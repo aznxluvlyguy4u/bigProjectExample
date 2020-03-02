@@ -299,7 +299,7 @@ class Company
     /**
      * @var boolean
      *
-     * @Assert\NotBlank
+     * @Assert\NotNull
      * @ORM\Column(type="boolean", options={"default":true})
      * @JMS\Type("boolean")
      * @JMS\Groups({
@@ -338,6 +338,14 @@ class Company
      */
     private $resultTableAnimalCounts;
 
+    /**
+     * @var ArrayCollection|AnimalAnnotation[]
+     * @ORM\OrderBy({"updatedAt" = "DESC"})
+     * @ORM\OneToMany(targetEntity="AppBundle\Entity\AnimalAnnotation", mappedBy="company", cascade={"persist", "remove"}, fetch="LAZY")
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\AnimalAnnotation>")
+     */
+    private $animalAnnotations;
+
   /**
    * Company constructor.
    */
@@ -349,6 +357,7 @@ class Company
     $this->setCompanyId(Utils::generateTokenCode());
     $this->notes = new ArrayCollection();
     $this->invoices = new ArrayCollection();
+    $this->animalAnnotations = new ArrayCollection();
     $this->lastMakeLivestockPublicDate = new \DateTime();
   }
 
@@ -959,4 +968,44 @@ class Company
         return $this;
     }
 
+    /**
+     * @return AnimalAnnotation[]|ArrayCollection
+     */
+    public function getAnimalAnnotations()
+    {
+        return $this->animalAnnotations;
+    }
+
+    /**
+     * @param  AnimalAnnotation[]|ArrayCollection  $annotations
+     * @return Company
+     */
+    public function setAnimalAnnotations(ArrayCollection $annotations)
+    {
+        $this->animalAnnotations = $annotations;
+        return $this;
+    }
+
+    /**
+     * Add annotation
+     *
+     * @param AnimalAnnotation $annotation
+     *
+     * @return Company
+     */
+    public function addAnimalAnnotation(AnimalAnnotation $annotation)
+    {
+        $this->animalAnnotations->add($annotation);
+        return $this;
+    }
+
+    /**
+     * Remove annotation
+     *
+     * @param AnimalAnnotation $annotation
+     */
+    public function removeAnimalAnnotation(AnimalAnnotation $annotation)
+    {
+        $this->animalAnnotations->removeElement($annotation);
+    }
 }

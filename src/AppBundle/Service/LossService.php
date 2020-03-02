@@ -99,7 +99,7 @@ class LossService extends DeclareControllerServiceBase
      */
     public function createLoss(Request $request)
     {
-        $content = RequestUtil::getContentAsArray($request);
+        $content = RequestUtil::getContentAsArrayCollection($request);
         $client = $this->getAccountOwner($request);
         $loggedInUser = $this->getUser();
         $location = $this->getSelectedLocation($request);
@@ -156,7 +156,7 @@ class LossService extends DeclareControllerServiceBase
      */
     public function editLoss(Request $request, $Id)
     {
-        $content = RequestUtil::getContentAsArray($request);
+        $content = RequestUtil::getContentAsArrayCollection($request);
         $client = $this->getAccountOwner($request);
         $loggedInUser = $this->getUser();
         $location = $this->getSelectedLocation($request);
@@ -235,7 +235,7 @@ class LossService extends DeclareControllerServiceBase
         $isAdmin = AdminValidator::isAdmin($loggedInUser, AccessLevelType::DEVELOPER);
         if(!$isAdmin) { return AdminValidator::getStandardErrorResponse(); }
 
-        $content = RequestUtil::getContentAsArray($request);
+        $content = RequestUtil::getContentAsArrayCollection($request);
         $minDateOfDeathString = $content->get('min_date_of_death');
         $minDateOfDeath = new \DateTime($minDateOfDeathString);
 

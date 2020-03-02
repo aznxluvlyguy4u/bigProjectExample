@@ -171,4 +171,30 @@ class SqlViewRepositoryBase
         $sql = "SELECT * FROM ".$this->getTableName()." WHERE ".$this->getPrimaryKeyName()." IN (".implode(',',$primaryKeys).")";
         return $this->getConnection()->query($sql)->fetchAll();
     }
+
+
+    /**
+     * Only apply for views with an 'uln' column!
+     *
+     * @param array $ulns
+     * @return ArrayCollection
+     * @throws \Exception
+     */
+    protected function findByUlnsBase(array $ulns = [])
+    {
+        $results = new ArrayCollection();
+        if (empty($ulns)) {
+            return $results;
+        }
+
+        $ulnSearchString = "'" . implode("','", $ulns) . "'";
+        $sql = "SELECT * FROM ".$this->getTableName()." WHERE uln IN (".$ulnSearchString.")";
+        $sqlResults = $this->getConnection()->query($sql)->fetchAll();
+        $objects = $this->denormalizeToObjects($sqlResults);
+
+        foreach ($objects as $object) {
+            $results->set($object->getPrimaryKey(), $object);
+        }
+        return $results;
+    }
 }

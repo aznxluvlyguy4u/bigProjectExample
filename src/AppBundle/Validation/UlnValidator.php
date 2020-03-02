@@ -10,7 +10,10 @@ use AppBundle\Entity\Client;
 use AppBundle\Entity\Company;
 use AppBundle\Entity\Employee;
 use AppBundle\Entity\Person;
-use AppBundle\SqlView\Repository\ViewMinimalParentDetailsRepository;
+use AppBundle\SqlView\Repository\ViewAnimalHistoricLocationsRepository;
+use AppBundle\SqlView\Repository\ViewAnimalIsPublicDetailsRepository;
+use AppBundle\SqlView\View\ViewAnimalHistoricLocations;
+use AppBundle\SqlView\View\ViewAnimalIsPublicDetails;
 use AppBundle\SqlView\View\ViewMinimalParentDetails;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\Validator;
@@ -29,8 +32,11 @@ class UlnValidator implements UlnValidatorInterface
     /** @var EntityManagerInterface */
     private $em;
 
-    /** @var ViewMinimalParentDetailsRepository */
-    private $viewMinimalParentDetailsRepository;
+    /** @var ViewAnimalHistoricLocationsRepository */
+    private $viewAnimalHistoricLocationsRepository;
+
+    /** @var ViewAnimalIsPublicDetailsRepository */
+    private $viewAnimalIsPublicDetailsRepository;
 
     /** @var TranslatorInterface */
     private $translator;
@@ -47,11 +53,13 @@ class UlnValidator implements UlnValidatorInterface
     private $invalidUlns;
 
     public function __construct(EntityManagerInterface $em,
-                                ViewMinimalParentDetailsRepository $viewMinimalParentDetailsRepository,
+                                ViewAnimalHistoricLocationsRepository $viewAnimalHistoricLocationsRepository,
+                                ViewAnimalIsPublicDetailsRepository $viewAnimalIsPublicDetailsRepository,
                                 TranslatorInterface $translator)
     {
         $this->em = $em;
-        $this->viewMinimalParentDetailsRepository = $viewMinimalParentDetailsRepository;
+        $this->viewAnimalHistoricLocationsRepository = $viewAnimalHistoricLocationsRepository;
+        $this->viewAnimalIsPublicDetailsRepository = $viewAnimalIsPublicDetailsRepository;
         $this->translator = $translator;
     }
 
@@ -120,10 +128,14 @@ class UlnValidator implements UlnValidatorInterface
         }
 
         $this->blockedUlns = [];
-        $animals = $this->viewMinimalParentDetailsRepository->findByUlns($this->ulns);
-        foreach ($animals as $animal) {
-            if (!Validator::isUserAllowedToAccessAnimalDetails($animal, $company, $currentUbnsOfUser)) {
-                $this->blockedUlns[] = $animal->getUln();
+        $viewAnimalHistoricLocations = $this->viewAnimalHistoricLocationsRepository->findByUlns($this->ulns);
+        $viewAnimalIsPublicDetailsByAnimalId = $this->viewAnimalIsPublicDetailsRepository->findByUlns($this->ulns);
+        foreach ($viewAnimalHistoricLocations as $viewAnimalHistoricLocation) {
+            /** @var ViewAnimalIsPublicDetails $viewAnimalIsPublicDetails */
+            $viewAnimalIsPublicDetails = $viewAnimalIsPublicDetailsByAnimalId->get($viewAnimalHistoricLocation->getAnimalId());
+
+            if (!Validator::isUserAllowedToAccessAnimalDetails($viewAnimalHistoricLocation, $company, $viewAnimalIsPublicDetails->isPublic(), $currentUbnsOfUser)) {
+                $this->blockedUlns[] = $viewAnimalHistoricLocation->getUln();
             }
         }
 
@@ -155,12 +167,15 @@ class UlnValidator implements UlnValidatorInterface
     }
 
     /**
-     * @param ViewMinimalParentDetails $animal
+     * @param ViewAnimalHistoricLocations $animalHistoricLocations
+     * @param bool $isPublicAnimal
      * @param Person $person
      * @param Company|null $company
      * @return bool
      */
-    public static function isUserAllowedToAccessAnimalDetails(ViewMinimalParentDetails $animal, Person $person, ?Company $company)
+    public static function isUserAllowedToAccessAnimalDetails(ViewAnimalHistoricLocations $animalHistoricLocations,
+        bool $isPublicAnimal, Person $person, ?Company $company
+    )
     {
         if ($person instanceof Employee) {
             return true;
@@ -175,7 +190,7 @@ class UlnValidator implements UlnValidatorInterface
             return false;
         }
 
-        return Validator::isUserAllowedToAccessAnimalDetails($animal, $company, $currentUbnsOfUser);
+        return Validator::isUserAllowedToAccessAnimalDetails($animalHistoricLocations, $company, $isPublicAnimal, $currentUbnsOfUser);
     }
 
 

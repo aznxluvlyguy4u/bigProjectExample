@@ -15,6 +15,8 @@ class SqlView
 
     const VIEW_PERSON_FULL_NAME = 'view_person_full_name';
     const VIEW_ANIMAL_LIVESTOCK_OVERVIEW_DETAILS = 'view_animal_livestock_overview_details';
+    const VIEW_ANIMAL_HISTORIC_LOCATIONS = 'view_animal_historic_locations';
+    const VIEW_ANIMAL_IS_PUBLIC = 'view_animal_is_public';
     const VIEW_SCAN_MEASUREMENTS = 'view_scan_measurements';
     const VIEW_EWE_LITTER_AGE = 'view_ewe_litter_age';
     const VIEW_LITTER_DETAILS = 'view_litter_details';
@@ -95,6 +97,8 @@ class SqlView
     {
         switch ($viewName) {
             case self::VIEW_ANIMAL_LIVESTOCK_OVERVIEW_DETAILS: return self::animalLiveStockOverviewDetails();
+            case self::VIEW_ANIMAL_IS_PUBLIC: return self::isPublicAnimalQuery();
+            case self::VIEW_ANIMAL_HISTORIC_LOCATIONS: return self::animalResidenceQuery();
             case self::VIEW_LITTER_DETAILS: return self::litterDetails();
             case self::VIEW_EWE_LITTER_AGE: return self::eweLitterAge();
             case self::VIEW_LOCATION_DETAILS: return self::locationDetails();
@@ -233,10 +237,7 @@ class SqlView
                 a.breed_code,
                 a.scrapie_genotype,
                 a_breed_types.dutch_first_letter as breed_type_as_dutch_first_letter,
-                COALESCE(is_public_status.is_public, TRUE) as is_public,
-                a.location_of_birth_id,
-                residences.historic_ubns,
-                residences.historic_location_ids
+                a.location_of_birth_id
               FROM animal a
                 LEFT JOIN location l ON a.location_id = l.id
                 LEFT JOIN animal_cache c ON c.animal_id = a.id
@@ -248,12 +249,7 @@ class SqlView
                 LEFT JOIN (VALUES
                 ".SqlUtil::createSqlValuesString(Translation::getEnglishPredicateToAbbreviationArray())."
                 ) AS predicate(english, abbreviation) ON predicate.english = a.predicate
-                LEFT JOIN (
-                    ".self::isPublicAnimalQuery()."
-                )is_public_status ON is_public_status.animal_id = a.id
-                LEFT JOIN (
-                    ".self::animalResidenceQuery()."
-                )residences ON residences.animal_id = a.id";
+                ";
     }
 
 
@@ -318,9 +314,7 @@ class SqlView
                 body_fat.fat3 as fat3,
                 to_char(body_fat.measurement_date, '".DateUtil::DEFAULT_SQL_DATE_STRING_FORMAT."') as dd_mm_yyyy_body_fat_measurement_date,
                  
-                COALESCE(child_status.has_children_as_mom, FALSE) as has_children_as_mom,
-                residences.historic_ubns,
-                residences.historic_location_ids
+                COALESCE(child_status.has_children_as_mom, FALSE) as has_children_as_mom
                 
               FROM animal a
                 LEFT JOIN animal_cache c ON c.animal_id = a.id
@@ -334,9 +328,6 @@ class SqlView
                 LEFT JOIN (VALUES
                 ".SqlUtil::createSqlValuesString(Translation::getEnglishPredicateToAbbreviationArray())."
                 ) AS predicate(english, abbreviation) ON predicate.english = a.predicate
-                LEFT JOIN (
-                    ".self::animalResidenceQuery()."
-                )residences ON residences.animal_id = a.id
                 LEFT JOIN (
                     SELECT
                       m.animal_id,
@@ -413,29 +404,37 @@ class SqlView
     private static function animalResidenceQuery(): string
     {
         return "SELECT
-                      r.animal_id,
-                      -- If you want to remove the curly brackets use the following code
-                      -- TRIM(BOTH '{,}' FROM CAST(array_agg(l.ubn ORDER BY ubn) AS TEXT)) as historic_ubns,
-                      -- TRIM(BOTH '{,}' FROM CAST(array_agg(r.location_id ORDER BY r.location_id) AS TEXT)) as historic_location_ids
-                      REPLACE( REPLACE( CAST(array_agg(l.ubn ORDER BY ubn) AS TEXT),'{', '['), '}', ']') as historic_ubns,
-                      REPLACE( REPLACE( CAST(array_agg(r.location_id ORDER BY r.location_id) AS TEXT) ,'{', '['), '}', ']') as historic_location_ids
-                    FROM (
-                           SELECT
-                             r.animal_id,
-                             r.location_id
-                           FROM animal_residence r
-                           GROUP BY r.animal_id, r.location_id
-                    
-                           UNION
-                    
-                           SELECT
-                             a.id as animal_id,
-                             a.location_id
-                           FROM animal a
-                           WHERE a.location_id NOTNULL
-                         ) r
-                      INNER JOIN location l on r.location_id = l.id
-                    GROUP BY r.animal_id";
+                    residence.animal_id,
+                    CONCAT(uln_country_code, uln_number) as uln,
+                    residence.historic_location_ids,
+                    residence.historic_ubns
+                FROM animal a
+                    INNER JOIN (
+                        SELECT
+                            r.animal_id,
+                            -- If you want to remove the curly brackets use the following code
+                            -- TRIM(BOTH '{,}' FROM CAST(array_agg(l.ubn ORDER BY ubn) AS TEXT)) as historic_ubns,
+                            -- TRIM(BOTH '{,}' FROM CAST(array_agg(r.location_id ORDER BY r.location_id) AS TEXT)) as historic_location_ids
+                            REPLACE( REPLACE( CAST(array_agg(l.ubn ORDER BY ubn) AS TEXT),'{', '['), '}', ']') as historic_ubns,
+                            REPLACE( REPLACE( CAST(array_agg(r.location_id ORDER BY r.location_id) AS TEXT) ,'{', '['), '}', ']') as historic_location_ids
+                        FROM (
+                                 SELECT
+                                     r.animal_id,
+                                     r.location_id
+                                 FROM animal_residence r
+                                 GROUP BY r.animal_id, r.location_id
+                
+                                 UNION
+                
+                                 SELECT
+                                     a.id as animal_id,
+                                     a.location_id
+                                 FROM animal a
+                                 WHERE a.location_id NOTNULL
+                             ) r
+                                 INNER JOIN location l on r.location_id = l.id
+                        GROUP BY r.animal_id
+                    )residence ON residence.animal_id = a.id";
     }
 
 
@@ -445,37 +444,44 @@ class SqlView
     private static function isPublicAnimalQuery(): string
     {
         return "SELECT
-                  r.animal_id,
-                  TRUE = ANY(array_agg(is_reveal_historic_animals)::boolean[]) as is_public
-                FROM (
-                       SELECT
-                         r.animal_id,
-                         r.location_id,
-                         c.is_reveal_historic_animals
-                       FROM animal_residence r
-                         INNER JOIN location l on r.location_id = l.id
-                         INNER JOIN (
-                                      SELECT id, is_reveal_historic_animals
-                                      FROM company WHERE is_active
-                                   )c ON l.company_id = c.id
-                       GROUP BY r.animal_id, r.location_id, c.is_reveal_historic_animals
-                
-                       UNION
-                
-                       SELECT
-                         a.id as animal_id,
-                         a.location_id,
-                         c.is_reveal_historic_animals
-                       FROM animal a
-                         INNER JOIN location l on a.location_id = l.id
-                         INNER JOIN (
+                    public_status.animal_id,
+                    CONCAT(uln_country_code, uln_number) as uln,
+                    public_status.is_public
+                FROM animal a
+                    INNER JOIN (
+                        SELECT
+                            r.animal_id,
+                            TRUE = ANY(array_agg(is_reveal_historic_animals)::boolean[]) as is_public
+                        FROM (
+                                 SELECT
+                                     r.animal_id,
+                                     r.location_id,
+                                     c.is_reveal_historic_animals
+                                 FROM animal_residence r
+                                          INNER JOIN location l on r.location_id = l.id
+                                          INNER JOIN (
                                      SELECT id, is_reveal_historic_animals
                                      FROM company WHERE is_active
-                                   )c ON l.company_id = c.id
-                       GROUP BY a.id, a.location_id, c.is_reveal_historic_animals
-                     ) r
-                  INNER JOIN location l on r.location_id = l.id
-                GROUP BY r.animal_id";
+                                 )c ON l.company_id = c.id
+                                 GROUP BY r.animal_id, r.location_id, c.is_reveal_historic_animals
+                
+                                 UNION
+                
+                                 SELECT
+                                     a.id as animal_id,
+                                     a.location_id,
+                                     c.is_reveal_historic_animals
+                                 FROM animal a
+                                          INNER JOIN location l on a.location_id = l.id
+                                          INNER JOIN (
+                                     SELECT id, is_reveal_historic_animals
+                                     FROM company WHERE is_active
+                                 )c ON l.company_id = c.id
+                                 GROUP BY a.id, a.location_id, c.is_reveal_historic_animals
+                             ) r
+                                 INNER JOIN location l on r.location_id = l.id
+                        GROUP BY r.animal_id
+                    )public_status ON public_status.animal_id = a.id";
     }
 
 

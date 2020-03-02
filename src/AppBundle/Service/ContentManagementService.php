@@ -40,7 +40,7 @@ class ContentManagementService extends ControllerServiceBase
             return AdminValidator::getStandardErrorResponse();
         }
 
-        $content = RequestUtil::getContentAsArray($request);
+        $content = RequestUtil::getContentAsArrayCollection($request);
 
         /** @var Content $cms */
         $cms = $this->getManager()->getRepository(Content::class)->getCMS();

@@ -68,7 +68,7 @@ class LocationHealthService extends ControllerServiceBase implements HealthAPICo
             return ResultUtil::errorResult("No Company found for location with ubn: " . $ubn, 428);
         }
 
-        $content = RequestUtil::getContentAsArray($request);
+        $content = RequestUtil::getContentAsArrayCollection($request);
 
         $updateHealthStatusValues = true;
         if ($content->containsKey(JsonInputConstant::ANIMAL_HEALTH_SUBSCRIPTION)) {

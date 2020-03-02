@@ -34,7 +34,7 @@ class AdminActionLogWriter
 
     const DESCRIPTION_MID_KEY_DUTCH = ', beschrijving: ';
     const INSPECTOR_MID_KEY = ', Inspecteur: ';
-    
+
     /**
      * @param EntityManagerInterface $em
      * @param Client $client
@@ -112,7 +112,7 @@ class AdminActionLogWriter
     public static function createTreatmentTemplate(ObjectManager $em, $admin, $request, $template)
     {
         $description = 'Type: '.$template->getDutchType().'('.$template->getType().')'
-            .', '.ArrayUtil::implode(RequestUtil::getContentAsArray($request)->toArray());
+            .', '.ArrayUtil::implode(RequestUtil::getContentAsArrayCollection($request)->toArray());
 
         $log = new ActionLog($template->getLocationOwner(), $admin, UserActionType::TREATMENT_TEMPLATE_CREATE, true, $description, self::IS_USER_ENVIRONMENT);
         DoctrineUtil::persistAndFlush($em, $log);

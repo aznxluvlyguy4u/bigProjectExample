@@ -217,7 +217,7 @@ abstract class ControllerServiceBase
      */
     public function isAccessTokenValid(Request $request)
     {
-        $content = RequestUtil::getContentAsArray($request);
+        $content = RequestUtil::getContentAsArrayCollection($request);
 
         //Get token header to read token value
         if($request->headers->has(Constant::ACCESS_TOKEN_HEADER_NAMESPACE)) {

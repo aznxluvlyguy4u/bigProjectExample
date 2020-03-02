@@ -9,6 +9,8 @@ class Variable
     const ACTION_BY = 'actionBy';
     const ANIMAL = 'animal';
 
+    const COMPANY = 'company';
+
     const END_DATE = 'endDate';
 
     const IS_ACTIVE = 'isActive';
@@ -21,6 +23,8 @@ class Variable
     const LOG_DATE = 'logDate';
 
     const MEASUREMENT_DATE = 'measurementDate';
+
+    const PERSON = "person";
 
     const REQUEST_STATE = "requestState";
 

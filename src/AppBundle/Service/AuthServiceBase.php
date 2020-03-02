@@ -91,7 +91,7 @@ class AuthServiceBase extends ControllerServiceBase
      */
     function passwordResetRequest(Request $request, $dashboardType = null)
     {
-        $content = RequestUtil::getContentAsArray($request);
+        $content = RequestUtil::getContentAsArrayCollection($request);
         if (!$content->containsKey(JsonInputConstant::EMAIL_ADDRESS)) {
             return ResultUtil::errorResult(self::ERROR_EMAIL_ADDRESS_EMPTY, Response::HTTP_BAD_REQUEST);
         }
@@ -252,7 +252,7 @@ class AuthServiceBase extends ControllerServiceBase
      */
     function emailChangeRequest(Request $request, $dashboardType = null)
     {
-        $content = RequestUtil::getContentAsArray($request);
+        $content = RequestUtil::getContentAsArrayCollection($request);
         if (!$content->containsKey(JsonInputConstant::EMAIL_ADDRESS)) {
             return ResultUtil::errorResult(self::ERROR_EMAIL_ADDRESS_EMPTY, Response::HTTP_BAD_REQUEST);
         }

@@ -72,8 +72,10 @@ abstract class Animal
      *     "ANIMALS_BATCH_EDIT",
      *     "BASIC",
      *     "BASIC_SUB_ANIMAL_DETAILS",
+     *     "CHILD",
      *     "DECLARE",
      *     "ERROR_DETAILS",
+     *     "LIVESTOCK",
      *     "MIXBLUP",
      *     "PARENT_DATA",
      *     "RESPONSE_PERSISTENCE",
@@ -428,7 +430,7 @@ abstract class Animal
 
     /**
      * @var boolean
-     * @Assert\NotBlank
+     * @Assert\NotNull
      * @ORM\Column(type="boolean")
      * @JMS\Type("boolean")
      * @JMS\Groups({
@@ -762,7 +764,7 @@ abstract class Animal
     /**
      * The current blindnessFactor
      *
-     * @var string
+     * @var string|null
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Groups({
@@ -851,7 +853,7 @@ abstract class Animal
     /**
      * @var boolean
      * @JMS\Type("boolean")
-     * @ORM\Column(type="boolean", nullable=true)
+     * @ORM\Column(type="boolean", nullable=false, options={"default":false})
      * @JMS\Groups({
      *     "ANIMAL_DETAILS",
      *     "ANIMALS_BATCH_EDIT"
@@ -874,6 +876,14 @@ abstract class Animal
     protected $latestNormalizedBreedGrades;
 
     /**
+     * @var ArrayCollection|AnimalAnnotation[]
+     * @ORM\OrderBy({"updatedAt" = "DESC"})
+     * @ORM\OneToMany(targetEntity="AppBundle\Entity\AnimalAnnotation", mappedBy="animal", cascade={"persist", "remove"}, fetch="LAZY")
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\AnimalAnnotation>")
+     */
+    protected $annotations;
+
+    /**
      * @var ArrayCollection
      * @ORM\OrderBy({"description" = "ASC"})
      * @ORM\OneToMany(targetEntity="AppBundle\Entity\TreatmentAnimal", mappedBy="animal", cascade={"persist", "remove"})
@@ -882,7 +892,7 @@ abstract class Animal
     protected $treatments;
 
     /**
-     * @var ScanMeasurementSet
+     * @var ScanMeasurementSet|null
      * @ORM\OneToOne(targetEntity="AppBundle\Entity\ScanMeasurementSet", cascade={"persist", "remove"})
      * @ORM\JoinColumn(name="scan_measurement_set_id", referencedColumnName="id")
      * @JMS\Type("AppBundle\Entity\ScanMeasurementSet")
@@ -1175,12 +1185,14 @@ abstract class Animal
         $this->treatments = new ArrayCollection();
         $this->wormResistances = new ArrayCollection();
         $this->animalRelocations = new ArrayCollection();
+        $this->annotations = new ArrayCollection();
         $this->isAlive = true;
         $this->ulnCountryCode = '';
         $this->ulnNumber = '';
         $this->animalOrderNumber = '';
         $this->isImportAnimal = false;
         $this->isExportAnimal = false;
+        $this->lambar = false;
         $this->isDepartedAnimal = false;
         $this->updatedGeneDiversity = false;
         $this->creationDate = new \DateTime();
@@ -2853,7 +2865,7 @@ abstract class Animal
     }
 
     /**
-     * @return string
+     * @return string|null
      */
     public function getBlindnessFactor()
     {
@@ -2922,18 +2934,18 @@ abstract class Animal
     }
 
     /**
-     * @return ScanMeasurementSet
+     * @return ScanMeasurementSet|null
      */
-    public function getScanMeasurementSet(): ScanMeasurementSet
+    public function getScanMeasurementSet(): ?ScanMeasurementSet
     {
         return $this->scanMeasurementSet;
     }
 
     /**
-     * @param ScanMeasurementSet $scanMeasurementSet
+     * @param ScanMeasurementSet|null $scanMeasurementSet
      * @return Animal
      */
-    public function setScanMeasurementSet(ScanMeasurementSet $scanMeasurementSet): Animal
+    public function setScanMeasurementSet(?ScanMeasurementSet $scanMeasurementSet): Animal
     {
         $this->scanMeasurementSet = $scanMeasurementSet;
         return $this;
@@ -3110,7 +3122,7 @@ abstract class Animal
     }
 
     /**
-     * @return boolean|null
+     * @return boolean
      */
     public function getLambar()
     {
@@ -3505,7 +3517,46 @@ abstract class Animal
         return $this;
     }
 
+    /**
+     * @return AnimalAnnotation[]|ArrayCollection
+     */
+    public function getAnnotations()
+    {
+        return $this->annotations;
+    }
 
+    /**
+     * @param  AnimalAnnotation[]|ArrayCollection  $annotations
+     * @return Animal
+     */
+    public function setAnnotations(ArrayCollection $annotations)
+    {
+        $this->annotations = $annotations;
+        return $this;
+    }
+
+    /**
+     * Add annotation
+     *
+     * @param AnimalAnnotation $annotation
+     *
+     * @return Animal
+     */
+    public function addAnnotation(AnimalAnnotation $annotation)
+    {
+        $this->annotations->add($annotation);
+        return $this;
+    }
+
+    /**
+     * Remove annotation
+     *
+     * @param AnimalAnnotation $annotation
+     */
+    public function removeAnnotation(AnimalAnnotation $annotation)
+    {
+        $this->annotations->removeElement($annotation);
+    }
 
 
 }

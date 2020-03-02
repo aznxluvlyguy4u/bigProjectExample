@@ -82,7 +82,7 @@ class TagsService extends ControllerServiceBase
         $this->nullCheckClient($client);
 
         $location = $this->getSelectedLocation($request);
-        $content = RequestUtil::getContentAsArray($request);
+        $content = RequestUtil::getContentAsArrayCollection($request);
 
         $ulnPartsArray = $this->getUlnPartsArrayFromPlainTextInput($content, $location->getCountryCode());
         $this->validateIfUlnsAreAlreadyUsedByAnimal($ulnPartsArray);
@@ -443,7 +443,7 @@ class TagsService extends ControllerServiceBase
      */
     private function validateAnimalsByPlainTextInputRequest(Request $request)
     {
-        $content = RequestUtil::getContentAsArray($request);
+        $content = RequestUtil::getContentAsArrayCollection($request);
 
         if ($content === null) {
             throw new BadRequestHttpException('CONTENT IS MISSING.');

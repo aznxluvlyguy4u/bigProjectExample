@@ -812,6 +812,9 @@ services:
             arguments:
               - '@AppBundle\Service\AwsInternalQueueService'
 
+    AppBundle\Service\AnimalAnnotationService:
+      parent: app.abstract_base.controller
+
     AppBundle\Service\ArrivalService:
         parent: app.abstract_base.declare
         calls:
@@ -1132,6 +1135,8 @@ services:
     AppBundle\SqlView\SqlViewManager:
         arguments:
           - '@AppBundle\SqlView\Repository\ViewAnimalLivestockOverviewDetailsRepository'
+          - '@AppBundle\SqlView\Repository\ViewAnimalHistoricLocationsRepository'
+          - '@AppBundle\SqlView\Repository\ViewAnimalIsPublicDetailsRepository'
           - '@AppBundle\SqlView\Repository\ViewLitterDetailsRepository'
           - '@AppBundle\SqlView\Repository\ViewLocationDetailsRepository'
           - '@AppBundle\SqlView\Repository\ViewMinimalParentDetailsRepository'
@@ -1150,6 +1155,12 @@ services:
 
     AppBundle\SqlView\Repository\ViewAnimalLivestockOverviewDetailsRepository:
         parent: app.sqlview.repository.base
+
+    AppBundle\SqlView\Repository\ViewAnimalHistoricLocationsRepository:
+      parent: app.sqlview.repository.base
+
+    AppBundle\SqlView\Repository\ViewAnimalIsPublicDetailsRepository:
+      parent: app.sqlview.repository.base
 
     AppBundle\SqlView\Repository\ViewLitterDetailsRepository:
         parent: app.sqlview.repository.base
@@ -1197,7 +1208,8 @@ services:
     AppBundle\Validation\UlnValidator:
         arguments:
           - '@doctrine.orm.entity_manager'
-          - '@AppBundle\SqlView\Repository\ViewMinimalParentDetailsRepository'
+          - '@AppBundle\SqlView\Repository\ViewAnimalHistoricLocationsRepository'
+          - '@AppBundle\SqlView\Repository\ViewAnimalIsPublicDetailsRepository'
           - '@translator'
         lazy: true
 

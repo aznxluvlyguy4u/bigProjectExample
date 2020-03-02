@@ -21,6 +21,7 @@ class JsonInputConstant
     const KEY = 'key';
     const TRANSLATION_KEY = 'translation_key';
     const FORMATTED = 'formatted';
+    const LABEL = 'label';
 
     //Admins
     const ADMINS = 'admins';
@@ -36,6 +37,7 @@ class JsonInputConstant
     const ANIMAL_ID = 'animal_id';
     const ANIMAL_ID_AND_DATE = 'animal_id_and_date';
     const BIRTH_PROGRESS = 'birth_progress';
+    const BIRTH = 'birth';
     const RAM = 'ram';
     const EWE = 'ewe';
     const NEUTER = 'neuter';
@@ -106,6 +108,8 @@ class JsonInputConstant
     const FOUND_STNS = 'found_stns';
     const BREED_CODE_UPDATED = 'breed_code_updated';
     const REARING = 'rearing';
+    const LAMBAR = 'lambar';
+    const SURROGATE = 'surrogate';
 
     //Request & Response
     const ERROR_CODE = 'error_code';
@@ -247,6 +251,7 @@ class JsonInputConstant
     const INSPECTOR_LAST_NAME = 'inspector_last_name';
     const YEAR_AND_UBN_OF_BIRTH = 'year_and_ubn_of_birth';
     const YEAR_AND_UBN_OF_TREATMENT = 'year_and_ubn_of_treatment';
+    const SCAN_MEASUREMENTS = 'scan_measurements';
 
     //Weight measurements
     const LAST_WEIGHT = 'last_weight';
@@ -297,6 +302,7 @@ class JsonInputConstant
     const SUCKLE_COUNT = 'suckle_count';
     const LITTER_GROUP = 'litter_group';
     const LITTER_COUNT = 'litter_count';
+    const LITTER_SIZE = 'litter_size';
     const TOTAL_BORN_ALIVE_COUNT = 'total_born_alive_count';
     const TOTAL_STILLBORN_COUNT = 'total_stillborn_count';
     const BORN_ALIVE_COUNT = 'born_alive_count';

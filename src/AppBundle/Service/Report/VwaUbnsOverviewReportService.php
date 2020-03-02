@@ -43,7 +43,7 @@ class VwaUbnsOverviewReportService extends ReportServiceBase
      */
     public function getUbnsOverviewReport(Request $request)
     {
-        $content = RequestUtil::getContentAsArray($request);
+        $content = RequestUtil::getContentAsArrayCollection($request);
 
         $ubns = [];
         $incorrectUbns = [];

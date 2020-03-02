@@ -117,4 +117,14 @@ class AnimalCacheRepository extends BaseRepository {
 
         return $this->getAnimalCacherInputData($ignoreAnimalsWithAnExistingCache, $ignoreCacheBeforeDateString, $filter);
     }
+
+
+    /**
+     * @param  int  $animalId
+     * @return AnimalCache
+     */
+    public function findByAnimalId(int $animalId): AnimalCache
+    {
+        return $this->findOneBy(['animalId' => $animalId]);
+    }
 }

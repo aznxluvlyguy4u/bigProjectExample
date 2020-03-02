@@ -19,6 +19,9 @@ class ResultUtil
      */
     public static function successResult($result)
     {
+        if ($result === null) {
+            return new JsonResponse(null, Response::HTTP_NO_CONTENT);
+        }
         return new JsonResponse([Constant::RESULT_NAMESPACE => $result], Response::HTTP_OK);
     }
 

@@ -9,7 +9,8 @@ class BreedType
 {
     use EnumInfo;
 
-    const BLIND_FACTOR = "BLIND_FACTOR";             // Blindfactor
+    const BLIND_FACTOR = "BLIND_FACTOR";             // Erfelijke afwijking TODO remove this when BLIND_FACTOR is replaced in the database
+    // const HEREDITARY_DEVIATION = "HEREDITARY_DEVIATION";    // Erfelijke afwijking  TODO only add this if BLIND_FACTOR is replaced in the database
     const MEAT_LAMB_FATHER = "MEAT_LAMB_FATHER";     // Vleeslamvaderdier
     const MEAT_LAMB_MOTHER = "MEAT_LAMB_MOTHER";     // Vleeslammoederdier
     const PARENT_ANIMAL = "PARENT_ANIMAL";           // Ouderdier

@@ -181,7 +181,7 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
      */
     public function createArrivalOrImport(Request $request)
     {
-        $content = RequestUtil::getContentAsArray($request);
+        $content = RequestUtil::getContentAsArrayCollection($request);
         if ($content->get(Constant::IS_IMPORT_ANIMAL)) {
             return $this->createImport($request);
         }
@@ -191,7 +191,7 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
 
     private function createArrival(Request $request)
     {
-        $content = RequestUtil::getContentAsArray($request);
+        $content = RequestUtil::getContentAsArrayCollection($request);
         $content = $this->capitalizePedigreeNumberInPostArray($content);
 
         $client = $this->getAccountOwner($request);
@@ -309,7 +309,7 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
 
     private function createImport(Request $request)
     {
-        $content = RequestUtil::getContentAsArray($request);
+        $content = RequestUtil::getContentAsArrayCollection($request);
         $content = $this->capitalizePedigreeNumberInPostArray($content);
 
         $client = $this->getAccountOwner($request);
@@ -392,7 +392,7 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
      */
     public function updateArrival(Request $request, $Id) {
 
-        $content = RequestUtil::getContentAsArray($request);
+        $content = RequestUtil::getContentAsArrayCollection($request);
         $requestId = $Id;
         $content->set("request_id", $requestId);
 
