@@ -346,13 +346,12 @@ class DepartService extends DeclareControllerServiceBase
             $export->getAnimal()->setIsExportAnimal(false);
             $export->getAnimal()->setTransferringTransferState();
             $this->getManager()->persist($export->getAnimal());
+            $this->getManager()->persist($export);
+            $this->getManager()->flush();
 
         } else {
             $messageArray = $this->exportProcessor->process($export);
         }
-
-        $this->getManager()->persist($export);
-        $this->getManager()->flush();
 
         $this->saveNewestDeclareVersion($content, $export);
 
