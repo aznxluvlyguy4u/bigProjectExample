@@ -346,6 +346,7 @@ class DepartService extends DeclareControllerServiceBase
             $export->getAnimal()->setIsExportAnimal(false);
             $export->getAnimal()->setTransferringTransferState();
             $this->getManager()->persist($export->getAnimal());
+            $this->getManager()->persist($export);
             $this->getManager()->flush();
 
         } else {
