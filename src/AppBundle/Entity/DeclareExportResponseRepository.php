@@ -25,6 +25,7 @@ class DeclareExportResponseRepository extends BaseRepository {
 
     /**
      * @param Location $location
+     * @param integer $page
      * @return ArrayCollection
      */
     public function getExportsWithLastHistoryResponses(Location $location, $page = 1)
@@ -77,10 +78,18 @@ class DeclareExportResponseRepository extends BaseRepository {
                 FETCH NEXT 10 ROWS ONLY"
         ;
 
+         $totalItems = 0;
+
+         $countResult = $this->getManager()->getConnection()->query($countSql)->fetchAll();
+
+         if (!empty($countResult)) {
+             $totalItems = $countResult[0]['totalitems'];
+         }
+
          return [
-            'totalItems' =>  $this->getConnection()->query($countSql)->fetchAll()[0]['totalitems'],
-            'items' => $this->getConnection()->query($sql)->fetchAll()
-        ];
+             'totalItems' => $totalItems,
+             'items' => $this->getManager()->getConnection()->query($sql)->fetchAll()
+         ];
     }
 
     /**

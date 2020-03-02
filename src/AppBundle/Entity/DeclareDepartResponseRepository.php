@@ -26,6 +26,7 @@ class DeclareDepartResponseRepository extends BaseRepository {
 
     /**
      * @param Location $location
+     * @param integer $page
      * @return ArrayCollection
      */
     public function getDeparturesWithLastHistoryResponses(Location $location, $page = 1)
@@ -76,6 +77,19 @@ class DeclareDepartResponseRepository extends BaseRepository {
                 OFFSET 10 * (".$page." - 1)
                 FETCH NEXT 10 ROWS ONLY"
         ;
+
+        $totalItems = 0;
+
+        $countResult = $this->getManager()->getConnection()->query($countSql)->fetchAll();
+
+        if (!empty($countResult)) {
+            $totalItems = $countResult[0]['totalitems'];
+        }
+
+        return [
+            'totalItems' => $totalItems,
+            'items' => $this->getManager()->getConnection()->query($sql)->fetchAll()
+        ];
 
         return [
             'totalItems' =>  $this->getConnection()->query($countSql)->fetchAll()[0]['totalitems'],
