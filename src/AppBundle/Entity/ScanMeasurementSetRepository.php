@@ -227,6 +227,7 @@ class ScanMeasurementSetRepository  extends MeasurementRepository{
         $fat2
             ->setMeasurementDate($values->measurementDate)
             ->setAnimalIdAndDate($animalIdAndDate)
+            ->setActionBy($actionBy)
         ;
 
         $fat3 = (new Fat3())
@@ -236,6 +237,7 @@ class ScanMeasurementSetRepository  extends MeasurementRepository{
         $fat3
             ->setMeasurementDate($values->measurementDate)
             ->setAnimalIdAndDate($animalIdAndDate)
+            ->setActionBy($actionBy)
         ;
 
         $bodyFat->setFat1($fat1);
