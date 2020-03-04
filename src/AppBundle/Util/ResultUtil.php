@@ -81,6 +81,24 @@ class ResultUtil
 
 
     /**
+     * @return JsonResponse
+     */
+    public static function notFound()
+    {
+        return ResultUtil::errorResult('NOT FOUND', Response::HTTP_NOT_FOUND);
+    }
+
+
+    /**
+     * @return JsonResponse
+     */
+    public static function noContent()
+    {
+        return ResultUtil::errorResult('NO CONTENT', Response::HTTP_NO_CONTENT);
+    }
+
+
+    /**
      * @param \Exception $exception
      * @return JsonResponse
      */
