@@ -633,6 +633,7 @@ services:
           - '@translator'
           - '@logger'
           - '@AppBundle\SqlView\SqlViewManager'
+          - '@validator'
 
     AppBundle\Service\Google\FireBaseService:
         arguments:

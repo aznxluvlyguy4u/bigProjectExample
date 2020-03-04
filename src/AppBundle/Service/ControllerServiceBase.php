@@ -51,6 +51,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
 use Symfony\Component\Translation\TranslatorInterface;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 /**
  * Class ControllerServiceBase
@@ -72,6 +73,8 @@ abstract class ControllerServiceBase
     private $sqlViewManager;
     /** @var RegistryInterface */
     private $doctrine;
+    /** @var ValidatorInterface */
+    private $validator;
 
     /** @var string */
     private $actionLogEditMessage;
@@ -82,7 +85,8 @@ abstract class ControllerServiceBase
                                 UserService $userService,
                                 TranslatorInterface $translator,
                                 Logger $logger,
-                                SqlViewManagerInterface $sqlViewManager
+                                SqlViewManagerInterface $sqlViewManager,
+                                ValidatorInterface $validator
     )
     {
         $this->baseSerializer = $baseSerializer;
@@ -93,6 +97,7 @@ abstract class ControllerServiceBase
         $this->translator = $translator;
         $this->logger = $logger;
         $this->sqlViewManager = $sqlViewManager;
+        $this->validator = $validator;
     }
 
 
@@ -142,6 +147,15 @@ abstract class ControllerServiceBase
     public function getLogger()
     {
         return $this->logger;
+    }
+
+
+    /**
+     * @return ValidatorInterface
+     */
+    public function getValidator(): ValidatorInterface
+    {
+        return $this->validator;
     }
 
 
