@@ -190,7 +190,7 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
 
     /**
      *
-     * Edits the birth weight and tail length of the given animal.
+     * Edit the birth measurements of the given animal.
      *
      * If the animal already contains a weight and tail length record, the values in those records is overwritten.
      * If those records do not exist yet, new records are created.
@@ -218,7 +218,7 @@ class MeasurementAPIController extends APIController implements MeasurementAPICo
      *     }
      *   },
      *   resource = true,
-     *   description = "Update an exterior measurement for a specific ULN and measurementDate"
+     *   description = "Edit the birth measurements of the given animal."
      * )
      *
      * @param Request $request the request object
