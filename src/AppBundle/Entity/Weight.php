@@ -121,9 +121,11 @@ class Weight extends Measurement implements ScanMeasurementInterface
 
     /**
      * @param boolean $isBirthWeight
+     * @return Weight
      */
     public function setIsBirthWeight($isBirthWeight) {
       $this->isBirthWeight = $isBirthWeight;
+      return $this;
     }
 
 
