@@ -584,3 +584,11 @@ DISEASE: Ziekte
 HEAT CULTIVATE: Verwentelen
 EUTHANASIA: Euthanasie
 ANIMAL NO LONGER PRESENT: Dier niet meer op bedrijf aanwezig
+
+# Property keys
+fat1: vet1
+fat2: vet2
+fat3: vet3
+measurementDate: meetdatum
+muscleThickness: spierdikte
+scanWeight: scangewicht

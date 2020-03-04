@@ -38,6 +38,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
 use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
+use Symfony\Component\Translation\TranslatorInterface;
 use Symfony\Component\Validator\ConstraintViolation;
 use Symfony\Component\Validator\ConstraintViolationListInterface;
 
@@ -979,23 +980,31 @@ class Validator
 
 
     /**
+     * @param TranslatorInterface|null $translator
      * @param ConstraintViolationListInterface $errors
      */
-    public static function throwExceptionWithFormattedErrorMessageIfHasErrors($errors)
+    public static function throwExceptionWithFormattedErrorMessageIfHasErrors($errors, ?TranslatorInterface $translator = null)
     {
         if (empty($errors->count())) {
             return;
         }
 
         // Prepare error message string
-        $errorMessage = '';
+        $errorMessageWithContext = '';
         $prefix = '';
         foreach ($errors as $index => $error) {
+            $property = $error->getPropertyPath();
+            $errorMessage = $error->getMessage();
+            if ($translator instanceof TranslatorInterface) {
+                $property = $translator->trans($error->getPropertyPath());
+                $errorMessage = $translator->trans($error->getMessage(), $error->getParameters(), 'validators');
+            }
+
             /* @var ConstraintViolation $error */
-            $errorMessage .= $prefix . $error->getPropertyPath().': '.$error->getMessage();
+            $errorMessageWithContext .= $prefix . $property.': '.$errorMessage;
             $prefix = ' | ';
         }
-        throw new PreconditionFailedHttpException($errorMessage);
+        throw new PreconditionFailedHttpException($errorMessageWithContext);
     }
 
     /**

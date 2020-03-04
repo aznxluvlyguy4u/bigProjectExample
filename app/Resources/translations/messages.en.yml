@@ -575,3 +575,11 @@ DISEASE: Disease
 HEAT CULTIVATE: Heat Cultivate
 EUTHANASIA: Euthanasia
 ANIMAL NO LONGER PRESENT: Animal no longer present on company
+
+# Property keys
+fat1: fat1
+fat2: fat2
+fat3: fat3
+measurementDate: measurement date
+muscleThickness: muscle thickness
+scanWeight: scan weight
