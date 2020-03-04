@@ -128,7 +128,7 @@ class DuplicateMeasurementsFixer extends DuplicateFixerBase
                 break;
 
             case $measurement instanceof Weight:
-                $measurement->setIsRevoked(true);
+                $measurement->deactivateWeight();
 
                 break;
             default:

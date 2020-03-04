@@ -177,6 +177,28 @@ class Weight extends Measurement implements ScanMeasurementInterface
         return $this->isRevoked;
     }
 
+
+    /**
+     * @return Weight
+     */
+    public function activateWeight(): Weight
+    {
+        $this->setIsActive(true);
+        $this->setIsRevoked(false);
+        return $this;
+    }
+
+
+    /**
+     * @return Weight
+     */
+    public function deactivateWeight(): Weight
+    {
+        $this->setIsActive(false);
+        $this->setIsRevoked(true);
+        return $this;
+    }
+
     /**
      * @param boolean $isRevoked
      */

@@ -156,10 +156,9 @@ class BirthMeasurementService extends ControllerServiceBase implements BirthMeas
         if ($currentBirthWeight instanceof Weight) {
             $oldValue = $currentBirthWeight->getWeight();
             if ($newBirthWeightValue === null) {
-                $currentBirthWeight->setIsActive(false);
+                $currentBirthWeight->deactivateWeight();
                 $currentBirthWeight->setDeleteDate(new \DateTime());
                 $currentBirthWeight->setDeletedBy($actionBy);
-                $currentBirthWeight->setIsRevoked(!$currentBirthWeight->isIsActive());
                 $currentBirthWeight->setActionBy($actionBy);
                 $this->getManager()->persist($currentBirthWeight);
                 $isUpdated = true;
@@ -169,12 +168,11 @@ class BirthMeasurementService extends ControllerServiceBase implements BirthMeas
 
             } elseif (!NumberUtil::areFloatsEqual($newBirthWeightValue, $currentBirthWeight->getWeight())) {
                 $currentBirthWeight->setWeight($newBirthWeightValue);
-                $currentBirthWeight->setIsActive(true);
+                $currentBirthWeight->activateWeight();
                 if ($content->isResetMeasurementDateUsingDateOfBirth()) {
                     $currentBirthWeight->setMeasurementDate($animal->getDateOfBirth());
                 }
                 $currentBirthWeight->setEditDate(new \DateTime());
-                $currentBirthWeight->setIsRevoked(!$currentBirthWeight->isIsActive());
                 $currentBirthWeight->setActionBy($actionBy);
                 $this->getManager()->persist($currentBirthWeight);
                 $isUpdated = true;
@@ -192,8 +190,7 @@ class BirthMeasurementService extends ControllerServiceBase implements BirthMeas
             $newBirthWeight->setWeight($newBirthWeightValue);
             $newBirthWeight->setActionBy($actionBy);
             $newBirthWeight->setAnimalIdAndDateByAnimalAndDateTime($animal,$measurementDate);
-            $newBirthWeight->setIsActive(true);
-            $newBirthWeight->setIsRevoked(false);
+            $newBirthWeight->activateWeight();
             $this->getManager()->persist($newBirthWeight);
             $isUpdated = true;
 

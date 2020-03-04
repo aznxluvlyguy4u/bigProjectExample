@@ -66,7 +66,7 @@ class DeclareWeightBuilder extends NsfoBaseBuilder
 
         $animal = $animalRepository->findAnimalByAnimalArray($animalArray);
         $declareWeight->setAnimal($animal);
-        
+
         $weightMeasurement = self::createNewWeight($animal, $weightValue, $measurementDate);
         $declareWeight->setWeightMeasurement($weightMeasurement);
 
@@ -108,8 +108,7 @@ class DeclareWeightBuilder extends NsfoBaseBuilder
         $historicalMate = new DeclareWeight();
         $historicalMate->duplicateValues($declareWeight);
         $historicalMate->setIsOverwrittenVersion(true);
-        $declareWeight->getWeightMeasurement()->setIsRevoked(true);
-        $declareWeight->getWeightMeasurement()->setIsActive(false);
+        $declareWeight->getWeightMeasurement()->deactivateWeight();
 
         //Edit current values
         $declareWeight = self::postBase($client, $loggedInUser, $location, $declareWeight);
