@@ -228,7 +228,7 @@ class Company
     private $invoices;
 
     /**
-     * @var ArrayCollection
+     * @var ArrayCollection|Client[]
      *
      * @ORM\OneToMany(targetEntity="Client", mappedBy="employer", cascade={"persist"})
      * @JMS\Type("ArrayCollection<AppBundle\Entity\Person>")
@@ -491,6 +491,25 @@ class Company
     public function getOwner()
     {
         return $this->owner;
+    }
+
+    /**
+     * @param  Client  $client
+     * @return bool
+     */
+    public function isCompanyUserOrOwner(Client $client): bool
+    {
+        if ($this->getOwner() && $this->getOwner()->getId() === $client->getId()) {
+            return true;
+        }
+
+        foreach ($this->companyUsers as $companyUser) {
+            if ($companyUser->getId() === $client->getId()) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

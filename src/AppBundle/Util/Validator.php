@@ -30,7 +30,6 @@ use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\PredicateType;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\SqlView\View\ViewAnimalHistoricLocations;
-use AppBundle\SqlView\View\ViewMinimalParentDetails;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Exception\ForeignKeyConstraintViolationException;
@@ -285,10 +284,7 @@ class Validator
         $company = $location->getCompany();
         if($company == null || !$company->isActive()) { return $nullInputResult; }
 
-        $ownerOfAnimal = $company->getOwner();
-        if($ownerOfAnimal == null) { return $nullInputResult; }
-
-        return $ownerOfAnimal->getId() == $client->getId();
+        return $company->isCompanyUserOrOwner($client);
     }
 
 
