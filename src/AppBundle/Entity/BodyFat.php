@@ -50,7 +50,7 @@ class BodyFat extends Measurement implements ScanMeasurementInterface
 
     /**
      * @var ScanMeasurementSet|null
-     * @ORM\OneToMany(targetEntity="AppBundle\Entity\ScanMeasurementSet", mappedBy="bodyFat")
+     * @ORM\OneToOne(targetEntity="AppBundle\Entity\ScanMeasurementSet", mappedBy="bodyFat")
      */
     private $scanMeasurementSet;
 

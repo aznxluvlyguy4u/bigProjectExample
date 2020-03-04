@@ -33,7 +33,7 @@ class MuscleThickness extends Measurement implements ScanMeasurementInterface
 
     /**
      * @var ScanMeasurementSet|null
-     * @ORM\OneToMany(targetEntity="AppBundle\Entity\ScanMeasurementSet", mappedBy="muscleThickness")
+     * @ORM\OneToOne(targetEntity="AppBundle\Entity\ScanMeasurementSet", mappedBy="muscleThickness")
      */
     private $scanMeasurementSet;
 

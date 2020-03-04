@@ -49,7 +49,7 @@ class Weight extends Measurement implements ScanMeasurementInterface
 
     /**
      * @var ScanMeasurementSet|null
-     * @ORM\OneToMany(targetEntity="AppBundle\Entity\ScanMeasurementSet", mappedBy="scanWeight")
+     * @ORM\OneToOne(targetEntity="AppBundle\Entity\ScanMeasurementSet", mappedBy="scanWeight")
      */
     private $scanMeasurementSet;
 
