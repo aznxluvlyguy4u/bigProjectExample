@@ -1000,6 +1000,9 @@ services:
     AppBundle\Service\BirthMeasurementService:
       parent: app.abstract_base.controller
 
+    AppBundle\Service\ScanMeasurementsService:
+      parent: app.abstract_base.controller
+
     app.messages:
         parent: app.abstract_base.controller
         class: AppBundle\Service\MessageService
