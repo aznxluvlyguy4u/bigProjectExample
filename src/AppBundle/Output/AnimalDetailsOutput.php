@@ -20,10 +20,12 @@ use AppBundle\Entity\ExteriorRepository;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\ParentInterface;
 use AppBundle\Entity\Person;
+use AppBundle\Entity\ScanMeasurementSet;
 use AppBundle\Entity\Weight;
 use AppBundle\Entity\WeightRepository;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\JmsGroup;
+use AppBundle\Service\ScanMeasurementsService;
 use AppBundle\SqlView\Repository\ViewAnimalHistoricLocationsRepository;
 use AppBundle\SqlView\Repository\ViewAnimalIsPublicDetailsRepository;
 use AppBundle\SqlView\Repository\ViewBreedValueMaxGenerationDateRepository;
@@ -204,14 +206,7 @@ class AnimalDetailsOutput extends OutputServiceBase
 
             // Scan measurements
             JsonInputConstant::SCAN_MEASUREMENTS =>
-                [
-                    JsonInputConstant::MEASUREMENT_DATE => $scanMeasurements ? $scanMeasurements->getMeasurementDate() : null,
-                    "fat_cover_one" => $scanMeasurements ? $scanMeasurements->getFat1Value() : null,
-                    "fat_cover_two" => $scanMeasurements ? $scanMeasurements->getFat2Value() : null,
-                    "fat_cover_three" => $scanMeasurements ? $scanMeasurements->getFat3Value() : null,
-                    "muscular_thickness" => $scanMeasurements ? $scanMeasurements->getMuscleThicknessValue() : null,
-                    "scan_weight" => $scanMeasurements ? $scanMeasurements->getScanWeightValue() : null,
-                ],
+                $this->getScanMeasurementsValues($animal->getScanMeasurementSet()),
 
             // Birth measurements
             JsonInputConstant::BIRTH => [
@@ -305,6 +300,15 @@ class AnimalDetailsOutput extends OutputServiceBase
         $this->ownerUbns = null;
 
         return $result;
+    }
+
+
+    private function getScanMeasurementsValues(?ScanMeasurementSet $scanMeasurementSet): array
+    {
+        if ($scanMeasurementSet) {
+            return $this->getSerializer()->normalizeToArray(ScanMeasurementsService::getResult($scanMeasurementSet));
+        }
+        return [];
     }
 
 
