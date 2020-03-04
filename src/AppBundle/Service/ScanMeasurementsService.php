@@ -23,6 +23,10 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class ScanMeasurementsService extends ControllerServiceBase implements ScanMeasurementsAPIControllerInterface
 {
+    private function getResult(ScanMeasurementSet $scanMeasurementSet): ScanMeasurementsValues {
+        return (new ScanMeasurementsValues())->mapScanMeasurementSet($scanMeasurementSet);
+    }
+
     function getScanMeasurements(Request $request, $animalId)
     {
         $animal = $this->getAnimal($animalId);
@@ -30,7 +34,7 @@ class ScanMeasurementsService extends ControllerServiceBase implements ScanMeasu
         if (!$animal->getScanMeasurementSet()) {
             return ResultUtil::notFound();
         }
-        return $animal->getScanMeasurementSet();
+        return $this->getResult($animal->getScanMeasurementSet());
     }
 
     function deleteScanMeasurements(Request $request, $animalId)
@@ -65,7 +69,7 @@ class ScanMeasurementsService extends ControllerServiceBase implements ScanMeasu
             $scanMeasurementSet = $this->create($animal, $requestBody, $actionBy);
         }
 
-        return (new ScanMeasurementsValues())->mapScanMeasurementSet($scanMeasurementSet);
+        return $this->getResult($scanMeasurementSet);
     }
 
     private function getContent(Request $request): ScanMeasurementsValues

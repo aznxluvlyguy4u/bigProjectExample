@@ -87,6 +87,12 @@ class ScanMeasurementsValues
      */
     public $inspectorId;
 
+    /**
+     * @var string
+     * @JMS\Type("string")
+     */
+    public $inspectorFullName;
+
     public function mapScanMeasurementSet(ScanMeasurementSet $set): ScanMeasurementsValues
     {
         $this->fat1 = $set->getFat1Value();
@@ -94,6 +100,11 @@ class ScanMeasurementsValues
         $this->fat3 = $set->getFat3Value();
         $this->muscleThickness = $set->getMuscleThicknessValue();
         $this->scanWeight = $set->getScanWeightValue();
+        $this->measurementDate = $set->getMeasurementDate();
+        if ($set->getInspector()) {
+            $this->inspectorId = $set->getInspector()->getId();
+            $this->inspectorFullName = $set->getInspector()->getFullName();
+        }
         return $this;
     }
 
