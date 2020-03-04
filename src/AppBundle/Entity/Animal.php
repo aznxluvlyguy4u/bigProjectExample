@@ -894,7 +894,7 @@ abstract class Animal
     /**
      * @var ScanMeasurementSet|null
      * @ORM\OneToOne(targetEntity="AppBundle\Entity\ScanMeasurementSet", cascade={"persist", "remove"})
-     * @ORM\JoinColumn(name="scan_measurement_set_id", referencedColumnName="id")
+     * @ORM\JoinColumn(name="scan_measurement_set_id", referencedColumnName="id", onDelete="set null")
      * @JMS\Type("AppBundle\Entity\ScanMeasurementSet")
      */
     protected $scanMeasurementSet;
