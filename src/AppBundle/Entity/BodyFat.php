@@ -24,7 +24,7 @@ class BodyFat extends Measurement implements ScanMeasurementInterface
     /**
      * @var Fat1
      *
-     * @ORM\OneToOne(targetEntity="Fat1", inversedBy="bodyFat")
+     * @ORM\OneToOne(targetEntity="Fat1", inversedBy="bodyFat", cascade={"persist","remove"}, fetch="EAGER")
      * @ORM\JoinColumn(name="fat1_id", referencedColumnName="id")
      * @JMS\Type("AppBundle\Entity\Fat1")
      */
@@ -33,7 +33,7 @@ class BodyFat extends Measurement implements ScanMeasurementInterface
   /**
    * @var Fat2
    *
-   * @ORM\OneToOne(targetEntity="Fat2", inversedBy="bodyFat")
+   * @ORM\OneToOne(targetEntity="Fat2", inversedBy="bodyFat", cascade={"persist","remove"}, fetch="EAGER")
    * @ORM\JoinColumn(name="fat2_id", referencedColumnName="id")
    * @JMS\Type("AppBundle\Entity\Fat2")
    */
@@ -42,7 +42,7 @@ class BodyFat extends Measurement implements ScanMeasurementInterface
     /**
      * @var Fat3
      *
-     * @ORM\OneToOne(targetEntity="Fat3", inversedBy="bodyFat")
+     * @ORM\OneToOne(targetEntity="Fat3", inversedBy="bodyFat", cascade={"persist","remove"}, fetch="EAGER")
      * @ORM\JoinColumn(name="fat3_id", referencedColumnName="id")
      * @JMS\Type("AppBundle\Entity\Fat3")
      */
