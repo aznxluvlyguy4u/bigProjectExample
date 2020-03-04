@@ -89,13 +89,7 @@ class ScanMeasurementsService extends ControllerServiceBase implements ScanMeasu
     }
 
     private function validateAuthorization(Person $person, Animal $animal) {
-        if ($person instanceof Client) {
-            if (!Validator::isAnimalOfClient($animal, $person)) {
-                throw new AccessDeniedHttpException();
-            }
-        } elseif(!($person instanceof Employee)) {
-            throw new AccessDeniedHttpException();
-        }
+        Validator::validateIsAnimalOfClientOrIsAdmin($person, $animal);
     }
 
     private function validateRequestBody(ScanMeasurementsValues $requestBody, Animal $animal)

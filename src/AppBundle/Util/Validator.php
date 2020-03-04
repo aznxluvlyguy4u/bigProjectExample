@@ -35,6 +35,7 @@ use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Exception\ForeignKeyConstraintViolationException;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
 use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 use Symfony\Component\Translation\TranslatorInterface;
@@ -285,6 +286,18 @@ class Validator
         if($company == null || !$company->isActive()) { return $nullInputResult; }
 
         return $company->isCompanyUserOrOwner($client);
+    }
+
+
+    public static function validateIsAnimalOfClientOrIsAdmin(Person $person, Animal $animal)
+    {
+        if ($person instanceof Client) {
+            if (!Validator::isAnimalOfClient($animal, $person)) {
+                throw new AccessDeniedHttpException();
+            }
+        } elseif(!($person instanceof Employee)) {
+            throw new AccessDeniedHttpException();
+        }
     }
 
 
