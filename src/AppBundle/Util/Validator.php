@@ -8,6 +8,7 @@ use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Constant\TestConstant;
+use AppBundle\Constant\TranslationKey;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\BirthProgress;
@@ -298,6 +299,26 @@ class Validator
         } elseif(!($person instanceof Employee)) {
             throw new AccessDeniedHttpException();
         }
+    }
+
+
+    public static function validateSurrogateDateOfBirth(?\DateTime $surrogateDateOfBirth, ?\DateTime $childDateOfBirth): array
+    {
+        $errors = [];
+        if ($surrogateDateOfBirth === null || $childDateOfBirth === null) {
+            $errors[] = TranslationKey::SURROGATE_MOTHER_MUST_BE_AT_LEAST_180_DAYS_OLDER_THAN_CHILD;
+            return $errors;
+        }
+
+        $daysBetweenSurrogateAndChildDateOfBirth = TimeUtil::getDaysBetween($surrogateDateOfBirth, $childDateOfBirth);
+        if ($daysBetweenSurrogateAndChildDateOfBirth < 0) {
+            $errors[] = TranslationKey::SURROGATE_MOTHER_IS_YOUNGER_THAN_CHILD;
+        }
+
+        if ($daysBetweenSurrogateAndChildDateOfBirth < 180) {
+            $errors[] = TranslationKey::SURROGATE_MOTHER_MUST_BE_AT_LEAST_180_DAYS_OLDER_THAN_CHILD;
+        }
+        return $errors;
     }
 
 

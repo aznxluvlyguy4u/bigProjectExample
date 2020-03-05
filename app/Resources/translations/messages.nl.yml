@@ -510,6 +510,7 @@ NO ACTIVE INSPECTOR FOUND FOR GIVEN ID: Er is geen actieve inspecteur gevonden v
 SURROGATE MOTHER NO EWE FOUND FOR GIVEN ID: Pleegmoeder invoer fout. Er is geen ooi gevonden voor het opgegeven id
 SURROGATE MOTHER IS SAME AS CHILD: Pleegmoeder is het identiek aan het kind
 SURROGATE MOTHER IS YOUNGER THAN CHILD: Pleegmoeder is jonger dan het kind
+SURROGATE MOTHER MUST BE AT LEAST 180 DAYS OLDER THAN CHILD: Pleegmoeder moet minstens 180 dagen (6 maanden) ouder zijn dan het kind
 
 IN COMBINATION WITH: in combinatie met
 

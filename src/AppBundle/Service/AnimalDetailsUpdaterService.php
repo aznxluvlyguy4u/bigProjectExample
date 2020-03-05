@@ -21,7 +21,6 @@ use AppBundle\Util\LitterUtil;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
 use AppBundle\Util\StringUtil;
-use AppBundle\Util\TimeUtil;
 use AppBundle\Util\Validator;
 use AppBundle\Validation\AdminValidator;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -41,7 +40,6 @@ class AnimalDetailsUpdaterService extends ControllerServiceBase
     /* Surrogate mother error messages */
     const SURROGATE_MOTHER_NO_EWE_FOUND_FOR_GIVEN_ID = 'SURROGATE MOTHER NO EWE FOUND FOR GIVEN ID';
     const SURROGATE_MOTHER_IS_SAME_AS_CHILD = 'SURROGATE MOTHER IS SAME AS CHILD';
-    const SURROGATE_MOTHER_IS_YOUNGER_THAN_CHILD = 'SURROGATE MOTHER IS YOUNGER THAN CHILD';
 
     /* Parent error messages */
     const ERROR_NOT_FOUND = 'ERROR_NOT_FOUND';
@@ -453,9 +451,18 @@ class AnimalDetailsUpdaterService extends ControllerServiceBase
             $isValidSurrogateInput = false;
         }
 
-        if ($newSurrogate != null && TimeUtil::isDate1BeforeDate2($animal->getDateOfBirth(), $newSurrogate->getDateOfBirth())) {
-            $this->errors[self::SURROGATE_MOTHER_IS_YOUNGER_THAN_CHILD] = $newSurrogate->getDateOfBirthString();
-            $isValidSurrogateInput = false;
+        if ($newSurrogate != null) {
+            $surrogateDateTimeErrors = Validator::validateSurrogateDateOfBirth($newSurrogate->getDateOfBirth(), $animal->getDateOfBirth());
+
+            if (!empty($surrogateDateTimeErrors)) {
+                foreach ($surrogateDateTimeErrors as $surrogateDateTimeErrorTranslationKeys) {
+                    $dateInfoSurrogate = $newSurrogate->getDateOfBirthString(DateUtil::DATE_USER_DISPLAY_FORMAT) ?? '-';
+                    $dateInfoChild = $animal->getDateOfBirthString(DateUtil::DATE_USER_DISPLAY_FORMAT) ?? '-';
+                    $this->errors[$surrogateDateTimeErrorTranslationKeys] = $this->translateUcFirstLower('C') . ' ' . $dateInfoChild . ', ' .
+                        $this->translateUcFirstLower('SURROGATE MOTHER') . ' ' . $dateInfoSurrogate ;
+                }
+                $isValidSurrogateInput = false;
+            }
         }
 
         return $isValidSurrogateInput ? $newSurrogate : null;
@@ -464,7 +471,7 @@ class AnimalDetailsUpdaterService extends ControllerServiceBase
     private function hasSurrogateInputError(): bool
     {
         return key_exists(self::SURROGATE_MOTHER_IS_SAME_AS_CHILD, $this->errors) ||
-            key_exists(self::SURROGATE_MOTHER_IS_YOUNGER_THAN_CHILD, $this->errors) ||
+            key_exists(TranslationKey::SURROGATE_MOTHER_IS_YOUNGER_THAN_CHILD, $this->errors) ||
             key_exists(self::SURROGATE_MOTHER_NO_EWE_FOUND_FOR_GIVEN_ID, $this->errors);
     }
 
