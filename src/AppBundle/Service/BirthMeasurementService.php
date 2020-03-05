@@ -3,6 +3,8 @@
 namespace AppBundle\Service;
 
 
+use AppBundle\Cache\TailLengthCacher;
+use AppBundle\Cache\WeightCacher;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Controller\BirthMeasurementAPIControllerInterface;
@@ -64,6 +66,10 @@ class BirthMeasurementService extends ControllerServiceBase implements BirthMeas
                 $this->getManager()->clear();
             }
             $this->getManager()->commit();
+
+            WeightCacher::updateBirthWeights($this->getConnection(), [$animalId]);
+            TailLengthCacher::update($this->getConnection(), [$animalId]);
+
         } catch (\Exception $exception) {
             $this->getManager()->rollback();
             throw $exception;
