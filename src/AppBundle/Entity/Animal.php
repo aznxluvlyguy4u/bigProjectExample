@@ -894,7 +894,7 @@ abstract class Animal
     /**
      * @var ScanMeasurementSet|null
      * @ORM\OneToOne(targetEntity="AppBundle\Entity\ScanMeasurementSet", cascade={"persist", "remove"})
-     * @ORM\JoinColumn(name="scan_measurement_set_id", referencedColumnName="id")
+     * @ORM\JoinColumn(name="scan_measurement_set_id", referencedColumnName="id", onDelete="set null")
      * @JMS\Type("AppBundle\Entity\ScanMeasurementSet")
      */
     protected $scanMeasurementSet;
@@ -1176,6 +1176,7 @@ abstract class Animal
         $this->muscleThicknessMeasurements = new ArrayCollection();
         $this->tailLengthMeasurements = new ArrayCollection();
         $this->weightMeasurements = new ArrayCollection();
+        $this->scanMeasurementSetHistory = new ArrayCollection();
         $this->declareWeights = new ArrayCollection();
         $this->exteriorMeasurements = new ArrayCollection();
         $this->flags = new ArrayCollection();
@@ -2954,19 +2955,9 @@ abstract class Animal
     /**
      * @return ArrayCollection
      */
-    public function getScanMeasurementSetHistory(): ArrayCollection
+    public function getScanMeasurementSetHistory()
     {
         return $this->scanMeasurementSetHistory;
-    }
-
-    /**
-     * @param ArrayCollection $scanMeasurementSetHistory
-     * @return Animal
-     */
-    public function setScanMeasurementSetHistory(ArrayCollection $scanMeasurementSetHistory): Animal
-    {
-        $this->scanMeasurementSetHistory = $scanMeasurementSetHistory;
-        return $this;
     }
 
     /**

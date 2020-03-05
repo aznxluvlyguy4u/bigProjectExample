@@ -2,6 +2,7 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\model\request\ScanMeasurementsValues;
 use AppBundle\model\ScanMeasurementsUnlinkedData;
 
 /**
@@ -167,5 +168,201 @@ class ScanMeasurementSetRepository  extends MeasurementRepository{
             )
     ) ");
         return $this->retrieveMappedResults($sql);
+    }
+
+
+    /**
+     * @param  Animal  $animal
+     * @param  ScanMeasurementsValues  $values
+     * @param  Person  $actionBy
+     * @return ScanMeasurementSet
+     */
+    public function create(Animal $animal, ScanMeasurementsValues $values, Person $actionBy): ScanMeasurementSet
+    {
+        /** @var Inspector|null $inspectorByReference */
+        $inspectorByReference = is_int($values->inspectorId) ?
+            $this->getManager()->getReference(Inspector::class, intval($values->inspectorId)) : null;
+
+        $animalIdAndDate = Measurement::generateAnimalIdAndDate($animal, $values->measurementDate);
+
+        $set = new ScanMeasurementSet();
+
+        $scanWeight = (new Weight())
+            ->setIsBirthWeight(false)
+            ->setWeight($values->scanWeight)
+            ->setScanMeasurementSet($set)
+            ->setAnimal($animal)
+        ;
+        $scanWeight
+            ->setMeasurementDate($values->measurementDate)
+            ->setAnimalIdAndDate($animalIdAndDate)
+            ->setActionBy($actionBy)
+        ;
+
+
+        $bodyFat = (new BodyFat())
+            ->setScanMeasurementSet($set)
+            ->setAnimal($animal)
+        ;
+        $bodyFat
+            ->setMeasurementDate($values->measurementDate)
+            ->setAnimalIdAndDate($animalIdAndDate)
+            ->setActionBy($actionBy)
+        ;
+
+        $fat1 = (new Fat1())
+            ->setFat($values->fat1)
+            ->setBodyFat($bodyFat)
+            ;
+        $fat1
+            ->setMeasurementDate($values->measurementDate)
+            ->setAnimalIdAndDate($animalIdAndDate)
+            ->setActionBy($actionBy)
+        ;
+
+        $fat2 = (new Fat2())
+            ->setFat($values->fat2)
+            ->setBodyFat($bodyFat)
+        ;
+        $fat2
+            ->setMeasurementDate($values->measurementDate)
+            ->setAnimalIdAndDate($animalIdAndDate)
+            ->setActionBy($actionBy)
+        ;
+
+        $fat3 = (new Fat3())
+            ->setFat($values->fat3)
+            ->setBodyFat($bodyFat)
+        ;
+        $fat3
+            ->setMeasurementDate($values->measurementDate)
+            ->setAnimalIdAndDate($animalIdAndDate)
+            ->setActionBy($actionBy)
+        ;
+
+        $bodyFat->setFat1($fat1);
+        $bodyFat->setFat2($fat2);
+        $bodyFat->setFat3($fat3);
+
+
+        $muscleThickness = (new MuscleThickness())
+            ->setMuscleThickness($values->muscleThickness)
+            ->setScanMeasurementSet($set)
+            ->setAnimal($animal)
+        ;
+        $muscleThickness
+            ->setMeasurementDate($values->measurementDate)
+            ->setAnimalIdAndDate($animalIdAndDate)
+            ->setActionBy($actionBy)
+        ;
+
+
+        $set
+            ->setBodyFat($bodyFat)
+            ->setMuscleThickness($muscleThickness)
+            ->setScanWeight($scanWeight)
+            ->setAnimal($animal)
+            ->setMeasurementDate($values->measurementDate)
+            ->setAnimalIdAndDate($animalIdAndDate)
+            ->setActionBy($actionBy)
+        ;
+
+        $animal->setScanMeasurementSet($set);
+
+        if ($inspectorByReference) {
+            $scanWeight->setInspector($inspectorByReference);
+            $bodyFat->setInspector($inspectorByReference);
+            $fat1->setInspector($inspectorByReference);
+            $fat2->setInspector($inspectorByReference);
+            $fat3->setInspector($inspectorByReference);
+            $muscleThickness->setInspector($inspectorByReference);
+            $set->setInspector($inspectorByReference);
+        }
+
+        $this->getManager()->persist($scanWeight);
+        $this->getManager()->persist($fat1);
+        $this->getManager()->persist($fat2);
+        $this->getManager()->persist($fat3);
+        $this->getManager()->persist($bodyFat);
+        $this->getManager()->persist($muscleThickness);
+        $this->getManager()->persist($set);
+        $this->getManager()->persist($animal);
+
+        $this->flush();
+        $this->getManager()->refresh($set);
+        return $set;
+    }
+
+
+    /**
+     * @param  ScanMeasurementSet  $set
+     * @param  ScanMeasurementsValues  $values
+     * @param  Person  $actionBy
+     * @return ScanMeasurementSet
+     */
+    public function edit(ScanMeasurementSet $set, ScanMeasurementsValues $values, Person $actionBy): ScanMeasurementSet
+    {
+        $animal = $set->getAnimal();
+        $editDate = new \DateTime();
+
+        if (!$values->hasSameMeasurementDate($set)) {
+            $animalIdAndDate = Measurement::generateAnimalIdAndDate($animal, $values->measurementDate);
+            $set
+                ->setNestedMeasurementDate($values->measurementDate)
+                ->setNestedAnimalIdAndDate($animalIdAndDate)
+                ->setNestedActionByAndEditDate($actionBy, $editDate)
+            ;
+        }
+
+        if (!$values->hasSameInspector($set)) {
+            /** @var Inspector|null $inspectorByReference */
+            $inspectorByReference = is_int($values->inspectorId) ?
+                $this->getManager()->getReference(Inspector::class, intval($values->inspectorId)) : null;
+
+            $set
+                ->setNestedInspector($inspectorByReference)
+                ->setNestedActionByAndEditDate($actionBy, $editDate)
+            ;
+        }
+
+        if (!$values->hasSameScanWeight($set)) {
+            $set->getScanWeight()->setWeight($values->scanWeight)
+                ->setEditDate($editDate)->setActionBy($actionBy);
+        }
+
+        if (!$values->hasSameFats($set)) {
+            $set->getBodyFat()->getFat1()->setFat($set->getFat1Value())->setEditDate($editDate)->setActionBy($actionBy);
+            $set->getBodyFat()->getFat2()->setFat($set->getFat2Value())->setEditDate($editDate)->setActionBy($actionBy);
+            $set->getBodyFat()->getFat3()->setFat($set->getFat3Value())->setEditDate($editDate)->setActionBy($actionBy);
+        }
+
+        if (!$values->hasSameMuscleThickness($set)) {
+            $set->getMuscleThickness()->setMuscleThickness($values->muscleThickness)
+                ->setEditDate($editDate)->setActionBy($actionBy);
+        }
+
+        $this->getManager()->persist($animal); // has nested cascade persist
+
+        $this->flush();
+        $this->getManager()->refresh($set);
+        return $set;
+    }
+
+
+    /**
+     * @param  ScanMeasurementSet  $set
+     * @param  Person  $deletedBy
+     */
+    public function delete(ScanMeasurementSet $set, Person $deletedBy)
+    {
+        $animal = $set->getAnimal();
+        $deleteDate = new \DateTime();
+
+        $set->nestedDeactivate($deletedBy, $deleteDate);
+        $animal->setScanMeasurementSet(null);
+
+        $this->getManager()->persist($animal); // has nested cascade persist
+
+        $this->flush();
     }
 }

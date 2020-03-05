@@ -633,6 +633,7 @@ services:
           - '@translator'
           - '@logger'
           - '@AppBundle\SqlView\SqlViewManager'
+          - '@validator'
 
     AppBundle\Service\Google\FireBaseService:
         arguments:
@@ -997,6 +998,9 @@ services:
         class: AppBundle\Service\MeasurementService
 
     AppBundle\Service\BirthMeasurementService:
+      parent: app.abstract_base.controller
+
+    AppBundle\Service\ScanMeasurementsService:
       parent: app.abstract_base.controller
 
     app.messages:

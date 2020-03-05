@@ -30,14 +30,15 @@ use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\PredicateType;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\SqlView\View\ViewAnimalHistoricLocations;
-use AppBundle\SqlView\View\ViewMinimalParentDetails;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Exception\ForeignKeyConstraintViolationException;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
 use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
+use Symfony\Component\Translation\TranslatorInterface;
 use Symfony\Component\Validator\ConstraintViolation;
 use Symfony\Component\Validator\ConstraintViolationListInterface;
 
@@ -284,10 +285,19 @@ class Validator
         $company = $location->getCompany();
         if($company == null || !$company->isActive()) { return $nullInputResult; }
 
-        $ownerOfAnimal = $company->getOwner();
-        if($ownerOfAnimal == null) { return $nullInputResult; }
+        return $company->isCompanyUserOrOwner($client);
+    }
 
-        return $ownerOfAnimal->getId() == $client->getId();
+
+    public static function validateIsAnimalOfClientOrIsAdmin(Person $person, Animal $animal)
+    {
+        if ($person instanceof Client) {
+            if (!Validator::isAnimalOfClient($animal, $person)) {
+                throw new AccessDeniedHttpException();
+            }
+        } elseif(!($person instanceof Employee)) {
+            throw new AccessDeniedHttpException();
+        }
     }
 
 
@@ -979,23 +989,31 @@ class Validator
 
 
     /**
+     * @param TranslatorInterface|null $translator
      * @param ConstraintViolationListInterface $errors
      */
-    public static function throwExceptionWithFormattedErrorMessageIfHasErrors($errors)
+    public static function throwExceptionWithFormattedErrorMessageIfHasErrors($errors, ?TranslatorInterface $translator = null)
     {
         if (empty($errors->count())) {
             return;
         }
 
         // Prepare error message string
-        $errorMessage = '';
+        $errorMessageWithContext = '';
         $prefix = '';
         foreach ($errors as $index => $error) {
+            $property = $error->getPropertyPath();
+            $errorMessage = $error->getMessage();
+            if ($translator instanceof TranslatorInterface) {
+                $property = $translator->trans($error->getPropertyPath());
+                $errorMessage = $translator->trans($error->getMessage(), $error->getParameters(), 'validators');
+            }
+
             /* @var ConstraintViolation $error */
-            $errorMessage .= $prefix . $error->getPropertyPath().': '.$error->getMessage();
+            $errorMessageWithContext .= $prefix . $property.': '.$errorMessage;
             $prefix = ' | ';
         }
-        throw new PreconditionFailedHttpException($errorMessage);
+        throw new PreconditionFailedHttpException($errorMessageWithContext);
     }
 
     /**

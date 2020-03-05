@@ -3,11 +3,15 @@
 namespace AppBundle\Service;
 
 
+use AppBundle\Cache\TailLengthCacher;
+use AppBundle\Cache\WeightCacher;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Controller\BirthMeasurementAPIControllerInterface;
 use AppBundle\Entity\ActionLog;
 use AppBundle\Entity\Animal;
+use AppBundle\Entity\Client;
+use AppBundle\Entity\Employee;
 use AppBundle\Entity\Person;
 use AppBundle\Entity\TailLength;
 use AppBundle\Entity\Weight;
@@ -22,7 +26,6 @@ use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
 use AppBundle\Util\StringUtil;
 use AppBundle\Util\Validator;
-use AppBundle\Validation\AdminValidator;
 use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
@@ -45,9 +48,10 @@ class BirthMeasurementService extends ControllerServiceBase implements BirthMeas
     function editBirthMeasurements(Request $request, $animalId)
     {
         $actionBy = $this->getUser();
-        AdminValidator::isAdmin($actionBy, AccessLevelType::ADMIN, true);
 
         $animal = $this->getAnimal($animalId);
+        $this->validateAuthorization($this->getUser(), $animal);
+
         $content = $this->getContent($request);
 
         $this->getManager()->beginTransaction(); // suspend auto-commit
@@ -62,12 +66,21 @@ class BirthMeasurementService extends ControllerServiceBase implements BirthMeas
                 $this->getManager()->clear();
             }
             $this->getManager()->commit();
+
+            WeightCacher::updateBirthWeights($this->getConnection(), [$animalId]);
+            TailLengthCacher::update($this->getConnection(), [$animalId]);
+
         } catch (\Exception $exception) {
             $this->getManager()->rollback();
             throw $exception;
         }
 
         return $this->getResponse($animalId);
+    }
+
+
+    private function validateAuthorization(Person $person, Animal $animal) {
+        Validator::validateIsAnimalOfClientOrIsAdmin($person, $animal);
     }
 
 
@@ -156,10 +169,9 @@ class BirthMeasurementService extends ControllerServiceBase implements BirthMeas
         if ($currentBirthWeight instanceof Weight) {
             $oldValue = $currentBirthWeight->getWeight();
             if ($newBirthWeightValue === null) {
-                $currentBirthWeight->setIsActive(false);
+                $currentBirthWeight->deactivateWeight();
                 $currentBirthWeight->setDeleteDate(new \DateTime());
                 $currentBirthWeight->setDeletedBy($actionBy);
-                $currentBirthWeight->setIsRevoked(!$currentBirthWeight->isIsActive());
                 $currentBirthWeight->setActionBy($actionBy);
                 $this->getManager()->persist($currentBirthWeight);
                 $isUpdated = true;
@@ -169,12 +181,11 @@ class BirthMeasurementService extends ControllerServiceBase implements BirthMeas
 
             } elseif (!NumberUtil::areFloatsEqual($newBirthWeightValue, $currentBirthWeight->getWeight())) {
                 $currentBirthWeight->setWeight($newBirthWeightValue);
-                $currentBirthWeight->setIsActive(true);
+                $currentBirthWeight->activateWeight();
                 if ($content->isResetMeasurementDateUsingDateOfBirth()) {
                     $currentBirthWeight->setMeasurementDate($animal->getDateOfBirth());
                 }
                 $currentBirthWeight->setEditDate(new \DateTime());
-                $currentBirthWeight->setIsRevoked(!$currentBirthWeight->isIsActive());
                 $currentBirthWeight->setActionBy($actionBy);
                 $this->getManager()->persist($currentBirthWeight);
                 $isUpdated = true;
@@ -192,8 +203,7 @@ class BirthMeasurementService extends ControllerServiceBase implements BirthMeas
             $newBirthWeight->setWeight($newBirthWeightValue);
             $newBirthWeight->setActionBy($actionBy);
             $newBirthWeight->setAnimalIdAndDateByAnimalAndDateTime($animal,$measurementDate);
-            $newBirthWeight->setIsActive(true);
-            $newBirthWeight->setIsRevoked(false);
+            $newBirthWeight->activateWeight();
             $this->getManager()->persist($newBirthWeight);
             $isUpdated = true;
 

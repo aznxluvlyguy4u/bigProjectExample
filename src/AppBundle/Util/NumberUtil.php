@@ -63,6 +63,17 @@ class NumberUtil
 
 
     /**
+     * @param $float
+     * @param  float  $accuracy
+     * @return bool
+     */
+    public static function isFloatNegative($float, $accuracy = self::DEFAULT_FLOAT_ACCURACY): bool
+    {
+        return $float !== null && !NumberUtil::isFloatZero($float, $accuracy) && $float < 0;
+    }
+
+
+    /**
      * @param float $float
      * @return bool
      */

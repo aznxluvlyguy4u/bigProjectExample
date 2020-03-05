@@ -249,6 +249,14 @@ abstract class Measurement
     }
 
     /**
+     * @return int|null
+     */
+    public function getInspectorId(): ?int
+    {
+        return $this->inspector ? $this->inspector->getId() : null;
+    }
+
+    /**
      * @return string
      */
     public function getAnimalIdAndDate()
@@ -258,10 +266,12 @@ abstract class Measurement
 
     /**
      * @param string $animalIdAndDate
+     * @return Measurement
      */
     public function setAnimalIdAndDate($animalIdAndDate)
     {
         $this->animalIdAndDate = $animalIdAndDate;
+        return $this;
     }
 
     /**
@@ -303,20 +313,24 @@ abstract class Measurement
 
     /**
      * @param Person $actionBy
+     * @param Measurement
      */
     public function setActionBy($actionBy)
     {
         $this->actionBy = $actionBy;
+        return $this;
     }
 
     /**
      * Set editDate
      *
      * @param \DateTime $editDate
+     * @return Measurement
      */
     public function setEditDate($editDate)
     {
         $this->editDate = $editDate;
+        return $this;
     }
 
     /**

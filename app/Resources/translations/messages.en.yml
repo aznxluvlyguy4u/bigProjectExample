@@ -497,6 +497,7 @@ CANNOT BE IN THE FUTURE: cannot be in the future
 IS MISSING: is missing
 NO ANIMAL FOUND FOR GIVEN ULN: no animal was found for the given ULN
 YOU DO NOT HAVE PERMISSION TO CHANGE THE FOLLOWING VALUES: You do not have permission to change the following values
+NO ACTIVE INSPECTOR FOUND FOR GIVEN ID: No active inspector was found for the given id
 
 SURROGATE MOTHER NO EWE FOUND FOR GIVEN ID: Surrogate mother input error. No ewe found for given id
 SURROGATE MOTHER IS SAME AS CHILD: Surrogate mother is identical to the child
@@ -575,3 +576,11 @@ DISEASE: Disease
 HEAT CULTIVATE: Heat Cultivate
 EUTHANASIA: Euthanasia
 ANIMAL NO LONGER PRESENT: Animal no longer present on company
+
+# Property keys
+fat1: fat1
+fat2: fat2
+fat3: fat3
+measurementDate: measurement date
+muscleThickness: muscle thickness
+scanWeight: scan weight

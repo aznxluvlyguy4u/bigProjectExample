@@ -26,7 +26,7 @@ class ScanMeasurementSet extends Measurement
     /**
      * @var Weight
      *
-     * @ORM\OneToOne(targetEntity="Weight", inversedBy="scanMeasurementSet", cascade={"persist"})
+     * @ORM\OneToOne(targetEntity="Weight", inversedBy="scanMeasurementSet", cascade={"persist"}, fetch="EAGER")
      * @ORM\JoinColumn(name="scan_weight_id", referencedColumnName="id")
      * @JMS\Type("AppBundle\Entity\Weight")
      */
@@ -35,7 +35,7 @@ class ScanMeasurementSet extends Measurement
     /**
      * @var BodyFat
      *
-     * @ORM\OneToOne(targetEntity="BodyFat", cascade={"persist"})
+     * @ORM\OneToOne(targetEntity="BodyFat", cascade={"persist"}, fetch="EAGER")
      * @ORM\JoinColumn(name="body_fat_id", referencedColumnName="id")
      * @JMS\Type("AppBundle\Entity\BodyFat")
      */
@@ -44,7 +44,7 @@ class ScanMeasurementSet extends Measurement
     /**
      * @var MuscleThickness
      *
-     * @ORM\OneToOne(targetEntity="MuscleThickness", cascade={"persist"})
+     * @ORM\OneToOne(targetEntity="MuscleThickness", cascade={"persist"}, fetch="EAGER")
      * @ORM\JoinColumn(name="muscle_thickness_id", referencedColumnName="id")
      * @JMS\Type("AppBundle\Entity\MuscleThickness")
      */
@@ -107,7 +107,7 @@ class ScanMeasurementSet extends Measurement
     /**
      * @return Animal
      */
-    public function getAnimal()
+    public function getAnimal(): Animal
     {
         return $this->animal;
     }
@@ -169,5 +169,177 @@ class ScanMeasurementSet extends Measurement
     public function getMuscleThicknessValue(): ?float
     {
         return $this->getMuscleThickness() ? $this->getMuscleThickness()->getMuscleThickness() : null;
+    }
+
+    /**
+     * Set measurementDate
+     *
+     * @param \DateTime $measurementDate
+     *
+     * @return ScanMeasurementSet
+     */
+    public function setNestedMeasurementDate($measurementDate): ScanMeasurementSet
+    {
+        $this->measurementDate = $measurementDate;
+
+        if ($this->bodyFat) {
+            $this->bodyFat->setMeasurementDate($measurementDate);
+            $this->bodyFat->getFat1()->setMeasurementDate($measurementDate);
+            $this->bodyFat->getFat2()->setMeasurementDate($measurementDate);
+            $this->bodyFat->getFat3()->setMeasurementDate($measurementDate);
+        }
+
+        if ($this->scanWeight) {
+            $this->scanWeight->setMeasurementDate($measurementDate);
+        }
+
+        if ($this->muscleThickness) {
+            $this->muscleThickness->setMeasurementDate($measurementDate);
+        }
+
+        return $this;
+    }
+
+
+    /**
+     * Set animalIdAndDate
+     *
+     * @param string $animalIdAndDate
+     *
+     * @return ScanMeasurementSet
+     */
+    public function setNestedAnimalIdAndDate($animalIdAndDate): ScanMeasurementSet
+    {
+        $this->animalIdAndDate = $animalIdAndDate;
+
+        if ($this->bodyFat) {
+            $this->bodyFat->setAnimalIdAndDate($animalIdAndDate);
+            $this->bodyFat->getFat1()->setAnimalIdAndDate($animalIdAndDate);
+            $this->bodyFat->getFat2()->setAnimalIdAndDate($animalIdAndDate);
+            $this->bodyFat->getFat3()->setAnimalIdAndDate($animalIdAndDate);
+        }
+
+        if ($this->scanWeight) {
+            $this->scanWeight->setAnimalIdAndDate($animalIdAndDate);
+        }
+
+        if ($this->muscleThickness) {
+            $this->muscleThickness->setAnimalIdAndDate($animalIdAndDate);
+        }
+
+        return $this;
+    }
+
+
+    /**
+     * Set $inspector
+     *
+     * @param Inspector|null $inspector
+     *
+     * @return ScanMeasurementSet
+     */
+    public function setNestedInspector(?Inspector $inspector): ScanMeasurementSet
+    {
+        $this->setInspector($inspector);
+
+        if ($this->bodyFat) {
+            $this->bodyFat->setInspector($inspector);
+            $this->bodyFat->getFat1()->setInspector($inspector);
+            $this->bodyFat->getFat2()->setInspector($inspector);
+            $this->bodyFat->getFat3()->setInspector($inspector);
+        }
+
+        if ($this->scanWeight) {
+            $this->scanWeight->setInspector($inspector);
+        }
+
+        if ($this->muscleThickness) {
+            $this->muscleThickness->setInspector($inspector);
+        }
+
+        return $this;
+    }
+
+
+    /**
+     * Set nested actionBy and editDate
+     *
+     * @param Person $actionBy
+     * @param \DateTime $editDate
+     *
+     * @return ScanMeasurementSet
+     */
+    public function setNestedActionByAndEditDate(Person $actionBy, \DateTime $editDate): ScanMeasurementSet
+    {
+        $this->setActionBy($actionBy);
+        $this->setEditDate($editDate);
+
+        if ($this->bodyFat) {
+            $this->bodyFat->setActionBy($actionBy);
+            $this->bodyFat->getFat1()->setActionBy($actionBy);
+            $this->bodyFat->getFat2()->setActionBy($actionBy);
+            $this->bodyFat->getFat3()->setActionBy($actionBy);
+            $this->bodyFat->setEditDate($editDate);
+            $this->bodyFat->getFat1()->setEditDate($editDate);
+            $this->bodyFat->getFat2()->setEditDate($editDate);
+            $this->bodyFat->getFat3()->setEditDate($editDate);
+        }
+
+        if ($this->scanWeight) {
+            $this->scanWeight->setActionBy($actionBy);
+            $this->scanWeight->setEditDate($editDate);
+        }
+
+        if ($this->muscleThickness) {
+            $this->muscleThickness->setActionBy($actionBy);
+            $this->muscleThickness->setEditDate($editDate);
+        }
+
+        return $this;
+    }
+
+
+    /**
+     * Set nested actionBy and editDate
+     *
+     * @param Person $deletedBy
+     * @param \DateTime $deleteDate
+     *
+     * @return ScanMeasurementSet
+     */
+    public function nestedDeactivate(Person $deletedBy, \DateTime $deleteDate): ScanMeasurementSet
+    {
+        $this->setDeletedBy($deletedBy);
+        $this->setDeleteDate($deleteDate);
+        $this->setIsActive(false);
+
+        if ($this->bodyFat) {
+            $this->bodyFat->setDeletedBy($deletedBy);
+            $this->bodyFat->getFat1()->setDeletedBy($deletedBy);
+            $this->bodyFat->getFat2()->setDeletedBy($deletedBy);
+            $this->bodyFat->getFat3()->setDeletedBy($deletedBy);
+            $this->bodyFat->setDeleteDate($deleteDate);
+            $this->bodyFat->getFat1()->setDeleteDate($deleteDate);
+            $this->bodyFat->getFat2()->setDeleteDate($deleteDate);
+            $this->bodyFat->getFat3()->setDeleteDate($deleteDate);
+            $this->bodyFat->setIsActive(false);
+            $this->bodyFat->getFat1()->setIsActive(false);
+            $this->bodyFat->getFat2()->setIsActive(false);
+            $this->bodyFat->getFat3()->setIsActive(false);
+        }
+
+        if ($this->scanWeight) {
+            $this->scanWeight->setDeletedBy($deletedBy);
+            $this->scanWeight->setDeleteDate($deleteDate);
+            $this->scanWeight->setIsActive(false);
+        }
+
+        if ($this->muscleThickness) {
+            $this->muscleThickness->setDeletedBy($deletedBy);
+            $this->muscleThickness->setDeleteDate($deleteDate);
+            $this->muscleThickness->setIsActive(false);
+        }
+
+        return $this;
     }
 }

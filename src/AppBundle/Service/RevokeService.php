@@ -241,9 +241,8 @@ class RevokeService extends DeclareControllerServiceBase implements RevokeAPICon
     public static function revoke(DeclareNsfoBase $declareNsfoBase, $loggedInUser)
     {
         if($declareNsfoBase instanceof DeclareWeight) {
-            if($declareNsfoBase->getWeightMeasurement() != null) {
-                $declareNsfoBase->getWeightMeasurement()->setIsRevoked(true);
-                $declareNsfoBase->getWeightMeasurement()->setIsActive(false);
+            if ($declareNsfoBase->getWeightMeasurement() != null) {
+                $declareNsfoBase->getWeightMeasurement()->deactivateWeight();
             }
         }
 

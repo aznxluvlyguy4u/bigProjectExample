@@ -1,0 +1,4 @@
+decimal:
+  limit:
+    max:
+      exceeded: Het decimalen aantal is %number% en overschrijdt het maximaal aantal toegestane decimalen van %limit%.

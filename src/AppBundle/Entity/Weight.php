@@ -49,7 +49,7 @@ class Weight extends Measurement implements ScanMeasurementInterface
 
     /**
      * @var ScanMeasurementSet|null
-     * @ORM\OneToMany(targetEntity="AppBundle\Entity\ScanMeasurementSet", mappedBy="scanWeight")
+     * @ORM\OneToOne(targetEntity="AppBundle\Entity\ScanMeasurementSet", mappedBy="scanWeight")
      */
     private $scanMeasurementSet;
 
@@ -121,9 +121,11 @@ class Weight extends Measurement implements ScanMeasurementInterface
 
     /**
      * @param boolean $isBirthWeight
+     * @return Weight
      */
     public function setIsBirthWeight($isBirthWeight) {
       $this->isBirthWeight = $isBirthWeight;
+      return $this;
     }
 
 
@@ -175,6 +177,28 @@ class Weight extends Measurement implements ScanMeasurementInterface
     public function getIsRevoked()
     {
         return $this->isRevoked;
+    }
+
+
+    /**
+     * @return Weight
+     */
+    public function activateWeight(): Weight
+    {
+        $this->setIsActive(true);
+        $this->setIsRevoked(false);
+        return $this;
+    }
+
+
+    /**
+     * @return Weight
+     */
+    public function deactivateWeight(): Weight
+    {
+        $this->setIsActive(false);
+        $this->setIsRevoked(true);
+        return $this;
     }
 
     /**
