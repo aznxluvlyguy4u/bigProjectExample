@@ -19,6 +19,9 @@ class ResultUtil
      */
     public static function successResult($result)
     {
+        if ($result === null) {
+            return new JsonResponse(null, Response::HTTP_NO_CONTENT);
+        }
         return new JsonResponse([Constant::RESULT_NAMESPACE => $result], Response::HTTP_OK);
     }
 
@@ -74,6 +77,24 @@ class ResultUtil
     public static function badRequest()
     {
         return ResultUtil::errorResult('BAD REQUEST', Response::HTTP_BAD_REQUEST);
+    }
+
+
+    /**
+     * @return JsonResponse
+     */
+    public static function notFound()
+    {
+        return ResultUtil::errorResult('NOT FOUND', Response::HTTP_NOT_FOUND);
+    }
+
+
+    /**
+     * @return JsonResponse
+     */
+    public static function noContent()
+    {
+        return ResultUtil::errorResult('NO CONTENT', Response::HTTP_NO_CONTENT);
     }
 
 

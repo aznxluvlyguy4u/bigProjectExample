@@ -29,7 +29,9 @@ use AppBundle\Service\BreedIndexService;
 use AppBundle\Service\BreedValuePrinter;
 use AppBundle\Service\BreedValueService;
 use AppBundle\Service\CacheService;
+use AppBundle\Service\DataFix\DuplicateMeasurementsFixer;
 use AppBundle\Service\ExcelService;
+use AppBundle\Service\InbreedingCoefficient\InbreedingCoefficientUpdaterService;
 use AppBundle\Service\Migration\LambMeatIndexMigrator;
 use AppBundle\Service\Migration\MixBlupAnalysisTypeMigrator;
 use AppBundle\Service\Migration\WormResistanceIndexMigrator;
@@ -169,7 +171,7 @@ class NsfoMainCommand extends ContainerAwareCommand
                 '5: '.strtolower(self::FIX_DUPLICATE_ANIMALS), "\n",
                 MainCommandUtil::FIX_DATABASE_VALUES.': '.strtolower(self::FIX_DATABASE_VALUES), "\n",
                 '7: '.strtolower(self::GENDER_CHANGE), "\n",
-                '8: '.strtolower(self::INITIALIZE_DATABASE_VALUES), "\n",
+                MainCommandUtil::INITIALIZE_DATABASE_VALUES.': '.strtolower(self::INITIALIZE_DATABASE_VALUES), "\n",
                 '9: '.strtolower(self::FILL_MISSING_DATA), "\n",
                 self::LINE_THIN, "\n",
                 '10: '.strtolower(CommandTitle::DATA_MIGRATION), "\n",
@@ -199,8 +201,8 @@ class NsfoMainCommand extends ContainerAwareCommand
             case 5: $this->fixDuplicateAnimalsOptions(); break;
             case MainCommandUtil::FIX_DATABASE_VALUES: $this->fixDatabaseValuesOptions($options); break;
             case 7: $this->getContainer()->get('app.cli.gender_changer')->run($this->cmdUtil); break;
-            case 8: $this->initializeDatabaseValuesOptions(); break;
-            case 9: $this->fillMissingDataOptions(); break;
+            case MainCommandUtil::INITIALIZE_DATABASE_VALUES: $this->initializeDatabaseValuesOptions($options); break;
+            case 9: $this->fillMissingDataOptions($options); break;
             case 10: $this->dataMigrationOptions(); break;
             case 11: $this->runMixblupCliOptions($this->cmdUtil); break;
             case 12: $this->getContainer()->get('app.cli.internal_worker.depart')->run($this->cmdUtil); break;
@@ -459,8 +461,10 @@ class NsfoMainCommand extends ContainerAwareCommand
             '8: BatchUpdate remove suckleCount from REVOKED Litters', "\n\n",
             '9: BatchUpdate litterOrdinals in Litters, update all incongruous values', "\n",
             '10: BatchUpdate remove litterOrdinals from REVOKED Litters', "\n\n",
-            '11: BatchUpdate gestationPeriods in Litters, update all incongruous values (incl. revoked litters and mates)', "\n",
-            '12: BatchUpdate birthIntervals in Litters, update all incongruous values (incl. revoked litters and mates NOTE! Update litterOrdinals first!)', "\n\n",
+            '11: BatchUpdate cumulativeBornAliveCount in Litters, update all incongruous values. NOTE! Update litterOrdinals first!', "\n",
+            '12: BatchUpdate updateLitterOffspringExteriorValues and starEweBasePoints in Litters, update all incongruous values.', "\n",
+            '13: BatchUpdate gestationPeriods in Litters, update all incongruous values (incl. revoked litters and mates)', "\n",
+            '14: BatchUpdate birthIntervals in Litters, update all incongruous values (incl. revoked litters and mates NOTE! Update litterOrdinals first!)', "\n\n",
 
             'other: exit submenu', "\n"
         ], self::DEFAULT_OPTION);
@@ -473,12 +477,14 @@ class NsfoMainCommand extends ContainerAwareCommand
             case 4: $this->writeLn(LitterUtil::matchMatchingMates($this->conn, true).' \'mate-litter\'s matched'); break;
             case 5: $this->writeLn(LitterUtil::removeMatesFromRevokedLitters($this->conn).' \'mate-litter\'s unmatched'); break;
             case 6: $this->writeLn(LitterUtil::countToBeMatchedLitters($this->conn).' \'mate-litter\'s to be matched'); break;
-            case 7: $this->writeLn(LitterUtil::updateSuckleCount($this->conn).' suckleCounts updated'); break;
+            case 7: $this->writeLn(LitterUtil::updateAllSuckleCounts($this->conn).' suckleCounts updated'); break;
             case 8: $this->writeLn(LitterUtil::removeSuckleCountFromRevokedLitters($this->conn).' suckleCounts removed from revoked litters'); break;
-            case 9: $this->writeLn(LitterUtil::updateLitterOrdinals($this->conn).' litterOrdinals updated'); break;
+            case 9: $this->writeLn(LitterUtil::updateAllLitterOrdinals($this->conn).' litterOrdinals updated'); break;
             case 10: $this->writeLn(LitterUtil::removeLitterOrdinalFromRevokedLitters($this->conn).' litterOrdinals removed from revoked litters'); break;
-            case 11: $this->writeLn(LitterUtil::updateGestationPeriods($this->conn).' gestationPeriods updated'); break;
-            case 12: $this->writeLn(LitterUtil::updateBirthInterVal($this->conn).' birthIntervals updated'); break;
+            case 11: $this->writeLn(LitterUtil::updateCumulativeBornAliveCount($this->conn).' cumulativeBornAliveCount updated'); break;
+            case 12: LitterUtil::updateLitterOffspringExteriorAndStarEweValues($this->conn, null, $this->getLogger()); break;
+            case 13: $this->writeLn(LitterUtil::updateGestationPeriods($this->conn).' gestationPeriods updated'); break;
+            case 14: $this->writeLn(LitterUtil::updateAllBirthInterVal($this->conn).' birthIntervals updated'); break;
 
             default: $this->writeMenuExit(); return;
         }
@@ -608,10 +614,16 @@ class NsfoMainCommand extends ContainerAwareCommand
                 '30: Remove locations and incorrect animal residences for ulns in app/Resources/imports/corrections/remove_locations_by_uln.csv', "\n",
                 '31: Kill resurrected dead animals already having a FINISHED or FINISHED_WITH_WARNING last declare loss', "\n",
                 '32: Kill alive animals with a date_of_death, even if they don\'t have a declare loss', "\n",
-                '33: Remove duplicate animal residences', "\n\n",
+                '33: Fix animal residences: 1. remove duplicates, 2. close open residences by next residence, 3. close open residences by date of death', "\n\n",
 
                 '================== DECLARES ===================', "\n",
-                '50: Fill missing messageNumbers in DeclareReponseBases where errorCode = IDR-00015', "\n\n",
+                '50: Fill missing messageNumbers in DeclareResponseBases where errorCode = IDR-00015', "\n\n",
+
+                '================== SCAN MEASUREMENTS ===================', "\n",
+                '60: Fix duplicate measurements', "\n",
+                '61: Create scan measurement set records for unlinked scan measurements', "\n",
+                '62: Link latest scan measurement set records to animals', "\n\n",
+
                 'other: exit submenu', "\n"
             ], self::DEFAULT_OPTION);
         } else {
@@ -643,9 +655,13 @@ class NsfoMainCommand extends ContainerAwareCommand
             case 30: DatabaseDataFixer::removeAnimalsFromLocationAndAnimalResidence($this->conn, $this->cmdUtil); break;
             case 31: DatabaseDataFixer::killResurrectedDeadAnimalsAlreadyHavingFinishedLastDeclareLoss($this->conn, $this->cmdUtil); break;
             case 32: DatabaseDataFixer::killAliveAnimalsWithADateOfDeath($this->conn, $this->cmdUtil); break;
-            case 33: DatabaseDataFixer::removeDuplicateAnimalResidences($this->conn, $this->cmdUtil); break;
+            case 33: DatabaseDataFixer::fixAnimalResidenceRecords($this->conn, $this->getLogger()); break;
 
             case 50: DatabaseDataFixer::fillBlankMessageNumbersForErrorMessagesWithErrorCodeIDR00015($this->conn, $this->cmdUtil); break;
+
+            case 60: $this->getDuplicateMeasurementsFixer()->deactivateDuplicateMeasurements(); break;
+            case 61: MeasurementsUtil::createNewScanMeasurementSetsByUnlinkedData($this->em, $this->getLogger(), $this->getDuplicateMeasurementsFixer()); break;
+            case 62: MeasurementsUtil::linkLatestScanMeasurementsToAnimals($this->conn, $this->getLogger()); break;
 
             default: $this->writeMenuExit(); return;
         }
@@ -655,31 +671,40 @@ class NsfoMainCommand extends ContainerAwareCommand
         $this->fixDatabaseValuesOptions();
     }
 
+    private function getDuplicateMeasurementsFixer(): DuplicateMeasurementsFixer
+    {
+        return $this->getContainer()->get(DuplicateMeasurementsFixer::class);
+    }
 
-    public function initializeDatabaseValuesOptions()
+    public function initializeDatabaseValuesOptions(array $options = [])
     {
         $this->initializeMenu(self::INITIALIZE_DATABASE_VALUES);
 
-        $option = $this->cmdUtil->generateMultiLineQuestion([
-            'Choose option: ', "\n",
-            self::LINE_THICK, "\n",
-            '1: BirthProgress', "\n",
-            '2: is_rvo_message boolean in action_log', "\n",
-            '3: TreatmentType', "\n",
-            '4: LedgerCategory', "\n",
-            '5: ScrapieGenotypeSource', "\n",
-            '6: PedigreeCodes & PedigreeRegister-PedigreeCode relationships', "\n",
-            '7: Initialize batch invoice invoice rules', "\n",
-            '8: EditType', "\n",
-            self::LINE_THICK, "\n",
-            '10: StoredProcedures: initialize if not exist', "\n",
-            '11: StoredProcedures: overwrite all', "\n",
-            '12: SqlViews: initialize if not exist', "\n",
-            '13: SqlViews: overwrite all', "\n",
-            "\n",
+        if (empty($options)) {
+            $option = $this->cmdUtil->generateMultiLineQuestion([
+                'Choose option: ', "\n",
+                self::LINE_THICK, "\n",
+                '1: BirthProgress', "\n",
+                '2: is_rvo_message boolean in action_log', "\n",
+                '3: TreatmentType', "\n",
+                '4: LedgerCategory', "\n",
+                '5: ScrapieGenotypeSource', "\n",
+                '6: PedigreeCodes & PedigreeRegister-PedigreeCode relationships', "\n",
+                '7: Initialize batch invoice invoice rules', "\n",
+                '8: EditType', "\n",
+                self::LINE_THICK, "\n",
+                '10: StoredProcedures: initialize if not exist', "\n",
+                '11: StoredProcedures: overwrite all', "\n",
+                '12: SqlViews: initialize if not exist', "\n",
+                '13: SqlViews: overwrite all', "\n",
+                "\n",
 
-            'other: exit submenu', "\n"
-        ], self::DEFAULT_OPTION);
+                'other: exit submenu', "\n"
+            ], self::DEFAULT_OPTION);
+        } else {
+            $option = array_shift($options);
+            $this->exitAfterRun = true;
+        }
 
         $storedProcedureIntializer = $this->getContainer()->get('AppBundle\Service\Migration\StoredProcedureInitializer');
 
@@ -704,25 +729,38 @@ class NsfoMainCommand extends ContainerAwareCommand
 
             default: $this->writeMenuExit(); return;
         }
+        if ($this->exitAfterRun) {
+            die;
+        }
+
         $this->initializeDatabaseValuesOptions();
     }
 
 
-    public function fillMissingDataOptions()
+    public function fillMissingDataOptions(array $options = [])
     {
         $this->initializeMenu(self::FILL_MISSING_DATA);
 
-        $option = $this->cmdUtil->generateMultiLineQuestion([
-            'Choose option: ', "\n",
-            self::LINE_THICK, "\n",
-            '1: Birth Weight and TailLength', "\n",
-            '2: UbnOfBirth (string) in Animal', "\n",
-            '3: Fill empty breedCode, breedType and pedigree (stn) data for all declareBirth animals (no data is overwritten)', "\n",
-            '4: Fill empty scrapieGenotype data for all declareBirth animals currently on livestocks (no data is overwritten)', "\n",
-            '5: Fill missing pedigreeRegisterIds by breedNumber in STN (no data is overwritten)', "\n",
-            "\n",
-            'other: exit submenu', "\n"
-        ], self::DEFAULT_OPTION);
+        if (empty($options)) {
+            $option = $this->cmdUtil->generateMultiLineQuestion([
+                'Choose option: ', "\n",
+                self::LINE_THICK, "\n",
+                '1: Birth Weight and TailLength', "\n",
+                '2: UbnOfBirth (string) in Animal', "\n",
+                '3: Fill empty breedCode, breedType and pedigree (stn) data for all declareBirth animals (no data is overwritten)', "\n",
+                '4: Fill empty scrapieGenotype data for all declareBirth animals currently on livestocks (no data is overwritten)', "\n",
+                '5: Fill missing pedigreeRegisterIds by breedNumber in STN (no data is overwritten)', "\n",
+                self::LINE_THIN, "\n",
+                '6: Inbreeding coefficients, generate if empty, all', "\n",
+                '7: Inbreeding coefficients, generate if empty, for given ubn', "\n",
+                '8: Inbreeding coefficients, regenerate if empty, for given ubn', "\n",
+                "\n",
+                'other: exit submenu', "\n"
+            ], self::DEFAULT_OPTION);
+        } else {
+            $option = array_shift($options);
+            $this->exitAfterRun = true;
+        }
 
         switch ($option) {
             case 1: $this->getContainer()->get('app.datafix.birth.measurements.missing')->run(); break;
@@ -730,8 +768,14 @@ class NsfoMainCommand extends ContainerAwareCommand
             case 3: $this->getContainer()->get('AppBundle\Service\Migration\PedigreeDataReprocessor')->run($this->cmdUtil); break;
             case 4: $this->getContainer()->get('AppBundle\Service\Migration\ScrapieGenotypeReprocessor')->run($this->cmdUtil); break;
             case 5: $this->getContainer()->get('AppBundle\Service\Migration\PedigreeDataReprocessor')->batchMatchMissingPedigreeRegisterByBreederNumberInStn(); break;
+            case 6: $this->getContainer()->get(InbreedingCoefficientUpdaterService::class)->generateForAllAnimalsAndLitters(); break;
+            case 7: $this->getContainer()->get(InbreedingCoefficientUpdaterService::class)->generateForAnimalsAndLittersOfUbn($this->askForUbn()); break;
+            case 8: $this->getContainer()->get(InbreedingCoefficientUpdaterService::class)->regenerateForAnimalsAndLittersOfUbn($this->askForUbn()); break;
 
             default: $this->writeMenuExit(); return;
+        }
+        if ($this->exitAfterRun) {
+            die;
         }
         $this->fillMissingDataOptions();
     }
@@ -959,6 +1003,9 @@ class NsfoMainCommand extends ContainerAwareCommand
         );
     }
 
+    private function askForUbn(): string {
+        return $this->cmdUtil->generateQuestion('insert ubn (default: '.self::DEFAULT_UBN.')', self::DEFAULT_UBN);
+    }
 
     private function printBreedValuesAllUbns()
     {
@@ -974,7 +1021,7 @@ class NsfoMainCommand extends ContainerAwareCommand
     private function printBreedValuesByUbn()
     {
         do {
-            $ubn = $this->cmdUtil->generateQuestion('insert ubn (default: '.self::DEFAULT_UBN.')', self::DEFAULT_UBN);
+            $ubn = $this->askForUbn();
         } while(!ctype_digit($ubn) && !is_int($ubn));
         $this->cmdUtil->writeln('Generating breedValues csv file for UBN: '.$ubn.' ...');
         $this->getBreedValuePrinter()->printBreedValuesByUbn($ubn);

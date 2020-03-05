@@ -52,9 +52,12 @@ abstract class AwsQueueServiceBase implements QueueServiceInterface
      * @param string $selectedEnvironment
      * @param string $currentEnvironment
      * @param boolean $useErrorQueue
+     * @param boolean|null $deactivateSsl
      */
     public function __construct($queueIdPrefix, $accessKeyId, $secretKey, $region, $version,
-                                $selectedEnvironment, $currentEnvironment, $useErrorQueue = true)
+                                $selectedEnvironment, $currentEnvironment, $useErrorQueue = true,
+        $deactivateSsl = false
+    )
     {
         $this->accessKeyId = $accessKeyId;
         $this->secretKey = $secretKey;
@@ -67,11 +70,15 @@ abstract class AwsQueueServiceBase implements QueueServiceInterface
         $this->selectedEnvironment = $selectedEnvironment;
         $this->queueId = $this->selectQueueIdByEnvironment($queueIdPrefix, $this->selectedEnvironment);
 
-        $sqsConfig = array(
+        $sqsConfig = [
             'region'  => $this->region,
             'version' => $this->version,
             'credentials' => $this->awsCredentials
-        );
+        ];
+
+        if ($deactivateSsl) {
+            $sqsConfig['http'] = [ 'verify' => false ];
+        }
 
         $sqsClient = new SqsClient($sqsConfig);
         $this->queueService = $sqsClient;

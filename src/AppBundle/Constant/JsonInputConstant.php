@@ -20,6 +20,8 @@ class JsonInputConstant
     const IS_VALID = 'is_valid';
     const KEY = 'key';
     const TRANSLATION_KEY = 'translation_key';
+    const FORMATTED = 'formatted';
+    const LABEL = 'label';
 
     //Admins
     const ADMINS = 'admins';
@@ -35,12 +37,18 @@ class JsonInputConstant
     const ANIMAL_ID = 'animal_id';
     const ANIMAL_ID_AND_DATE = 'animal_id_and_date';
     const BIRTH_PROGRESS = 'birth_progress';
+    const BIRTH = 'birth';
     const RAM = 'ram';
     const EWE = 'ewe';
     const NEUTER = 'neuter';
     const EWES = 'ewes';
     const CHILDREN = 'children';
     const COUNTRY_OF_BIRTH = 'country_of_birth';
+
+    const COLLAR = 'collar';
+    const COLOR = 'color';
+    const NUMBER = 'number';
+
     const LITTERS = 'litters';
     const COUNTRY = 'country';
     const COUNTRY_CODE = 'country_code';
@@ -51,6 +59,7 @@ class JsonInputConstant
     const DATE_OF_BIRTH = 'date_of_birth';
     const UBN_OF_BIRTH = 'ubn_of_birth';
     const GENDER = 'gender';
+    const INBREEDING_COEFFICIENT = 'inbreeding_coefficient';
     const IS_REVEAL_HISTORIC_ANIMALS = 'is_reveal_historic_animals';
     const IS_HISTORIC_ANIMAL = 'is_historic_animal';
     const IS_PUBLIC = 'is_public';
@@ -75,9 +84,9 @@ class JsonInputConstant
     const BREED_TYPE = 'breed_type';
     const BLINDNESS_FACTOR = 'blindness_factor';
     const PREDICATE = 'predicate';
+    const PREDICATE_DETAILS = 'predicate_details';
     const PREDICATE_SCORE = 'predicate_score';
-    const BREEDER_NAME = 'breeder_name';
-    const BREEDER_NUMBER = 'breeder_number';
+    const SCORE = 'score';
     const ANIMAL_TYPE = 'animal_type';
     const NICKNAME = 'nickname';
     const ANIMAL_RESIDENCE_HISTORY = 'animal_residence_history';
@@ -98,6 +107,9 @@ class JsonInputConstant
     const FOUND_ULNS = 'found_ulns';
     const FOUND_STNS = 'found_stns';
     const BREED_CODE_UPDATED = 'breed_code_updated';
+    const REARING = 'rearing';
+    const LAMBAR = 'lambar';
+    const SURROGATE = 'surrogate';
 
     //Request & Response
     const ERROR_CODE = 'error_code';
@@ -114,6 +126,10 @@ class JsonInputConstant
     const SUCCESSFUL_EDITS = 'successful_edits';
     const SUCCESS_COUNT = 'success_count';
     const ERROR_COUNT = 'error_count';
+
+    // Breeder & Holder
+    const BREEDER = 'breeder';
+    const HOLDER = 'holder';
 
     //Sync
     const IS_RVO_LEADING = 'is_rvo_leading';
@@ -235,6 +251,7 @@ class JsonInputConstant
     const INSPECTOR_LAST_NAME = 'inspector_last_name';
     const YEAR_AND_UBN_OF_BIRTH = 'year_and_ubn_of_birth';
     const YEAR_AND_UBN_OF_TREATMENT = 'year_and_ubn_of_treatment';
+    const SCAN_MEASUREMENTS = 'scan_measurements';
 
     //Weight measurements
     const LAST_WEIGHT = 'last_weight';
@@ -285,6 +302,7 @@ class JsonInputConstant
     const SUCKLE_COUNT = 'suckle_count';
     const LITTER_GROUP = 'litter_group';
     const LITTER_COUNT = 'litter_count';
+    const LITTER_SIZE = 'litter_size';
     const TOTAL_BORN_ALIVE_COUNT = 'total_born_alive_count';
     const TOTAL_STILLBORN_COUNT = 'total_stillborn_count';
     const BORN_ALIVE_COUNT = 'born_alive_count';
@@ -302,6 +320,7 @@ class JsonInputConstant
     const BREED_VALUE_GROWTH = "breed_value_growth";
     const BREED_VALUE_MUSCLE_THICKNESS = "breed_value_muscle_thickness";
     const BREED_VALUE_FAT = "breed_value_fat";
+    const BREED_VALUE_MAX_GENERATION_DATE = "breed_value_max_generation_date";
     const LAMB_MEAT_INDEX = "lamb_meat_index";
     const LAMB_MEAT_INDEX_WITHOUT_ACCURACY = "lamb_meat_index_without_accuracy";
 

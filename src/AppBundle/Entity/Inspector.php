@@ -34,12 +34,12 @@ class Inspector extends Person implements PersonImplementationInterface
 
     /**
      * @var boolean
-     * @Assert\NotBlank
+     * @Assert\NotNull
      * @ORM\Column(type="boolean", nullable=false, options={"default":false})
      * @JMS\Type("boolean")
      */
     private $isAuthorizedNsfoInspector;
-  
+
     /**
      * Constructor
      */
@@ -47,7 +47,7 @@ class Inspector extends Person implements PersonImplementationInterface
     {
       //Call super constructor first
       parent::__construct();
-  
+
       $this->objectType = "Inspector";
       $this->isAuthorizedNsfoInspector = false;
     }
@@ -111,6 +111,6 @@ class Inspector extends Person implements PersonImplementationInterface
         $this->isAuthorizedNsfoInspector = $isAuthorizedNsfoInspector;
         return $this;
     }
-    
+
 
 }

@@ -110,6 +110,7 @@
                     <th>Geslacht</th>
                     <th>Geb.dat.</th>
                     <th>Vorige UBN</th>
+                    <th>UBN Bestemming</th>
                     <th>Dat.aanvoer</th>
                     <th>Dat.afvoer</th>
                     <th>Dat.sterfte</th>
@@ -138,17 +139,20 @@
                         <td style="min-width: 30mm; max-width: 30mm">
                             {{ value.stn }}
                         </td>
-                        <td style="min-width: 30mm; max-width: 30mm">
+                        <td style="min-width: 10mm; max-width: 10mm">
                             {{ value.werknummer }}
                         </td>
-                        <td style="min-width: 30mm; max-width: 30mm">
+                        <td style="min-width: 10mm; max-width: 10mm">
                             {{ value.geslacht }}
                         </td>
                         <td style="min-width: 16mm; max-width: 16mm">
                             {{ value.geboortedatum }}
                         </td>
-                        <td style="min-width: 30mm; max-width: 30mm">
+                        <td style="min-width: 25mm; max-width: 25mm">
                             {{ value.vorig_ubn }}
+                        </td>
+                        <td style="min-width: 25mm; max-width: 25mm">
+                            {{ value.ubn_bestemming }}
                         </td>
                         <td style="min-width: 16mm; max-width: 16mm">
                             {{ value.datum_aanvoer }}

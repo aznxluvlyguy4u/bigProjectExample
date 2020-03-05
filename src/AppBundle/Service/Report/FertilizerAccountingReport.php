@@ -54,7 +54,7 @@ use Symfony\Component\HttpFoundation\Response;
  *
  * Type 552
  * Opfokooien, weideschapen en vleesschapen van ca. 4 maanden en ouder
- *
+ * (Rudolf: Alle schapen die niet in 550 en 551 zitten)
  *
  * Categorieen: Toepassing in Code
  * Zie fertilizerCategorySelectCriteria()
@@ -99,6 +99,9 @@ class FertilizerAccountingReport extends ReportServiceBase
             $this->initializeReferenceDateValues($referenceDate);
             $this->setFileAndFolderNames();
 
+            /** Do this before running the report query */
+            $this->fixAnimalResidenceRecords();
+
             $sql = $this->query();
             $data = $this->em->getConnection()->query($sql)->fetch();
 
@@ -107,8 +110,6 @@ class FertilizerAccountingReport extends ReportServiceBase
             } else {
                 return $this->createCsvReport($data);
             }
-
-            throw new \Exception('INVALID FILE TYPE', Response::HTTP_PRECONDITION_REQUIRED);
 
         } catch (\Exception $exception) {
             $this->logger->error($exception->getTraceAsString());
@@ -420,7 +421,10 @@ class FertilizerAccountingReport extends ReportServiceBase
                          " . $this->isResidenceSelectResult() . "
                          r.*
                      FROM animal_residence r
-                     WHERE r.location_id = ".$this->getLocationId()." AND r.is_pending = FALSE
+                        INNER JOIN animal a ON a.id = r.animal_id
+                        INNER JOIN location l on r.location_id = l.id
+                     WHERE l.ubn = '".$this->getUbn()."' AND r.is_pending = FALSE
+                     AND (a.date_of_death ISNULL OR a.date_of_death >= '$this->oldestReferenceDateString')
                      AND (r.end_date ISNULL OR r.end_date >= '$this->oldestReferenceDateString')
                      AND (r.start_date <= '$this->newestReferenceDateString')
                  )a GROUP BY animal_id
@@ -503,6 +507,8 @@ class FertilizerAccountingReport extends ReportServiceBase
         $referenceDateOfMonth = $this->referenceDateStringsByMonth[$month];
         return "(start_date NOTNULL AND end_date NOTNULL) AND DATE(start_date) <= '$referenceDateOfMonth' AND DATE(end_date) >= '$referenceDateOfMonth' OR --closed residence
         (start_date NOTNULL AND end_date ISNULL) AND DATE(start_date) <= '$referenceDateOfMonth' --open residence
+        AND (a.date_of_death ISNULL OR a.date_of_death >= '$referenceDateOfMonth')
+        AND (a.date_of_birth NOTNULL AND a.date_of_birth <= '$referenceDateOfMonth')
          as ".$this->residenceKey($month).SqlUtil::SELECT_ROW_SEPARATOR;
     }
 
@@ -539,16 +545,13 @@ class FertilizerAccountingReport extends ReportServiceBase
                         EXTRACT(MONTH FROM AGE('$referenceDateString', a.date_of_birth)) <= 3 --age in months on reference_date
                        )";
 
-            case FertilizerCategory::_552: // Animal Category 552: All other animals 4 months or older
+            case FertilizerCategory::_552: // Animal Category 552: All other animals ("4 months or older")
                 return "(
                         NOT
                         ".$this->fertilizerCategorySelectCriteria($referenceDateString, FertilizerCategory::_550)."
                         AND NOT
                         ".$this->fertilizerCategorySelectCriteria($referenceDateString,FertilizerCategory::_551)."
-                        AND (
-                          EXTRACT(YEAR FROM AGE('$referenceDateString', a.date_of_birth)) * 12 +
-                          EXTRACT(MONTH FROM AGE('$referenceDateString', a.date_of_birth)) >= 4 --age in months on reference_date
-                        ) 
+                        -- NOTE! To prevent any sheep from being missing from the total count, this category should contain all other sheep
                       )";
             default: throw new \Exception('Invalid FertilizerCategory: '.$fertilizerCategory, Response::HTTP_INTERNAL_SERVER_ERROR);
         }

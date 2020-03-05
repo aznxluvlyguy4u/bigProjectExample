@@ -15,6 +15,8 @@ use AppBundle\Entity\Location;
 use AppBundle\Entity\PedigreeRegister;
 use AppBundle\Entity\Ram;
 use AppBundle\Enumerator\QueryType;
+use AppBundle\model\ParentIdsPair;
+use AppBundle\Service\InbreedingCoefficient\InbreedingCoefficientUpdaterService;
 use AppBundle\Util\ActionLogWriter;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\RequestUtil;
@@ -44,6 +46,10 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
 
     /** @var boolean */
     private $anyCurrentAnimalValueWasUpdated;
+    /** @var boolean */
+    private $updateInbreedingCoefficient = false;
+    /** @var array */
+    private $animalsIdsForWhichInbreedingCoefficientShouldBeUpdated = [];
     /** @var Ram|Ewe[] */
     private $newParentsById;
     /** @var Location[] */
@@ -57,6 +63,9 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
 
     /** @var array */
     private $animalIdsWithUpdatedNLingValues;
+
+    /** @var InbreedingCoefficientUpdaterService */
+    private $inbreedingCoefficientUpdaterService;
 
     /* Parent error messages */
     const ERROR_NOT_FOUND = 'ERROR_NOT_FOUND';
@@ -80,12 +89,20 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
     ];
 
     /**
+     * @param InbreedingCoefficientUpdaterService $inbreedingCoefficientUpdaterService
+     */
+    public function setInbreedingCoefficientUpdaterService(InbreedingCoefficientUpdaterService $inbreedingCoefficientUpdaterService)
+    {
+        $this->inbreedingCoefficientUpdaterService = $inbreedingCoefficientUpdaterService;
+    }
+
+    /**
      * @param Request $request
      * @return \AppBundle\Component\HttpFoundation\JsonResponse
      */
     public function updateAnimalDetails(Request $request)
     {
-        $content = RequestUtil::getContentAsArray($request);
+        $content = RequestUtil::getContentAsArrayCollection($request);
         return $this->updateAnimalDetailsByArrayCollection($content);
     }
 
@@ -146,6 +163,9 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
 
         try {
 
+            $this->updateInbreedingCoefficient = false;
+            $this->animalsIdsForWhichInbreedingCoefficientShouldBeUpdated = [];
+
             $updateAnimalResults = $this->updateValues($animalsWithNewValues, $currentAnimalsResult);
             if ($updateAnimalResults instanceof JsonResponse) {
                 $this->getManager()->getConnection()->rollBack();
@@ -154,6 +174,23 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
 
             if ($this->anyValueWasUpdated) {
                 $this->getManager()->flush();
+
+                /* Update Inbreeding Coefficient */
+                if ($this->updateInbreedingCoefficient) {
+
+                    foreach ($this->animalsIdsForWhichInbreedingCoefficientShouldBeUpdated as $animalId) {
+                        /** @var Animal $toBeUpdatedAnimal */
+                        $toBeUpdatedAnimal = $updateAnimalResults[JsonInputConstant::UPDATED][$animalId];
+                        $parentIdsPair = new ParentIdsPair(
+                            $toBeUpdatedAnimal->getParentFatherId(),
+                            $toBeUpdatedAnimal->getParentMotherId()
+                        );
+
+                        $this->inbreedingCoefficientUpdaterService->regenerateInbreedingCoefficients([$parentIdsPair]);
+                        $this->inbreedingCoefficientUpdaterService->matchAnimalsAndLitters([$animalId], []);
+                    }
+                }
+
                 $this->getManager()->getConnection()->commit();
             } else {
                 $this->getManager()->getConnection()->rollBack();
@@ -391,7 +428,7 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
                     } elseif ($parentType === Constant::SURROGATE_NAMESPACE) {
                         $parentLabelId = 'surrogate_id';
                     } else {
-                        throw new \Exception('$parentTeyp must be Ram::class or Ewe::class or surrogate');
+                        throw new \Exception('$parentType must be Ram::class or Ewe::class or surrogate');
                     }
 
                     switch ($typeKey) {
@@ -597,6 +634,8 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
             $newParent = $animalsWithNewValue->getParent($parentClazz);
 
             if ($this->hasParentChanged($currentParent, $newParent)) {
+                $this->updateInbreedingCoefficient = true;
+                $this->animalsIdsForWhichInbreedingCoefficientShouldBeUpdated[] = $retrievedAnimal->getId();
                 $ulnStringCurrentParent = $currentParent ? $currentParent->getUln() : $this->getEmptyLabel();
                 if ($newParent && $newParent->getId()) {
                     /** @var Ram|Ewe $retrievedNewParent */
@@ -1019,7 +1058,7 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
                 return QueryType::DELETE;
             }
         }
-        
+
         return null;
     }
 
@@ -1179,7 +1218,7 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
         if ($this->retrievedPedigreeRegistersById === null) {
             $this->retrievedPedigreeRegistersById = [];
         }
-        
+
         if (!key_exists($pedigreeRegisterId, $this->retrievedPedigreeRegistersById)) {
             $this->retrievedPedigreeRegistersById[$pedigreeRegisterId] = $this->getManager()->getRepository(PedigreeRegister::class)->find($pedigreeRegisterId);
         }

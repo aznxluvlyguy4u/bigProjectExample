@@ -2,6 +2,8 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\model\measurements\BodyFatData;
+use AppBundle\model\measurements\MeasurementDataInterface;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\MeasurementsUtil;
 use AppBundle\Util\NullChecker;
@@ -38,6 +40,25 @@ class MeasurementRepository extends BaseRepository {
 
         return $measurements;
     }
+
+
+
+    /**
+     * @param MeasurementDataInterface[] $results
+     * @return array
+     */
+    protected function groupSqlMeasurementObjectResultsByAnimalIdAndDate($results)
+    {
+        $measurementsGroupedByAnimalAndDate = [];
+        foreach ($results as $result) {
+            $animalIdAndData = $result->getAnimalIdAndDate();
+            $items = $measurementsGroupedByAnimalAndDate[$animalIdAndData] ?? [];
+            $items[] = $result;
+            $measurementsGroupedByAnimalAndDate[$animalIdAndData] = $items;
+        }
+        return $measurementsGroupedByAnimalAndDate;
+    }
+
 
 
     /**
@@ -104,7 +125,7 @@ class MeasurementRepository extends BaseRepository {
         return $this->executeSqlQuery($sql);
     }
 
-    
+
     public function removeTimeFromAllMeasurementDates()
     {
         $sql = "UPDATE measurement SET measurement_date = DATE(measurement_date)";

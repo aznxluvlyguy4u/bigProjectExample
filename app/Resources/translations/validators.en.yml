@@ -1,0 +1,4 @@
+decimal:
+  limit:
+    max:
+      exceeded: The decimal count is %number% and exceeds the max decimal count of %limit%.

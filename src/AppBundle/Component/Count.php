@@ -203,16 +203,16 @@ class Count
 
         $sql = "SELECT COUNT(animal.id), '".LiveStockType::PEDIGREE_ADULT."' as type FROM animal
                     LEFT JOIN pedigree_register r ON animal.pedigree_register_id = r.id
-                WHERE is_alive = TRUE AND is_export_animal = FALSE AND is_departed_animal = FALSE
+                WHERE is_alive = TRUE
                     AND (transfer_state ISNULL OR transfer_state = '".AnimalTransferStatus::TRANSFERRED."')
                     AND location_id = ".$locationId."
                     AND pedigree_country_code NOTNULL AND animal.pedigree_number NOTNULL
                     AND animal.date_of_birth <= '".$adultDateOfBirthLimit."'
-                    AND r.is_registered_with_nsfo = TRUE  
+                    AND r.is_registered_with_nsfo = TRUE
                 UNION
                 SELECT COUNT(animal.id), '".LiveStockType::PEDIGREE_TOTAL."' as type FROM animal
                     LEFT JOIN pedigree_register r ON animal.pedigree_register_id = r.id
-                WHERE is_alive = TRUE AND is_export_animal = FALSE AND is_departed_animal = FALSE
+                WHERE is_alive = TRUE
                     AND (transfer_state ISNULL OR transfer_state = '".AnimalTransferStatus::TRANSFERRED."')
                     AND location_id = ".$locationId."
                     AND pedigree_country_code NOTNULL AND animal.pedigree_number NOTNULL
@@ -220,7 +220,7 @@ class Count
                 UNION
                 SELECT COUNT(animal.id), '".LiveStockType::NON_PEDIGREE_ADULT."' as type FROM animal
                     LEFT JOIN pedigree_register r ON animal.pedigree_register_id = r.id
-                WHERE is_alive = TRUE AND is_export_animal = FALSE AND is_departed_animal = FALSE
+                WHERE is_alive = TRUE
                     AND (transfer_state ISNULL OR transfer_state = '".AnimalTransferStatus::TRANSFERRED."')
                     AND location_id = ".$locationId."
                     AND ((pedigree_country_code ISNULL OR animal.pedigree_number ISNULL) OR
@@ -229,7 +229,7 @@ class Count
                 UNION
                 SELECT COUNT(animal.id), '".LiveStockType::NON_PEDIGREE_TOTAL."' as type FROM animal
                     LEFT JOIN pedigree_register r ON animal.pedigree_register_id = r.id
-                WHERE is_alive = TRUE AND is_export_animal = FALSE AND is_departed_animal = FALSE
+                WHERE is_alive = TRUE
                     AND (transfer_state ISNULL OR transfer_state = '".AnimalTransferStatus::TRANSFERRED."')
                     AND location_id = ".$locationId."
                     AND ((pedigree_country_code ISNULL OR animal.pedigree_number ISNULL) OR

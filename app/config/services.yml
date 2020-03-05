@@ -71,6 +71,7 @@ services:
           - '%environment%' #currentEnv
           - '%kernel.environment%'
           - true
+          - '%aws_sqs_deactivate_ssl%'
 
     AppBundle\Service\AwsFeedbackQueueService:
         parent: app.aws.queueservice.workers_base
@@ -144,6 +145,10 @@ services:
 
     AppBundle\Service\AnimalDetailsBatchUpdaterService:
         parent: app.abstract_base.controller
+        calls:
+          - method: setInbreedingCoefficientUpdaterService
+            arguments:
+              - '@AppBundle\Service\InbreedingCoefficient\InbreedingCoefficientUpdaterService'
 
     app.animallocation.history:
         class: AppBundle\Service\AnimalLocationHistoryService
@@ -193,6 +198,7 @@ services:
         arguments:
         #NOTE! Don't use named keys here! That will prevent the child services from properly overriding the arguments.
           - '@doctrine.orm.entity_manager'
+          - '@logger'
 
     app.datafix.animals.duplicate:
         parent: app.datafix.base.duplicate
@@ -205,6 +211,9 @@ services:
     app.datafix.animals.exterminator:
         parent: app.datafix.base.duplicate
         class: AppBundle\Service\DataFix\AnimalExterminator
+
+    AppBundle\Service\DataFix\DuplicateMeasurementsFixer:
+      parent: app.datafix.base.duplicate
 
     app.datafix.ubn:
         parent: app.datafix.base.duplicate
@@ -483,6 +492,9 @@ services:
     AppBundle\Service\Report\OffspringReportService:
         parent: app.report.breedvalues.base
 
+    AppBundle\Service\Report\AnimalFeaturesPerYearOfBirthReportService:
+        parent: app.report.breedvalues.base
+
     app.report.pedigree_certificates:
         parent: app.report.base
         class: AppBundle\Service\Report\PedigreeCertificateReportService
@@ -502,11 +514,18 @@ services:
         parent: app.report.base
         class: AppBundle\Service\Report\InbreedingCoefficientReportService
         lazy: true
+        calls:
+          - method: setInbreedingCoefficientUpdaterService
+            arguments:
+              - '@AppBundle\Service\InbreedingCoefficient\InbreedingCoefficientUpdaterService'
 
     AppBundle\Service\Report\FertilizerAccountingReport:
         parent: app.report.base
 
     AppBundle\Service\Report\BirthListReportService:
+      parent: app.report.base
+
+    AppBundle\Service\Report\EweCardReportService:
       parent: app.report.base
 
     AppBundle\Service\Report\CompanyRegisterReportService:
@@ -614,6 +633,7 @@ services:
           - '@translator'
           - '@logger'
           - '@AppBundle\SqlView\SqlViewManager'
+          - '@validator'
 
     AppBundle\Service\Google\FireBaseService:
         arguments:
@@ -623,6 +643,38 @@ services:
           - '%firebase_notifications_private_key%'
           - '@logger'
           - '@translator'
+
+    AppBundle\Service\Task\StarEwesCalculationTaskService:
+        arguments:
+          - '@doctrine.orm.entity_manager'
+          - '@logger'
+
+    AppBundle\Service\Task\InbreedingCoefficientCalculationTaskService:
+      arguments:
+        - '@doctrine.orm.entity_manager'
+        - '@logger'
+        - '@AppBundle\Service\InbreedingCoefficient\InbreedingCoefficientUpdaterService'
+
+    AppBundle\Service\TaskService:
+        arguments:
+          - '@enqueue.producer'
+          - '@app.serializer.base'
+          - '@doctrine.orm.entity_manager'
+          - '@app.user'
+          - '@translator'
+          - '@logger'
+          - '@AppBundle\Validation\UlnValidatorInterface'
+
+    AppBundle\Processor\TaskProcessor:
+        arguments:
+          - '@AppBundle\Service\Task\InbreedingCoefficientCalculationTaskService'
+          - '@AppBundle\Service\Task\StarEwesCalculationTaskService'
+          - '@doctrine.orm.entity_manager'
+          - '@logger'
+          - '@app.serializer.base'
+        tags:
+          - {name: 'enqueue.client.processor'}
+
 
     AppBundle\Service\ReportService:
         arguments:
@@ -637,16 +689,20 @@ services:
           - '@app.report.livestock'
           - '@AppBundle\Service\Report\BirthListReportService'
           - '@AppBundle\Service\Report\MembersAndUsersOverviewReportService'
+          - '@AppBundle\Service\Report\EweCardReportService'
           - '@AppBundle\Service\Report\CompanyRegisterReportService'
           - '@AppBundle\Service\Report\ClientNotesOverviewReportService'
           - '@app.report.inbreeding_coefficient'
           - '@AppBundle\Service\Report\WeightsPerYearOfBirthReportService'
           - '@AppBundle\Service\Report\PopRepInputFileService'
           - '@AppBundle\Service\Report\FertilizerAccountingReport'
+          - '@AppBundle\Service\Report\AnimalFeaturesPerYearOfBirthReportService'
 
 
     AppBundle\Processor\ReportProcessor:
         arguments:
+          - '@AppBundle\Service\Report\AnimalFeaturesPerYearOfBirthReportService'
+          - '@AppBundle\Service\Report\EweCardReportService'
           - '@AppBundle\Service\Report\PopRepInputFileService'
           - '@AppBundle\Service\Report\WeightsPerYearOfBirthReportService'
           - '@AppBundle\Service\Report\ClientNotesOverviewReportService'
@@ -757,6 +813,9 @@ services:
             arguments:
               - '@AppBundle\Service\AwsInternalQueueService'
 
+    AppBundle\Service\AnimalAnnotationService:
+      parent: app.abstract_base.controller
+
     AppBundle\Service\ArrivalService:
         parent: app.abstract_base.declare
         calls:
@@ -794,6 +853,9 @@ services:
           - method: setInternalQueueService
             arguments:
               - '@AppBundle\Service\AwsInternalQueueService'
+          - method: setInbreedingCoefficientUpdaterService
+            arguments:
+              - '@AppBundle\Service\InbreedingCoefficient\InbreedingCoefficientUpdaterService'
 
     app.breed_type:
         parent: app.abstract_base.controller
@@ -938,6 +1000,9 @@ services:
     AppBundle\Service\BirthMeasurementService:
       parent: app.abstract_base.controller
 
+    AppBundle\Service\ScanMeasurementsService:
+      parent: app.abstract_base.controller
+
     app.messages:
         parent: app.abstract_base.controller
         class: AppBundle\Service\MessageService
@@ -1074,11 +1139,14 @@ services:
     AppBundle\SqlView\SqlViewManager:
         arguments:
           - '@AppBundle\SqlView\Repository\ViewAnimalLivestockOverviewDetailsRepository'
+          - '@AppBundle\SqlView\Repository\ViewAnimalHistoricLocationsRepository'
+          - '@AppBundle\SqlView\Repository\ViewAnimalIsPublicDetailsRepository'
           - '@AppBundle\SqlView\Repository\ViewLitterDetailsRepository'
           - '@AppBundle\SqlView\Repository\ViewLocationDetailsRepository'
           - '@AppBundle\SqlView\Repository\ViewMinimalParentDetailsRepository'
           - '@AppBundle\SqlView\Repository\ViewPedigreeRegisterAbbreviationRepository'
           - '@AppBundle\SqlView\Repository\ViewPersonFullNameRepository'
+          - '@AppBundle\SqlView\Repository\ViewBreedValueMaxGenerationDateRepository'
 
     app.sqlview.repository.base:
         abstract: true
@@ -1091,6 +1159,12 @@ services:
 
     AppBundle\SqlView\Repository\ViewAnimalLivestockOverviewDetailsRepository:
         parent: app.sqlview.repository.base
+
+    AppBundle\SqlView\Repository\ViewAnimalHistoricLocationsRepository:
+      parent: app.sqlview.repository.base
+
+    AppBundle\SqlView\Repository\ViewAnimalIsPublicDetailsRepository:
+      parent: app.sqlview.repository.base
 
     AppBundle\SqlView\Repository\ViewLitterDetailsRepository:
         parent: app.sqlview.repository.base
@@ -1106,6 +1180,9 @@ services:
 
     AppBundle\SqlView\Repository\ViewPersonFullNameRepository:
         parent: app.sqlview.repository.base
+
+    AppBundle\SqlView\Repository\ViewBreedValueMaxGenerationDateRepository:
+        parent: app.sqlView.repository.base
 
 
     app.output.base:
@@ -1135,7 +1212,8 @@ services:
     AppBundle\Validation\UlnValidator:
         arguments:
           - '@doctrine.orm.entity_manager'
-          - '@AppBundle\SqlView\Repository\ViewMinimalParentDetailsRepository'
+          - '@AppBundle\SqlView\Repository\ViewAnimalHistoricLocationsRepository'
+          - '@AppBundle\SqlView\Repository\ViewAnimalIsPublicDetailsRepository'
           - '@translator'
         lazy: true
 
@@ -1150,6 +1228,11 @@ services:
           - method: setInternalQueueService
             arguments:
               - '@AppBundle\Service\AwsInternalQueueService'
+
+    AppBundle\Service\InbreedingCoefficient\InbreedingCoefficientUpdaterService:
+        arguments:
+          - '@doctrine.orm.entity_manager'
+          - '@logger'
 
     AppBundle\Worker\DirectProcessor\DeclareArrivalProcessorInterface:
         class: AppBundle\Worker\DirectProcessor\DeclareArrivalProcessor

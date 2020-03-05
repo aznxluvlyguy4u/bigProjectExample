@@ -68,7 +68,7 @@ class AuthService extends AuthServiceBase
             $emailAddress = $inputValues[JsonInputConstant::EMAIL_ADDRESS];
             $password = $inputValues[JsonInputConstant::PASSWORD];
         } else {
-            $requestData = RequestUtil::getContentAsArray($request);
+            $requestData = RequestUtil::getContentAsArrayCollection($request);
 
             $emailAddress = $requestData[JsonInputConstant::EMAIL_ADDRESS];
             $password = $requestData[JsonInputConstant::PASSWORD];
@@ -157,7 +157,7 @@ class AuthService extends AuthServiceBase
 
         $client = $this->getAccountOwner($request);
         $loggedInUser = $this->getUser();
-        $content = RequestUtil::getContentAsArray($request);
+        $content = RequestUtil::getContentAsArrayCollection($request);
         $log = ActionLogWriter::passwordChange($this->getManager(), $client, $loggedInUser);
 
         $enteredOldPassword = base64_decode($content->get('current_password'));

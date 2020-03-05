@@ -12,7 +12,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  * @ORM\Entity(repositoryClass="AppBundle\Entity\WeightRepository")
  * @package AppBundle\Entity
  */
-class Weight extends Measurement
+class Weight extends Measurement implements ScanMeasurementInterface
 {
     use EntityClassInfo;
 
@@ -47,14 +47,20 @@ class Weight extends Measurement
      */
     private $isRevoked;
 
+    /**
+     * @var ScanMeasurementSet|null
+     * @ORM\OneToOne(targetEntity="AppBundle\Entity\ScanMeasurementSet", mappedBy="scanWeight")
+     */
+    private $scanMeasurementSet;
+
    /**
     * Weight constructor.
     */
-    public function __construct() 
+    public function __construct()
     {
       parent::__construct();
-        
-      $this->isRevoked = false;  
+
+      $this->isRevoked = false;
       $this->weight = 0.00;
     }
 
@@ -115,9 +121,11 @@ class Weight extends Measurement
 
     /**
      * @param boolean $isBirthWeight
+     * @return Weight
      */
     public function setIsBirthWeight($isBirthWeight) {
       $this->isBirthWeight = $isBirthWeight;
+      return $this;
     }
 
 
@@ -171,6 +179,28 @@ class Weight extends Measurement
         return $this->isRevoked;
     }
 
+
+    /**
+     * @return Weight
+     */
+    public function activateWeight(): Weight
+    {
+        $this->setIsActive(true);
+        $this->setIsRevoked(false);
+        return $this;
+    }
+
+
+    /**
+     * @return Weight
+     */
+    public function deactivateWeight(): Weight
+    {
+        $this->setIsActive(false);
+        $this->setIsRevoked(true);
+        return $this;
+    }
+
     /**
      * @param boolean $isRevoked
      */
@@ -178,8 +208,25 @@ class Weight extends Measurement
     {
         $this->isRevoked = $isRevoked;
     }
-    
-    
+
+    /**
+     * @return ScanMeasurementSet|null
+     */
+    public function getScanMeasurementSet(): ?ScanMeasurementSet
+    {
+        return $this->scanMeasurementSet;
+    }
+
+    /**
+     * @param ScanMeasurementSet $scanMeasurementSet
+     * @return Weight
+     */
+    public function setScanMeasurementSet(?ScanMeasurementSet $scanMeasurementSet): Weight
+    {
+        $this->scanMeasurementSet = $scanMeasurementSet;
+        return $this;
+    }
+
     /**
      * @param mixed $weight
      * @return bool

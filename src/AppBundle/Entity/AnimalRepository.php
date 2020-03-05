@@ -124,7 +124,7 @@ class AnimalRepository extends BaseRepository
       return $results[0]['id'];
     }
   }
-  
+
 
   /**
    * @param $animalType
@@ -333,7 +333,7 @@ class AnimalRepository extends BaseRepository
         JsonInputConstant::IS_ALIVE => Utils::fillNullOrEmptyString($result['is_alive'], $nullFiller),
       ];
     }
-    
+
     return $results;
   }
 
@@ -396,9 +396,8 @@ class AnimalRepository extends BaseRepository
                                                      $onlyIncludeAliveEwes = true)
   {
       $clazz = Ewe::class;
-      $isAlive = $onlyIncludeAliveEwes ? null : true;
 
-      $query = $this->getLivestockQuery($location, $isAlive, $clazz, false);
+      $query = $this->getLivestockQuery($location, $onlyIncludeAliveEwes, $clazz, false);
       $query->setFetchMode(Mate::class, 'studEwe', ClassMetadata::FETCH_EAGER);
       $query->setFetchMode(Ram::class, 'parentFather', ClassMetadata::FETCH_EXTRA_LAZY);
       $query->setFetchMode(Ewe::class, 'parentMother', ClassMetadata::FETCH_EXTRA_LAZY);
@@ -481,6 +480,7 @@ class AnimalRepository extends BaseRepository
             $animals = $serializer->deserializeArrayOfObjects($cacheService->getItem($cacheId), $clazz);
         } else {
             $animals = $query->getResult();
+            $this->setProductionValues($animals);
 
             $standardJmsGroups = [JmsGroup::BASIC, JmsGroup::LIVESTOCK];
             $jmsGroups = count($extraJmsGroups) > 0 ? ArrayUtil::concatArrayValues([$extraJmsGroups, $standardJmsGroups], true): $standardJmsGroups;
@@ -494,6 +494,42 @@ class AnimalRepository extends BaseRepository
     }
 
     return $animals;
+  }
+
+
+    /**
+     * @param array|Animal[]  $animals
+     */
+  public function setProductionValues(array &$animals)
+  {
+      if (empty($animals)) {
+          return;
+      }
+
+      $animalIds = array_map(function(Animal $animal) {
+          return $animal->getId();
+      }, $animals);
+
+      $idsAsString = SqlUtil::getIdsFilterListString($animalIds);
+
+      $sql = "SELECT
+    animal_id,
+    production
+FROM view_animal_livestock_overview_details
+WHERE animal_id IN (
+    $idsAsString
+    )";
+      $productionValues = $this->getConnection()->query($sql)->fetchAll();
+
+      foreach ($animals as $animal)
+      {
+          $selectAnimalId = $animal->getId();
+          $productionValueResult = array_filter($productionValues, function ($record) use ($selectAnimalId){
+             return intval($record['animal_id']) === $selectAnimalId;
+          });
+          $productionValue = array_shift($productionValueResult)['production'];
+          $animal->production = $productionValue;
+      }
   }
 
 
@@ -1261,7 +1297,7 @@ class AnimalRepository extends BaseRepository
     $sql = "SELECT MAX(id) FROM animal";
     return $this->executeSqlQuery($sql);
   }
-  
+
   /**
    * @return int|null
    * @throws \Doctrine\DBAL\DBALException
@@ -1396,7 +1432,7 @@ class AnimalRepository extends BaseRepository
     if (TimeUtil::isFormatYYYYMMDD($measurementDateString)) {
       $sql = "SELECT DATE(date_of_birth) as date_of_birth FROM animal WHERE id = " . intval($animalId);
       $result = $this->getManager()->getConnection()->query($sql)->fetch();
-      
+
       $dateOfBirth = new \DateTime($result['date_of_birth']);
       $measurementDate = new \DateTime($measurementDateString);
       $dateOfBirthPlus3Days = clone $dateOfBirth;
@@ -1550,7 +1586,7 @@ class AnimalRepository extends BaseRepository
   public function deleteTestAnimal(OutputInterface $output = null, CommandUtil $cmdUtil = null)
   {
     if($output != null) { $output->writeln('Find all testAnimals...'); }
-    
+
     /** @var AnimalRepository $animalRepository */
     $animalRepository = $this->getManager()->getRepository(Animal::class);
     $testAnimals = $animalRepository->findBy(['ulnCountryCode' => 'XD']);
@@ -1603,7 +1639,7 @@ class AnimalRepository extends BaseRepository
     $ubnsUpdated = 0;
     $updatedWithActiveLocations = 0;
     $updatedWithDeactivatedLocations = 0;
-    
+
     /*
      * 1. Set current active locations on missing locationOfBirth where possible
      * 2. Set deactivated locations on missing locationOfBirth where possible
@@ -1616,7 +1652,7 @@ class AnimalRepository extends BaseRepository
       $results = $this->getConnection()->query($sql)->fetchAll();
 
       $internalCount = count($results);
-      
+
       if($internalCount > 0) {
         if($cmdUtil != null) { $cmdUtil->setStartTimeAndPrintIt($internalCount,1); }
 
@@ -1802,7 +1838,7 @@ class AnimalRepository extends BaseRepository
     }
 
     if($output != null) { $output->writeln('Clearing '.$count.' pedigreeNumbers for animals without a pedigreeRegister ...'); }
-    
+
     $sql = "UPDATE animal SET pedigree_country_code = NULL, pedigree_number = NULL 
             WHERE pedigree_register_id ISNULL AND (pedigree_country_code NOTNULL OR pedigree_number NOTNULL)";
     $this->getConnection()->exec($sql);
@@ -1852,7 +1888,7 @@ class AnimalRepository extends BaseRepository
       if(is_int($animalIds)) {
         $animalIds = [$animalIds];
       } else {
-        return; 
+        return;
       }
     }
     if(count($animalIds) == 0) { return; }
@@ -1977,12 +2013,10 @@ class AnimalRepository extends BaseRepository
      */
     public function findAnimalByIdOrUln($id)
     {
-        if(StringUtil::isStringContains($id, 'NL')) {
-            return $this->findAnimalByUlnString($id);
-        } elseif(ctype_digit($id) || is_int($id)) {
-            return $this->find($id);
+        if (ctype_digit($id) || is_int($id)) {
+            return $this->find(intval($id));
         }
-        return null;
+        return $this->findAnimalByUlnString($id);
     }
 
 

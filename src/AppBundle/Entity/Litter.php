@@ -75,11 +75,25 @@ class Litter extends DeclareNsfoBase
      * The number designating then place in an ordered sequence of litters for a specific ewe
      * starting at 1.
      *
+     * Includes abortions and pseudo pregnancies
+     *
      * @var integer
      * @ORM\Column(type="integer", nullable=true, options={"default":null})
      * @JMS\Type("integer")
      */
     private $litterOrdinal;
+
+    /**
+     * The number designating then place in an ordered sequence of litters for a specific ewe
+     * starting at 1.
+     *
+     * DOES NOT Include abortions and pseudo pregnancies
+     *
+     * @var integer
+     * @ORM\Column(type="integer", nullable=true, options={"default":null})
+     * @JMS\Type("integer")
+     */
+    private $standardLitterOrdinal;
 
     /**
      * @var integer
@@ -108,6 +122,17 @@ class Litter extends DeclareNsfoBase
      * })
      */
     private $bornAliveCount;
+
+    /**
+     * @var integer
+     *
+     * @ORM\Column(type="integer", options={"default":0})
+     * @JMS\Type("integer")
+     * @JMS\Groups({
+     *     "ANIMAL_DETAILS"
+     * })
+     */
+    private $cumulativeBornAliveCount;
 
     /**
      * @ORM\Column(type="boolean", nullable=true)
@@ -139,7 +164,7 @@ class Litter extends DeclareNsfoBase
 
     /**
      * @var ArrayCollection
-     * 
+     *
      * @ORM\OneToMany(targetEntity="Stillborn", mappedBy="litter", cascade={"persist"})
      * @JMS\Type("ArrayCollection<AppBundle\Entity\Stillborn>")
      * @JMS\Groups({
@@ -249,6 +274,110 @@ class Litter extends DeclareNsfoBase
     private $updatedGeneDiversity;
 
     /**
+     * @var InbreedingCoefficient|null
+     * @ORM\ManyToOne(targetEntity="InbreedingCoefficient", inversedBy="litters", fetch="LAZY")
+     * @JMS\Type("AppBundle\Entity\InbreedingCoefficient")
+     * @JMS\Groups({
+     *     "ANIMAL_DETAILS"
+     * })
+     * @JMS\MaxDepth(depth=1)
+     */
+    public $inbreedingCoefficient;
+
+    /**
+     * Last dateTime when inbreedingCoefficient was matched with this animal
+     *
+     * @var DateTime|null
+     *
+     * @ORM\Column(type="datetime", nullable=true)
+     * @Assert\Date
+     * @JMS\Type("DateTime")
+     */
+    public $inbreedingCoefficientMatchUpdatedAt;
+
+    /**
+     * @var integer
+     *
+     * @ORM\Column(type="integer", options={"default":0})
+     * @JMS\Type("integer")
+     */
+    private $ewesWithDefinitiveExteriorCount;
+
+    /**
+     * @var integer
+     *
+     * @ORM\Column(type="integer", options={"default":0})
+     * @JMS\Type("integer")
+     */
+    private $ramsWithDefinitiveExteriorCount;
+
+    /**
+     * Sons that have a VG exterior, if the father has no definitive exterior yet.
+     * If the father has a definitive exterior, then the count should be zero.
+     *
+     * @var integer
+     *
+     * @ORM\Column(type="integer", options={"default":0})
+     * @JMS\Type("integer")
+     */
+    private $vgRamsIfFatherNoDefExteriorCount;
+
+    /**
+     * Sons that have a DEFINITIVE_PREMIUM_RAM (DP) breed type.
+     *
+     * @var integer
+     *
+     * @ORM\Column(type="integer", options={"default":0})
+     * @JMS\Type("integer")
+     */
+    private $definitivePrimeRamCount;
+
+    /**
+     * Sons that have a GRADE_RAM (DP) breed type.
+     *
+     * @var integer
+     *
+     * @ORM\Column(type="integer", options={"default":0})
+     * @JMS\Type("integer")
+     */
+    private $gradeRamCount;
+
+    /**
+     * Sons that have a breed type in (
+     * - PREFERENT
+     * - PREFERENT_1
+     * - PREFERENT_2
+     * - PREFERENT_A
+     * ).
+     *
+     * @var integer
+     *
+     * @ORM\Column(type="integer", options={"default":0})
+     * @JMS\Type("integer")
+     */
+    private $preferentRamCount;
+
+    /**
+     * @var bool
+     * @ORM\Column(type="boolean", nullable=false, options={"default":false})
+     * @JMS\Type("boolean")
+     */
+    private $hasMinimumOffspringMuscularity;
+
+    /**
+     * The StarEwe base points:
+     * - only based on the offspring exterior.generalAppearance conversion table values
+     * - NO StarEwe prerequisites were taken into account for this base value
+     * - Bonus points bases on the Predicate values of the sons are NOT included
+     *
+     * @var integer
+     *
+     * @ORM\Column(type="integer", options={"default":0})
+     * @JMS\Type("integer")
+     */
+    private $starEweBasePoints;
+
+    /**
      * Litter constructor.
      */
     public function __construct()
@@ -260,8 +389,18 @@ class Litter extends DeclareNsfoBase
         $this->logDate = new \DateTime();
         $this->stillbornCount = 0;
         $this->bornAliveCount = 0;
+        $this->cumulativeBornAliveCount = 0;
         $this->declareBirths = new ArrayCollection();
         $this->updatedGeneDiversity = false;
+
+        $this->ewesWithDefinitiveExteriorCount = 0;
+        $this->ramsWithDefinitiveExteriorCount = 0;
+        $this->vgRamsIfFatherNoDefExteriorCount = 0;
+        $this->definitivePrimeRamCount = 0;
+        $this->gradeRamCount = 0;
+        $this->preferentRamCount = 0;
+        $this->hasMinimumOffspringMuscularity = false;
+        $this->starEweBasePoints = 0;
     }
 
     /**
@@ -357,6 +496,22 @@ class Litter extends DeclareNsfoBase
     }
 
     /**
+     * @return integer
+     */
+    public function getStandardLitterOrdinal()
+    {
+        return $this->standardLitterOrdinal;
+    }
+
+    /**
+     * @param integer $standardLitterOrdinal
+     */
+    public function setStandardLitterOrdinal($standardLitterOrdinal)
+    {
+        $this->standardLitterOrdinal = $standardLitterOrdinal;
+    }
+
+    /**
      * @return int
      */
     public function getStillbornCount()
@@ -386,6 +541,22 @@ class Litter extends DeclareNsfoBase
     public function setBornAliveCount($bornAliveCount)
     {
         $this->bornAliveCount = $bornAliveCount;
+    }
+
+    /**
+     * @return int
+     */
+    public function getCumulativeBornAliveCount()
+    {
+        return $this->cumulativeBornAliveCount;
+    }
+
+    /**
+     * @param int $cumulativeBornAliveCount
+     */
+    public function setCumulativeBornAliveCount($cumulativeBornAliveCount)
+    {
+        $this->cumulativeBornAliveCount = $cumulativeBornAliveCount;
     }
 
     /**
@@ -712,7 +883,7 @@ class Litter extends DeclareNsfoBase
         $this->updatedGeneDiversity = $updatedGeneDiversity;
         return $this;
     }
-    
+
 
     /**
      * @return string
@@ -779,6 +950,186 @@ class Litter extends DeclareNsfoBase
 
 
     /**
+     * @return InbreedingCoefficient|null
+     */
+    public function getInbreedingCoefficient(): ?InbreedingCoefficient
+    {
+        return $this->inbreedingCoefficient;
+    }
+
+    /**
+     * @param InbreedingCoefficient|null $inbreedingCoefficient
+     * @return Litter
+     */
+    public function setInbreedingCoefficient(?InbreedingCoefficient $inbreedingCoefficient): Litter
+    {
+        $this->inbreedingCoefficient = $inbreedingCoefficient;
+        return $this;
+    }
+
+    /**
+     * @return DateTime|null
+     */
+    public function getInbreedingCoefficientMatchUpdatedAt(): ?DateTime
+    {
+        return $this->inbreedingCoefficientMatchUpdatedAt;
+    }
+
+    /**
+     * @param DateTime|null $inbreedingCoefficientMatchUpdatedAt
+     * @return Litter
+     */
+    public function setInbreedingCoefficientMatchUpdatedAt(?DateTime $inbreedingCoefficientMatchUpdatedAt): Litter
+    {
+        $this->inbreedingCoefficientMatchUpdatedAt = $inbreedingCoefficientMatchUpdatedAt;
+        return $this;
+    }
+
+    /**
+     * @return int
+     */
+    public function getEwesWithDefinitiveExteriorCount(): int
+    {
+        return $this->ewesWithDefinitiveExteriorCount;
+    }
+
+    /**
+     * @param  int  $ewesWithDefinitiveExteriorCount
+     * @return Litter
+     */
+    public function setEwesWithDefinitiveExteriorCount(int $ewesWithDefinitiveExteriorCount): Litter
+    {
+        $this->ewesWithDefinitiveExteriorCount = $ewesWithDefinitiveExteriorCount;
+        return $this;
+    }
+
+    /**
+     * @return int
+     */
+    public function getRamsWithDefinitiveExteriorCount(): int
+    {
+        return $this->ramsWithDefinitiveExteriorCount;
+    }
+
+    /**
+     * @param  int  $ramsWithDefinitiveExteriorCount
+     * @return Litter
+     */
+    public function setRamsWithDefinitiveExteriorCount(int $ramsWithDefinitiveExteriorCount): Litter
+    {
+        $this->ramsWithDefinitiveExteriorCount = $ramsWithDefinitiveExteriorCount;
+        return $this;
+    }
+
+    /**
+     * @return int
+     */
+    public function getVgRamsIfFatherNoDefExteriorCount(): int
+    {
+        return $this->vgRamsIfFatherNoDefExteriorCount;
+    }
+
+    /**
+     * @param  int  $vgRamsIfFatherNoDefExteriorCount
+     * @return Litter
+     */
+    public function setVgRamsIfFatherNoDefExteriorCount(int $vgRamsIfFatherNoDefExteriorCount): Litter
+    {
+        $this->vgRamsIfFatherNoDefExteriorCount = $vgRamsIfFatherNoDefExteriorCount;
+        return $this;
+    }
+
+    /**
+     * @return int
+     */
+    public function getDefinitivePrimeRamCount(): int
+    {
+        return $this->definitivePrimeRamCount;
+    }
+
+    /**
+     * @param  int  $definitivePrimeRamCount
+     * @return Litter
+     */
+    public function setDefinitivePrimeRamCount(int $definitivePrimeRamCount): Litter
+    {
+        $this->definitivePrimeRamCount = $definitivePrimeRamCount;
+        return $this;
+    }
+
+    /**
+     * @return int
+     */
+    public function getGradeRamCount(): int
+    {
+        return $this->gradeRamCount;
+    }
+
+    /**
+     * @param  int  $gradeRamCount
+     * @return Litter
+     */
+    public function setGradeRamCount(int $gradeRamCount): Litter
+    {
+        $this->gradeRamCount = $gradeRamCount;
+        return $this;
+    }
+
+    /**
+     * @return int
+     */
+    public function getPreferentRamCount(): int
+    {
+        return $this->preferentRamCount;
+    }
+
+    /**
+     * @param  int  $preferentRamCount
+     * @return Litter
+     */
+    public function setPreferentRamCount(int $preferentRamCount): Litter
+    {
+        $this->preferentRamCount = $preferentRamCount;
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isHasMinimumOffspringMuscularity(): bool
+    {
+        return $this->hasMinimumOffspringMuscularity;
+    }
+
+    /**
+     * @param  bool  $hasMinimumOffspringMuscularity
+     * @return Litter
+     */
+    public function setHasMinimumOffspringMuscularity(bool $hasMinimumOffspringMuscularity): Litter
+    {
+        $this->hasMinimumOffspringMuscularity = $hasMinimumOffspringMuscularity;
+        return $this;
+    }
+
+    /**
+     * @return int
+     */
+    public function getStarEweBasePoints(): int
+    {
+        return $this->starEweBasePoints;
+    }
+
+    /**
+     * @param  int  $starEweBasePoints
+     * @return Litter
+     */
+    public function setStarEweBasePoints(int $starEweBasePoints): Litter
+    {
+        $this->starEweBasePoints = $starEweBasePoints;
+        return $this;
+    }
+
+    /**
      * @return array
      */
     public function getAllAnimalIds(): array
@@ -798,5 +1149,12 @@ class Litter extends DeclareNsfoBase
             }
         }
         return $animalIds;
+    }
+
+
+    public function getChildrenIds(): array {
+        return array_map(function(Animal $animal) {
+            return $animal->getId();
+        }, $this->children->toArray());
     }
 }

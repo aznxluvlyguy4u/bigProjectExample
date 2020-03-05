@@ -169,7 +169,7 @@ class DepartService extends DeclareControllerServiceBase
      */
     public function createDepartOrExport(Request $request)
     {
-        $content = RequestUtil::getContentAsArray($request);
+        $content = RequestUtil::getContentAsArrayCollection($request);
         return $content['is_export_animal'] ? $this->createExport($request) : $this->createDepart($request);
     }
 
@@ -178,7 +178,7 @@ class DepartService extends DeclareControllerServiceBase
     {
         $arrivalLocation = null;
 
-        $content = RequestUtil::getContentAsArray($request);
+        $content = RequestUtil::getContentAsArrayCollection($request);
         $client = $this->getAccountOwner($request);
         $loggedInUser = $this->getUser();
         $location = $this->getSelectedLocation($request);
@@ -302,7 +302,7 @@ class DepartService extends DeclareControllerServiceBase
 
     private function createExport(Request $request)
     {
-        $content = RequestUtil::getContentAsArray($request);
+        $content = RequestUtil::getContentAsArrayCollection($request);
         $client = $this->getAccountOwner($request);
         $loggedInUser = $this->getUser();
         $location = $this->getSelectedLocation($request);
@@ -346,6 +346,7 @@ class DepartService extends DeclareControllerServiceBase
             $export->getAnimal()->setIsExportAnimal(false);
             $export->getAnimal()->setTransferringTransferState();
             $this->getManager()->persist($export->getAnimal());
+            $this->getManager()->persist($export);
             $this->getManager()->flush();
 
         } else {
@@ -365,7 +366,7 @@ class DepartService extends DeclareControllerServiceBase
      */
     public function updateDepart(Request $request, $Id)
     {
-        $content = RequestUtil::getContentAsArray($request);
+        $content = RequestUtil::getContentAsArrayCollection($request);
 
         //Client can only depart/export own animals
         $client = $this->getAccountOwner($request);

@@ -72,9 +72,9 @@ class CompanyAPIController extends APIController
      * @Route("/{companyId}/status")
      * @Method("PUT")
      */
-    public function setCompanyInactive(Request $request, $companyId)
+    public function setCompanyActiveStatus(Request $request, $companyId)
     {
-        return $this->get('app.company')->setCompanyInactive($request, $companyId);
+        return $this->get('app.company')->setCompanyActiveStatus($request, $companyId);
     }
 
     /**

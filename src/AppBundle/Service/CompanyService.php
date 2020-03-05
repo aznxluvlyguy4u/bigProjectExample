@@ -36,6 +36,7 @@ use Doctrine\ORM\Query;
 use Doctrine\ORM\QueryBuilder;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
 
 
@@ -105,7 +106,7 @@ class CompanyService extends AuthServiceBase
         }
 
         // Validate content
-        $content = RequestUtil::getContentAsArray($request);
+        $content = RequestUtil::getContentAsArrayCollection($request);
 
         // TODO VALIDATE CONTENT
         $companyValidator = new CompanyValidator($this->getManager(), $content);
@@ -321,7 +322,7 @@ class CompanyService extends AuthServiceBase
             return AdminValidator::getStandardErrorResponse();
         }
         // Validate content
-        $content = RequestUtil::getContentAsArray($request);
+        $content = RequestUtil::getContentAsArrayCollection($request);
         // TODO VALIDATE CONTENT
 
         // Get Company
@@ -662,7 +663,7 @@ class CompanyService extends AuthServiceBase
      * @param $companyId
      * @return JsonResponse|\Symfony\Component\HttpFoundation\JsonResponse
      */
-    public function setCompanyInactive(Request $request, $companyId)
+    public function setCompanyActiveStatus(Request $request, $companyId)
     {
         // Validation if user is an admin
         $admin = $this->getEmployee();
@@ -671,7 +672,7 @@ class CompanyService extends AuthServiceBase
         }
 
         // Validate content
-        $content = RequestUtil::getContentAsArray($request);
+        $content = RequestUtil::getContentAsArrayCollection($request);
         // TODO VALIDATE CONTENT
 
         // Get Content
@@ -680,9 +681,43 @@ class CompanyService extends AuthServiceBase
         // Get Company
         /** @var Company $company */
         $company = $this->getManager()->getRepository(Company::class)->findOneByCompanyId($companyId);
-
-        // Set Company inactive
         $company->setIsActive($isActive);
+
+        if ($isActive) {
+            // Reactivate all owned locations if company is reactivated
+            /** @var Location[]|array $activeLocations */
+            $activeLocations = [];
+            $reactivatedLocationsCount = 0;
+            foreach ($company->getLocations() as $location) {
+                $activeLocation = $this->getManager()->getRepository(Location::class)->findOneByActiveUbn($location->getUbn());
+                if (!$activeLocation) {
+                    // Only reactivate locations for which there is no other active location with the same UBN
+                    $location->setIsActive($isActive);
+                    $this->getManager()->persist($location);
+                    $reactivatedLocationsCount++;
+                } else {
+                    $activeLocations[] = $activeLocation;
+                }
+            }
+
+            if ($reactivatedLocationsCount == 0) {
+                $errorMessage = "Voor dit bedrijf kon geen enkele bijbehorende locatie worden heractiveerd ".
+                "omdat hetzelde UBN al bestaat bij andere bedrijven: ";
+                $prefix = "";
+                foreach ($activeLocations as $location) {
+                    $errorMessage .= $prefix . "UBN " . $location->getUbn() . " bij bedrijf ".$location->getCompanyName();
+                    $prefix = ", ";
+                }
+                throw new BadRequestHttpException($errorMessage);
+            }
+        } else {
+            // Deactivate all owned locations if company is deactivated
+            foreach ($company->getLocations() as $location) {
+                $location->setIsActive($isActive);
+                $this->getManager()->persist($location);
+            }
+        }
+
         $this->getManager()->persist($company);
         $this->getManager()->flush();
 
@@ -759,7 +794,7 @@ class CompanyService extends AuthServiceBase
         }
 
         // Validate content
-        $content = RequestUtil::getContentAsArray($request);
+        $content = RequestUtil::getContentAsArrayCollection($request);
         // TODO VALIDATE CONTENT
 
         // Get Company

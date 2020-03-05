@@ -45,7 +45,7 @@ class InvoiceSenderDetailsService extends ControllerServiceBase implements Invoi
         { return AdminValidator::getStandardErrorResponse(); }
 
         $details = new InvoiceSenderDetails();
-        $content = RequestUtil::getContentAsArray($request);
+        $content = RequestUtil::getContentAsArrayCollection($request);
         $contentAddress = $content->get('address');
         $address = new BillingAddress();
         $address->setStreetName($contentAddress['street_name']);
@@ -111,7 +111,7 @@ class InvoiceSenderDetailsService extends ControllerServiceBase implements Invoi
         if (!AdminValidator::isAdmin($this->getUser(), AccessLevelType::ADMIN))
         { return AdminValidator::getStandardErrorResponse(); }
 
-        $content = RequestUtil::getContentAsArray($request);
+        $content = RequestUtil::getContentAsArrayCollection($request);
         $temporaryInvoiceSenderDetails = new InvoiceSenderDetails();
         $contentAddress = $content->get('address');
         $temporaryAddress = new BillingAddress();

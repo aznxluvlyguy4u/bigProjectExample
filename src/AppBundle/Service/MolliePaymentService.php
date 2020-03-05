@@ -38,7 +38,7 @@ class MolliePaymentService extends ControllerServiceBase
      */
     public function createMolliePayment(Request $request)
     {
-        $content = RequestUtil::getContentAsArray($request);
+        $content = RequestUtil::getContentAsArrayCollection($request);
         /** @var Invoice $invoice */
         $invoice = $this->getManager()->getRepository(Invoice::class)->findOneBy(['id' => $content['id']]);
         $payment = $this->mollieService->createPayment($invoice);
@@ -73,7 +73,7 @@ class MolliePaymentService extends ControllerServiceBase
                 break;
         }
         $this->persistAndFlush($invoice);
-        
+
         return ResultUtil::successResult($payment);
     }
 

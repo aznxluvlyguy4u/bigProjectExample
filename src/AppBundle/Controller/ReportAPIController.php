@@ -416,6 +416,74 @@ class ReportAPIController extends APIController {
         return $this->get(ReportService::class)->createOffspringReport($request);
     }
 
+    /**
+     * Generate ewe card report.
+     *
+     * @ApiDoc(
+     *   section = "Reports",
+     *   headers={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "required"=true,
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Generate ewe card report"
+     * )
+     * @param Request $request the request object
+     * @return JsonResponse
+     * @Route("/ewe-card")
+     * @Method("POST")
+     */
+    public function getEweCardReport(Request $request)
+    {
+        return $this->get(ReportService::class)->createEweCardReport($request);
+    }
+
+    /**
+     * Generate animal features per year of birth report.
+     *
+     * @ApiDoc(
+     *   section = "Reports",
+     *   headers={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "required"=true,
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   parameters={
+     *     {
+     *        "name"="language",
+     *        "dataType"="string",
+     *        "required"=false,
+     *        "description"="Choose language option for column headers: en (english) or nl (dutch). nl is default",
+     *        "format"="?language=en"
+     *     },
+     *     {
+     *        "name"="concat_value_and_accuracy",
+     *        "dataType"="boolean",
+     *        "required"=false,
+     *        "description"="Choose if the value and accuracy breedValue numbers should be combined into one column. false is default",
+     *        "format"="?concat_value_and_accuracy=true"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Generate animal features per year of birth report"
+     * )
+     * @param Request $request the request object
+     * @return JsonResponse
+     * @Route("/animal-features-per-year-of-birth")
+     * @Method("POST")
+     */
+    public function getAnimalFeaturesPerYearOfBirthReport(Request $request)
+    {
+        return $this->get(ReportService::class)->createAnimalFeaturesPerYearOfBirthReport($request);
+    }
+
 
     /**
      * Generate animal health status report.

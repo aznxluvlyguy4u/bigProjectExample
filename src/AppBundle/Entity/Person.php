@@ -147,6 +147,7 @@ abstract class Person implements UserInterface
    * @Assert\NotBlank
    * @JMS\Type("string")
    * @JMS\Groups({
+   *     "ANIMAL_DETAILS",
    *     "BASIC",
    *     "GHOST_LOGIN",
    *     "VWA",
@@ -336,6 +337,14 @@ abstract class Person implements UserInterface
     private $workers;
 
     /**
+     * @var ArrayCollection|AnimalAnnotation[]
+     * @ORM\OrderBy({"updatedAt" = "DESC"})
+     * @ORM\OneToMany(targetEntity="AppBundle\Entity\AnimalAnnotation", mappedBy="actionBy", cascade={"persist", "remove"}, fetch="LAZY")
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\AnimalAnnotation>")
+     */
+    protected $animalAnnotations;
+
+    /**
      * @var LanguageOption|null
      *
      * @ORM\ManyToOne(targetEntity="AppBundle\Entity\LanguageOption")
@@ -347,13 +356,30 @@ abstract class Person implements UserInterface
      */
     private $languagePreference;
 
+    /**
+     * Returns the full name of the user.
+     *
+     * @JMS\VirtualProperty
+     * @JMS\SerializedName("full_name")
+     * @JMS\Groups({
+     *     "ANIMAL_DETAILS"
+     * })
+     *
+     * @return string The username
+     */
+    public function getFullName()
+    {
+        return StringUtil::getFullName($this->firstName, $this->lastName);
+    }
+
   public function __construct($firstName = null, $lastName = null, $emailAddress = null,
                               $password = '', $username = null, $cellphoneNumber = null)
   {
     $this->tokens = new ArrayCollection();
     $this->mobileDevices = new ArrayCollection();
     $this->workers = new ArrayCollection();
-    
+    $this->animalAnnotations = new ArrayCollection();
+
     $this->setFirstName($firstName);
     $this->setLastName($lastName);
     $this->setEmailAddress($emailAddress);
@@ -521,16 +547,6 @@ abstract class Person implements UserInterface
   public function getUsername()
   {
     return $this->username;
-  }
-
-  /**
-   * Returns the full name of the user.
-   *
-   * @return string The username
-   */
-  public function getFullName()
-  {
-    return StringUtil::getFullName($this->firstName, $this->lastName);
   }
 
   /**
@@ -936,6 +952,47 @@ abstract class Person implements UserInterface
     {
         $this->getMobileDevices()->removeElement($mobileDevice);
         return $this;
+    }
+
+    /**
+     * @return AnimalAnnotation[]|ArrayCollection
+     */
+    public function getAnimalAnnotations()
+    {
+        return $this->animalAnnotations;
+    }
+
+    /**
+     * @param  AnimalAnnotation[]|ArrayCollection  $annotations
+     * @return Person
+     */
+    public function setAnimalAnnotations(ArrayCollection $annotations)
+    {
+        $this->animalAnnotations = $annotations;
+        return $this;
+    }
+
+    /**
+     * Add annotation
+     *
+     * @param AnimalAnnotation $annotation
+     *
+     * @return Person
+     */
+    public function addAnimalAnnotation(AnimalAnnotation $annotation)
+    {
+        $this->animalAnnotations->add($annotation);
+        return $this;
+    }
+
+    /**
+     * Remove annotation
+     *
+     * @param AnimalAnnotation $annotation
+     */
+    public function removeAnimalAnnotation(AnimalAnnotation $annotation)
+    {
+        $this->animalAnnotations->removeElement($annotation);
     }
 
     /**

@@ -22,19 +22,23 @@ use AppBundle\Entity\Neuter;
 use AppBundle\Entity\Person;
 use AppBundle\Entity\Ram;
 use AppBundle\Entity\Token;
+use AppBundle\Enumerator\BirthType;
 use AppBundle\Enumerator\BlindnessFactorType;
 use AppBundle\Enumerator\BreedType;
 use AppBundle\Enumerator\EmailPrefix;
 use AppBundle\Enumerator\GenderType;
+use AppBundle\Enumerator\PredicateType;
 use AppBundle\Enumerator\RequestStateType;
-use AppBundle\SqlView\View\ViewMinimalParentDetails;
+use AppBundle\SqlView\View\ViewAnimalHistoricLocations;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Exception\ForeignKeyConstraintViolationException;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
 use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
+use Symfony\Component\Translation\TranslatorInterface;
 use Symfony\Component\Validator\ConstraintViolation;
 use Symfony\Component\Validator\ConstraintViolationListInterface;
 
@@ -102,7 +106,7 @@ class Validator
         $string = str_replace('.', '', $string);
         return ctype_digit($string);
     }
-    
+
 
     /**
      * validate if Id is of format: AZ123456789012
@@ -276,15 +280,24 @@ class Validator
         if(!($animal instanceof Animal) || !($client instanceof Client)) { return $nullInputResult; }
 
         $location = $animal->getLocation();
-        if($location == null) { return $nullInputResult; }
+        if($location == null || !$location->getIsActive()) { return $nullInputResult; }
 
         $company = $location->getCompany();
-        if($company == null) { return $nullInputResult; }
+        if($company == null || !$company->isActive()) { return $nullInputResult; }
 
-        $ownerOfAnimal = $company->getOwner();
-        if($ownerOfAnimal == null) { return $nullInputResult; }
+        return $company->isCompanyUserOrOwner($client);
+    }
 
-        return $ownerOfAnimal->getId() == $client->getId();
+
+    public static function validateIsAnimalOfClientOrIsAdmin(Person $person, Animal $animal)
+    {
+        if ($person instanceof Client) {
+            if (!Validator::isAnimalOfClient($animal, $person)) {
+                throw new AccessDeniedHttpException();
+            }
+        } elseif(!($person instanceof Employee)) {
+            throw new AccessDeniedHttpException();
+        }
     }
 
 
@@ -309,7 +322,7 @@ class Validator
     /**
      * Note! This will only validate for pedigreeCodes is they exist in the array.
      * If they don't exist in the array or are null, then by default 'true' is returned.
-     * 
+     *
      * @param ObjectManager $manager
      * @param array $animalArray
      * @param boolean $nullResult
@@ -327,7 +340,7 @@ class Validator
     /**
      * Note! This will only validate for pedigreeCodes is they exist in the array.
      * If they don't exist in the array or are null, then by default 'true' is returned.
-     * 
+     *
      * @param ObjectManager $manager
      * @param string $pedigreeCountryCode
      * @param string $pedigreeNumber
@@ -374,7 +387,7 @@ class Validator
         if(!$containsUlnOrPedigree) {
             return false;
         }
-        
+
         //Then validate the uln if it exists
         $ulnString = NullChecker::getUlnStringFromArray($animalArray, null);
         if ($ulnString != null) {
@@ -537,7 +550,7 @@ class Validator
 
     /**
      * Test if database used is the test database.
-     * 
+     *
      * @param EntityManagerInterface|ObjectManager $em
      * @throws \Exception
      */
@@ -547,7 +560,7 @@ class Validator
         $connection = $em->getConnection();
         $databaseName = $connection->getDatabase();
         $host = $connection->getHost();
-        
+
         $isIgnoreCase = true;
         //$isLocalHost = self::isStringContainsAtleastOne($host, ['localhost', '127.0.0.1'], $isIgnoreCase);
         $isTestDatabaseName = self::isStringContainsAtleastOne($databaseName, ['test'], $isIgnoreCase);
@@ -571,7 +584,7 @@ class Validator
 
         } elseif(empty($array1) || empty($array2)) {
             return true;
-            
+
         } else {
             $isUnique = true;
             foreach ($array1 as $item) {
@@ -769,13 +782,18 @@ class Validator
 
 
     /**
-     * @param ViewMinimalParentDetails $animal
+     * @param ViewAnimalHistoricLocations $animalHistoricLocations
      * @param Company $companyOfUser
+     * @param bool $isPublicAnimal
      * @param array $currentUbnsOfUser
      * @return bool
      */
-    public static function isUserAllowedToAccessAnimalDetails(ViewMinimalParentDetails $animal, Company $companyOfUser,
-                                                              $currentUbnsOfUser = []): bool
+    public static function isUserAllowedToAccessAnimalDetails(
+        ViewAnimalHistoricLocations $animalHistoricLocations,
+        Company $companyOfUser,
+        bool $isPublicAnimal = true,
+        $currentUbnsOfUser = []
+    ): bool
     {
         /*
          * 1. Always show animals on own location/ubn
@@ -785,8 +803,8 @@ class Validator
          * Note, the current ubn is included in the historic ubns list of the sqlViews
          */
 
-        if (!empty($animal->getHistoricUbns()) && !empty($currentUbnsOfUser)
-        && ArrayUtil::hasAtLeastOneValueInArray($animal->getHistoricUbnsAsArray(), $currentUbnsOfUser)) {
+        if (!empty($animalHistoricLocations->getHistoricUbns()) && !empty($currentUbnsOfUser)
+        && ArrayUtil::hasAtLeastOneValueInArray($animalHistoricLocations->getHistoricUbnsAsArray(), $currentUbnsOfUser)) {
             return true;
         }
 
@@ -794,7 +812,7 @@ class Validator
          * 3. For the public, allow access to all public animals
          */
         if (!$companyOfUser) {
-            return $animal->isPublic();
+            return $isPublicAnimal;
 
         } elseif ($companyOfUser->getIsRevealHistoricAnimals()) {
 
@@ -804,7 +822,7 @@ class Validator
 
             // TODO 6. Set a delay before giving access to animal using $company->getLastMakeLivestockPublicDate()
 
-            return $animal->isPublic();
+            return $isPublicAnimal;
         }
 
         /*
@@ -971,23 +989,31 @@ class Validator
 
 
     /**
+     * @param TranslatorInterface|null $translator
      * @param ConstraintViolationListInterface $errors
      */
-    public static function throwExceptionWithFormattedErrorMessageIfHasErrors($errors)
+    public static function throwExceptionWithFormattedErrorMessageIfHasErrors($errors, ?TranslatorInterface $translator = null)
     {
         if (empty($errors->count())) {
             return;
         }
 
         // Prepare error message string
-        $errorMessage = '';
+        $errorMessageWithContext = '';
         $prefix = '';
         foreach ($errors as $index => $error) {
+            $property = $error->getPropertyPath();
+            $errorMessage = $error->getMessage();
+            if ($translator instanceof TranslatorInterface) {
+                $property = $translator->trans($error->getPropertyPath());
+                $errorMessage = $translator->trans($error->getMessage(), $error->getParameters(), 'validators');
+            }
+
             /* @var ConstraintViolation $error */
-            $errorMessage .= $prefix . $error->getPropertyPath().': '.$error->getMessage();
+            $errorMessageWithContext .= $prefix . $property.': '.$errorMessage;
             $prefix = ' | ';
         }
-        throw new PreconditionFailedHttpException($errorMessage);
+        throw new PreconditionFailedHttpException($errorMessageWithContext);
     }
 
     /**
@@ -1028,4 +1054,74 @@ class Validator
     {
         return self::isFillerEmailAddress($emailAddress) ? $nullFiller : $emailAddress;
     }
+
+
+    /**
+     * @param  string|null $predicateType
+     * @param  bool  $allowNull
+     * @return bool
+     */
+    public static function isValidPredicateType(?string $predicateType, bool $allowNull): bool
+    {
+        return ($predicateType === null && $allowNull) ||
+            in_array($predicateType, PredicateType::getConstants());
+    }
+
+
+    /**
+     * @param  string|null $predicateScore
+     * @param  string|null $predicateType
+     * @param  bool  $allowNull
+     * @return bool
+     */
+    public static function isValidPredicateScore(?string $predicateScore, ?string $predicateType, bool $allowNull = true): bool
+    {
+        if ($predicateType === null && $predicateScore != null) {
+            return false;
+        }
+
+
+        $minimumValue = 13;
+        return ($predicateScore === null && $allowNull) || (
+            (ctype_digit($predicateScore) || is_int($predicateScore)) && $minimumValue <= intval($predicateScore)
+        );
+    }
+
+
+    /**
+     * @param  string|null $blindnessFactor
+     * @param  bool  $allowNull
+     * @return bool
+     */
+    public static function isValidBlindnessFactor(?string $blindnessFactor, bool $allowNull): bool
+    {
+        return ($blindnessFactor === null && $allowNull) ||
+            in_array($blindnessFactor, BlindnessFactorType::getConstants());
+    }
+
+
+    /**
+     * @param  string|null $breedType
+     * @param  bool  $allowNull
+     * @return bool
+     */
+    public static function isValidBreedType(?string $breedType, bool $allowNull): bool
+    {
+        return ($breedType === null && $allowNull) ||
+            in_array($breedType, BreedType::getConstants());
+    }
+
+
+    /**
+     * @param  string|null $birthProcess
+     * @param  bool  $allowNull
+     * @return bool
+     */
+    public static function isValidBirthProcess(?string $birthProcess, bool $allowNull): bool
+    {
+        return ($birthProcess === null && $allowNull) ||
+            in_array($birthProcess, BirthType::getConstants());
+    }
+
+
 }

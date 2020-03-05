@@ -3,11 +3,15 @@
 namespace AppBundle\Service;
 
 
+use AppBundle\Cache\TailLengthCacher;
+use AppBundle\Cache\WeightCacher;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Controller\BirthMeasurementAPIControllerInterface;
 use AppBundle\Entity\ActionLog;
 use AppBundle\Entity\Animal;
+use AppBundle\Entity\Client;
+use AppBundle\Entity\Employee;
 use AppBundle\Entity\Person;
 use AppBundle\Entity\TailLength;
 use AppBundle\Entity\Weight;
@@ -20,7 +24,8 @@ use AppBundle\Output\BirthMeasurements\TailLengthOutput;
 use AppBundle\Util\NumberUtil;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
-use AppBundle\Validation\AdminValidator;
+use AppBundle\Util\StringUtil;
+use AppBundle\Util\Validator;
 use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
@@ -43,22 +48,28 @@ class BirthMeasurementService extends ControllerServiceBase implements BirthMeas
     function editBirthMeasurements(Request $request, $animalId)
     {
         $actionBy = $this->getUser();
-        AdminValidator::isAdmin($actionBy, AccessLevelType::ADMIN, true);
 
         $animal = $this->getAnimal($animalId);
+        $this->validateAuthorization($this->getUser(), $animal);
+
         $content = $this->getContent($request);
 
         $this->getManager()->beginTransaction(); // suspend auto-commit
         try {
             $birthWeightUpdateMessage = $this->updateBirthWeight($actionBy, $animal, $animal->getLatestBirthWeight(), $content);
             $tailLengthUpdateMessage = $this->updateTailLength($actionBy, $animal, $animal->getLatestTailLength(), $content);
-            if (!empty($birthWeightUpdateMessage) || !empty($tailLengthUpdateMessage)) {
-                $this->logAction($actionBy, $animal, $birthWeightUpdateMessage, $tailLengthUpdateMessage);
+            $birthProcessMessage = $this->updateBirthProcess($animal, $content->getBirthProgress());
+            if (!empty($birthWeightUpdateMessage) || !empty($tailLengthUpdateMessage) || !empty($birthProcessMessage)) {
+                $this->logAction($actionBy, $animal, $birthWeightUpdateMessage, $tailLengthUpdateMessage, $birthProcessMessage);
                 $this->getManager()->flush();
             } else {
                 $this->getManager()->clear();
             }
             $this->getManager()->commit();
+
+            WeightCacher::updateBirthWeights($this->getConnection(), [$animalId]);
+            TailLengthCacher::update($this->getConnection(), [$animalId]);
+
         } catch (\Exception $exception) {
             $this->getManager()->rollback();
             throw $exception;
@@ -68,17 +79,29 @@ class BirthMeasurementService extends ControllerServiceBase implements BirthMeas
     }
 
 
-    private function logAction(Person $actionBy, Animal $animal, $birthWeightUpdateMessage, $tailLengthUpdateMessage) {
-        if (empty($birthWeightUpdateMessage) && empty($tailLengthUpdateMessage)) {
+    private function validateAuthorization(Person $person, Animal $animal) {
+        Validator::validateIsAnimalOfClientOrIsAdmin($person, $animal);
+    }
+
+
+    private function logAction(Person $actionBy, Animal $animal, $birthWeightUpdateMessage, $tailLengthUpdateMessage,
+        $birthProcessMessage) {
+        if (empty($birthWeightUpdateMessage) && empty($tailLengthUpdateMessage) && empty($birthProcessMessage)) {
             return;
         }
 
+        $prefix = '';
         $description = AnimalDetailsBatchUpdaterService::getAnimalEditLogPrefix($animal);
         if (!empty($birthWeightUpdateMessage)) {
-            $description .= $birthWeightUpdateMessage.'; ';
+            $description .= $birthWeightUpdateMessage;
+            $prefix = '; ';
         }
         if (!empty($tailLengthUpdateMessage)) {
-            $description .= $tailLengthUpdateMessage;
+            $description .= $prefix.$tailLengthUpdateMessage;
+            $prefix = '; ';
+        }
+        if (!empty($birthProcessMessage)) {
+            $description .= $prefix.$birthProcessMessage;
         }
 
         $log = new ActionLog(null, $actionBy, UserActionType::ADMIN_ANIMAL_EDIT,
@@ -101,9 +124,27 @@ class BirthMeasurementService extends ControllerServiceBase implements BirthMeas
             $body->setTailLength(new TailLengthOutput($tailLength));
         }
 
+        $body->setBirthProgress($animal->getBirthProgress());
+
         return ResultUtil::successResult($body);
     }
 
+
+    private function updateBirthProcess(Animal $animal, ?string $newBirthProgressInput): ?string
+    {
+        $newBirthProcess = StringUtil::convertEmptyStringToNull($newBirthProgressInput);
+        $oldBirthProcess = $animal->getBirthProgress();
+
+        if ($oldBirthProcess != $newBirthProcess) {
+            $animal->setBirthProgress($newBirthProcess);
+            $this->getManager()->persist($animal);
+            return "geboorteproces "
+                .($oldBirthProcess ?? AnimalDetailsUpdaterService::LOG_EMPTY).' => '
+                .($newBirthProcess ?? AnimalDetailsUpdaterService::LOG_EMPTY);
+        }
+
+        return null;
+    }
 
     /**
      * @param Person $actionBy
@@ -128,10 +169,9 @@ class BirthMeasurementService extends ControllerServiceBase implements BirthMeas
         if ($currentBirthWeight instanceof Weight) {
             $oldValue = $currentBirthWeight->getWeight();
             if ($newBirthWeightValue === null) {
-                $currentBirthWeight->setIsActive(false);
+                $currentBirthWeight->deactivateWeight();
                 $currentBirthWeight->setDeleteDate(new \DateTime());
                 $currentBirthWeight->setDeletedBy($actionBy);
-                $currentBirthWeight->setIsRevoked(!$currentBirthWeight->isIsActive());
                 $currentBirthWeight->setActionBy($actionBy);
                 $this->getManager()->persist($currentBirthWeight);
                 $isUpdated = true;
@@ -141,12 +181,11 @@ class BirthMeasurementService extends ControllerServiceBase implements BirthMeas
 
             } elseif (!NumberUtil::areFloatsEqual($newBirthWeightValue, $currentBirthWeight->getWeight())) {
                 $currentBirthWeight->setWeight($newBirthWeightValue);
-                $currentBirthWeight->setIsActive(true);
+                $currentBirthWeight->activateWeight();
                 if ($content->isResetMeasurementDateUsingDateOfBirth()) {
                     $currentBirthWeight->setMeasurementDate($animal->getDateOfBirth());
                 }
                 $currentBirthWeight->setEditDate(new \DateTime());
-                $currentBirthWeight->setIsRevoked(!$currentBirthWeight->isIsActive());
                 $currentBirthWeight->setActionBy($actionBy);
                 $this->getManager()->persist($currentBirthWeight);
                 $isUpdated = true;
@@ -164,8 +203,7 @@ class BirthMeasurementService extends ControllerServiceBase implements BirthMeas
             $newBirthWeight->setWeight($newBirthWeightValue);
             $newBirthWeight->setActionBy($actionBy);
             $newBirthWeight->setAnimalIdAndDateByAnimalAndDateTime($animal,$measurementDate);
-            $newBirthWeight->setIsActive(true);
-            $newBirthWeight->setIsRevoked(false);
+            $newBirthWeight->activateWeight();
             $this->getManager()->persist($newBirthWeight);
             $isUpdated = true;
 
@@ -273,28 +311,30 @@ class BirthMeasurementService extends ControllerServiceBase implements BirthMeas
 
     private function getContent(Request $request): EditBirthMeasurementsJsonFormat {
         $content = new EditBirthMeasurementsJsonFormat();
-        $requestBody = RequestUtil::getContentAsArray($request);
+        $requestBody = RequestUtil::getContentAsArrayCollection($request);
 
         $birthWeight = $this->getFloatValueInput(JsonInputConstant::BIRTH_WEIGHT, $requestBody);
         $tailLength = $this->getFloatValueInput(JsonInputConstant::TAIL_LENGTH, $requestBody);
+        $birthProgress = StringUtil::convertEmptyStringToNull($requestBody->get(JsonInputConstant::BIRTH_PROGRESS));
 
         $defaultResetMeasurementDate = false;
         $resetMeasurementDate = $requestBody->get(JsonInputConstant::RESET_MEASUREMENT_DATE_USING_DATE_OF_BIRTH)
             ?? $defaultResetMeasurementDate;
         $resetMeasurementDate = is_bool($resetMeasurementDate) ? $resetMeasurementDate : $defaultResetMeasurementDate;
 
-        $this->validateBirthMeasurements($birthWeight, $tailLength);
+        $this->validateBirthMeasurements($birthWeight, $tailLength, $birthProgress);
 
         $content
             ->setBirthWeight($birthWeight)
             ->setTailLength($tailLength)
             ->setResetMeasurementDateUsingDateOfBirth($resetMeasurementDate)
+            ->setBirthProgress($birthProgress);
         ;
         return $content;
     }
 
 
-    private function validateBirthMeasurements($birthWeight, $tailLength) {
+    private function validateBirthMeasurements($birthWeight, $tailLength, $birthProgress) {
         $errorMessage = '';
         $errorSeparator = '';
 
@@ -315,6 +355,13 @@ class BirthMeasurementService extends ControllerServiceBase implements BirthMeas
                         '%minValue%' => self::MIN_TAIL_LENGTH,
                         '%maxValue%' => self::MAX_TAIL_LENGTH,
                     ]);
+            $errorSeparator = '. ';
+        }
+
+        if (!Validator::isValidBirthProcess($birthProgress, true)) {
+            $errorMessage .= $errorSeparator . $this->translator->trans(
+                    'INVALID BIRTH PROCESS'
+                ).': '.$birthProgress;
         }
 
         if (!empty($errorMessage)) {

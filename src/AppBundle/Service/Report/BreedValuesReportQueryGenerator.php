@@ -858,11 +858,11 @@ LEFT JOIN (
                   c.birth_weight as ".$this->translateColumnHeader('birth_weight').",
                   $selectBirthProgress as ".$this->translateColumnHeader('birth_progress').",
                   aa.tail_length as ".$this->translateColumnHeader('tail_length').",
-                  aa.fat1 as ".$this->translateColumnHeader('fat1').",
-                  aa.fat2 as ".$this->translateColumnHeader('fat2').",
-                  aa.fat3 as ".$this->translateColumnHeader('fat3').",
-                  aa.muscle_thickness as ".$this->translateColumnHeader('muscle_thickness').",
-                  c.last_weight as ".$this->translateColumnHeader('scan_weight').",
+                  scan_measurements.fat1 as ".$this->translateColumnHeader('fat1').",
+                  scan_measurements.fat2 as ".$this->translateColumnHeader('fat2').",
+                  scan_measurements.fat3 as ".$this->translateColumnHeader('fat3').",
+                  scan_measurements.muscle_thickness as ".$this->translateColumnHeader('muscle_thickness').",
+                  scan_measurements.weight as ".$this->translateColumnHeader('scan_weight').",
                   aa.skull as ".$this->translateColumnHeader('skull').",
                   aa.progress as ".$this->translateColumnHeader('progress').",
                   aa.muscularity as ".$this->translateColumnHeader('muscularity').",
@@ -912,6 +912,7 @@ LEFT JOIN (
 
                 FROM animal a
                   INNER JOIN view_animal_livestock_overview_details aa ON a.id = aa.animal_id
+                  LEFT JOIN view_scan_measurements scan_measurements ON a.id = scan_measurements.animal_id
                   LEFT JOIN view_animal_livestock_overview_details mom ON a.parent_mother_id = mom.animal_id
                   LEFT JOIN view_animal_livestock_overview_details dad ON a.parent_father_id = dad.animal_id
                   LEFT JOIN location l ON l.id = a.location_id
@@ -929,6 +930,139 @@ LEFT JOIN (
     }
 
 
+    /**
+     * @param $yearOfBirth
+     * @param $location
+     * @param bool $concatBreedValuesAndAccuracies
+     * @param bool $includeAnimalsWithoutAnyBreedValues
+     * @param bool $ignoreHiddenBreedValueTypes
+     * @return string
+     * @throws DBALException
+     */
+    public function createAnimalFeaturesPerYearOfBirthReportQuery(
+        $yearOfBirth,
+        $location,
+        $concatBreedValuesAndAccuracies = true,
+        $includeAnimalsWithoutAnyBreedValues = true,
+        $ignoreHiddenBreedValueTypes = true
+    )
+    {
+        $this->createBreedIndexBatchAndQueryParts($concatBreedValuesAndAccuracies, $includeAnimalsWithoutAnyBreedValues,
+            $ignoreHiddenBreedValueTypes);
+
+        $locationId = $location ? $location->getId() : null;
+        $locationFilter = $locationId ? "AND a.location_id = $locationId -- location filter (for user)" : "";
+
+        $mainFilter =
+                    "WHERE
+                        date_part('year', a.date_of_birth) = $yearOfBirth -- Year filter (for user and admin)
+                        $locationFilter
+                    ";
+        $mainFilter .= ' ' . $this->animalShouldHaveAtleastOneExistingBreedValueFilter;
+
+
+
+        $selectBirthProgress = $this->translator->getLocale() === Locale::NL ?
+            'birth_progress.dutch_description' : 'a.birth_progress';
+
+        $sql = "SELECT DISTINCT
+                  aa.uln as ".$this->translateColumnHeader('uln').",
+                  aa.stn as ".$this->translateColumnHeader('stn').",
+                  aa.animal_order_number as ".$this->translateColumnHeader('ANIMAL_ORDER_NUMBER').",
+                  aa.dd_mm_yyyy_date_of_birth as ".$this->translateColumnHeader('date_of_birth').",
+                  aa.n_ling as n_ling, -- sql header cannot have a dash so do not translate it
+                  gender.translated_char as ".$this->translateColumnHeader('gender').",
+                  aa.breed_code as ".$this->translateColumnHeader('breed_code').",
+                  aa.breed_type_as_dutch_first_letter as ".$this->translateColumnHeader('dutch_breed_status').",
+                  aa.pedigree_register_abbreviation as ".$this->translateColumnHeader('pedigree_register').",
+                  dad.stn as ".$this->translateColumnHeader('f_stn').",
+                  mom.stn as ".$this->translateColumnHeader('m_stn').",
+                  CASE WHEN a.surrogate_id IS NULL THEN 0 ELSE 1 END as ".$this->translateColumnHeader('surrogate_mother').",
+                  a.lambar as ".$this->translateColumnHeader('lambar').",
+                  c.birth_weight as ".$this->translateColumnHeader('birth_weight').",
+                  $selectBirthProgress as ".$this->translateColumnHeader('birth_progress').",
+                  aa.tail_length as ".$this->translateColumnHeader('tail_length').",
+                  EXTRACT(YEAR FROM AGE(NOW(), a.date_of_birth)) as ".$this->translateColumnHeader('age_in_years').",
+                  
+                  grouped_litters.litter_count as aantal_worpen,
+                  grouped_litters.total_born_count as totaal_aantal_geboren_lammeren,
+                  grouped_litters.born_alive_count as aantal_levend_geboren_lammeren,
+                  grouped_litters.suckle_count as gezoogd_grootgebrachte_lammeren,
+
+                  CASE WHEN a.scan_measurement_set_id IS NULL THEN false ELSE true END as ".$this->translateColumnHeader('scanned').",                                                              
+                  scan_measurements.fat1 as ".$this->translateColumnHeader('fat1').",
+                  scan_measurements.fat2 as ".$this->translateColumnHeader('fat2').",
+                  scan_measurements.fat3 as ".$this->translateColumnHeader('fat3').",
+                  scan_measurements.muscle_thickness as ".$this->translateColumnHeader('muscle_thickness').",
+                  scan_measurements.weight as ".$this->translateColumnHeader('scan_weight').",
+                  scan_measurements.dd_mm_yyyy_measurement_date as ".$this->translateColumnHeader('scan_date').",
+                  
+                  CASE WHEN dad.scan_measurement_set_id IS NULL THEN false ELSE true END as ".$this->translateColumnHeader('father_scanned').",
+                  CASE WHEN mom.scan_measurement_set_id IS NULL THEN false ELSE true END as ".$this->translateColumnHeader('mother_scanned').",
+                  
+                  aa.skull as ".$this->translateColumnHeader('skull').",
+                  aa.progress as ".$this->translateColumnHeader('progress').",
+                  aa.muscularity as ".$this->translateColumnHeader('muscularity').",
+                  aa.proportion as ".$this->translateColumnHeader('proportion').",
+                  aa.exterior_type as ".$this->translateColumnHeader('exterior_type').",
+                  aa.leg_work as ".$this->translateColumnHeader('leg_work').",
+                  aa.fur as ".$this->translateColumnHeader('fur').",
+                  aa.general_appearance as ".$this->translateColumnHeader('general_appearance').",
+                  aa.height as ".$this->translateColumnHeader('height').",
+                  aa.breast_depth as ".$this->translateColumnHeader('breast_depth').",
+                  aa.torso_length as ".$this->translateColumnHeader('torso_length').",
+                  aa.kind as ".$this->translateColumnHeader('kind').",
+                  aa.dd_mm_yyyy_exterior_measurement_date as ".$this->translateColumnHeader('measurement_date').",
+                  aa.formatted_predicate as ".$this->translateColumnHeader('predicate').",
+
+                  ic.value as inteeltcoefficient,
+
+                  --BREED VALUES
+                  ".$this->breedValuesSelectQueryPart."
+                FROM animal a
+                  INNER JOIN view_animal_livestock_overview_details aa ON a.id = aa.animal_id
+                  LEFT JOIN view_scan_measurements scan_measurements ON a.id = scan_measurements.animal_id
+                  LEFT JOIN view_animal_livestock_overview_details mom ON a.parent_mother_id = mom.animal_id
+                  LEFT JOIN view_animal_livestock_overview_details dad ON a.parent_father_id = dad.animal_id
+                  LEFT JOIN location l ON l.id = a.location_id
+                  LEFT JOIN birth_progress birth_progress ON birth_progress.description = a.birth_progress
+                  LEFT JOIN result_table_breed_grades bg ON bg.animal_id = a.id
+                  LEFT JOIN result_table_normalized_breed_grades nbg ON nbg.animal_id = a.id
+                  LEFT JOIN animal_cache c ON c.animal_id = a.id
+                  LEFT JOIN inbreeding_coefficient ic ON ic.id = a.inbreeding_coefficient_id
+                  LEFT JOIN (VALUES ".$this->getGenderLetterTranslationValues().") AS gender(english_full, translated_char) ON a.gender = gender.english_full
+                  LEFT JOIN (
+                      SELECT
+                               animal_father_id as animal_id,
+                               COUNT(*) as litter_count,
+                               COALESCE(SUM(born_alive_count + stillborn_count), 0) as total_born_count,
+                               COALESCE(SUM(born_alive_count), 0) as born_alive_count,
+                               COALESCE(SUM(suckle_count), 0) as suckle_count
+                        FROM litter
+                        WHERE status IN ('COMPLETED', 'IMPORTED')
+                          AND animal_father_id NOTNULL
+                        GROUP BY animal_father_id
+                        
+                        UNION
+                        
+                        SELECT
+                            animal_mother_id as animal_id,
+                            COUNT(*) as litter_count,
+                            COALESCE(SUM(born_alive_count + stillborn_count), 0) as total_born_count,
+                            COALESCE(SUM(born_alive_count), 0) as born_alive_count,
+                            COALESCE(SUM(suckle_count), 0) as suckle_count
+                        FROM litter
+                        WHERE status IN ('COMPLETED', 'IMPORTED')
+                          AND animal_mother_id NOTNULL
+                        GROUP BY animal_mother_id
+                  )grouped_litters ON grouped_litters.animal_id = a.id
+                ".$this->breedValuesPlusSignsQueryJoinPart."
+                " . $mainFilter;
+
+        ReportServiceBase::closeColumnHeaderTranslation();
+
+        return $sql;
+    }
 
     /**
      * @param string $columnHeader
@@ -937,6 +1071,20 @@ LEFT JOIN (
     private function translateColumnHeader($columnHeader)
     {
         return ReportServiceBase::staticTranslateColumnHeader($this->translator, $columnHeader);
+    }
+
+    /**
+     * @return array
+     */
+    public function getAnimalFeaturesPerYearOfBirthReportBooleanColumns()
+    {
+        return [
+            $this->translateColumnHeader('surrogate_mother'),
+            $this->translateColumnHeader('lambar'),
+            $this->translateColumnHeader('scanned'),
+            $this->translateColumnHeader('mother_scanned'),
+            $this->translateColumnHeader('father_scanned'),
+        ];
     }
 
 }

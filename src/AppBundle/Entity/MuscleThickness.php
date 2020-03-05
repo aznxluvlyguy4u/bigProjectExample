@@ -12,7 +12,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  * @ORM\Entity(repositoryClass="AppBundle\Entity\MuscleThicknessRepository")
  * @package AppBundle\Entity
  */
-class MuscleThickness extends Measurement
+class MuscleThickness extends Measurement implements ScanMeasurementInterface
 {
     use EntityClassInfo;
 
@@ -31,13 +31,19 @@ class MuscleThickness extends Measurement
      */
     private $animal;
 
+    /**
+     * @var ScanMeasurementSet|null
+     * @ORM\OneToOne(targetEntity="AppBundle\Entity\ScanMeasurementSet", mappedBy="muscleThickness")
+     */
+    private $scanMeasurementSet;
+
   /**
    * MuscleThickness constructor.
    */
-    public function __construct() 
+    public function __construct()
     {
       parent::__construct();
-        
+
       $this->muscleThickness = 0.00;
     }
 
@@ -111,6 +117,24 @@ class MuscleThickness extends Measurement
     public function getInspector()
     {
         return $this->inspector;
+    }
+
+    /**
+     * @return ScanMeasurementSet|null
+     */
+    public function getScanMeasurementSet(): ?ScanMeasurementSet
+    {
+        return $this->scanMeasurementSet;
+    }
+
+    /**
+     * @param ScanMeasurementSet $scanMeasurementSet
+     * @return MuscleThickness
+     */
+    public function setScanMeasurementSet(?ScanMeasurementSet $scanMeasurementSet): MuscleThickness
+    {
+        $this->scanMeasurementSet = $scanMeasurementSet;
+        return $this;
     }
 
 

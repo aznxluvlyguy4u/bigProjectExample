@@ -3,13 +3,12 @@
 namespace AppBundle\Report;
 
 
+use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Constant\ReportLabel;
 use AppBundle\Entity\Client;
-use AppBundle\Enumerator\PedigreeMasterKey;
+use AppBundle\Entity\InbreedingCoefficient;
 use AppBundle\Util\AnimalArrayReader;
 use AppBundle\Util\ArrayUtil;
-use AppBundle\Util\InbreedingCoefficientOffspring;
-use AppBundle\Util\PedigreeUtil;
 use Doctrine\Common\Persistence\ObjectManager;
 use Symfony\Component\Translation\TranslatorInterface;
 
@@ -27,10 +26,10 @@ class InbreedingCoefficientReportData extends ReportBase
     private $ramData;
     /** @var array */
     private $ewesData;
-    /** @var array */
-    private $parentAscendants;
     /** @var TranslatorInterface */
     protected $translator;
+    /** @var array|float[] */
+    private $inbreedingCoefficientValuesByPairId;
 
     /**
      * InbreedingCoefficientReportData constructor.
@@ -38,10 +37,12 @@ class InbreedingCoefficientReportData extends ReportBase
      * @param $translator
      * @param array $ramData
      * @param array $ewesData
-     * @param int $generationOfAscendants
+     * @param array|InbreedingCoefficient[] $inbreedingCoefficients
      * @param Client $client
      */
-    public function __construct(ObjectManager $em, $translator, $ramData, $ewesData, $generationOfAscendants, Client $client = null)
+    public function __construct(ObjectManager $em, $translator, $ramData, $ewesData,
+                                $inbreedingCoefficients,
+                                Client $client = null)
     {
         parent::__construct($em, $client, self::FILE_NAME_REPORT_TYPE);
         $this->translator = $translator;
@@ -64,8 +65,10 @@ class InbreedingCoefficientReportData extends ReportBase
             $parentIds[$eweId] = $eweId;
         }
 
-        $this->parentAscendants = PedigreeUtil::findNestedParentsBySingleSqlQuery($this->conn, $parentIds, $generationOfAscendants,PedigreeMasterKey::ULN);
-
+        $this->inbreedingCoefficientValuesByPairId = [];
+        foreach ($inbreedingCoefficients as $inbreedingCoefficient) {
+            $this->inbreedingCoefficientValuesByPairId[$inbreedingCoefficient->getPairId()] = $inbreedingCoefficient->getValue();
+        }
 
         if($this->ramData == null) {
             $this->data[ReportLabel::IS_RAM_MISSING] = true;
@@ -164,6 +167,7 @@ class InbreedingCoefficientReportData extends ReportBase
      */
     private function generateDataForEwe($eweArray)
     {
+        $ramId = $this->ramData[JsonInputConstant::ID];
         $ulnString = AnimalArrayReader::getIdString($eweArray);
 
         $this->data[ReportLabel::EWES][$ulnString] = array();
@@ -174,10 +178,9 @@ class InbreedingCoefficientReportData extends ReportBase
         } else {
             $this->data[ReportLabel::EWES][$ulnString][ReportLabel::PEDIGREE] = $this->getPedigreeString($eweArray);
 
-            $inbreedingCoefficientResult = new InbreedingCoefficientOffspring($this->em,
-                $this->ramData, $eweArray, [], [], [], $this->parentAscendants);
-
-            $this->data[ReportLabel::EWES][$ulnString][ReportLabel::INBREEDING_COEFFICIENT] = $inbreedingCoefficientResult->getValue();
+            $eweId = $eweArray[JsonInputConstant::ID];
+            $pairId = InbreedingCoefficient::generatePairId($ramId, $eweId);
+            $this->data[ReportLabel::EWES][$ulnString][ReportLabel::INBREEDING_COEFFICIENT] = ArrayUtil::get($pairId, $this->inbreedingCoefficientValuesByPairId, 0.0);
         }
     }
 

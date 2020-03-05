@@ -97,7 +97,7 @@ class DisplayUtil
      */
     public static function parsePredicateString($predicate, $predicateScore)
     {
-        if(!array_key_exists($predicate, PredicateType::getAll())) { return null; }
+        if(!array_key_exists($predicate, PredicateType::getConstants())) { return null; }
         $score = $predicateScore != null && $predicateScore >= self::MIN_PREDICATE_SCORE_FOR_DISPLAY ? '('.$predicateScore.')' : null;
 
         return Translation::getPredicateAbbreviation($predicate).$score;

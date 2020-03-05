@@ -247,19 +247,21 @@ class MixBlupInputFilesService implements MixBlupServiceInterface
             $this->logger->notice(LitterUtil::matchMatchingMates($this->conn, false).' \'mate-litter\'s matched');
             $this->logger->notice(LitterUtil::removeMatesFromRevokedLitters($this->conn).' \'mate-litter\'s unmatched');
 
-            $this->logger->notice(LitterUtil::updateLitterOrdinals($this->conn).' litterOrdinals updated');
+            $this->logger->notice(LitterUtil::updateAllLitterOrdinals($this->conn).' litterOrdinals updated');
             $this->logger->notice(LitterUtil::removeLitterOrdinalFromRevokedLitters($this->conn).' litterOrdinals removed from revoked litters');
+            $this->logger->notice(LitterUtil::updateCumulativeBornAliveCount($this->conn).' litterOrdinals updated');
+            $this->logger->notice(LitterUtil::updateLitterOffspringExteriorAndStarEweValues($this->conn).' litter offspring exterior and starEwePoints updated');
 
             if ($this->runIncludesFertility()) {
-                $this->logger->notice(LitterUtil::updateSuckleCount($this->conn).' suckleCounts updated');
+                $this->logger->notice(LitterUtil::updateAllSuckleCounts($this->conn).' suckleCounts updated');
                 $this->logger->notice(LitterUtil::removeSuckleCountFromRevokedLitters($this->conn).' suckleCounts removed from revoked litters');
                 $this->logger->notice(LitterUtil::updateGestationPeriods($this->conn).' gestationPeriods updated');
-                $this->logger->notice(LitterUtil::updateBirthInterVal($this->conn).' birthIntervals updated');
+                $this->logger->notice(LitterUtil::updateAllBirthInterVal($this->conn).' birthIntervals updated');
             }
         }
     }
 
-    
+
     /**
      * Writes the instructionFile-, dataFile- and pedigreeFile data to their respective text input files.
      * Note! Old files are automatically purged.

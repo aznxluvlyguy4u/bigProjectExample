@@ -15,11 +15,16 @@ class SqlView
 
     const VIEW_PERSON_FULL_NAME = 'view_person_full_name';
     const VIEW_ANIMAL_LIVESTOCK_OVERVIEW_DETAILS = 'view_animal_livestock_overview_details';
+    const VIEW_ANIMAL_HISTORIC_LOCATIONS = 'view_animal_historic_locations';
+    const VIEW_ANIMAL_IS_PUBLIC = 'view_animal_is_public';
+    const VIEW_SCAN_MEASUREMENTS = 'view_scan_measurements';
+    const VIEW_EWE_LITTER_AGE = 'view_ewe_litter_age';
     const VIEW_LITTER_DETAILS = 'view_litter_details';
     const VIEW_LOCATION_DETAILS = 'view_location_details';
     const VIEW_NAME_AND_ADDRESS_DETAILS = 'view_name_and_address_details';
     const VIEW_MINIMAL_PARENT_DETAILS = 'view_minimal_parent_details';
     const VIEW_PEDIGREE_REGISTER_ABBREVIATION = 'view_pedigree_register_abbreviation';
+    const VIEW_BREED_VALUE_MAX_GENERATION_DATE = 'view_breed_value_max_generation_date';
 
 
     /**
@@ -92,12 +97,17 @@ class SqlView
     {
         switch ($viewName) {
             case self::VIEW_ANIMAL_LIVESTOCK_OVERVIEW_DETAILS: return self::animalLiveStockOverviewDetails();
+            case self::VIEW_ANIMAL_IS_PUBLIC: return self::isPublicAnimalQuery();
+            case self::VIEW_ANIMAL_HISTORIC_LOCATIONS: return self::animalResidenceQuery();
             case self::VIEW_LITTER_DETAILS: return self::litterDetails();
+            case self::VIEW_EWE_LITTER_AGE: return self::eweLitterAge();
             case self::VIEW_LOCATION_DETAILS: return self::locationDetails();
             case self::VIEW_NAME_AND_ADDRESS_DETAILS: return self::nameAndAddressDetailsQuery();
             case self::VIEW_MINIMAL_PARENT_DETAILS: return self::minimalParentDetails();
             case self::VIEW_PEDIGREE_REGISTER_ABBREVIATION: return self::pedigreeRegisterAbbreviation();
+            case self::VIEW_BREED_VALUE_MAX_GENERATION_DATE: return self::breedValueMaxGenerationDate();
             case self::VIEW_PERSON_FULL_NAME: return self::personFullName();
+            case self::VIEW_SCAN_MEASUREMENTS: return self::scanMeasurements();
             default: return null;
         }
     }
@@ -227,10 +237,7 @@ class SqlView
                 a.breed_code,
                 a.scrapie_genotype,
                 a_breed_types.dutch_first_letter as breed_type_as_dutch_first_letter,
-                COALESCE(is_public_status.is_public, TRUE) as is_public,
-                a.location_of_birth_id,
-                residences.historic_ubns,
-                residences.historic_location_ids
+                a.location_of_birth_id
               FROM animal a
                 LEFT JOIN location l ON a.location_id = l.id
                 LEFT JOIN animal_cache c ON c.animal_id = a.id
@@ -242,12 +249,7 @@ class SqlView
                 LEFT JOIN (VALUES
                 ".SqlUtil::createSqlValuesString(Translation::getEnglishPredicateToAbbreviationArray())."
                 ) AS predicate(english, abbreviation) ON predicate.english = a.predicate
-                LEFT JOIN (
-                    ".self::isPublicAnimalQuery()."
-                )is_public_status ON is_public_status.animal_id = a.id
-                LEFT JOIN (
-                    ".self::animalResidenceQuery()."
-                )residences ON residences.animal_id = a.id";
+                ";
     }
 
 
@@ -273,6 +275,7 @@ class SqlView
                 a.ubn_of_birth,
                 a.location_of_birth_id,
                 a.location_id,
+                a.scan_measurement_set_id,
                 NULLIF(CONCAT(
                            COALESCE(CAST(c.production_age AS TEXT), '-'),'/',
                            COALESCE(CAST(c.litter_count AS TEXT), '-'),'/',
@@ -311,9 +314,7 @@ class SqlView
                 body_fat.fat3 as fat3,
                 to_char(body_fat.measurement_date, '".DateUtil::DEFAULT_SQL_DATE_STRING_FORMAT."') as dd_mm_yyyy_body_fat_measurement_date,
                  
-                COALESCE(child_status.has_children_as_mom, FALSE) as has_children_as_mom,
-                residences.historic_ubns,
-                residences.historic_location_ids
+                COALESCE(child_status.has_children_as_mom, FALSE) as has_children_as_mom
                 
               FROM animal a
                 LEFT JOIN animal_cache c ON c.animal_id = a.id
@@ -327,9 +328,6 @@ class SqlView
                 LEFT JOIN (VALUES
                 ".SqlUtil::createSqlValuesString(Translation::getEnglishPredicateToAbbreviationArray())."
                 ) AS predicate(english, abbreviation) ON predicate.english = a.predicate
-                LEFT JOIN (
-                    ".self::animalResidenceQuery()."
-                )residences ON residences.animal_id = a.id
                 LEFT JOIN (
                     SELECT
                       m.animal_id,
@@ -406,29 +404,37 @@ class SqlView
     private static function animalResidenceQuery(): string
     {
         return "SELECT
-                      r.animal_id,
-                      -- If you want to remove the curly brackets use the following code
-                      -- TRIM(BOTH '{,}' FROM CAST(array_agg(l.ubn ORDER BY ubn) AS TEXT)) as historic_ubns,
-                      -- TRIM(BOTH '{,}' FROM CAST(array_agg(r.location_id ORDER BY r.location_id) AS TEXT)) as historic_location_ids
-                      REPLACE( REPLACE( CAST(array_agg(l.ubn ORDER BY ubn) AS TEXT),'{', '['), '}', ']') as historic_ubns,
-                      REPLACE( REPLACE( CAST(array_agg(r.location_id ORDER BY r.location_id) AS TEXT) ,'{', '['), '}', ']') as historic_location_ids
-                    FROM (
-                           SELECT
-                             r.animal_id,
-                             r.location_id
-                           FROM animal_residence r
-                           GROUP BY r.animal_id, r.location_id
-                    
-                           UNION
-                    
-                           SELECT
-                             a.id as animal_id,
-                             a.location_id
-                           FROM animal a
-                           WHERE a.location_id NOTNULL
-                         ) r
-                      INNER JOIN location l on r.location_id = l.id
-                    GROUP BY r.animal_id";
+                    residence.animal_id,
+                    CONCAT(uln_country_code, uln_number) as uln,
+                    residence.historic_location_ids,
+                    residence.historic_ubns
+                FROM animal a
+                    INNER JOIN (
+                        SELECT
+                            r.animal_id,
+                            -- If you want to remove the curly brackets use the following code
+                            -- TRIM(BOTH '{,}' FROM CAST(array_agg(l.ubn ORDER BY ubn) AS TEXT)) as historic_ubns,
+                            -- TRIM(BOTH '{,}' FROM CAST(array_agg(r.location_id ORDER BY r.location_id) AS TEXT)) as historic_location_ids
+                            REPLACE( REPLACE( CAST(array_agg(l.ubn ORDER BY ubn) AS TEXT),'{', '['), '}', ']') as historic_ubns,
+                            REPLACE( REPLACE( CAST(array_agg(r.location_id ORDER BY r.location_id) AS TEXT) ,'{', '['), '}', ']') as historic_location_ids
+                        FROM (
+                                 SELECT
+                                     r.animal_id,
+                                     r.location_id
+                                 FROM animal_residence r
+                                 GROUP BY r.animal_id, r.location_id
+                
+                                 UNION
+                
+                                 SELECT
+                                     a.id as animal_id,
+                                     a.location_id
+                                 FROM animal a
+                                 WHERE a.location_id NOTNULL
+                             ) r
+                                 INNER JOIN location l on r.location_id = l.id
+                        GROUP BY r.animal_id
+                    )residence ON residence.animal_id = a.id";
     }
 
 
@@ -438,37 +444,44 @@ class SqlView
     private static function isPublicAnimalQuery(): string
     {
         return "SELECT
-                  r.animal_id,
-                  TRUE = ANY(array_agg(is_reveal_historic_animals)::boolean[]) as is_public
-                FROM (
-                       SELECT
-                         r.animal_id,
-                         r.location_id,
-                         c.is_reveal_historic_animals
-                       FROM animal_residence r
-                         INNER JOIN location l on r.location_id = l.id
-                         INNER JOIN (
-                                      SELECT id, is_reveal_historic_animals
-                                      FROM company WHERE is_active
-                                   )c ON l.company_id = c.id
-                       GROUP BY r.animal_id, r.location_id, c.is_reveal_historic_animals
-                
-                       UNION
-                
-                       SELECT
-                         a.id as animal_id,
-                         a.location_id,
-                         c.is_reveal_historic_animals
-                       FROM animal a
-                         INNER JOIN location l on a.location_id = l.id
-                         INNER JOIN (
+                    public_status.animal_id,
+                    CONCAT(uln_country_code, uln_number) as uln,
+                    public_status.is_public
+                FROM animal a
+                    INNER JOIN (
+                        SELECT
+                            r.animal_id,
+                            TRUE = ANY(array_agg(is_reveal_historic_animals)::boolean[]) as is_public
+                        FROM (
+                                 SELECT
+                                     r.animal_id,
+                                     r.location_id,
+                                     c.is_reveal_historic_animals
+                                 FROM animal_residence r
+                                          INNER JOIN location l on r.location_id = l.id
+                                          INNER JOIN (
                                      SELECT id, is_reveal_historic_animals
                                      FROM company WHERE is_active
-                                   )c ON l.company_id = c.id
-                       GROUP BY a.id, a.location_id, c.is_reveal_historic_animals
-                     ) r
-                  INNER JOIN location l on r.location_id = l.id
-                GROUP BY r.animal_id";
+                                 )c ON l.company_id = c.id
+                                 GROUP BY r.animal_id, r.location_id, c.is_reveal_historic_animals
+                
+                                 UNION
+                
+                                 SELECT
+                                     a.id as animal_id,
+                                     a.location_id,
+                                     c.is_reveal_historic_animals
+                                 FROM animal a
+                                          INNER JOIN location l on a.location_id = l.id
+                                          INNER JOIN (
+                                     SELECT id, is_reveal_historic_animals
+                                     FROM company WHERE is_active
+                                 )c ON l.company_id = c.id
+                                 GROUP BY a.id, a.location_id, c.is_reveal_historic_animals
+                             ) r
+                                 INNER JOIN location l on r.location_id = l.id
+                        GROUP BY r.animal_id
+                    )public_status ON public_status.animal_id = a.id";
     }
 
 
@@ -495,5 +508,71 @@ class SqlView
                   LEFT JOIN address ca ON ca.id = c.address_id
                   LEFT JOIN person owner ON owner.id = c.owner_id
                   LEFT JOIN country on ca.country_details_id = country.id";
+    }
+
+
+    private static function scanMeasurements(): string {
+        return "SELECT
+    s.animal_id,
+    m.log_date,
+    m.measurement_date,
+    to_char(m.measurement_date, 'DD-MM-YYYY') as dd_mm_yyyy_measurement_date,
+    w_details.is_active as is_scan_weight_active,
+    w.weight,
+    t.muscle_thickness,
+    fat1.fat as fat1,
+    fat2.fat as fat2,
+    fat3.fat as fat3,
+    m.inspector_id,
+    NULLIF(TRIM(CONCAT(inspector.first_name,' ',inspector.last_name)),'') as inspector,
+    m.action_by_id,
+    NULLIF(TRIM(CONCAT(action_by.first_name,' ',action_by.last_name)),'') as action_by
+FROM scan_measurement_set s
+        LEFT JOIN measurement m ON m.id = s.id
+        LEFT JOIN weight w ON w.id = s.scan_weight_id
+        LEFT JOIN measurement w_details ON w_details.id = w.id
+        LEFT JOIN muscle_thickness t ON t.id = s.muscle_thickness_id
+        LEFT JOIN body_fat bf ON bf.id = s.body_fat_id
+        LEFT JOIN fat1 ON bf.fat1_id = fat1.id
+        LEFT JOIN fat2 ON bf.fat2_id = fat2.id
+        LEFT JOIN fat3 ON bf.fat3_id = fat3.id
+        LEFT JOIN person inspector ON inspector.id = m.inspector_id
+        LEFT JOIN person action_by ON action_by.id = m.action_by_id";
+    }
+
+
+    private static function breedValueMaxGenerationDate(): string
+    {
+        return "SELECT
+       to_char(generation_date, 'DD-MM-YYYY') as dd_mm_yyyy,
+       generation_date::date as date,
+       generation_date as date_time,
+       DATE_PART('year', generation_date) as year
+FROM breed_value WHERE generation_date NOTNULL ORDER BY id DESC LIMIT 1";
+    }
+
+    private static function eweLitterAge(): string
+    {
+        return "SELECT
+    mom.id as ewe_id,
+    mom.date_of_birth,
+    litter.litter_date,
+    EXTRACT(YEAR FROM AGE(litter.litter_date, mom.date_of_birth)) as date_accurate_years,
+    EXTRACT(YEAR FROM AGE(litter.litter_date, mom.date_of_birth)) * 12 +
+    EXTRACT(MONTH FROM AGE(litter.litter_date, mom.date_of_birth)) as date_accurate_months,
+    EXTRACT(DAYS FROM (litter.litter_date - mom.date_of_birth)) / 365 * 12 as day_standardized_months,
+    EXTRACT(DAYS FROM (litter.litter_date - mom.date_of_birth)) / 365 as day_standardized_years,
+    EXTRACT(DAYS FROM (litter.litter_date - mom.date_of_birth)) as days
+FROM litter
+    INNER JOIN animal mom ON mom.id = litter.animal_mother_id
+    INNER JOIN (
+        SELECT
+            animal_mother_id,
+            MAX(standard_litter_ordinal) as max_standard_litter_ordinal
+        FROM litter
+        GROUP BY animal_mother_id
+    )last_litter ON last_litter.max_standard_litter_ordinal = litter.standard_litter_ordinal
+ AND last_litter.animal_mother_id = litter.animal_mother_id
+ WHERE mom.date_of_birth NOTNULL and litter.litter_date NOTNULL";
     }
 }

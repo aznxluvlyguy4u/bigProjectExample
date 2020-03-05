@@ -158,7 +158,7 @@ class Location
 
   /**
    * @var ArrayCollection
-   * 
+   *
    * @ORM\OneToMany(targetEntity="DeclareLoss", mappedBy="location")
    * @ORM\OrderBy({"dateOfDeath" = "ASC"})
    */
@@ -190,7 +190,7 @@ class Location
    * @ORM\OrderBy({"measurementDate" = "ASC"})
    */
   protected $declareWeights;
-  
+
 
   /**
    * @var Company
@@ -213,6 +213,7 @@ class Location
    * @Expose
    * @JMS\Type("AppBundle\Entity\LocationAddress")
    * @JMS\Groups({
+   *     "ANIMAL_DETAILS",
    *     "INVOICE",
    *     "INVOICE_NO_COMPANY",
    *     "DOSSIER"
@@ -319,6 +320,14 @@ class Location
     private $workers;
 
     /**
+     * @var ArrayCollection|AnimalAnnotation[]
+     * @ORM\OrderBy({"updatedAt" = "DESC"})
+     * @ORM\OneToMany(targetEntity="AppBundle\Entity\AnimalAnnotation", mappedBy="location", cascade={"persist", "remove"}, fetch="LAZY")
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\AnimalAnnotation>")
+     */
+    private $animalAnnotations;
+
+    /**
      * @JMS\VirtualProperty
      * @JMS\SerializedName("owner")
      * @JMS\Groups({
@@ -408,6 +417,7 @@ class Location
     $this->pedigreeRegisterRegistrations = new ArrayCollection();
     $this->workers = new ArrayCollection();
     $this->animalRelocations = new ArrayCollection();
+    $this->animalAnnotations = new ArrayCollection();
     $this->setLocationId(Utils::generateTokenCode());
   }
 
@@ -656,10 +666,10 @@ class Location
     public function addLoss(\AppBundle\Entity\DeclareLoss $loss)
     {
       $this->losses[] = $loss;
-  
+
       return $this;
     }
-  
+
     /**
      * Remove loss
      *
@@ -669,7 +679,7 @@ class Location
     {
       $this->losses->removeElement($loss);
     }
-  
+
     /**
      * Get losses
      *
@@ -1057,7 +1067,7 @@ class Location
     {
       return $this->tags;
     }
-  
+
     /**
      * @param ArrayCollection $tags
      */
@@ -1065,7 +1075,7 @@ class Location
     {
       $this->tags = $tags;
     }
-  
+
     /**
      * Add tag
      *
@@ -1076,10 +1086,10 @@ class Location
     public function addTag(\AppBundle\Entity\Tag $tag)
     {
       $this->tags[] = $tag;
-  
+
       return $this;
     }
-  
+
     /**
      * Remove tag
      *
@@ -1270,6 +1280,18 @@ class Location
 
 
     /**
+     * @return Country|null
+     */
+    public function getCountryDetails(): ?Country
+    {
+        if ($this->getAddress()) {
+            return $this->getAddress()->getCountryDetails();
+        }
+        return null;
+    }
+
+
+    /**
      * @param bool $returnEmptyStringAsNull
      * @return null|string
      */
@@ -1315,5 +1337,44 @@ class Location
         return $this;
     }
 
+    /**
+     * @return AnimalAnnotation[]|ArrayCollection
+     */
+    public function getAnimalAnnotations()
+    {
+        return $this->animalAnnotations;
+    }
 
+    /**
+     * @param  AnimalAnnotation[]|ArrayCollection  $annotations
+     * @return Location
+     */
+    public function setAnimalAnnotations(ArrayCollection $annotations)
+    {
+        $this->animalAnnotations = $annotations;
+        return $this;
+    }
+
+    /**
+     * Add annotation
+     *
+     * @param AnimalAnnotation $annotation
+     *
+     * @return Location
+     */
+    public function addAnimalAnnotation(AnimalAnnotation $annotation)
+    {
+        $this->animalAnnotations->add($annotation);
+        return $this;
+    }
+
+    /**
+     * Remove annotation
+     *
+     * @param AnimalAnnotation $annotation
+     */
+    public function removeAnimalAnnotation(AnimalAnnotation $annotation)
+    {
+        $this->animalAnnotations->removeElement($annotation);
+    }
 }

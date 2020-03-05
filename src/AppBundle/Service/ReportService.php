@@ -23,7 +23,9 @@ use AppBundle\Enumerator\WorkerAction;
 use AppBundle\Enumerator\WorkerType;
 use AppBundle\Exception\InvalidBreedCodeHttpException;
 use AppBundle\Exception\InvalidPedigreeRegisterAbbreviationHttpException;
+use AppBundle\Service\Report\AnimalFeaturesPerYearOfBirthReportService;
 use AppBundle\Service\Report\BirthListReportService;
+use AppBundle\Service\Report\EweCardReportService;
 use AppBundle\Service\Report\ClientNotesOverviewReportService;
 use AppBundle\Service\Report\CompanyRegisterReportService;
 use AppBundle\Service\Report\FertilizerAccountingReport;
@@ -104,6 +106,9 @@ class ReportService
     /** @var MembersAndUsersOverviewReportService */
     private $membersAndUsersOverviewReport;
 
+    /** @var EweCardReportService  */
+    private $eweCardReportService;
+
     /** @var CompanyRegisterReportService */
     private $companyRegisterReportService;
 
@@ -122,6 +127,9 @@ class ReportService
     /** @var FertilizerAccountingReport */
     private $fertilizerAccountingReport;
 
+    /** @var AnimalFeaturesPerYearOfBirthReportService */
+    private $animalFeaturesPerYearOfBirthReportService;
+
     /**
      * ReportService constructor.
      * @param ProducerInterface $producer
@@ -135,12 +143,14 @@ class ReportService
      * @param LiveStockReportService $livestockReportService
      * @param BirthListReportService $birthListReportService
      * @param MembersAndUsersOverviewReportService $membersAndUsersOverviewReport
+     * @param EweCardReportService $eweCardReportService
      * @param CompanyRegisterReportService $companyRegisterReportService
      * @param ClientNotesOverviewReportService $clientNotesOverviewReportService
      * @param InbreedingCoefficientReportService $inbreedingCoefficientReportService
      * @param WeightsPerYearOfBirthReportService $weightsPerYearOfBirthReportService
      * @param PopRepInputFileService $popRepInputFileService
      * @param FertilizerAccountingReport $fertilizerAccountingReport
+     * @param AnimalFeaturesPerYearOfBirthReportService $animalFeaturesPerYearOfBirthReportService
      */
     public function __construct(
         ProducerInterface $producer,
@@ -154,12 +164,14 @@ class ReportService
         LiveStockReportService $livestockReportService,
         BirthListReportService $birthListReportService,
         MembersAndUsersOverviewReportService $membersAndUsersOverviewReport,
+        EweCardReportService $eweCardReportService,
         CompanyRegisterReportService $companyRegisterReportService,
         ClientNotesOverviewReportService $clientNotesOverviewReportService,
         InbreedingCoefficientReportService $inbreedingCoefficientReportService,
         WeightsPerYearOfBirthReportService $weightsPerYearOfBirthReportService,
         PopRepInputFileService $popRepInputFileService,
-        FertilizerAccountingReport $fertilizerAccountingReport
+        FertilizerAccountingReport $fertilizerAccountingReport,
+        AnimalFeaturesPerYearOfBirthReportService $animalFeaturesPerYearOfBirthReportService
     )
     {
         $this->em = $em;
@@ -173,12 +185,14 @@ class ReportService
         $this->livestockReportService = $livestockReportService;
         $this->birthListReportService = $birthListReportService;
         $this->membersAndUsersOverviewReport = $membersAndUsersOverviewReport;
+        $this->eweCardReportService = $eweCardReportService;
         $this->companyRegisterReportService = $companyRegisterReportService;
         $this->clientNotesOverviewReportService = $clientNotesOverviewReportService;
         $this->inbreedingCoefficientReportService = $inbreedingCoefficientReportService;
         $this->weightsPerYearOfBirthReportService = $weightsPerYearOfBirthReportService;
         $this->popRepInputFileService = $popRepInputFileService;
         $this->fertilizerAccountingReport = $fertilizerAccountingReport;
+        $this->animalFeaturesPerYearOfBirthReportService = $animalFeaturesPerYearOfBirthReportService;
     }
 
     /**
@@ -229,7 +243,7 @@ class ReportService
         $location = $this->userService->getSelectedLocation($request);
         $fileType = $request->query->get(QueryParameter::FILE_TYPE_QUERY, self::getDefaultFileType());
         $language = $request->query->get(QueryParameter::LANGUAGE, $this->translator->getLocale());
-        $content = RequestUtil::getContentAsArray($request);
+        $content = RequestUtil::getContentAsArrayCollection($request);
         $concatValueAndAccuracy = RequestUtil::getBooleanQuery($request,QueryParameter::CONCAT_VALUE_AND_ACCURACY, false);
 
         $report = $this->livestockReportService->getReport($person, $location, $fileType, $concatValueAndAccuracy, $content,$language);
@@ -247,7 +261,7 @@ class ReportService
     private function createLiveStockReportAsWorkerTask(Request $request): JsonResponse
     {
         $concatValueAndAccuracy = RequestUtil::getBooleanQuery($request,QueryParameter::CONCAT_VALUE_AND_ACCURACY, false);
-        $content = RequestUtil::getContentAsArray($request);
+        $content = RequestUtil::getContentAsArrayCollection($request);
         $contentAsJson = JSON::encode($content->toArray());
 
         $inputForHash = $contentAsJson . StringUtil::getBooleanAsString($concatValueAndAccuracy);
@@ -290,7 +304,7 @@ class ReportService
      */
     public function createPedigreeCertificates(Request $request)
     {
-        $content = RequestUtil::getContentAsArray($request);
+        $content = RequestUtil::getContentAsArrayCollection($request);
 
         $processAsWorkerTask = RequestUtil::getBooleanQuery($request,QueryParameter::PROCESS_AS_WORKER_TASK,true);
 
@@ -331,7 +345,7 @@ class ReportService
         $location = $this->userService->getSelectedLocation($request);
         $fileType = $request->query->get(QueryParameter::FILE_TYPE_QUERY, self::getDefaultFileType());
         $language = $request->query->get(QueryParameter::LANGUAGE, $this->translator->getLocale());
-        $content = empty($content) ? RequestUtil::getContentAsArray($request) : $content;
+        $content = empty($content) ? RequestUtil::getContentAsArrayCollection($request) : $content;
 
         $report = $this->pedigreeCertificateReportService->getReport($person, $location, $fileType, $content, $language);
         if ($report instanceof Response) {
@@ -414,7 +428,7 @@ class ReportService
      */
     public function createOffspringReport(Request $request)
     {
-        $content = RequestUtil::getContentAsArray($request);
+        $content = RequestUtil::getContentAsArrayCollection($request);
         $animalsArray = $content->get(JsonInputConstant::PARENTS);
         if (!is_array($animalsArray)) {
             return ResultUtil::errorResult("'".JsonInputConstant::PARENTS."' key is missing in body", Response::HTTP_BAD_REQUEST);
@@ -435,6 +449,95 @@ class ReportService
             ],
             $request,ReportType::OFFSPRING, $inputForHash
         );
+    }
+
+
+    /**
+     * @param Request $request
+     * @return JsonResponse
+     * @throws \Exception
+     */
+    public function createEweCardReport(Request $request)
+    {
+        $content = RequestUtil::getContentAsArrayCollection($request);
+        $animalsArray = $content->get(JsonInputConstant::ANIMALS);
+
+        if (!is_array($animalsArray)) {
+            return ResultUtil::errorResult("'".JsonInputConstant::ANIMALS."' key is missing in body", Response::HTTP_BAD_REQUEST);
+        }
+
+        if (count($animalsArray) === 0) {
+            return ResultUtil::errorResult("Empty input", Response::HTTP_BAD_REQUEST);
+        }
+
+        $contentAsJson = JSON::encode($content->toArray());
+        $inputForHash = $contentAsJson;
+
+        $fileType = $request->query->get(QueryParameter::FILE_TYPE_QUERY, EweCardReportService::defaultFileType());
+        ReportUtil::validateFileType($fileType, EweCardReportService::allowedFileTypes(), $this->translator);
+
+        $location = $this->userService->getSelectedLocation($request);
+        $actionBy = $this->userService->getUser();
+
+        $processAsWorkerTask = RequestUtil::getBooleanQuery($request,QueryParameter::PROCESS_AS_WORKER_TASK,true);
+
+        if ($processAsWorkerTask) {
+                return $this->processReportAsWorkerTask(
+                    [
+                        'content' => $contentAsJson
+                    ],
+                    $request,ReportType::EWE_CARD, $inputForHash
+            );
+        }
+
+        $report = $this->eweCardReportService->getReport($actionBy, $location, $content);
+        if ($report instanceof Response) {
+            return $report;
+        }
+        return ResultUtil::successResult($report);
+    }
+
+
+    /**
+     * @param Request $request
+     * @return JsonResponse
+     * @throws \Exception
+     */
+    public function createAnimalFeaturesPerYearOfBirthReport(Request $request)
+    {
+        /** @var Location $location */
+        $location = null;
+
+        // not admin
+        if ($this->userService->isRequestFromUserFrontend($request)) {
+            $location = $this->userService->getSelectedLocation($request);
+            NullChecker::checkLocation($location);
+        }
+
+        $yearOfBirth = RequestUtil::getIntegerQuery($request,QueryParameter::YEAR_OF_BIRTH, null);
+
+        if (!$yearOfBirth) {
+            return ResultUtil::errorResult('Invalid year of birth', Response::HTTP_PRECONDITION_REQUIRED);
+        }
+
+        $concatValueAndAccuracy = RequestUtil::getBooleanQuery($request,QueryParameter::CONCAT_VALUE_AND_ACCURACY, false);
+
+        $ubn = is_null($location) ? "" : $location->getUbn();
+        $inputForHash = $yearOfBirth . $ubn;
+
+        $processAsWorkerTask = RequestUtil::getBooleanQuery($request,QueryParameter::PROCESS_AS_WORKER_TASK,true);
+
+        if ($processAsWorkerTask) {
+            return $this->processReportAsWorkerTask(
+                [
+                    'year_of_birth' => $yearOfBirth,
+                    'concat_value_and_accuracy' => $concatValueAndAccuracy
+                ],
+                $request,ReportType::ANIMAL_FEATURES_PER_YEAR_OF_BIRTH, $inputForHash
+            );
+        }
+
+        return $this->animalFeaturesPerYearOfBirthReportService->getReport($concatValueAndAccuracy, $yearOfBirth, $location);
     }
 
     /**
@@ -520,7 +623,7 @@ class ReportService
      */
     public function createInbreedingCoefficientsReport(Request $request)
     {
-        $content = RequestUtil::getContentAsArray($request);
+        $content = RequestUtil::getContentAsArrayCollection($request);
         $contentAsJson = JSON::encode($content->toArray());
         $inputForHash = $contentAsJson;
 
@@ -558,7 +661,7 @@ class ReportService
         $processAsWorkerTask = RequestUtil::getBooleanQuery($request,QueryParameter::PROCESS_AS_WORKER_TASK,true);
 
         $this->fertilizerAccountingReport->validateReferenceDate($referenceDate);
-        
+
         if ($processAsWorkerTask) {
             return $this->processReportAsWorkerTask(
                 [
@@ -1043,6 +1146,8 @@ class ReportService
                 return $this->createPedigreeCertificatesWithoutWorker($request, $content);
             case ReportType::BIRTH_LIST:
                 return $this->createBirthListReport($request);
+            case ReportType::COMPANY_REGISTER:
+                return $this->createCompanyRegisterReport($request);
             default:
                 throw new PreconditionFailedHttpException('INVALID REPORT TYPE'
                     .'. '.$this->getValidTestReportTypesErrorMessage());

@@ -14,6 +14,13 @@ class AnimalHealthStatusesReportService extends ReportServiceBase
     const FOLDER_NAME = self::TITLE;
     const FILENAME = self::TITLE;
 
+
+    const CAE = 'cae';
+    const CASEOUS_LYMPHADENITIS = 'caseous_lymphadenitis';
+    const FOOT_ROT = 'foot_rot';
+    const MAEDI_VISNA = 'maedi_visna';
+    const SCRAPIE = 'scrapie';
+
     /**
      * @inheritDoc
      */
@@ -106,32 +113,50 @@ class AnimalHealthStatusesReportService extends ReportServiceBase
              maedi_visna_health_status_demotion.demotion_duration
               as duur_maedi_visna_status_verlaging, -- duration_maedi_visna_health_status_demotion
              caseous_lymphadenitis_health_status_demotion.demotion_duration
-               as duur_caseous_lymphadenitis_status_verlaging, -- duration_caseous_lymphadenitis_health_status_demotion
+               as duur_cl_status_verlaging, -- duration_caseous_lymphadenitis_health_status_demotion
              'data_niet_beschikbaar'
                as duur_cae_status_verlaging, -- duration_cae_health_status_demotion
              scrapie_health_status_demotion.demotion_duration
                as duur_scrapie_status_verlaging, -- duration_scrapie_health_status_demotion      
              foot_rot_health_status_demotion.demotion_duration
-               as duur_foot_rot_status_verlaging, -- duration_foot_rot_health_status_demotion
+               as duur_rotkreupel_status_verlaging, -- duration_foot_rot_health_status_demotion
              
              -- When a status was changed to free/resistant but in the last 12 months had a demotion
              maedi_visna_health_status_promotion_with_demotion_in_last_12_months.promotion_duration
-              as duur_maedi_visna_status_verhoging_jonger_dan_12_maanden, -- duration_maedi_visna_health_status_promotion_with_demotion_in_last_12_months
+              as duur_maedi_visna_status_verhoging_laatste_12_maanden, -- duration_maedi_visna_health_status_promotion_with_demotion_in_last_12_months
              caseous_lymphadenitis_health_status_promotion_with_demotion_in_last_12_months.promotion_duration
-               as duur_caseous_lymphadenitis_status_verhoging_jonger_dan_12_maanden, -- duration_caseous_lymphadenitis_health_status_promotion_with_demotion_in_last_12_months
+               as duur_cl_status_verhoging_laatste_12_maanden, -- duration_caseous_lymphadenitis_health_status_promotion_with_demotion_in_last_12_months
              'data_niet_beschikbaar'
-               as duur_cae_status_verhoging_jonger_dan_12_maanden, -- duration_cae_health_status_promotion_with_demotion_in_last_12_months
+               as duur_cae_status_verhoging_laatste_12_maanden, -- duration_cae_health_status_promotion_with_demotion_in_last_12_months
              scrapie_health_status_promotion_with_demotion_in_last_12_months.promotion_duration
-               as duur_scrapie_status_verhoging_jonger_dan_12_maanden, -- duration_scrapie_health_status_promotion_with_demotion_in_last_12_months
+               as duur_scrapie_status_verhoging_laatste_12_maanden, -- duration_scrapie_health_status_promotion_with_demotion_in_last_12_months
              foot_rot_health_status_promotion_with_demotion_in_last_12_months.promotion_duration
-               as duur_foot_rot_status_verhoging_jonger_dan_12_maanden, -- duration_foot_rot_health_status_promotion_with_demotion_in_last_12_months
+               as duur_rotkreupel_status_verhoging_laatste_12_maanden, -- duration_foot_rot_health_status_promotion_with_demotion_in_last_12_months
              
-             -- When any status promotion or demotion took place
-             last_maedi_visna.date_last_change_maedi_visna as datum_laatste_wijziging_zwoegerziekte,
-             null as datum_laatste_wijziging_cae,
-             last_caseous_lymphadenitis.date_last_change_caseous_lymphadenitis as datum_laatste_wijziging_cl,
-             last_scrapie.date_last_change_scrapie as datum_laatste_wijziging_scrapie,
-             last_foot_rot.date_last_change_foot_rot as datum_laatste_wijziging_rotkreupel,
+             -- last time when any status promotion or demotion took place
+             last_maedi_visna.log_date_last_change_maedi_visna as logdatum_laatste_wijziging_zwoegerziekte,
+             last_maedi_visna.check_date_last_change_maedi_visna as datum_tot_laatste_wijziging_zwoegerziekte,
+             null as logdatum_laatste_wijziging_cae,
+             null as datum_vanaf_laatste_wijziging_cae,
+             last_caseous_lymphadenitis.log_date_last_change_caseous_lymphadenitis as logdatum_laatste_wijziging_cl,
+             last_caseous_lymphadenitis.check_date_last_change_caseous_lymphadenitis as datum_tot_laatste_wijziging_cl,
+             last_scrapie.log_date_last_change_scrapie as logdatum_laatste_wijziging_scrapie,
+             last_scrapie.check_date_last_change_scrapie as datum_vanaf_laatste_wijziging_scrapie,
+             last_foot_rot.log_date_last_change_foot_rot as logdatum_laatste_wijziging_rotkreupel,
+             last_foot_rot.check_date_last_change_foot_rot as datum_tot_laatste_wijziging_rotkreupel,
+       
+             -- second last time when any status promotion or demotion took place
+             second_last_maedi_visna.log_date_last_change_maedi_visna as logdatum_voorlaatste_wijziging_zwoegerziekte,
+             second_last_maedi_visna.check_date_last_change_maedi_visna as datum_tot_voorlaatste_wijziging_zwoegerziekte,
+             null as logdatum_voorlaatste_wijziging_cae,
+             null as datum_vanaf_voorlaatste_wijziging_cae,
+             second_last_caseous_lymphadenitis.log_date_last_change_caseous_lymphadenitis as logdatum_voorlaatste_wijziging_cl,
+             second_last_caseous_lymphadenitis.check_date_last_change_caseous_lymphadenitis as datum_tot_voorlaatste_wijziging_cl,
+             second_last_scrapie.log_date_last_change_scrapie as logdatum_voorlaatste_wijziging_scrapie,
+             second_last_scrapie.check_date_last_change_scrapie as datum_vanaf_voorlaatste_wijziging_scrapie,
+             second_last_foot_rot.log_date_last_change_foot_rot as logdatum_voorlaatste_wijziging_rotkreupel,
+             second_last_foot_rot.check_date_last_change_foot_rot as datum_tot_voorlaatste_wijziging_rotkreupel,
+       
              'geen data' as datum_volgende_bloedonderzoek_zwoegerziekte,
              'geen data' as datum_volgende_bloedonderzoek_cae,
              'geen data' as datum_volgende_bloedonderzoek_cl
@@ -154,7 +179,7 @@ class AnimalHealthStatusesReportService extends ReportServiceBase
                 ".self::selectQueryMaediVisnaDetails()."
               )maedi_visna_details ON maedi_visna_details.location_health_id = lh.id
             LEFT JOIN (
-                ".self::selectQueryScapieDetails()."
+                ".self::selectQueryScrapieDetails()."
               )scrapie_details ON scrapie_details.location_health_id = lh.id              
             LEFT JOIN (
                 ".self::selectQueryCaseousLymphadenitisDetails()."
@@ -169,47 +194,59 @@ class AnimalHealthStatusesReportService extends ReportServiceBase
               ".self::selectQueryImportDetails()."
             )import_details ON import_details.location_id = l.id
             LEFT JOIN (
-                ".self::selectQueryLastIllness('maedi_visna')."
+                ".self::selectQueryLastIllness(self::MAEDI_VISNA)."
               )last_maedi_visna ON last_maedi_visna.location_health_id = lh.id
               LEFT JOIN (
-                ".self::selectQueryLastIllness('scrapie')."
+                ".self::selectQueryLastIllness(self::SCRAPIE)."
               )last_scrapie ON last_scrapie.location_health_id = lh.id
               LEFT JOIN (
-                ".self::selectQueryLastIllness('foot_rot')."
+                ".self::selectQueryLastIllness(self::FOOT_ROT)."
               )last_foot_rot ON last_foot_rot.location_health_id = lh.id
               LEFT JOIN (
-              ".self::selectQueryLastIllness('caseous_lymphadenitis')."
+              ".self::selectQueryLastIllness(self::CASEOUS_LYMPHADENITIS)."
             )last_caseous_lymphadenitis ON last_caseous_lymphadenitis.location_health_id = lh.id
             LEFT JOIN (
-              ".self::illnessHealthStatusPromotionWithDemotionInLast12Months('maedi_visna')."
+              ".self::selectQuerySecondLastIllness(self::MAEDI_VISNA)."
+            )second_last_maedi_visna ON second_last_maedi_visna.location_health_id = lh.id
+            LEFT JOIN (
+              ".self::selectQuerySecondLastIllness(self::SCRAPIE)."
+            )second_last_scrapie ON second_last_scrapie.location_health_id = lh.id
+            LEFT JOIN (
+              ".self::selectQuerySecondLastIllness(self::FOOT_ROT)."
+            )second_last_foot_rot ON second_last_foot_rot.location_health_id = lh.id
+            LEFT JOIN (
+              ".self::selectQuerySecondLastIllness(self::CASEOUS_LYMPHADENITIS)."
+            )second_last_caseous_lymphadenitis ON second_last_caseous_lymphadenitis.location_health_id = lh.id
+            LEFT JOIN (
+              ".self::illnessHealthStatusPromotionWithDemotionInLast12Months(self::MAEDI_VISNA)."
               )maedi_visna_health_status_promotion_with_demotion_in_last_12_months ON
               maedi_visna_health_status_promotion_with_demotion_in_last_12_months.location_health_id = l.location_health_id
             LEFT JOIN (
-              ".self::illnessHealthStatusPromotionWithDemotionInLast12Months('scrapie')."
+              ".self::illnessHealthStatusPromotionWithDemotionInLast12Months(self::SCRAPIE)."
               )scrapie_health_status_promotion_with_demotion_in_last_12_months ON
               scrapie_health_status_promotion_with_demotion_in_last_12_months.location_health_id = l.location_health_id
             LEFT JOIN (
-              ".self::illnessHealthStatusPromotionWithDemotionInLast12Months('foot_rot')."
+              ".self::illnessHealthStatusPromotionWithDemotionInLast12Months(self::FOOT_ROT)."
               )foot_rot_health_status_promotion_with_demotion_in_last_12_months ON
               foot_rot_health_status_promotion_with_demotion_in_last_12_months.location_health_id = l.location_health_id
             LEFT JOIN (
-              ".self::illnessHealthStatusPromotionWithDemotionInLast12Months('caseous_lymphadenitis')."
+              ".self::illnessHealthStatusPromotionWithDemotionInLast12Months(self::CASEOUS_LYMPHADENITIS)."
               )caseous_lymphadenitis_health_status_promotion_with_demotion_in_last_12_months ON
               caseous_lymphadenitis_health_status_promotion_with_demotion_in_last_12_months.location_health_id = l.location_health_id
             LEFT JOIN (
-              ".self::illnessHealthStatusDemotion('maedi_visna')."
+              ".self::illnessHealthStatusDemotion(self::MAEDI_VISNA)."
               )maedi_visna_health_status_demotion ON
               maedi_visna_health_status_demotion.location_health_id = l.location_health_id
             LEFT JOIN (
-              ".self::illnessHealthStatusDemotion('scrapie')."
+              ".self::illnessHealthStatusDemotion(self::SCRAPIE)."
               )scrapie_health_status_demotion ON
               scrapie_health_status_demotion.location_health_id = l.location_health_id
             LEFT JOIN (
-              ".self::illnessHealthStatusDemotion('foot_rot')."
+              ".self::illnessHealthStatusDemotion(self::FOOT_ROT)."
               )foot_rot_health_status_demotion ON
               foot_rot_health_status_demotion.location_health_id = l.location_health_id
             LEFT JOIN (
-              ".self::illnessHealthStatusDemotion('caseous_lymphadenitis')."
+              ".self::illnessHealthStatusDemotion(self::CASEOUS_LYMPHADENITIS)."
               )caseous_lymphadenitis_health_status_demotion ON
               caseous_lymphadenitis_health_status_demotion.location_health_id = l.location_health_id;"
             ;
@@ -337,7 +374,7 @@ class AnimalHealthStatusesReportService extends ReportServiceBase
         AND last_cl.location_health_id = cl.location_health_id";
     }
 
-    private static function selectQueryScapieDetails(): string {
+    private static function selectQueryScrapieDetails(): string {
         return "SELECT
             scrapie.location_health_id,
             scrapie.log_date as max_log_date,
@@ -416,34 +453,60 @@ class AnimalHealthStatusesReportService extends ReportServiceBase
     /**
      * @param string $illness
      * @return string
-     * @throws \Exception
      */
     private static function selectQueryLastIllness(string $illness): string {
+        return self::selectQueryIllnessBase($illness, false);
+    }
+
+    /**
+     * @param string $illness
+     * @return string
+     */
+    private static function selectQuerySecondLastIllness(string $illness): string {
+        return self::selectQueryIllnessBase($illness, true);
+    }
+
+    /**
+     * @param string $illness
+     * @param bool $isSecondLastIllness
+     * @return string
+     * @throws \Exception
+     */
+    private static function selectQueryIllnessBase(string $illness, bool $isSecondLastIllness): string {
         self::validateIllnessVariable($illness);
+
+        $secondLastIllnessFilter = $isSecondLastIllness ? " WHERE i.id NOT IN (
+            SELECT
+                MAX(id) as last_id_for_each_location_health
+            FROM $illness i
+            GROUP BY location_health_id
+        ) " : "";
 
         return "SELECT
             last_$illness.location_health_id,
-            last_$illness.log_date as date_last_change_$illness
+            last_$illness.log_date as log_date_last_change_$illness,
+            last_$illness.check_date as check_date_last_change_$illness
         FROM $illness last_$illness
         INNER JOIN (
            SELECT
              location_health_id,
              MAX(id) as last_id
            FROM $illness i
+           $secondLastIllnessFilter
            GROUP BY location_health_id
         )max ON max.last_id = last_$illness.id";
     }
 
     private static function validateIllnessVariable(string $illness) {
-        if ($illness == 'cae') {
+        if ($illness == self::CAE) {
             throw new \Exception("cae is not implemented yet in database");
         }
 
         if (
-            $illness !== 'maedi_visna' &&
-            $illness !== 'scrapie' &&
-            $illness !== 'foot_rot' &&
-            $illness !== 'caseous_lymphadenitis'
+            $illness !== self::MAEDI_VISNA &&
+            $illness !== self::SCRAPIE &&
+            $illness !== self::FOOT_ROT &&
+            $illness !== self::CASEOUS_LYMPHADENITIS
         ) {
             throw new \Exception("Invalid illness type");
         }

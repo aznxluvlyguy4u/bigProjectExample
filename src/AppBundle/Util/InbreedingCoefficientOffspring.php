@@ -57,11 +57,10 @@ class InbreedingCoefficientOffspring
      * @param array $eweData
      * @param array $parentSearchArray
      * @param array $childrenSearchArray
-     * @param array $animalDataById
      * @param array $ascendants
      */
     public function __construct(ObjectManager $em, $ramData, $eweData, $parentSearchArray = [], $childrenSearchArray = [],
-                                $animalDataById, $ascendants = [])
+                                $ascendants = [])
     {
         $this->em = $em;
         $this->animalRepository = $em->getRepository(Animal::class);
@@ -183,28 +182,42 @@ class InbreedingCoefficientOffspring
             return;
         }
 
+        $dateOfBirthKey = PedigreeUtil::DATE_OF_BIRTH_SELECT_KEY;
+        $motherKey = 'mother';
+        $fatherKey = 'father';
+
         $animalId = ArrayUtil::get('id', $ascendantsSet, null);
+        $animalDateOfBirth = ArrayUtil::getDateFromString($dateOfBirthKey, $ascendantsSet, null);
 
         if (is_int($animalId) && is_array($ascendantsSet)) {
             if (!key_exists($animalId, $this->animalDataById)) {
 
                 foreach (array_keys($ascendantsSet) as $key) {
-                    if ($key !== 'father' && $key !== 'mother') {
+                    if ($key !== $fatherKey && $key !== $motherKey) {
                         $this->animalDataById[$animalId][$key] = $ascendantsSet[$key];
                     }
                 }
             }
         }
 
-        foreach (['father','mother'] as $parentKey) {
+        foreach ([$fatherKey, $motherKey] as $parentKey) {
 
             $parentArray = ArrayUtil::get($parentKey, $ascendantsSet, []);
             $parentId = ArrayUtil::get('id', $parentArray);
 
-            $this->addToChildrenSearchArrays($animalId, $parentId);
-            $this->addToParentsSearchArrays($animalId, $parentId);
+            $parentDateOfBirth = ArrayUtil::getDateFromString(PedigreeUtil::DATE_OF_BIRTH_SELECT_KEY, $parentArray, null);
 
-            $this->fillAnimalByIdAndChildrenAndParentSearchArrays($parentArray);
+            /**
+             * NOTE!
+             * If the parent is younger than the child, this is not a valid parent!
+             * These fake parents have to be excluded from the search data, to prevent infinite loops!
+             */
+            if ($animalDateOfBirth > $parentDateOfBirth) {
+                $this->addToChildrenSearchArrays($animalId, $parentId);
+                $this->addToParentsSearchArrays($animalId, $parentId);
+
+                $this->fillAnimalByIdAndChildrenAndParentSearchArrays($parentArray);
+            }
         }
     }
 
@@ -287,9 +300,8 @@ class InbreedingCoefficientOffspring
                             $this->em,
                             $this->animalDataById[$animalId],
                             $this->parentSearchArray,
-                            $this->childrenSearchArray,
-                            $this->animalDataById
-                    );
+                            $this->childrenSearchArray
+                        );
                     $this->commonAncestorsInbreedingCoefficient[$animalId] = $commonAncestorInbreedingCoefficientResult->getValue();
                 }
             }
@@ -392,15 +404,14 @@ class InbreedingCoefficient
      * @param array $animalData
      * @param array $parentSearchArray
      * @param array $childrenSearchArray
-     * @param array $animalDataById
      */
-    public function __construct(ObjectManager $em, $animalData, $parentSearchArray, $childrenSearchArray, $animalDataById)
+    public function __construct(ObjectManager $em, $animalData, $parentSearchArray, $childrenSearchArray)
     {
         $ramData = ArrayUtil::get('father', $animalData, []);
         $eweData = ArrayUtil::get('mother', $animalData, []);
 
         $this->inbreedingCoefficientOffspring = new InbreedingCoefficientOffspring($em, $ramData, $eweData,
-            $parentSearchArray, $childrenSearchArray, $animalDataById);
+            $parentSearchArray, $childrenSearchArray);
     }
 
     /**

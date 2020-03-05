@@ -93,7 +93,7 @@ class HealthCheckTask
      * @var boolean
      *
      * @JMS\Type("boolean")
-     * @Assert\NotBlank
+     * @Assert\NotNull
      */
     private $isProcessing;
 

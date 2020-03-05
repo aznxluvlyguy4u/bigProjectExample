@@ -4,7 +4,11 @@
 namespace AppBundle\Util;
 
 
+use AppBundle\Entity\Animal;
 use AppBundle\Entity\DeclareBirthRepository;
+use AppBundle\Enumerator\AnimalObjectType;
+use AppBundle\Enumerator\ExteriorKind;
+use AppBundle\Enumerator\PredicateType;
 use AppBundle\Enumerator\RequestStateType;
 use Doctrine\DBAL\Connection;
 use Monolog\Logger;
@@ -164,18 +168,77 @@ class LitterUtil
     }
 
 
+    public static function updateSuckleCountsForChildWithUpdatedSurrogateMother(Connection $conn, int $childId)
+    {
+        $sql = "SELECT
+    child.litter_id
+FROM animal child
+WHERE child.id = $childId AND child.litter_id NOTNULL
+UNION DISTINCT
+SELECT
+    surrogate_litter.id as litter_id
+FROM animal child
+         INNER JOIN animal surrogate ON surrogate.id = child.surrogate_id
+         INNER JOIN litter surrogate_litter ON surrogate_litter.animal_mother_id = surrogate.id
+WHERE child.id = $childId AND surrogate_litter.id NOTNULL
+UNION DISTINCT
+SELECT
+    mother_litter.id as litter_id
+FROM animal child
+         INNER JOIN animal mother ON mother.id = child.parent_mother_id
+         INNER JOIN litter mother_litter ON mother_litter.animal_mother_id = mother.id
+WHERE child.id = $childId AND mother_litter.id NOTNULL";
+
+        $results = $conn->query($sql)->fetchAll();
+        if (empty($results)) {
+            return 0;
+        }
+
+        $litterIds = array_map(function ($result) {
+            return $result['litter_id'];
+        }, $results);
+
+        $litterIdFilterString = ' AND l.id IN ('.implode(',', $litterIds).') ';
+
+        return self::updateSuckleCountsBase($conn, $litterIdFilterString);
+    }
+
+
+    /**
+     *
+     * @param Connection $conn
+     * @return int
+     */
+    public static function updateAllSuckleCounts(Connection $conn)
+    {
+        return self::updateSuckleCountsBase($conn, '');
+    }
+
+
+    /**
+     *
+     * @param Connection $conn
+     * @param int $litterId
+     * @return int
+     */
+    public static function updateSuckleCountsByLitterId(Connection $conn, int $litterId)
+    {
+        $litterIdFilter = ctype_digit($litterId) || is_int($litterId) ? ' AND l.id = '.$litterId.' ' : '';
+        return self::updateSuckleCountsBase($conn, $litterIdFilter);
+    }
+
+
     /**
      * Ewes with abortions and pseudopregnancies cannot give milk, while an ewe with only stillborns can.
      * Because the imported data from VSM has no registered surrogate mothers, the suckleCount will only be calculated
      * for litters registered in this current NSFO system.
-     * 
+     *
      * @param Connection $conn
-     * @param null $litterId
+     * @param string $litterId
      * @return int
      */
-    public static function updateSuckleCount(Connection $conn, $litterId = null)
+    private static function updateSuckleCountsBase(Connection $conn, string $litterIdFilter = '')
     {
-        $litterIdFilter = ctype_digit($litterId) || is_int($litterId) ? ' AND l.id = '.$litterId.' ' : '';
 
         $sql = "UPDATE litter SET suckle_count_update_date = NOW(), suckle_count = v.calculated_suckle_count
                 FROM(
@@ -245,19 +308,53 @@ class LitterUtil
     }
 
 
+    private static function getLitterAnimalMotherIdFilter($litterId = null, string $litterAlias = 'l'): string
+    {
+        return ctype_digit($litterId) || is_int($litterId) ?
+            " AND $litterAlias.animal_mother_id IN (" .
+            "      SELECT animal_mother_id FROM litter WHERE id = ".$litterId." " .
+            "    ) " : '';
+    }
+
+
     /**
      * @param Connection $conn
-     * @param int|string $litterId
      * @return int
      */
-    public static function updateLitterOrdinals(Connection $conn, $litterId = null)
+    public static function updateAllLitterOrdinals(Connection $conn)
     {
-        $animalMotherIdFilter = ctype_digit($litterId) || is_int($litterId) ?
-            " AND l.animal_mother_id IN (\n" +
-            "      SELECT animal_mother_id FROM litter WHERE id = ".$litterId."\n" +
-            "    ) " : '';
+        return self::updateLitterOrdinalsBase($conn);
+    }
 
-        $sql = "UPDATE litter SET litter_ordinal = v.calc_litter_ordinal
+
+    /**
+     * @param Connection $conn
+     * @param array $motherIds
+     * @return int
+     */
+    public static function updateLitterOrdinalsByMotherIds(Connection $conn, array $motherIds = [])
+    {
+        if (empty($motherIds)) {
+            return 0;
+        }
+
+        $litterAlias = 'l';
+        $motherIdsJoined = SqlUtil::getIdsFilterListString($motherIds);
+
+        $animalMotherIdFilter = " AND $litterAlias.animal_mother_id IN (".$motherIdsJoined.") ";
+
+        return self::updateLitterOrdinalsBase($conn, $animalMotherIdFilter);
+    }
+
+
+    /**
+     * @param Connection $conn
+     * @param string $animalMotherIdFilter
+     * @return int
+     */
+    private static function updateLitterOrdinalsBase(Connection $conn, string $animalMotherIdFilter = '')
+    {
+        $sqlGlobalLitter = "UPDATE litter SET litter_ordinal = v.calc_litter_ordinal
                 FROM (
                   SELECT l.id as litter_id,
                     DENSE_RANK() OVER (PARTITION BY animal_mother_id ORDER BY litter_date ASC) AS calc_litter_ordinal
@@ -272,7 +369,28 @@ class LitterUtil
                 ) AS v(litter_id, calc_litter_ordinal)
                 WHERE litter.id = litter_id
                   AND (litter.litter_ordinal ISNULL OR litter.litter_ordinal <> v.calc_litter_ordinal)";
-        return SqlUtil::updateWithCount($conn, $sql);
+        $globalLitterUpdateCount = SqlUtil::updateWithCount($conn, $sqlGlobalLitter);
+
+        $sqlStandardLitter = "UPDATE litter SET standard_litter_ordinal = v.calc_standard_litter_ordinal
+                FROM (
+                  SELECT l.id as litter_id,
+                    DENSE_RANK() OVER (PARTITION BY animal_mother_id ORDER BY litter_date ASC) AS calc_standard_litter_ordinal
+                  FROM litter l
+                  WHERE is_pseudo_pregnancy = FALSE AND is_abortion = FALSE AND
+                    animal_mother_id
+                    IN (
+                        SELECT animal_mother_id FROM litter
+                        WHERE standard_litter_ordinal ISNULL AND
+                              (status = '".RequestStateType::COMPLETED."' OR status = '".RequestStateType::IMPORTED."')
+                        GROUP BY animal_mother_id
+                      ) AND (status = '".RequestStateType::COMPLETED."' OR status = '".RequestStateType::IMPORTED."') ".$animalMotherIdFilter."
+                  ORDER BY animal_mother_id ASC, litter_date ASC
+                ) AS v(litter_id, calc_standard_litter_ordinal)
+                WHERE litter.id = litter_id
+                  AND (litter.standard_litter_ordinal ISNULL OR litter.standard_litter_ordinal <> v.calc_standard_litter_ordinal)";
+        $standardLitterUpdateCount = SqlUtil::updateWithCount($conn, $sqlStandardLitter);
+
+        return $globalLitterUpdateCount + $standardLitterUpdateCount;
     }
 
 
@@ -282,8 +400,35 @@ class LitterUtil
      */
     public static function removeLitterOrdinalFromRevokedLitters(Connection $conn)
     {
-        $sql = "UPDATE litter SET litter_ordinal = NULL
+        $sql = "UPDATE litter SET litter_ordinal = NULL, standard_litter_ordinal = NULL
                 WHERE (status = '".RequestStateType::REVOKED."' OR status = '".RequestStateType::INCOMPLETE."') AND litter_ordinal NOTNULL";
+        return SqlUtil::updateWithCount($conn, $sql);
+    }
+
+
+    public static function updateCumulativeBornAliveCount(Connection $conn, $litterId = null)
+    {
+        $animalMotherIdFilter = self::getLitterAnimalMotherIdFilter($litterId);
+
+        $activeRequestStateTypes = SqlUtil::activeRequestStateTypesForLittersJoinedList();
+
+        $sql = "UPDATE litter SET cumulative_born_alive_count = v.new_cumulative_born_alive_count
+FROM (
+         SELECT
+             l.id,
+             cumulative_born_alive_count,
+             SUM(l.born_alive_count) OVER (PARTITION BY animal_mother_id ORDER BY standard_litter_ordinal) as count
+         FROM litter l
+                  INNER JOIN declare_nsfo_base dnb on l.id = dnb.id
+         WHERE dnb.request_state IN ($activeRequestStateTypes)
+           $animalMotherIdFilter
+           AND standard_litter_ordinal NOTNULL
+         ORDER BY animal_mother_id, standard_litter_ordinal
+) AS v (litter_id, current_cumulative_born_alive_count, new_cumulative_born_alive_count)
+WHERE litter.id = v.litter_id AND (
+    v.current_cumulative_born_alive_count ISNULL OR
+    v.current_cumulative_born_alive_count <> new_cumulative_born_alive_count
+    )";
         return SqlUtil::updateWithCount($conn, $sql);
     }
 
@@ -334,15 +479,48 @@ class LitterUtil
 
     /**
      * NOTE! Update litterOrdinals first!
-     * 
+     *
      * @param Connection $conn
-     * @param null $litterId
+     * @param array $motherIds
      * @return int
      */
-    public static function updateBirthInterVal(Connection $conn, $litterId = null)
+    public static function updateBirthInterValByMotherIds(Connection $conn, array $motherIds = [])
     {
-        $litterIdFilter = ctype_digit($litterId) || is_int($litterId) ? ' AND l.id = '.$litterId.' ' : '';
-        
+        if (empty($motherIds)) {
+            return 0;
+        }
+
+        $motherIdsJoined = SqlUtil::getIdsFilterListString($motherIds);
+
+        $litterIdFilter = " AND l.id IN (
+            SELECT id FROM litter WHERE animal_mother_id IN ($motherIdsJoined) GROUP BY id
+        ) ";
+
+        return self::updateBirthInterValBase($conn, $litterIdFilter);
+    }
+
+
+    /**
+     * NOTE! Update litterOrdinals first!
+     *
+     * @param Connection $conn
+     * @return int
+     */
+    public static function updateAllBirthInterVal(Connection $conn)
+    {
+        return self::updateBirthInterValBase($conn, '');
+    }
+
+
+    /**
+     * NOTE! Update litterOrdinals first!
+     *
+     * @param Connection $conn
+     * @param string $litterIdFilter
+     * @return int
+     */
+    private static function updateBirthInterValBase(Connection $conn, string $litterIdFilter = '')
+    {
         $sql = "UPDATE litter SET birth_interval = v.calc_birth_interval
                 FROM (
                        SELECT l.id as litter_id, DATE(l.litter_date)-DATE(previous_litter.litter_date) as calc_birth_interval
@@ -357,12 +535,10 @@ class LitterUtil
         $updateIncongruentBirthIntervals = SqlUtil::updateWithCount($conn, $sql);
 
 
-        $litterIdFilter = ctype_digit($litterId) || is_int($litterId) ? ' AND litter.id = '.$litterId.' ' : '';
-
-        $sql = "UPDATE litter SET birth_interval = NULL
+        $sql = "UPDATE litter l SET birth_interval = NULL
                 WHERE (litter_ordinal <= 1 OR litter_ordinal ISNULL) AND birth_interval NOTNULL ".$litterIdFilter;
         $updateRevokedBirthIntervals = SqlUtil::updateWithCount($conn, $sql);
-        
+
         return $updateIncongruentBirthIntervals + $updateRevokedBirthIntervals;
     }
 
@@ -470,5 +646,346 @@ class LitterUtil
         }
 
         return $littersDeleted;
+    }
+
+    public static function updateLitterOffspringExteriorAndStarEweValues(Connection $conn, $litterId = null, ?Logger $logger = null): int
+    {
+        $updateCount = self::updateLitterOffspringExteriorValues($conn, $litterId, $logger);
+        return $updateCount + self::updateLitterStarEweBasePoints($conn, $litterId, $logger);
+    }
+
+    private static function updateLitterOffspringExteriorValues(Connection $conn, $litterId = null, ?Logger $logger = null): int
+    {
+        if ($logger) {
+            $updateType = !empty($litterId) && is_int($litterId) ? "litter with id $litterId" : "ALL litters";
+            $logger->notice("Update $updateType offspring exterior values ...");
+        }
+
+        $litterIdFilter = !empty($litterId) && is_int($litterId) ? " AND litter.id = $litterId " : '';
+        $subLitterIdFilter = !empty($litterId) && is_int($litterId) ? " AND litter_id = $litterId " : '';
+
+        $ramType = AnimalObjectType::Ram;
+        $eweType = AnimalObjectType::Ewe;
+
+        $minimumPercentageOfOffspringWithEnoughMuscularity = 75;
+        $minimumMuscularityOfOffspring = 80;
+
+        $predicateTypePreferentJoinedList = SqlUtil::predicateTypePreferentJoinedList();
+        $definitiveExteriorKindsJoinedList = SqlUtil::definitiveExteriorKindsJoinedList();
+
+        $sql = "UPDATE
+    litter
+SET
+    ewes_with_definitive_exterior_count = v.ewes_with_definitive_exterior_count,
+    rams_with_definitive_exterior_count = v.rams_with_definitive_exterior_count,
+    vg_rams_if_father_no_def_exterior_count = v.vg_rams_if_father_no_def_exterior_count,
+    definitive_prime_ram_count = v.definitive_prime_ram_count,
+    grade_ram_count = v.grade_ram_count,
+    preferent_ram_count = v.preferent_ram_count,
+    has_minimum_offspring_muscularity = v.has_minimum_offspring_muscularity
+FROM (
+         SELECT
+             l.id,
+             COALESCE(definitive_ewes_count, 0) as definitive_ewes_count,
+             COALESCE(definitive_rams_count, 0) as definitive_rams_count,
+             COALESCE(vg_exterior_rams_if_father_no_definitive_exterior_count, 0) as vg_exterior_rams_if_father_no_definitive_exterior_count,
+             COALESCE(definitive_prime_rams.definitive_prime_ram_count, 0) as definitive_prime_ram_count,
+             COALESCE(grade_rams.grade_ram_count, 0) as grade_ram_count,
+             COALESCE(preferent_rams.preferent_ram_count, 0) as preferent_ram_count,
+             COALESCE(minimum_muscularity.has_80_minimum_muscularity, false) as has_80_minimum_muscularity
+         FROM litter l
+                  LEFT JOIN (
+             SELECT
+                 litter_id,
+                 COUNT(*) as definitive_ewes_count
+             FROM animal a
+                      INNER JOIN (
+                 SELECT
+                     e.animal_id
+                 FROM exterior e
+                          INNER JOIN measurement m on e.id = m.id
+                 WHERE m.is_active AND
+                         kind IN ($definitiveExteriorKindsJoinedList)
+                 GROUP BY e.animal_id
+             )definitive_exterior ON definitive_exterior.animal_id = a.id
+             WHERE litter_id NOTNULL AND a.type = '$eweType' $subLitterIdFilter
+             GROUP BY litter_id
+         )definitive_ewes ON definitive_ewes.litter_id = l.id
+                  LEFT JOIN (
+             SELECT
+                 litter_id,
+                 COUNT(*) as definitive_rams_count
+             FROM animal a
+                      INNER JOIN (
+                 SELECT
+                     e.animal_id
+                 FROM exterior e
+                          INNER JOIN measurement m on e.id = m.id
+                 WHERE m.is_active AND
+                         kind IN ($definitiveExteriorKindsJoinedList)
+                 GROUP BY e.animal_id
+             )definitive_exterior ON definitive_exterior.animal_id = a.id
+             WHERE litter_id NOTNULL AND a.type = '$ramType' $subLitterIdFilter
+             GROUP BY litter_id
+         )definitive_rams ON definitive_rams.litter_id = l.id
+                  LEFT JOIN (
+             SELECT
+                 litter_id,
+                 COUNT(*) as vg_exterior_rams_if_father_no_definitive_exterior_count
+             FROM animal a
+                      INNER JOIN (
+                 SELECT
+                     e_offspring.animal_id
+                 FROM exterior e_offspring
+                          INNER JOIN measurement m_offspring on e_offspring.id = m_offspring.id
+                 WHERE m_offspring.is_active AND
+                         e_offspring.kind = '".ExteriorKind::VG_."'
+
+                 GROUP BY e_offspring.animal_id
+             )vg_exterior ON vg_exterior.animal_id = a.id
+             WHERE litter_id NOTNULL AND a.type = '$ramType' AND
+                     litter_id IN (
+                     -- litters with a father that has a definitive exterior
+                     SELECT
+                         litter.id
+                     FROM exterior e
+                              INNER JOIN measurement m on e.id = m.id
+                              INNER JOIN animal dad on e.animal_id = dad.id
+                              INNER JOIN litter ON litter.animal_father_id = dad.id
+                     WHERE m.is_active AND
+                             kind IN ($definitiveExteriorKindsJoinedList)
+                     GROUP BY litter.id
+                 ) $subLitterIdFilter
+             GROUP BY litter_id
+         )vg_exterior_rams_if_father_no_definitive_exterior ON vg_exterior_rams_if_father_no_definitive_exterior.litter_id = l.id
+                  LEFT JOIN (
+             SELECT
+                 litter_id,
+                 COUNT(*) as definitive_prime_ram_count
+             FROM animal
+             WHERE breed_type = '".PredicateType::DEFINITIVE_PREMIUM_RAM."' $subLitterIdFilter
+             GROUP BY litter_id
+         )definitive_prime_rams ON definitive_prime_rams.litter_id = l.id
+                  LEFT JOIN (
+             SELECT
+                 litter_id,
+                 COUNT(*) as grade_ram_count
+             FROM animal
+             WHERE breed_type = '".PredicateType::GRADE_RAM."' $subLitterIdFilter
+             GROUP BY litter_id
+         )grade_rams ON grade_rams.litter_id = l.id
+                  LEFT JOIN (
+             SELECT
+                 litter_id,
+                 COUNT(*) as preferent_ram_count
+             FROM animal
+             WHERE breed_type IN ($predicateTypePreferentJoinedList) $subLitterIdFilter
+             GROUP BY litter_id
+         )preferent_rams ON preferent_rams.litter_id = l.id
+                  LEFT JOIN (
+             SELECT
+                 definitive_offspring.litter_id,
+                 definitive_offspring_count,
+                 COALESCE(has_80_minimum_muscularity_count,0) as has_80_minimum_muscularity_count,
+                 ((COALESCE(has_80_minimum_muscularity_count,0) * 100) / definitive_offspring_count) > $minimumPercentageOfOffspringWithEnoughMuscularity
+                                                              as has_80_minimum_muscularity
+             FROM (
+                      SELECT
+                          litter_id,
+                          COUNT(*) as definitive_offspring_count
+                      FROM animal a
+                               INNER JOIN (
+                          SELECT
+                              e.animal_id
+                          FROM exterior e
+                                   INNER JOIN measurement m on e.id = m.id
+                          WHERE m.is_active AND
+                                  kind IN ($definitiveExteriorKindsJoinedList)
+                          GROUP BY e.animal_id
+                      )definitive_exterior ON definitive_exterior.animal_id = a.id
+                      WHERE litter_id NOTNULL $subLitterIdFilter
+                      GROUP BY litter_id
+                  )definitive_offspring
+                      LEFT JOIN (
+                 SELECT
+                     litter_id,
+                     COUNT(*) as has_80_minimum_muscularity_count
+                 FROM animal a
+                          INNER JOIN (
+                     SELECT
+                         e.animal_id
+                     FROM exterior e
+                              INNER JOIN measurement m on e.id = m.id
+                     WHERE m.is_active AND
+                             kind IN ($definitiveExteriorKindsJoinedList)
+                       AND muscularity >= $minimumMuscularityOfOffspring
+                     GROUP BY e.animal_id
+                 )definitive_exterior ON definitive_exterior.animal_id = a.id
+                 WHERE litter_id NOTNULL $subLitterIdFilter
+                 GROUP BY litter_id
+             )minimum_muscularity ON minimum_muscularity.litter_id = definitive_offspring.litter_id
+         )minimum_muscularity ON minimum_muscularity.litter_id = l.id
+         WHERE (
+                           l.ewes_with_definitive_exterior_count <> COALESCE(definitive_ewes_count, 0) OR
+                           l.rams_with_definitive_exterior_count <> COALESCE(definitive_rams_count, 0) OR
+                           l.vg_rams_if_father_no_def_exterior_count <> COALESCE(vg_exterior_rams_if_father_no_definitive_exterior_count, 0) OR
+                           l.definitive_prime_ram_count <> COALESCE(definitive_prime_rams.definitive_prime_ram_count, 0) OR
+                           l.grade_ram_count <> COALESCE(grade_rams.grade_ram_count, 0) OR
+                           l.preferent_ram_count <> COALESCE(preferent_rams.preferent_ram_count, 0) OR
+                           l.has_minimum_offspring_muscularity <> COALESCE(minimum_muscularity.has_80_minimum_muscularity, false)
+                   )
+) AS v(
+            litter_id,
+            ewes_with_definitive_exterior_count,
+            rams_with_definitive_exterior_count,
+            vg_rams_if_father_no_def_exterior_count,
+            definitive_prime_ram_count,
+            grade_ram_count,
+            preferent_ram_count,
+            has_minimum_offspring_muscularity
+    ) WHERE litter.id = v.litter_id $litterIdFilter";
+
+        $updateCount = SqlUtil::updateWithCount($conn, $sql);
+
+        if ($logger) {
+            $logger->notice("$updateCount litters updated with new offspring exterior count values");
+        }
+
+        return $updateCount;
+    }
+
+
+    private static function updateLitterStarEweBasePoints(Connection $conn, $litterId = null, ?Logger $logger = null): int
+    {
+        if ($logger) {
+            $updateType = !empty($litterId) && is_int($litterId) ? "litter with id $litterId" : "ALL litters";
+            $logger->notice("Update $updateType starEweBasePoints ...");
+        }
+
+        $litterIdFilter = !empty($litterId) && is_int($litterId) ? " AND l.id = $litterId " : '';
+        $subLitterIdFilter = !empty($litterId) && is_int($litterId) ? " AND litter_id = $litterId " : '';
+
+        $definitiveExteriorKindsJoinedList = SqlUtil::definitiveExteriorKindsJoinedList();
+
+        $ramType = AnimalObjectType::Ram;
+        $eweType = AnimalObjectType::Ewe;
+
+        $sql = "UPDATE litter SET star_ewe_base_points = v.star_ewe_base_points
+FROM (   
+         SELECT
+             l.id as litter_id,
+             COALESCE(definitive_graded_daughters.star_ewe_points, 0) +
+             COALESCE(definitive_graded_sons.star_ewe_points, 0) +
+             COALESCE(preliminary_graded_sons.star_ewe_points, 0) as star_ewe_base_points
+         FROM litter l
+                  LEFT JOIN (
+             SELECT
+                 litter_id,
+                 SUM(star_ewe_points) as star_ewe_points
+             FROM (
+                      SELECT
+                          animal.litter_id,
+                          CASE
+                              WHEN 75 <= e.general_appearance AND e.general_appearance <= 79 THEN
+                                  1
+                              WHEN 80 <= e.general_appearance AND e.general_appearance <= 84 THEN
+                                  3
+                              WHEN 85 <= e.general_appearance AND e.general_appearance <= 89 THEN
+                                  5
+                              WHEN 90 <= e.general_appearance THEN
+                                  6
+                              ELSE 0 END
+                              as star_ewe_points
+                      FROM animal
+                               INNER JOIN exterior e on animal.id = e.animal_id
+                               INNER JOIN measurement m on e.id = m.id
+                      WHERE m.is_active AND e.general_appearance NOTNULL AND 75 <= e.general_appearance
+                        AND litter_id NOTNULL $subLitterIdFilter AND animal.type = '$eweType'
+                        AND kind IN ($definitiveExteriorKindsJoinedList)
+                  )ewe_star_ewe_points
+             GROUP BY litter_id
+         )definitive_graded_daughters ON definitive_graded_daughters.litter_id = l.id
+                  LEFT JOIN (
+             SELECT
+                 litter_id,
+                 SUM(star_ewe_points) as star_ewe_points
+             FROM (
+                      SELECT
+                          animal.litter_id,
+                          CASE
+                              WHEN 75 <= e.general_appearance AND e.general_appearance <= 79 THEN
+                                  2
+                              WHEN 80 <= e.general_appearance AND e.general_appearance <= 84 THEN
+                                  4
+                              WHEN 85 <= e.general_appearance AND e.general_appearance <= 89 THEN
+                                  6
+                              WHEN 90 <= e.general_appearance THEN
+                                  7
+                              ELSE 0 END
+                              as star_ewe_points
+                      FROM animal
+                               INNER JOIN exterior e on animal.id = e.animal_id
+                               INNER JOIN measurement m on e.id = m.id
+                      WHERE m.is_active AND e.general_appearance NOTNULL AND litter_id NOTNULL $subLitterIdFilter AND animal.type = '$ramType'
+                        AND kind IN ($definitiveExteriorKindsJoinedList)
+                  )ram_star_ewe_points
+             GROUP BY litter_id
+         )definitive_graded_sons ON definitive_graded_sons.litter_id = l.id
+                  LEFT JOIN (
+             SELECT
+                 litter_id,
+                 SUM(star_ewe_points) as star_ewe_points
+             FROM (
+                      SELECT
+                          animal.litter_id,
+                          CASE
+                              WHEN 75 <= e.general_appearance AND e.general_appearance <= 79 THEN
+                                  0
+                              WHEN 80 <= e.general_appearance AND e.general_appearance <= 84 THEN
+                                  1
+                              WHEN 85 <= e.general_appearance AND e.general_appearance <= 89 THEN
+                                  2
+                              WHEN 90 <= e.general_appearance THEN
+                                  2
+                              ELSE 0 END
+                              as star_ewe_points
+                      FROM animal
+                        INNER JOIN (
+                          SELECT
+                              animal_id,
+                              general_appearance
+                          FROM (
+                                   SELECT
+                                       animal_id,
+                                       MAX(e.general_appearance) as general_appearance,
+                                       SUM(CASE WHEN kind = '".ExteriorKind::VG_."' THEN 1 ELSE 0 END) as vg_count
+                                   FROM animal
+                                            INNER JOIN exterior e on animal.id = e.animal_id
+                                            INNER JOIN measurement m on e.id = m.id
+                                   WHERE m.is_active AND e.general_appearance NOTNULL AND litter_id NOTNULL AND animal.type = '$ramType'
+                                   GROUP BY e.animal_id
+                                   -- only include animals that are NOT definitively graded yet
+                                   HAVING SUM(CASE WHEN (kind IN ($definitiveExteriorKindsJoinedList)) THEN 1 ELSE 0 END) = 0
+                               )exteriors
+                          WHERE exteriors.vg_count > 0
+                          )e ON e.animal_id = animal.id
+                        WHERE litter_id NOTNULL AND animal.type = '$ramType'
+                  )ram_star_ewe_points
+             GROUP BY litter_id
+         )preliminary_graded_sons ON preliminary_graded_sons.litter_id = l.id
+         WHERE l.star_ewe_base_points <> (
+                 COALESCE(definitive_graded_daughters.star_ewe_points, 0) +
+                 COALESCE(definitive_graded_sons.star_ewe_points, 0) +
+                 COALESCE(preliminary_graded_sons.star_ewe_points, 0)
+             ) $litterIdFilter
+     ) AS v(litter_id, star_ewe_base_points) WHERE litter.id = v.litter_id";
+
+        $updateCount = SqlUtil::updateWithCount($conn, $sql);
+
+        if ($logger) {
+            $logger->notice("$updateCount litters updated with new starEweBasePoints");
+        }
+
+        return $updateCount;
     }
 }

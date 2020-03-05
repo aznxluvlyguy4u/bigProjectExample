@@ -72,8 +72,10 @@ abstract class Animal
      *     "ANIMALS_BATCH_EDIT",
      *     "BASIC",
      *     "BASIC_SUB_ANIMAL_DETAILS",
+     *     "CHILD",
      *     "DECLARE",
      *     "ERROR_DETAILS",
+     *     "LIVESTOCK",
      *     "MIXBLUP",
      *     "PARENT_DATA",
      *     "RESPONSE_PERSISTENCE",
@@ -428,7 +430,7 @@ abstract class Animal
 
     /**
      * @var boolean
-     * @Assert\NotBlank
+     * @Assert\NotNull
      * @ORM\Column(type="boolean")
      * @JMS\Type("boolean")
      * @JMS\Groups({
@@ -690,7 +692,7 @@ abstract class Animal
     protected $breeder;
 
     /**
-     * @var string
+     * @var string|null
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Groups({
@@ -701,7 +703,7 @@ abstract class Animal
     protected $predicate;
 
     /**
-     * @var integer
+     * @var integer|null
      * @JMS\Type("integer")
      * @ORM\Column(type="integer", nullable=true)
      * @JMS\Groups({
@@ -710,6 +712,29 @@ abstract class Animal
      * })
      */
     protected $predicateScore;
+
+    /**
+     * @var DateTime|null
+     *
+     * @ORM\Column(type="datetime", nullable=true)
+     * @Assert\Date
+     * @JMS\Type("DateTime")
+     */
+    protected $predicateUpdatedAt;
+
+    /**
+     * @var string|null
+     * @JMS\Type("string")
+     * @ORM\Column(type="string", nullable=true)
+     */
+    protected $previousPredicate;
+
+    /**
+     * @var integer|null
+     * @JMS\Type("integer")
+     * @ORM\Column(type="integer", nullable=true)
+     */
+    protected $previousPredicateScore;
 
     /**
      * @var string
@@ -739,7 +764,7 @@ abstract class Animal
     /**
      * The current blindnessFactor
      *
-     * @var string
+     * @var string|null
      * @JMS\Type("string")
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Groups({
@@ -828,7 +853,7 @@ abstract class Animal
     /**
      * @var boolean
      * @JMS\Type("boolean")
-     * @ORM\Column(type="boolean", nullable=true)
+     * @ORM\Column(type="boolean", nullable=false, options={"default":false})
      * @JMS\Groups({
      *     "ANIMAL_DETAILS",
      *     "ANIMALS_BATCH_EDIT"
@@ -851,12 +876,36 @@ abstract class Animal
     protected $latestNormalizedBreedGrades;
 
     /**
+     * @var ArrayCollection|AnimalAnnotation[]
+     * @ORM\OrderBy({"updatedAt" = "DESC"})
+     * @ORM\OneToMany(targetEntity="AppBundle\Entity\AnimalAnnotation", mappedBy="animal", cascade={"persist", "remove"}, fetch="LAZY")
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\AnimalAnnotation>")
+     */
+    protected $annotations;
+
+    /**
      * @var ArrayCollection
      * @ORM\OrderBy({"description" = "ASC"})
      * @ORM\OneToMany(targetEntity="AppBundle\Entity\TreatmentAnimal", mappedBy="animal", cascade={"persist", "remove"})
      * @JMS\Type("ArrayCollection<AppBundle\Entity\TreatmentAnimal>")
      */
     protected $treatments;
+
+    /**
+     * @var ScanMeasurementSet|null
+     * @ORM\OneToOne(targetEntity="AppBundle\Entity\ScanMeasurementSet", cascade={"persist", "remove"})
+     * @ORM\JoinColumn(name="scan_measurement_set_id", referencedColumnName="id", onDelete="set null")
+     * @JMS\Type("AppBundle\Entity\ScanMeasurementSet")
+     */
+    protected $scanMeasurementSet;
+
+    /**
+     * @var ArrayCollection
+     * @ORM\OrderBy({"id" = "DESC"})
+     * @ORM\OneToMany(targetEntity="AppBundle\Entity\ScanMeasurementSet", mappedBy="animal", cascade={"persist", "remove"})
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\ScanMeasurementSet>")
+     */
+    protected $scanMeasurementSetHistory;
 
     /**
      * @var string
@@ -1079,6 +1128,39 @@ abstract class Animal
 
 
     /**
+     * @var InbreedingCoefficient|null
+     * @ORM\ManyToOne(targetEntity="InbreedingCoefficient", inversedBy="animals", fetch="LAZY")
+     * @JMS\Type("AppBundle\Entity\InbreedingCoefficient")
+     * @JMS\Groups({
+     *     "ANIMAL_DETAILS"
+     * })
+     * @JMS\MaxDepth(depth=1)
+     */
+    public $inbreedingCoefficient;
+
+    /**
+     * Last dateTime when inbreedingCoefficient was matched with this animal
+     *
+     * @var DateTime|null
+     *
+     * @ORM\Column(type="datetime", nullable=true)
+     * @Assert\Date
+     * @JMS\Type("DateTime")
+     */
+    public $inbreedingCoefficientMatchUpdatedAt;
+
+    /**
+     * @var string|null
+     * @JMS\Type("string")
+     * @JMS\Groups({
+     *     "ANIMAL_DETAILS",
+     *     "ANIMALS_BATCH_EDIT",
+     *     "LIVESTOCK"
+     * })
+     */
+    public $production;
+
+    /**
      * Animal constructor.
      */
     public function __construct()
@@ -1094,6 +1176,7 @@ abstract class Animal
         $this->muscleThicknessMeasurements = new ArrayCollection();
         $this->tailLengthMeasurements = new ArrayCollection();
         $this->weightMeasurements = new ArrayCollection();
+        $this->scanMeasurementSetHistory = new ArrayCollection();
         $this->declareWeights = new ArrayCollection();
         $this->exteriorMeasurements = new ArrayCollection();
         $this->flags = new ArrayCollection();
@@ -1103,12 +1186,14 @@ abstract class Animal
         $this->treatments = new ArrayCollection();
         $this->wormResistances = new ArrayCollection();
         $this->animalRelocations = new ArrayCollection();
+        $this->annotations = new ArrayCollection();
         $this->isAlive = true;
         $this->ulnCountryCode = '';
         $this->ulnNumber = '';
         $this->animalOrderNumber = '';
         $this->isImportAnimal = false;
         $this->isExportAnimal = false;
+        $this->lambar = false;
         $this->isDepartedAnimal = false;
         $this->updatedGeneDiversity = false;
         $this->creationDate = new \DateTime();
@@ -2129,6 +2214,17 @@ abstract class Animal
     }
 
     /**
+     * @return Country|null
+     */
+    public function getCountryDetailsOfBirth(): ?Country
+    {
+        if ($this->getLocationOfBirth()) {
+            return $this->getLocationOfBirth()->getCountryDetails();
+        }
+        return null;
+    }
+
+    /**
      * @return string
      */
     public function getTransferState()
@@ -2674,6 +2770,60 @@ abstract class Animal
     }
 
     /**
+     * @return DateTime|null
+     */
+    public function getPredicateUpdatedAt(): ?DateTime
+    {
+        return $this->predicateUpdatedAt;
+    }
+
+    /**
+     * @param  DateTime|null  $predicateUpdatedAt
+     * @return Animal
+     */
+    public function setPredicateUpdatedAt(?DateTime $predicateUpdatedAt): Animal
+    {
+        $this->predicateUpdatedAt = $predicateUpdatedAt;
+        return $this;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getPreviousPredicate(): ?string
+    {
+        return $this->previousPredicate;
+    }
+
+    /**
+     * @param  string|null  $previousPredicate
+     * @return Animal
+     */
+    public function setPreviousPredicate(?string $previousPredicate): Animal
+    {
+        $this->previousPredicate = $previousPredicate;
+        return $this;
+    }
+
+    /**
+     * @return int|null
+     */
+    public function getPreviousPredicateScore(): ?int
+    {
+        return $this->previousPredicateScore;
+    }
+
+    /**
+     * @param  int|null  $previousPredicateScore
+     * @return Animal
+     */
+    public function setPreviousPredicateScore(?int $previousPredicateScore): Animal
+    {
+        $this->previousPredicateScore = $previousPredicateScore;
+        return $this;
+    }
+
+    /**
      * Set scrapieGenotype
      *
      * @param string $scrapieGenotype
@@ -2716,7 +2866,7 @@ abstract class Animal
     }
 
     /**
-     * @return string
+     * @return string|null
      */
     public function getBlindnessFactor()
     {
@@ -2745,7 +2895,7 @@ abstract class Animal
     public function setMyoMax($myoMax)
     {
         $this->myoMax = $myoMax;
-    }    
+    }
 
     /**
      * Add exteriorMeasurement
@@ -2782,6 +2932,32 @@ abstract class Animal
         }
 
         return $this->exteriorMeasurements;
+    }
+
+    /**
+     * @return ScanMeasurementSet|null
+     */
+    public function getScanMeasurementSet(): ?ScanMeasurementSet
+    {
+        return $this->scanMeasurementSet;
+    }
+
+    /**
+     * @param ScanMeasurementSet|null $scanMeasurementSet
+     * @return Animal
+     */
+    public function setScanMeasurementSet(?ScanMeasurementSet $scanMeasurementSet): Animal
+    {
+        $this->scanMeasurementSet = $scanMeasurementSet;
+        return $this;
+    }
+
+    /**
+     * @return ArrayCollection
+     */
+    public function getScanMeasurementSetHistory()
+    {
+        return $this->scanMeasurementSetHistory;
     }
 
     /**
@@ -3296,6 +3472,82 @@ abstract class Animal
         return $this;
     }
 
+    /**
+     * @return InbreedingCoefficient|null
+     */
+    public function getInbreedingCoefficient(): ?InbreedingCoefficient
+    {
+        return $this->inbreedingCoefficient;
+    }
+
+    /**
+     * @param InbreedingCoefficient|null $inbreedingCoefficient
+     * @return Animal
+     */
+    public function setInbreedingCoefficient(?InbreedingCoefficient $inbreedingCoefficient): Animal
+    {
+        $this->inbreedingCoefficient = $inbreedingCoefficient;
+        return $this;
+    }
+
+    /**
+     * @return DateTime|null
+     */
+    public function getInbreedingCoefficientMatchUpdatedAt(): ?DateTime
+    {
+        return $this->inbreedingCoefficientMatchUpdatedAt;
+    }
+
+    /**
+     * @param DateTime|null $inbreedingCoefficientMatchUpdatedAt
+     * @return Animal
+     */
+    public function setInbreedingCoefficientMatchUpdatedAt(?DateTime $inbreedingCoefficientMatchUpdatedAt): Animal
+    {
+        $this->inbreedingCoefficientMatchUpdatedAt = $inbreedingCoefficientMatchUpdatedAt;
+        return $this;
+    }
+
+    /**
+     * @return AnimalAnnotation[]|ArrayCollection
+     */
+    public function getAnnotations()
+    {
+        return $this->annotations;
+    }
+
+    /**
+     * @param  AnimalAnnotation[]|ArrayCollection  $annotations
+     * @return Animal
+     */
+    public function setAnnotations(ArrayCollection $annotations)
+    {
+        $this->annotations = $annotations;
+        return $this;
+    }
+
+    /**
+     * Add annotation
+     *
+     * @param AnimalAnnotation $annotation
+     *
+     * @return Animal
+     */
+    public function addAnnotation(AnimalAnnotation $annotation)
+    {
+        $this->annotations->add($annotation);
+        return $this;
+    }
+
+    /**
+     * Remove annotation
+     *
+     * @param AnimalAnnotation $annotation
+     */
+    public function removeAnnotation(AnimalAnnotation $annotation)
+    {
+        $this->annotations->removeElement($annotation);
+    }
 
 
 }

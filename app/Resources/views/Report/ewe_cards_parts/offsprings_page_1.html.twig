@@ -1,0 +1,174 @@
+{# NAKOMELINGEN #}
+<div class="row">
+    <div class="col-xs-12 p-2 bordered border-top-0">
+        {# TITLE #}
+        <div class="row">
+            <div class="col-xs-12 py-1">
+                <h2 class="display-inline"><ins><b>Nakomelingen</b></ins></h2>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-xs-12">
+                <div class="row">
+                    <div class="col-xs-12">
+
+                        {# JUST TO GENERATE FIRST THEAD WITH PHONY TBODY #}
+                        <table class="w-100 border-0 px-0 py-0 mb-1">
+                            <thead>
+                                <tr class="text-nowrap">
+                                    <td colspan="7"></td>
+                                    <td colspan='3'>Gewicht</td>
+                                    <td>Gem.</td>
+                                    <td colspan="3"></td>
+                                </tr>
+
+                                <tr class="text-nowrap">
+                                    <td>werpdatum</td>
+                                    <td>ULN vader</td>
+                                    <td>geb.</td>
+                                    <td>dood</td>
+                                    <td>gesl.</td>
+                                    <td colspan="2">lamnummer</td>
+                                    <td>geb.</td>
+                                    <td>/speen</td>
+                                    <td>/aflev</td>
+                                    <td>groei</td>
+                                    <td>Bestem.</td>
+                                    <td>Saldo</td>
+                                    <td>Per kg</td>
+                                </tr>
+                            </thead>
+
+                            {% if animal.offspring is not empty %}
+                                {% set firstOffspring = (animal.offspring | first) %}
+                                <tbody>
+                                    <tr class="height-0 text-nowrap">
+                                        <td>{{ firstOffspring.dd_mm_yyyy_date_of_birth }}</td>
+                                        <td>{{ firstOffspring.dad_uln_country_code ~ ' ' ~ firstOffspring.dad_uln_number }}</td>
+                                        <td>{{ firstOffspring.total_born }}</td>
+                                        <td>{{ firstOffspring.stillborn_count }}</td>
+                                        <td>{{ firstOffspring.gender_dutch }}</td>
+                                        <td>{{ firstOffspring.uln_country_code ~ ' ' ~ firstOffspring.uln_number }}</td>
+                                        <td>
+                                            {% if firstOffspring.surrogate_id %}
+                                                P
+                                            {% elseif firstOffspring.lambar %}
+                                                L
+                                            {% else %}
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ firstOffspring.birth_weight }}</td>
+                                        <td>{{ firstOffspring.weaning_weight }}</td>
+                                        <td>{{ firstOffspring.delivery_weight }}</td>
+                                        <td>{{ firstOffspring.average_growth }}</td>
+                                        <td>{{ firstOffspring.destination }}</td>
+                                        <td>{{ firstOffspring.saldo }}</td>
+                                        <td>{{ firstOffspring.price_per_kg }}</td>
+                                    </tr>
+                                </tbody>
+                            {% endif %}
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="col-xs-12 p-2 bordered border-top-0">
+        <div class="row">
+            <div class="col-xs-12">
+                <div class="row">
+                    <div class="col-xs-12">
+
+                        {# HIDDEN THEAD WITH REAL TBODY #}
+                        <table class="w-100 border-0 px-0 py-0 mb-1">
+                            <thead>
+                                <tr class="height-0 text-nowrap">
+                                    <td>werpdatum</td>
+                                    <td>ULN vader</td>
+                                    <td>geb.</td>
+                                    <td>dood</td>
+                                    <td>gesl.</td>
+                                    <td colspan="2">lamnummer</td>
+                                    <td>geb.</td>
+                                    <td>/speen</td>
+                                    <td>/aflev</td>
+                                    <td>groei</td>
+                                    <td>Bestem.</td>
+                                    <td>Saldo</td>
+                                    <td>Per kg</td>
+                                </tr>
+                            </thead>
+
+                            {% if animal.offspring is not empty %}
+                                <tbody>
+                                    {% set currentDateOfBirth = null %}
+                                    {% set firstOfLitter = false %}
+
+                                    {% for offspring in animal.offspring|slice(0,maxRowsPage1) %}
+                                        {% if offspring.dd_mm_yyyy_date_of_birth != currentDateOfBirth %}
+                                            {% set currentDateOfBirth = offspring.dd_mm_yyyy_date_of_birth %}
+                                            {% set firstOfLitter = true %}
+                                        {% else %}
+                                            {% set firstOfLitter = false %}
+                                        {% endif %}
+
+                                        <tr class="text-nowrap">
+                                            <td>{{ firstOfLitter == true ? offspring.dd_mm_yyyy_date_of_birth : ''}}</td>
+                                            <td>{{ firstOfLitter == true ? (offspring.dad_uln_country_code ~ ' ' ~ offspring.dad_uln_number) : '' }}</td>
+                                            <td>{{ firstOfLitter == true ? offspring.total_born : '' }}</td>
+                                            <td>{{ firstOfLitter == true ? offspring.stillborn_count : '' }}</td>
+                                            <td>{{ offspring.gender_dutch }}</td>
+                                            <td>{{ offspring.uln_country_code ~ ' ' ~ offspring.uln_number }}</td>
+                                            <td>
+                                                {% if offspring.surrogate_id %}
+                                                    P
+                                                {% elseif offspring.lambar %}
+                                                    L
+                                                {% else %}
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ offspring.birth_weight }}</td>
+                                            <td>{{ offspring.weaning_weight }}</td>
+                                            <td>{{ offspring.delivery_weight }}</td>
+                                            <td>{{ offspring.average_growth }}</td>
+                                            <td>{{ offspring.destination }}</td>
+                                            <td>{{ offspring.saldo }}</td>
+                                            <td>{{ offspring.price_per_kg }}</td>
+                                        </tr>
+                                    {% endfor %}
+
+                                    {# SHOW AVERAGE IF < 25 #}
+                                    {% if showAverage %}
+                                        <tr class="pt-3 text-nowrap">
+                                            <td colspan="5"></td>
+                                            <td colspan="2" class="text-center  border-top-1">Gem.</td>
+                                            <td class="border-top-1">{{ (totalBirthWeight / offspringCount) | number_format(1) }}</td>
+                                            <td class="border-top-1">{{ (totalWeaningWeight / offspringCount) | number_format(1) }}</td>
+                                            <td class="border-top-1">{{ (totalDeliveryWeight / offspringCount) | number_format(1) }}</td>
+                                            <td colspan="2" class="border-top-1">{{ (totalAverageGrowth / offspringCount) | number_format(0) }}</td>
+                                            <td class="border-top-1">{{ (totalSaldo / offspringCount) | number_format(2) }}</td>
+                                            <td class="border-top-1">{{ (totalPricePerKg / offspringCount) | number_format(2) }}</td>
+                                        </tr>
+
+                                        <tr>
+                                            <td colspan="5">L = Lambar, P = Pleegmoeder</td>
+                                            <td colspan="2" class="text-center">Tot.</td>
+                                            <td colspan="5"></td>
+                                            <td colspan="2">{{ totalSaldo | number_format(2) }}</td>
+                                        </tr>
+                                    {% endif %}
+
+                                </tbody>
+                            {% endif %}
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+</div>
