@@ -299,8 +299,10 @@ class BirthListReportService extends ReportServiceBase
                   LEFT JOIN litter l on m.id = l.mate_id
                   $groupByUniqueEweJoin
                 WHERE
-                      ".$eweFilter."
-                      is_approved_by_third_party AND
+                      ".$eweFilter." 
+                      is_approved_by_third_party
+                      AND b.is_overwritten_version = false                       
+                      AND
                       (
                         b.request_state = '".RequestStateType::FINISHED."' OR 
                         b.request_state = '".RequestStateType::FINISHED_WITH_WARNING."' OR
