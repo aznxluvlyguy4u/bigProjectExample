@@ -621,8 +621,7 @@ class NsfoMainCommand extends ContainerAwareCommand
 
                 '================== SCAN MEASUREMENTS ===================', "\n",
                 '60: Fix duplicate measurements', "\n",
-                '61: Create scan measurement set records for unlinked scan measurements', "\n",
-                '62: Link latest scan measurement set records to animals', "\n\n",
+                '61: Create and link scan measurement set records for unlinked scan measurements', "\n",
 
                 'other: exit submenu', "\n"
             ], self::DEFAULT_OPTION);
@@ -660,8 +659,7 @@ class NsfoMainCommand extends ContainerAwareCommand
             case 50: DatabaseDataFixer::fillBlankMessageNumbersForErrorMessagesWithErrorCodeIDR00015($this->conn, $this->cmdUtil); break;
 
             case 60: $this->getDuplicateMeasurementsFixer()->deactivateDuplicateMeasurements(); break;
-            case 61: MeasurementsUtil::createNewScanMeasurementSetsByUnlinkedData($this->em, $this->getLogger(), $this->getDuplicateMeasurementsFixer()); break;
-            case 62: MeasurementsUtil::linkLatestScanMeasurementsToAnimals($this->conn, $this->getLogger()); break;
+            case 61: MeasurementsUtil::createAndLinkScanMeasurementSetsByUnlinkedData($this->em, $this->getLogger(), $this->getDuplicateMeasurementsFixer()); break;
 
             default: $this->writeMenuExit(); return;
         }

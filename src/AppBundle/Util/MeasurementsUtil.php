@@ -343,7 +343,18 @@ class MeasurementsUtil
     }
 
 
-    public static function createNewScanMeasurementSetsByUnlinkedData(
+    public static function createAndLinkScanMeasurementSetsByUnlinkedData(
+        EntityManagerInterface $em,
+        LoggerInterface $logger,
+        DuplicateMeasurementsFixer $duplicateMeasurementsFixer
+    ) {
+        // The processes have to be in this order!
+        self::createNewScanMeasurementSetsByUnlinkedData($em, $logger, $duplicateMeasurementsFixer);
+        self::linkLatestScanMeasurementsToAnimals($em->getConnection(), $logger);
+        self::removeAnimalsFromUnlinkedScanMeasurements($em->getConnection(), $logger);
+    }
+
+    private static function createNewScanMeasurementSetsByUnlinkedData(
         EntityManagerInterface $em,
         LoggerInterface $logger,
         DuplicateMeasurementsFixer $duplicateMeasurementsFixer
@@ -366,7 +377,7 @@ class MeasurementsUtil
         $logger->notice($countsMatchingInspector.' unlinked data sets found with '.$inspectorMatchingPrefix.'matching inspectors');
     }
 
-    public static function linkLatestScanMeasurementsToAnimals(Connection $connection, LoggerInterface $logger) {
+    private static function linkLatestScanMeasurementsToAnimals(Connection $connection, LoggerInterface $logger) {
         $sql = "UPDATE animal SET scan_measurement_set_id = v.scan_measurement_set_id
 FROM (
          SELECT
@@ -391,5 +402,20 @@ WHERE animal.id = v.animal_id";
         $updateCount = SqlUtil::updateWithCount($connection, $sql);
         $updateCountText = empty($updateCount) ? 'No' : '';
         $logger->notice($updateCountText.' latest scan_measurement_set records matched to animals');
+    }
+
+
+    private static function removeAnimalsFromUnlinkedScanMeasurements(Connection $connection, LoggerInterface $logger)
+    {
+        $sql = "UPDATE scan_measurement_set SET animal_id = NULL WHERE id IN (
+                    SELECT
+                        s.id
+                    FROM scan_measurement_set s
+                             LEFT JOIN animal a ON a.scan_measurement_set_id = s.id
+                    WHERE a.scan_measurement_set_id ISNULL AND s.animal_id NOTNULL
+                )";
+        $updateCount = SqlUtil::updateWithCount($connection, $sql);
+        $updateCountText = empty($updateCount) ? 'No' : '';
+        $logger->notice($updateCountText." animal_id's were removed from unlinked scan measurements sets");
     }
 }
