@@ -22,7 +22,7 @@ class ScanMeasurementsValues
      * @Assert\GreaterThanOrEqual(0)
      * @Assert\LessThanOrEqual(9)
      * @Assert\NotNull
-     * @Assert\Type("float")
+     * @Assert\Type("numeric")
      * @CustomAssert\LessThanOrEqualDecimalCount(1)
      * @JMS\Type("float")
      */
@@ -33,7 +33,7 @@ class ScanMeasurementsValues
      * @Assert\GreaterThanOrEqual(0)
      * @Assert\LessThanOrEqual(9)
      * @Assert\NotNull
-     * @Assert\Type("float")NSFO STAGE m4 Large  on NSFO AWS account
+     * @Assert\Type("numeric")
      * @CustomAssert\LessThanOrEqualDecimalCount(1)
      * @JMS\Type("float")
      */
@@ -44,7 +44,7 @@ class ScanMeasurementsValues
      * @Assert\GreaterThanOrEqual(0)
      * @Assert\LessThanOrEqual(9)
      * @Assert\NotNull
-     * @Assert\Type("float")
+     * @Assert\Type("numeric")
      * @CustomAssert\LessThanOrEqualDecimalCount(1)
      * @JMS\Type("float")
      */
@@ -55,7 +55,7 @@ class ScanMeasurementsValues
      * @Assert\GreaterThanOrEqual(10)
      * @Assert\LessThanOrEqual(50)
      * @Assert\NotNull
-     * @Assert\Type("float")
+     * @Assert\Type("numeric")
      * @CustomAssert\LessThanOrEqualDecimalCount(1)
      * @JMS\Type("float")
      */
@@ -66,7 +66,7 @@ class ScanMeasurementsValues
      * @Assert\GreaterThanOrEqual(10)
      * @Assert\LessThanOrEqual(99)
      * @Assert\NotNull
-     * @Assert\Type("float")
+     * @Assert\Type("numeric")
      * @CustomAssert\LessThanOrEqualDecimalCount(2)
      * @JMS\Type("float")
      */
