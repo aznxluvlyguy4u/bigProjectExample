@@ -5,6 +5,7 @@ use AppBundle\Constant\Constant;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Output\DeclareDepartResponseOutput;
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\DBAL\DBALException;
 
 /**
  * Class DeclareArrivalResponseRepository
@@ -27,12 +28,16 @@ class DeclareDepartResponseRepository extends BaseRepository {
     /**
      * @param Location $location
      * @param integer $page
-     * @return ArrayCollection
+     * @param string $query
+     * @return array
+     * @throws DBALException
      */
-    public function getDeparturesWithLastHistoryResponses(Location $location, $page = 1)
+    public function getDeparturesWithLastHistoryResponses(Location $location, $page = 1, $query = '')
     {
         $locationId = $location->getId();
         if(!is_int($locationId)) { return []; }
+
+        $query = "%".$query."%";
 
         $countSql = "SELECT COUNT (*) as totalItems
                 FROM declare_base b
@@ -46,12 +51,22 @@ class DeclareDepartResponseRepository extends BaseRepository {
                                    GROUP BY request_id
                                  ) z ON z.log_date = y.log_date AND z.request_id = y.request_id
                     )r ON r.request_id = b.request_id
-                WHERE (request_state = '".RequestStateType::OPEN."' OR
-                      request_state = '".RequestStateType::REVOKING."' OR
-                      request_state = '".RequestStateType::REVOKED."' OR
-                      request_state = '".RequestStateType::FINISHED."' OR
-                      request_state = '".RequestStateType::FINISHED_WITH_WARNING."')
-                AND location_id = ".$locationId." GROUP BY location_id";
+                WHERE ( 
+                    a.ubn_new_owner LIKE :query OR
+                    a.uln_country_code LIKE :query OR
+                    a.uln_number LIKE :query OR 
+                    a.pedigree_country_code LIKE :query OR
+                    a.pedigree_number LIKE :query
+                  ) 
+                  AND request_state IN (
+                    '".RequestStateType::OPEN."', 
+                    '".RequestStateType::REVOKING."', 
+                    '".RequestStateType::REVOKED."', 
+                    '".RequestStateType::FINISHED."', 
+                    '".RequestStateType::FINISHED_WITH_WARNING."'
+                  )
+                AND location_id = ".$locationId." 
+                GROUP BY location_id";
 
         $sql = "SELECT b.request_id, log_date, a.uln_country_code, a.uln_number,
                   pedigree_country_code, pedigree_number, is_export_animal,
@@ -68,32 +83,44 @@ class DeclareDepartResponseRepository extends BaseRepository {
                                    GROUP BY request_id
                                  ) z ON z.log_date = y.log_date AND z.request_id = y.request_id
                     )r ON r.request_id = b.request_id
-                WHERE (request_state = '".RequestStateType::OPEN."' OR
-                      request_state = '".RequestStateType::REVOKING."' OR
-                      request_state = '".RequestStateType::REVOKED."' OR
-                      request_state = '".RequestStateType::FINISHED."' OR
-                      request_state = '".RequestStateType::FINISHED_WITH_WARNING."')
-                AND location_id = ".$locationId." ORDER BY b.log_date DESC
+                WHERE ( 
+                    a.ubn_new_owner LIKE :query OR
+                    a.uln_country_code LIKE :query OR
+                    a.uln_number LIKE :query OR 
+                    a.pedigree_country_code LIKE :query OR
+                    a.pedigree_number LIKE :query
+                  ) 
+                  AND request_state IN (
+                    '".RequestStateType::OPEN."', 
+                    '".RequestStateType::REVOKING."', 
+                    '".RequestStateType::REVOKED."', 
+                    '".RequestStateType::FINISHED."', 
+                    '".RequestStateType::FINISHED_WITH_WARNING."'
+                  )
+                AND location_id = ".$locationId." 
+                ORDER BY b.log_date DESC
                 OFFSET 10 * (".$page." - 1)
                 FETCH NEXT 10 ROWS ONLY"
         ;
 
         $totalItems = 0;
 
-        $countResult = $this->getManager()->getConnection()->query($countSql)->fetchAll();
+        $statement = $this->getManager()->getConnection()->prepare($countSql);
+        $statement->bindParam('query', $query);
+        $statement->execute();
+        $countResult = $statement->fetchAll();
 
         if (!empty($countResult)) {
             $totalItems = $countResult[0]['totalitems'];
         }
 
-        return [
-            'totalItems' => $totalItems,
-            'items' => $this->getManager()->getConnection()->query($sql)->fetchAll()
-        ];
+        $statement = $this->getManager()->getConnection()->prepare($sql);
+        $statement->bindParam('query', $query);
+        $statement->execute();
 
         return [
-            'totalItems' =>  $this->getConnection()->query($countSql)->fetchAll()[0]['totalitems'],
-            'items' => $this->getConnection()->query($sql)->fetchAll()
+            'totalItems' => $totalItems,
+            'items' =>$statement->fetchAll()
         ];
     }
 

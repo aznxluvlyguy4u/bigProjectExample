@@ -19,7 +19,7 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as JMS;
-use Proxies\__CG__\AppBundle\Entity\AnimalRelocation;
+use AppBundle\Entity\AnimalRelocation;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
@@ -188,6 +188,8 @@ abstract class Animal
      * })
      */
     protected $locationOfBirth;
+
+    public $annotations;
 
     /**
      * @var DateTime
