@@ -9,6 +9,7 @@ use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Constant\TranslationKey;
 use AppBundle\Entity\Animal;
+use AppBundle\Entity\Client;
 use AppBundle\Entity\Employee;
 use AppBundle\Entity\Ewe;
 use AppBundle\Entity\Ram;
@@ -162,8 +163,11 @@ class AnimalDetailsUpdaterService extends ControllerServiceBase
         $isAdmin = $user instanceof Employee;
 
         if(!$isAdmin) {
-            $animalOwner = $animal->getOwner();
-            if ($animalOwner !== $user && $animalOwner !== $user->getEmployer()) {
+            $blockUser = !($user instanceof Client) ||
+                ($user instanceof Client && !Validator::isAnimalOfClient($animal,$user))
+            ;
+
+            if ($blockUser) {
                 $message = 'Dit dier is op dit moment niet in uw bezit en u bent niet door de huidige eigenaar geautoriseerd,'
                     .' dus het is niet toegestaan voor u om de gegevens aan te passen.';
                 return ResultUtil::errorResult($message, Response::HTTP_UNAUTHORIZED);
