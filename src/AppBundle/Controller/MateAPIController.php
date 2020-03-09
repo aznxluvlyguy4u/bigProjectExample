@@ -97,6 +97,7 @@ class MateAPIController extends APIController {
    */
   public function getMateHistory(Request $request)
   {
+      set_time_limit(0);
       return $this->get('app.mate')->getMateHistory($request);
   }
 

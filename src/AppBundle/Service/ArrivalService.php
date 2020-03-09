@@ -487,8 +487,11 @@ class ArrivalService extends DeclareControllerServiceBase implements ArrivalAPIC
         $location = $this->getSelectedLocation($request);
         $this->nullCheckLocation($location);
 
-        $declareArrivals = $this->getManager()->getRepository(DeclareArrivalResponse::class)->getArrivalsWithLastHistoryResponses($location);
-        $declareImports = $this->getManager()->getRepository(DeclareImportResponse::class)->getImportsWithLastHistoryResponses($location);
+        $page = $request->query->getInt('page', 1);
+        $searchQuery = $request->query->get('query', '');
+
+        $declareArrivals = $this->getManager()->getRepository(DeclareArrivalResponse::class)->getArrivalsWithLastHistoryResponses($location, $page, $searchQuery);
+        $declareImports = $this->getManager()->getRepository(DeclareImportResponse::class)->getImportsWithLastHistoryResponses($location, $page, $searchQuery);
 
         return ResultUtil::successResult(['arrivals' => $declareArrivals, 'imports' => $declareImports]);
     }
