@@ -191,8 +191,6 @@ abstract class Animal
      */
     protected $locationOfBirth;
 
-    public $annotations;
-
     /**
      * @var DateTime
      *
