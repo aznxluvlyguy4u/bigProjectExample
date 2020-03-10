@@ -1647,6 +1647,13 @@ abstract class Animal
     }
 
 
+    public function hasBothParentIds(): bool
+    {
+        return $this->getParentFatherId() != null &&
+            $this->getParentMotherId() != null;
+    }
+
+
     /**
      * Set parentMother
      *
