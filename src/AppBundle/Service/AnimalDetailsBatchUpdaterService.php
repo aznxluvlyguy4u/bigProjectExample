@@ -181,13 +181,15 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
                     foreach ($this->animalsIdsForWhichInbreedingCoefficientShouldBeUpdated as $animalId) {
                         /** @var Animal $toBeUpdatedAnimal */
                         $toBeUpdatedAnimal = $updateAnimalResults[JsonInputConstant::UPDATED][$animalId];
-                        $parentIdsPair = new ParentIdsPair(
-                            $toBeUpdatedAnimal->getParentFatherId(),
-                            $toBeUpdatedAnimal->getParentMotherId()
-                        );
+                        if ($toBeUpdatedAnimal->hasBothParentIds()) {
+                            $parentIdsPair = new ParentIdsPair(
+                                $toBeUpdatedAnimal->getParentFatherId(),
+                                $toBeUpdatedAnimal->getParentMotherId()
+                            );
 
-                        $this->inbreedingCoefficientUpdaterService->regenerateInbreedingCoefficients([$parentIdsPair]);
-                        $this->inbreedingCoefficientUpdaterService->matchAnimalsAndLitters([$animalId], []);
+                            $this->inbreedingCoefficientUpdaterService->regenerateInbreedingCoefficients([$parentIdsPair]);
+                            $this->inbreedingCoefficientUpdaterService->matchAnimalsAndLitters([$animalId], []);
+                        }
                     }
                 }
 

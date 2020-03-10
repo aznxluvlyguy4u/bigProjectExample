@@ -597,6 +597,12 @@ class Litter extends DeclareNsfoBase
         return $this;
     }
 
+    public function hasBothParentIds(): bool
+    {
+        return $this->animalFather != null && $this->animalFather->getId() != null &&
+            $this->animalMother != null && $this->animalMother->getId() != null;
+    }
+
     /**
      * Get animalMother
      *

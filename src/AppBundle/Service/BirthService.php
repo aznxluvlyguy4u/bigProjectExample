@@ -1281,20 +1281,22 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
     }
 
     private function generateInbreedingCoefficients(Litter $litter) {
-        $parentIdsPair = new ParentIdsPair(
-            $litter->getAnimalFather()->getId(),
-            $litter->getAnimalMother()->getId()
-        );
+        if ($litter->hasBothParentIds()) {
+            $parentIdsPair = new ParentIdsPair(
+                $litter->getAnimalFather()->getId(),
+                $litter->getAnimalMother()->getId()
+            );
 
-        $this->inbreedingCoefficientUpdaterService->generateInbreedingCoefficients(
-            [$parentIdsPair],
-            false
-        );
+            $this->inbreedingCoefficientUpdaterService->generateInbreedingCoefficients(
+                [$parentIdsPair],
+                false
+            );
 
-        $this->inbreedingCoefficientUpdaterService->matchAnimalsAndLitters(
-            $litter->getChildrenIds(),
-            [$litter->getId()]
-        );
+            $this->inbreedingCoefficientUpdaterService->matchAnimalsAndLitters(
+                $litter->getChildrenIds(),
+                [$litter->getId()]
+            );
+        }
     }
 
     /**
