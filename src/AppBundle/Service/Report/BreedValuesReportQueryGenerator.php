@@ -409,6 +409,8 @@ class BreedValuesReportQueryGenerator
         $sql = "SELECT DISTINCT
                     CONCAT(a.uln_country_code, a.uln_number) as a_uln,
                     CONCAT(a.pedigree_country_code, a.pedigree_number) as a_stn,
+                    a.collar_color as a_collar_color,
+                    a.collar_number as a_collar_number,
                     CONCAT(mom.uln_country_code, mom.uln_number) as m_uln,
                     CONCAT(mom.pedigree_country_code, mom.pedigree_number) as m_stn,
                     CONCAT(dad.uln_country_code, dad.uln_number) as f_uln,
