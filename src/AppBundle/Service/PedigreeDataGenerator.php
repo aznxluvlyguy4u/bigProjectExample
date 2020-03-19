@@ -484,9 +484,20 @@ class PedigreeDataGenerator
             $this->getLocation($animal)->getLocationHealth() &&
             $this->getLocation($animal)->getLocationHealth()->getCurrentScrapieStatus() === ScrapieStatus::RESISTANT)
         {
-            $animal->setScrapieGenotype(ScrapieGenotypeType::ARR_ARR);
-            $animal->setScrapieGenotypeSource($this->getScrapieGenotypeAdministrativeSource());
-            $this->valueWasUpdated();
+            $father = $animal->getParentFather();
+            $mother = $animal->getParentMother();
+
+            if (
+                $father->getScrapieGenotype() === ScrapieGenotypeType::ARR_ARR &&
+                $mother->getScrapieGenotype() === ScrapieGenotypeType::ARR_ARR
+            ) {
+                $animal->setScrapieGenotype(ScrapieGenotypeType::ARR_ARR);
+                $animal->setScrapieGenotypeSource($this->getScrapieGenotypeAdministrativeSource());
+                $this->valueWasUpdated();
+            } else {
+                $animal->setScrapieGenotype(null);
+                $animal->setScrapieGenotypeSource(null);
+            }
         }
 
         return $animal;
