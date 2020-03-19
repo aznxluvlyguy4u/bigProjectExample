@@ -19,6 +19,7 @@ use AppBundle\Util\StoredProcedure;
 use AppBundle\Util\StringUtil;
 use AppBundle\Util\TimeUtil;
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\DBAL\DBALException;
 
 class LiveStockReportService extends ReportServiceWithBreedValuesBase
 {
@@ -264,6 +265,7 @@ class LiveStockReportService extends ReportServiceWithBreedValuesBase
 
     /**
      * @return array
+     * @throws DBALException
      */
     private function retrieveLiveStockDataForCsv()
     {
