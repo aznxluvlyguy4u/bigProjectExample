@@ -13,6 +13,7 @@ use AppBundle\Enumerator\MaediVisnaStatus;
 use AppBundle\Enumerator\ScrapieGenotypeType;
 use AppBundle\Enumerator\ScrapieStatus;
 use AppBundle\Util\DateUtil;
+use AppBundle\Util\ExceptionUtil;
 use AppBundle\Util\Finder;
 use AppBundle\Util\LocationHealthUpdater;
 use AppBundle\Util\NullChecker;
@@ -35,6 +36,7 @@ class LocationHealthEditor
      * @param ArrayCollection $content
      * @param Location $location
      * @return Location
+     * @throws Exception
      */
     public static function edit(ObjectManager $em, Location $location, ArrayCollection $content)
     {
@@ -53,9 +55,7 @@ class LocationHealthEditor
         //Get the latest locationHealth status to use as a benchmark
         $latestIllnessStatuses = Finder::findLatestActiveIllnessStatusesOfLocation($location, $em);
 
-        
         /* Scrapie values */
-        
         $lastScrapieStatus = $latestIllnessStatuses->get(JsonInputConstant::SCRAPIE_STATUS);
         $lastScrapieStatus = Utils::fillNullOrEmptyString($lastScrapieStatus, self::defaultScrapieStatus);
         $lastScrapieCheckDate = $latestIllnessStatuses->get(JsonInputConstant::SCRAPIE_CHECK_DATE);
@@ -76,19 +76,9 @@ class LocationHealthEditor
             $newScrapieCheckDate = DateUtil::endOfTime();
             $newScrapieEndDate = DateUtil::endOfTime();
         } elseif(strtoupper($newScrapieStatus) === ScrapieStatus::RESISTANT) {
-            $animals = $location->getAnimals();
-
-            $animalsWithArrArrGenotypeCount = 0;
-
-            /** @var Animal $animal */
-            foreach ($animals as $animal) {
-                if ($animal->getScrapieGenotype() === ScrapieGenotypeType::ARR_ARR) {
-                    $animalsWithArrArrGenotypeCount++;
-                }
-            }
-
-            if ($animalsWithArrArrGenotypeCount !== $animals->count()) {
-                $resistantScrapieStatusEditIsValid = false;
+            $nonArrArrAnimals = self::nonArrArrAnimals($location);
+            if (!$nonArrArrAnimals['result']) {
+                throw new \Exception('Not all animals on the livestock list got ARR/ARR as scrapie genotype', 417);
             }
         } else {
             $newScrapieCheckDate = Utils::getNullCheckedArrayCollectionDateValue(JsonInputConstant::SCRAPIE_CHECK_DATE, $content, true);
@@ -190,7 +180,26 @@ class LocationHealthEditor
             $em->flush();
         }
 
-
         return $location;
+    }
+
+    /**
+     * @param Location $location
+     * @return array
+     */
+    private static function nonArrArrAnimals($location)
+    {
+        $animals = $location->getAnimals();
+
+        $animalsWithArrArrGenotype = array_filter($animals->toArray(), function(Animal $animal) {
+            return $animal->getScrapieGenotype() === ScrapieGenotypeType::ARR_ARR;
+        });
+
+        $count = count($animalsWithArrArrGenotype);
+
+        return [
+            'result' => $count === $animals->count(),
+            'count' => $count
+        ];
     }
 }
