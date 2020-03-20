@@ -4,11 +4,13 @@ namespace AppBundle\FormInput;
 
 use AppBundle\Component\Utils;
 use AppBundle\Constant\JsonInputConstant;
+use AppBundle\Entity\Animal;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\LocationHealth;
 use AppBundle\Entity\MaediVisna;
 use AppBundle\Entity\Scrapie;
 use AppBundle\Enumerator\MaediVisnaStatus;
+use AppBundle\Enumerator\ScrapieGenotypeType;
 use AppBundle\Enumerator\ScrapieStatus;
 use AppBundle\Util\DateUtil;
 use AppBundle\Util\Finder;
@@ -17,6 +19,7 @@ use AppBundle\Util\NullChecker;
 use AppBundle\Util\StringUtil;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
+use Exception;
 
 /**
  * Class LocationHealthEditor
@@ -57,6 +60,10 @@ class LocationHealthEditor
         $lastScrapieStatus = Utils::fillNullOrEmptyString($lastScrapieStatus, self::defaultScrapieStatus);
         $lastScrapieCheckDate = $latestIllnessStatuses->get(JsonInputConstant::SCRAPIE_CHECK_DATE);
         $lastReasonOfScrapieEdit = $latestIllnessStatuses->get(JsonInputConstant::SCRAPIE_REASON_OF_EDIT);
+        $newScrapieCheckDate = null;
+        $newScrapieEndDate = null;
+
+        $resistantScrapieStatusEditIsValid = true;
 
         if ($content->containsKey(JsonInputConstant::SCRAPIE_STATUS)) {
             $newScrapieStatus = StringUtil::replaceUnderscoresWithSpaces(
@@ -68,6 +75,21 @@ class LocationHealthEditor
         if (strtoupper($newScrapieStatus) === ScrapieStatus::BLANK) {
             $newScrapieCheckDate = DateUtil::endOfTime();
             $newScrapieEndDate = DateUtil::endOfTime();
+        } elseif(strtoupper($newScrapieStatus) === ScrapieStatus::RESISTANT) {
+            $animals = $location->getAnimals();
+
+            $animalsWithArrArrGenotypeCount = 0;
+
+            /** @var Animal $animal */
+            foreach ($animals as $animal) {
+                if ($animal->getScrapieGenotype() === ScrapieGenotypeType::ARR_ARR) {
+                    $animalsWithArrArrGenotypeCount++;
+                }
+            }
+
+            if ($animalsWithArrArrGenotypeCount !== $animals->count()) {
+                $resistantScrapieStatusEditIsValid = false;
+            }
         } else {
             $newScrapieCheckDate = Utils::getNullCheckedArrayCollectionDateValue(JsonInputConstant::SCRAPIE_CHECK_DATE, $content, true);
             $newScrapieEndDate = Utils::getNullCheckedArrayCollectionDateValue(JsonInputConstant::SCRAPIE_END_DATE, $content, true);
@@ -123,19 +145,25 @@ class LocationHealthEditor
         
         /* LocationHealth Entity */
 
-        //Only create a new Scrapie if there was any change in the values
-        if($scrapieStatusChanged || $scrapieDatesChanged || $scrapieReasonOfEditChanged) {
-            //First hide the obsolete scrapies
-            LocationHealthUpdater::hideAllFollowingScrapies($em, $location, $newScrapieCheckDate);
+        /*
+         * Only create a new Scrapie if there was any change in the values
+         * and when the status is resistant all the animals on the location
+         * must have arr/arr genotype
+         */
+        if ($resistantScrapieStatusEditIsValid) {
+            if($scrapieStatusChanged || $scrapieDatesChanged || $scrapieReasonOfEditChanged) {
+                //First hide the obsolete scrapies
+                LocationHealthUpdater::hideAllFollowingScrapies($em, $location, $newScrapieCheckDate);
 
-            $scrapie = new Scrapie($newScrapieStatus);
-            $scrapie->setCheckDate($newScrapieCheckDate);
-            $scrapie->setEndDate($newScrapieEndDate);
-            $scrapie->setIsManualEdit(true);
-            $locationHealth->addScrapie($scrapie);
-            $scrapie->setLocationHealth($locationHealth);
-            $scrapie->setReasonOfEdit($newReasonOfScrapieEdit);
-            $em->persist($scrapie);
+                $scrapie = new Scrapie($newScrapieStatus);
+                $scrapie->setCheckDate($newScrapieCheckDate);
+                $scrapie->setEndDate($newScrapieEndDate);
+                $scrapie->setIsManualEdit(true);
+                $locationHealth->addScrapie($scrapie);
+                $scrapie->setLocationHealth($locationHealth);
+                $scrapie->setReasonOfEdit($newReasonOfScrapieEdit);
+                $em->persist($scrapie);
+            }
         }
 
         //Only create a new MaediVisna if there was any change in the values
