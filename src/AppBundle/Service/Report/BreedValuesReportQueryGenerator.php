@@ -5,6 +5,7 @@ namespace AppBundle\Service\Report;
 
 
 use AppBundle\Constant\BreedValueTypeConstant;
+use AppBundle\Entity\Location;
 use AppBundle\Enumerator\Locale;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Util\DateUtil;
@@ -953,7 +954,7 @@ LEFT JOIN (
             $ignoreHiddenBreedValueTypes);
 
         $locationId = $location ? $location->getId() : null;
-        $locationFilter = $locationId ? "AND a.location_id = $locationId -- location filter (for user)" : "";
+        $locationFilter = $locationId ? "AND r.location_id = $locationId AND r.animal_id NOT IN (SELECT id FROM animal an WHERE an.location_id = $locationId)" : "";
 
         $mainFilter =
                     "WHERE
@@ -961,8 +962,6 @@ LEFT JOIN (
                         $locationFilter
                     ";
         $mainFilter .= ' ' . $this->animalShouldHaveAtleastOneExistingBreedValueFilter;
-
-
 
         $selectBirthProgress = $this->translator->getLocale() === Locale::NL ?
             'birth_progress.dutch_description' : 'a.birth_progress';
@@ -1032,6 +1031,7 @@ LEFT JOIN (
                   LEFT JOIN result_table_normalized_breed_grades nbg ON nbg.animal_id = a.id
                   LEFT JOIN animal_cache c ON c.animal_id = a.id
                   LEFT JOIN inbreeding_coefficient ic ON ic.id = a.inbreeding_coefficient_id
+                  LEFT JOIN animal_residence r ON r.animal_id = a.id 
                   LEFT JOIN (VALUES ".$this->getGenderLetterTranslationValues().") AS gender(english_full, translated_char) ON a.gender = gender.english_full
                   LEFT JOIN (
                       SELECT
@@ -1064,6 +1064,30 @@ LEFT JOIN (
         ReportServiceBase::closeColumnHeaderTranslation();
 
         return $sql;
+    }
+
+    public function createHistoricAnimalsQueryForAnimalFeaturesPerYearOfBirthReport(Location $location)
+    {
+        $locationId = $location ? $location->getId() : null;
+
+        $sql = "
+                SELECT * FROM animal_residence r
+                INNER JOIN animal a WITH r.animal_id = a.id
+                LEFT JOIN location l WITH  a.location_id = l.id
+                LEFT JOIN company comp WITH l.company_id = comp.id 
+                WHERE l.id = ".$locationId."
+                AND r.animal_id NOT IN (SELECT DISTINCT id FROM animal an WHERE an.location_id =  ".$locationId.")
+                AND date_part('year', a.date_of_birth) = 2015
+        ";
+
+        echo $sql;
+
+//        $connection = $this->em->getConnection();
+//
+//        $stmt = $connection->query($sql);
+//        while ($row = $stmt->fetchAll()) {
+//            var_dump($row);
+//        }
     }
 
     /**
