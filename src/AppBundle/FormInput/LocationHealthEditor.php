@@ -21,6 +21,7 @@ use AppBundle\Util\StringUtil;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
 use Exception;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Class LocationHealthEditor
@@ -76,9 +77,9 @@ class LocationHealthEditor
             $newScrapieCheckDate = DateUtil::endOfTime();
             $newScrapieEndDate = DateUtil::endOfTime();
         } elseif(strtoupper($newScrapieStatus) === ScrapieStatus::RESISTANT) {
-            $nonArrArrAnimals = self::nonArrArrAnimals($location);
-            if (!$nonArrArrAnimals['result']) {
-                throw new \Exception('Not all animals on the livestock list got ARR/ARR as scrapie genotype', 417);
+            $countArrArrAnimals = self::countArrArrAnimals($location);
+            if (!$countArrArrAnimals['hasOnlyArrArrAnimals']) {
+                throw new \Exception('Not all animals on the livestock list got ARR/ARR as scrapie genotype', Response::HTTP_EXPECTATION_FAILED);
             }
         } else {
             $newScrapieCheckDate = Utils::getNullCheckedArrayCollectionDateValue(JsonInputConstant::SCRAPIE_CHECK_DATE, $content, true);
@@ -187,7 +188,7 @@ class LocationHealthEditor
      * @param Location $location
      * @return array
      */
-    private static function nonArrArrAnimals($location)
+    private static function countArrArrAnimals($location)
     {
         $animals = $location->getAnimals();
 
@@ -198,7 +199,7 @@ class LocationHealthEditor
         $count = count($animalsWithArrArrGenotype);
 
         return [
-            'result' => $count === $animals->count(),
+            'hasOnlyArrArrAnimals' => $count === $animals->count(),
             'count' => $count
         ];
     }
