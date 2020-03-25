@@ -19,11 +19,13 @@ use AppBundle\Enumerator\ScrapieGenotypeType;
 use AppBundle\Enumerator\ScrapieStatus;
 use AppBundle\Exception\InvalidSwitchCaseException;
 use AppBundle\Service\EmailService;
+use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Monolog\Logger;
+use Twig\Error\Error;
 
 //TODO Nothing is done with the endDates yet.
 
@@ -126,7 +128,7 @@ class LocationHealthUpdater
     /**
      * @param DeclareArrival|DeclareImport|HealthCheckTask $declareInOrHealthCheckTask
      * @param Location $locationOfDestination
-     * @param \DateTime $checkDate
+     * @param DateTime $checkDate
      * @param Location|null $locationOfOrigin
      * @param Animal|null $animal
      * @param bool $recheckLocationHealthNullCheck used to only hide the obsolete illnesses once at the beginning of the HealthUpdaterService for loop
@@ -136,7 +138,7 @@ class LocationHealthUpdater
      */
     private function updateByGivenLocationOfOrigin($declareInOrHealthCheckTask,
                                                    Location $locationOfDestination,
-                                                   \DateTime $checkDate,
+                                                   DateTime $checkDate,
                                                    bool $recheckLocationHealthNullCheck,
                                                    ?Location $locationOfOrigin,
                                                    ?Animal $animal,
@@ -316,7 +318,7 @@ class LocationHealthUpdater
         return $locationHealthMessage;
     }
 
-    private function persistNewIllnessesOfLocationIfLatestAreNull(Location $locationOfDestination, \DateTime $checkDate)
+    private function persistNewIllnessesOfLocationIfLatestAreNull(Location $locationOfDestination, DateTime $checkDate)
     {
         $latestActiveIllnessesDestination = Finder::findLatestActiveIllnessesOfLocation($locationOfDestination, $this->em);
         $previousMaediVisnaDestination = $latestActiveIllnessesDestination->get(Constant::MAEDI_VISNA);
@@ -361,7 +363,7 @@ class LocationHealthUpdater
     /**
      * @param EntityManagerInterface $em
      * @param Location $location
-     * @param \DateTime $checkDate
+     * @param DateTime $checkDate
      * @param bool $createDefaultMaediVisna
      * @param bool $createDefaultScrapie
      * @return Location
@@ -395,7 +397,7 @@ class LocationHealthUpdater
 
     /**
      * @param LocationHealth $locationHealth
-     * @param \DateTime $checkDate
+     * @param DateTime $checkDate
      * @return MaediVisna
      */
     private function persistNewDefaultMaediVisnaAndHideFollowingOnes(LocationHealth $locationHealth, $checkDate)
@@ -422,10 +424,11 @@ class LocationHealthUpdater
 
     /**
      * @param LocationHealth $locationHealth
-     * @param \DateTime $checkDate
+     * @param DateTime $checkDate
+     * @param bool $changeCurrentScrapieStatus
      * @return Scrapie
      */
-    private function persistNewDefaultScrapieAndHideFollowingOnes(LocationHealth $locationHealth, $checkDate)
+    public function persistNewDefaultScrapieAndHideFollowingOnes(LocationHealth $locationHealth, $checkDate, $changeCurrentScrapieStatus = true)
     {
         if ($locationHealth->getAnimalHealthSubscription()) {
             $scrapie = new Scrapie(ScrapieStatus::UNDER_OBSERVATION);
@@ -436,7 +439,9 @@ class LocationHealthUpdater
         $scrapie->setCheckDate($checkDate);
         $scrapie->setLocationHealth($locationHealth);
         $locationHealth->addScrapie($scrapie);
-        $locationHealth->setCurrentScrapieStatus($scrapie->getStatus());
+        if ($changeCurrentScrapieStatus) {
+            $locationHealth->setCurrentScrapieStatus($scrapie->getStatus());
+        }
 
         $this->em->persist($scrapie);
         $this->em->persist($locationHealth);
@@ -451,7 +456,7 @@ class LocationHealthUpdater
      * Initialize LocationHealth entities and values of destination where necessary
      *
      * @param Location $locationOfDestination
-     * @param \DateTime $checkDate
+     * @param DateTime $checkDate
      * @param bool $includeMaediVisna
      * @param bool $includeScrapie
      * @return Location
@@ -513,10 +518,10 @@ class LocationHealthUpdater
 
     /**
      * @param Location $location
-     * @param \DateTime $checkDate
+     * @param DateTime $checkDate
      * @return Criteria
      */
-    private static function getHideCriteria(Location $location, \DateTime $checkDate)
+    private static function getHideCriteria(Location $location, DateTime $checkDate)
     {
         $criteria = Criteria::create()
             ->where(Criteria::expr()->eq('locationHealth', $location->getLocationHealth()))
@@ -530,9 +535,9 @@ class LocationHealthUpdater
     /**
      * @param ObjectManager $em
      * @param Location $location
-     * @param \DateTime $checkDate
+     * @param DateTime $checkDate
      */
-    public static function hideAllFollowingMaediVisnas(ObjectManager $em, Location $location, \DateTime $checkDate)
+    public static function hideAllFollowingMaediVisnas(ObjectManager $em, Location $location, DateTime $checkDate)
     {
         $maediVisnas = $em->getRepository(MaediVisna::class)
             ->matching(self::getHideCriteria($location, $checkDate));
@@ -549,9 +554,9 @@ class LocationHealthUpdater
     /**
      * @param ObjectManager $em
      * @param Location $location
-     * @param \DateTime $checkDate
+     * @param DateTime $checkDate
      */
-    public static function hideAllFollowingScrapies(ObjectManager $em, Location $location, \DateTime $checkDate)
+    public static function hideAllFollowingScrapies(ObjectManager $em, Location $location, DateTime $checkDate)
     {
         $scrapies = $em->getRepository(Scrapie::class)
             ->matching(self::getHideCriteria($location, $checkDate));
@@ -594,5 +599,23 @@ class LocationHealthUpdater
     public static function checkScrapieStatus(Location $location): bool
     {
         return $location->getAnimalHealthSubscription() || $location->hasNonBlankScrapieStatus();
+    }
+
+    /**
+     * @param LocationHealth $locationHealth
+     * @param Animal $animal
+     * @return LocationHealth
+     * @throws InvalidSwitchCaseException
+     * @throws Error
+     */
+    public function setScrapieStatusToUnderObservationWhenParentsAreNonArrArrAndSendEmail(LocationHealth $locationHealth, Animal $animal)
+    {
+        $locationHealth->setCurrentScrapieStatus(ScrapieStatus::UNDER_OBSERVATION);
+
+        $locationHealthMessage = LocationHealthMessageBuilder::prepare($animal->getLatestBirth());
+
+        $this->emailService->sendPossibleSickAnimalArrivalNotificationEmail($locationHealthMessage);
+
+        return $locationHealth;
     }
 }

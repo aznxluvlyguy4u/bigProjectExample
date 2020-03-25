@@ -23,9 +23,11 @@ use AppBundle\Enumerator\ScrapieStatus;
 use AppBundle\Exception\InvalidSwitchCaseException;
 use AppBundle\Util\BreedCodeUtil;
 use AppBundle\Util\CommandUtil;
+use AppBundle\Util\LocationHealthUpdater;
 use AppBundle\Util\SqlUtil;
 use AppBundle\Util\StringUtil;
 use AppBundle\Util\TimeUtil;
+use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Monolog\Logger;
 use Twig\Error\Error;
@@ -59,14 +61,14 @@ class PedigreeDataGenerator
     private $lastCheckedAnimalId;
     /** @var int */
     private $startAnimalId;
-    /** @var EmailService */
-    private $emailService;
+    /** @var LocationHealthUpdater */
+    private $locationHealthUpdater;
 
-    public function __construct(EntityManagerInterface $em, Logger $logger, EmailService $emailService)
+    public function __construct(EntityManagerInterface $em, Logger $logger, LocationHealthUpdater $locationHealthUpdater)
     {
         $this->em = $em;
         $this->logger = $logger;
-        $this->emailService = $emailService;
+        $this->locationHealthUpdater = $locationHealthUpdater;
     }
 
 
@@ -511,14 +513,10 @@ class PedigreeDataGenerator
                 $animal->setScrapieGenotype(null);
                 $animal->setScrapieGenotypeSource(null);
 
-                /** @var LocationHealth $locationHealth */
                 $locationHealth = $location->getLocationHealth();
-                $locationHealth->setCurrentScrapieStatus(ScrapieStatus::UNDER_OBSERVATION);
-                $this->em->persist($locationHealth);
 
-                $locationHealthMessage = LocationHealthMessageBuilder::prepare($animal->getLatestBirth());
-
-                $this->emailService->sendPossibleSickAnimalArrivalNotificationEmail($locationHealthMessage);
+                $locationHealth = $this->locationHealthUpdater->setScrapieStatusToUnderObservationWhenParentsAreNonArrArrAndSendEmail($locationHealth, $animal);
+                $this->locationHealthUpdater->persistNewDefaultScrapieAndHideFollowingOnes($locationHealth, new DateTime(), false);
             }
         }
 
