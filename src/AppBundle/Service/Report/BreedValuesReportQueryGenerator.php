@@ -954,7 +954,7 @@ LEFT JOIN (
             $ignoreHiddenBreedValueTypes);
 
         $locationId = $location ? $location->getId() : null;
-        $locationFilter = $locationId ? "AND r.location_id = $locationId AND r.animal_id NOT IN (SELECT id FROM animal an WHERE an.location_id = $locationId)" : "";
+        $locationFilter = $locationId ? "AND (r.location_id = $locationId OR a.location_id = $locationId)" : "";
 
         $mainFilter =
                     "WHERE
