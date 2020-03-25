@@ -104,7 +104,7 @@ class AnimalDetailsOutput extends OutputServiceBase
 
         $replacementString = "";
 
-        $litterSize = $replacementString;
+        $litterSize = $animal->getNLing();
         $suckleCount = $replacementString;
         $litter = $animal->getLitter();
         if ($litter) {
@@ -119,7 +119,6 @@ class AnimalDetailsOutput extends OutputServiceBase
             $countryName = $countryDetailsOfBirth->getName();
             $translatedCountryName = $this->getTranslator()->trans($countryName);
         }
-
 
         $inbreedingCoefficientValue = $replacementString;
         $inbreedingCoefficient = $animal->getInbreedingCoefficient();
