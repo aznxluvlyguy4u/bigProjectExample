@@ -16,6 +16,7 @@ use AppBundle\Enumerator\RequestType;
 use Symfony\Bridge\Monolog\Logger;
 use Symfony\Bridge\Twig\TwigEngine;
 use Symfony\Component\Translation\TranslatorInterface;
+use Twig\Error\Error;
 
 class EmailService
 {
@@ -329,6 +330,7 @@ class EmailService
     /**
      * @param LocationHealthMessage $locationHealthMessage
      * @return bool
+     * @throws Error
      */
     public function sendPossibleSickAnimalArrivalNotificationEmail(LocationHealthMessage $locationHealthMessage)
     {
@@ -359,7 +361,13 @@ class EmailService
                 $subjectHeaderData = $subjectHeaderData . 'Stallijst Sync'
                     . ($syncDate ? ' op: ' . $syncDate->format(DATE_ISO8601) : '');
                 break;
-
+            case RequestType::DECLARE_BIRTH:
+                $arrivalVerbType = 'geboren';
+                $senderInfo = '';
+                $syncDate = $locationHealthMessage->getSyncDate();
+                $subjectHeaderData = $subjectHeaderData . 'Geboorte melding'
+                    . ($syncDate ? ' op: ' . $syncDate->format(DATE_ISO8601) : '');
+                break;
             default:
                 break;
         }

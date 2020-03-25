@@ -5,6 +5,7 @@ namespace AppBundle\Component;
 
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\DeclareArrival;
+use AppBundle\Entity\DeclareBirth;
 use AppBundle\Entity\DeclareImport;
 use AppBundle\Entity\HealthCheckTask;
 use AppBundle\Entity\LocationHealth;
@@ -21,7 +22,7 @@ use Doctrine\Common\Persistence\ObjectManager;
 class LocationHealthMessageBuilder
 {
     /**
-     * @param DeclareArrival|DeclareImport|HealthCheckTask $declareIn
+     * @param DeclareArrival|DeclareImport|HealthCheckTask|DeclareBirth $declareIn
      * @return LocationHealthMessage
      * @throws InvalidSwitchCaseException
      */
