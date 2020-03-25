@@ -1066,30 +1066,6 @@ LEFT JOIN (
         return $sql;
     }
 
-    public function createHistoricAnimalsQueryForAnimalFeaturesPerYearOfBirthReport(Location $location)
-    {
-        $locationId = $location ? $location->getId() : null;
-
-        $sql = "
-                SELECT * FROM animal_residence r
-                INNER JOIN animal a WITH r.animal_id = a.id
-                LEFT JOIN location l WITH  a.location_id = l.id
-                LEFT JOIN company comp WITH l.company_id = comp.id 
-                WHERE l.id = ".$locationId."
-                AND r.animal_id NOT IN (SELECT DISTINCT id FROM animal an WHERE an.location_id =  ".$locationId.")
-                AND date_part('year', a.date_of_birth) = 2015
-        ";
-
-        echo $sql;
-
-//        $connection = $this->em->getConnection();
-//
-//        $stmt = $connection->query($sql);
-//        while ($row = $stmt->fetchAll()) {
-//            var_dump($row);
-//        }
-    }
-
     /**
      * @param string $columnHeader
      * @return string
