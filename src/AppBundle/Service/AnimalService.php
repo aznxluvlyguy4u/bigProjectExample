@@ -45,6 +45,7 @@ use AppBundle\Util\Validator;
 use AppBundle\Validation\AdminValidator;
 use AppBundle\Validation\AnimalDetailsValidator;
 use Doctrine\Common\Collections\ArrayCollection;
+use Exception;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
@@ -109,9 +110,10 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
     }
 
     /**
-		 * @param Request $request
-		 * @return JsonResponse
-		 */
+     * @param Request $request
+     * @return JsonResponse
+     * @throws Exception
+     */
     public function createAnimal(Request $request)
     {
         $actionBy = $this->getUser();
@@ -128,6 +130,7 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
             default: throw new PreconditionFailedHttpException(
                 'Gender must be '.GenderType::MALE.' OR '.GenderType::FEMALE);
         }
+
         $tempNewAnimal = null;
         $newAnimal = $this->getBaseSerializer()->denormalizeToObject($animalArray, $clazz, false);
 
@@ -137,6 +140,7 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         }
 
         $existingAnimal = $this->getManager()->getRepository(Animal::class)->findByUlnOrPedigree($uln, true);
+
         if (!empty($existingAnimal)) {
             throw new BadRequestHttpException('Dit dier bestaat al.');
         }
@@ -152,7 +156,6 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         } elseif ($newAnimal->getNLing() < Animal::MIN_N_LING_VALUE || Animal::MAX_N_LING_VALUE < $newAnimal->getNLing()) {
             throw new BadRequestHttpException($this->translateUcFirstLower('THE FOLLOWING N LINGS SHOULD HAVE A VALUE BETWEEN 0 AND 7').': '.$newAnimal->getNLing());
         }
-
 
         $newAnimal->getDateOfBirth()->setTime(0,0,0);
 
@@ -190,6 +193,7 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
             $newAnimal = $this->setLocationOfBirth($newAnimal);
             $newAnimal = $this->setCurrentLocation($newAnimal);
             $newAnimal = $this->setStartAnimalResidence($newAnimal);
+            $newAnimal->setLambar(false);
 
             $newAnimal = $this->setParents($newAnimal);
             if ($newAnimal instanceof JsonResponse) {
@@ -199,18 +203,23 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
             $newAnimal = $this->setPedigreeRegister($newAnimal);
 
             $this->getManager()->persist($newAnimal);
-            $this->getManager()->flush();
+            try {
+                $this->getManager()->flush();
+            } catch (Exception $e) {
+                $this->logExceptionAsError($e);
+                return ResultUtil::errorResult('DATABASE ERROR WITH FLUSHING', Response::HTTP_INTERNAL_SERVER_ERROR);
+            }
 
             AnimalCacher::cacheByAnimalIds($this->getConnection(), [$newAnimal->getId()]);
         }
-        catch(\Exception $e) {
+        catch(Exception $e) {
             $this->logExceptionAsError($e);
             return ResultUtil::errorResult('INTERNAL SERVER ERROR', Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
         try {
             AdminActionLogWriter::createAnimal($this->getManager(), $actionBy, $newAnimal, $request->getContent());
-        } catch (\Exception $t) {
+        } catch (Exception $t) {
             $this->logExceptionAsError($t);
         }
 
@@ -390,7 +399,7 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
             $minimizedOutput = AnimalOutput::createAnimalArray($animal, $this->getManager());
             return ResultUtil::successResult($minimizedOutput);
         }
-        catch (\Exception $e){
+        catch (Exception $e){
             return ResultUtil::successResult($e);
         }
     }
@@ -458,7 +467,7 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         try {
             $animals = $this->getManager()->getRepository(Animal::class)
                 ->findAnimalsByUlnPartsOrStnPartsOrUbns($ulnPartsArray, $stnPartsArray, $ubns);
-        } catch (\Exception $exception) {
+        } catch (Exception $exception) {
             return ResultUtil::errorResult($exception->getMessage(), Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
@@ -744,7 +753,7 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
     /**
      * @param Request $request
      * @return JsonResponse
-     * @throws \Exception
+     * @throws Exception
      */
     public function createRetrieveAnimals(Request $request)
     {
@@ -788,7 +797,7 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
     /**
      * @param Request $request
      * @return JsonResponse|\Symfony\Component\HttpFoundation\JsonResponse
-     * @throws \Exception
+     * @throws Exception
      */
     public function createRetrieveAnimalsForAllLocations(Request $request)
     {
@@ -816,7 +825,7 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
      * @param int $maxInternalQueueSize
      * @param boolean $maxLimitOnceADay
      * @return array
-     * @throws \Exception
+     * @throws Exception
      */
     public function syncAnimalsForAllLocations($loggedInUser,
                                                $hasNotBeenSyncedForAtLeastThisAmountOfDays = 0,
@@ -910,7 +919,7 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
     /**
      * @param Request $request
      * @return JsonResponse
-     * @throws \Exception
+     * @throws Exception
      */
     function createAnimalDetails(Request $request)
     {
@@ -936,7 +945,7 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
      * @param Request $request
      * @param string $ulnStringOrId
      * @return JsonResponse
-     * @throws \Exception
+     * @throws Exception
      */
     public function getAnimalDetailsByUlnOrId(Request $request, $ulnStringOrId)
     {
@@ -1004,7 +1013,7 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
      * @param Request $request
      * @param string $ulnString
      * @return JsonResponse
-     * @throws \Exception
+     * @throws Exception
      */
     public function getChildrenByUln(Request $request, $ulnString)
     {
