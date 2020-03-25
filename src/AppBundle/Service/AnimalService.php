@@ -177,6 +177,7 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         $newAnimal->setIsImportAnimal(false);
         $newAnimal->setIsExportAnimal(false);
         $newAnimal->setIsDepartedAnimal(false);
+        $newAnimal->setLambar(false);
 
         $newAnimal = AnimalDetailsBatchUpdaterService::cleanUpAnimalInputValues($newAnimal);
 
@@ -193,7 +194,6 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
             $newAnimal = $this->setLocationOfBirth($newAnimal);
             $newAnimal = $this->setCurrentLocation($newAnimal);
             $newAnimal = $this->setStartAnimalResidence($newAnimal);
-            $newAnimal->setLambar(false);
 
             $newAnimal = $this->setParents($newAnimal);
             if ($newAnimal instanceof JsonResponse) {
