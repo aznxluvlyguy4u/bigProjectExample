@@ -102,6 +102,21 @@ class AnimalDetailsOutput extends OutputServiceBase
     {
         $this->validateLocation($user, $location);
 
+        /** @var ViewMinimalParentDetailsRepository $viewMinimalParentDetailsRepository */
+        $viewMinimalParentDetailsRepository = $this->getSqlViewManager()->get(ViewMinimalParentDetails::class);
+
+        $animalId = $animal->getId();
+        $fatherId = $animal->getParentFatherId();
+        $motherId = $animal->getParentMotherId();
+
+        $animalIds[] = $animalId;
+        if ($fatherId) { $animalIds[] = $fatherId; }
+        if ($motherId) { $animalIds[] = $motherId; }
+
+        $viewMinimalParentDetails = $viewMinimalParentDetailsRepository->findByAnimalIds($animalIds);
+        /** @var ViewMinimalParentDetails $viewMinimalAnimalDetails */
+        $viewMinimalAnimalDetails = $viewMinimalParentDetails->get($animalId);
+
         $replacementString = "";
 
         $litterSize = $animal->getNLing();
@@ -110,6 +125,8 @@ class AnimalDetailsOutput extends OutputServiceBase
         if ($litter) {
             $litterSize = $litter->getSize();
             $suckleCount = $litter->getSuckleCount();
+        } else if ($viewMinimalAnimalDetails) {
+            $litterSize = $viewMinimalAnimalDetails->getNLing();
         }
 
         //Birth
@@ -137,23 +154,10 @@ class AnimalDetailsOutput extends OutputServiceBase
 
         /** @var AnimalRepository $animalRepository */
         $animalRepository = $this->getManager()->getRepository(Animal::class);
-        /** @var ViewMinimalParentDetailsRepository $viewMinimalParentDetailsRepository */
-        $viewMinimalParentDetailsRepository = $this->getSqlViewManager()->get(ViewMinimalParentDetails::class);
+
 
         /** @var ViewBreedValueMaxGenerationDateRepository $viewBreedValueMaxGenerationDateRepository */
         $viewBreedValueMaxGenerationDateRepository = $this->getSqlViewManager()->get(ViewBreedValueMaxGenerationDate::class);
-
-        $animalId = $animal->getId();
-        $fatherId = $animal->getParentFatherId();
-        $motherId = $animal->getParentMotherId();
-
-        $animalIds[] = $animalId;
-        if ($fatherId) { $animalIds[] = $fatherId; }
-        if ($motherId) { $animalIds[] = $motherId; }
-
-        $viewMinimalParentDetails = $viewMinimalParentDetailsRepository->findByAnimalIds($animalIds);
-        /** @var ViewMinimalParentDetails $viewMinimalAnimalDetails */
-        $viewMinimalAnimalDetails = $viewMinimalParentDetails->get($animalId);
 
         $predicate = $viewMinimalAnimalDetails ? $viewMinimalAnimalDetails->getFormattedPredicate() : null;
         $production = $viewMinimalAnimalDetails ? $viewMinimalAnimalDetails->getProduction() : null;
