@@ -129,7 +129,7 @@ class ExteriorCriteria
     {
         return Criteria::create()
             ->where(self::olderThanOneYearKindsCriteria())
-            ->andWhere(Criteria::expr()->gte('generalAppearance', 80))
+            ->andWhere(Criteria::expr()->gte('generalAppearance', 78))
             ;
     }
 }

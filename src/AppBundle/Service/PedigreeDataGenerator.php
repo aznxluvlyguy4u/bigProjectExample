@@ -674,7 +674,8 @@ class PedigreeDataGenerator
 
         return (
                     $this->isPureBredAndTE100($parent) ||
-                    BreedCodeUtil::hasBreedCodePart($parent->getBreedCode(), 'TE', 88)
+                    BreedCodeUtil::hasBreedCodePart($parent->getBreedCode(), 'TE', 88) ||
+                    BreedCodeUtil::hasBreedCodePart($parent->getBreedCode(), '', 12)
                )
                 && $parent->getExteriorMeasurements()
                 ->matching(ExteriorCriteria::pureBredTEMotherOfEweExterior())
