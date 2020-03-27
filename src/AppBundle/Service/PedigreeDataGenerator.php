@@ -518,6 +518,8 @@ class PedigreeDataGenerator
             case BreedCodeType::CF: $animal = $this->generateCFBreedType($animal); break;
             case BreedCodeType::BM: $animal = $this->generateBMBreedType($animal); break;
             case BreedCodeType::TE: $animal = $this->generateTEBreedType($animal); break;
+            case BreedCodeType::ME: $animal = $this->generateMEBreedType($animal); break;
+            case BreedCodeType::BS: $animal = $this->generateBSBreedType($animal); break;
             default: break;
         }
 
@@ -761,6 +763,54 @@ class PedigreeDataGenerator
         return $updateCount;
     }
 
+    private function hasPureBredValidatedParent(Animal $animal, $isFather, $breedCodePart)
+    {
+        $parent = $isFather ? $animal->getParentFather() : $animal->getParentMother();
+
+        if (!$parent || !$parent->getDateOfBirth() || $parent->getBreedCode() !== $breedCodePart.'100') {
+            return false;
+        }
+
+        return true;
+    }
+
+    private function generateMEBreedType(Animal $animal)
+    {
+        $calculatedBreedType = BreedType::REGISTER;
+
+        if ($animal->getDateOfBirth()
+            && $this->hasPureBredValidatedParent($animal, true, BreedCodeType::ME)
+            && $this->hasPureBredValidatedParent($animal, false, BreedCodeType::ME)
+        ) {
+            $calculatedBreedType = BreedType::PURE_BRED;
+        }
+
+        if ($animal->getBreedType() !== $calculatedBreedType) {
+            $animal->setBreedType($calculatedBreedType);
+            $this->valueWasUpdated();
+        }
+
+        return $animal;
+    }
+
+    private function generateBSBreedType(Animal $animal)
+    {
+        $calculatedBreedType = BreedType::REGISTER;
+
+        if ($animal->getDateOfBirth()
+            && $this->hasPureBredValidatedParent($animal, true, BreedCodeType::BS)
+            && $this->hasPureBredValidatedParent($animal, false, BreedCodeType::BS)
+        ) {
+            $calculatedBreedType = BreedType::PURE_BRED;
+        }
+
+        if ($animal->getBreedType() !== $calculatedBreedType) {
+            $animal->setBreedType($calculatedBreedType);
+            $this->valueWasUpdated();
+        }
+
+        return $animal;
+    }
 
     /**
      * @param string $message
