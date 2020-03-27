@@ -7,6 +7,7 @@ namespace AppBundle\Util;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
+use Exception;
 use Symfony\Component\HttpFoundation\JsonResponse as SymfonyJsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -99,10 +100,10 @@ class ResultUtil
 
 
     /**
-     * @param \Exception $exception
+     * @param Exception $exception
      * @return JsonResponse
      */
-    public static function errorResultByException(\Exception $exception)
+    public static function errorResultByException(Exception $exception)
     {
         $errorCode = $exception->getCode() === 0 ? Response::HTTP_INTERNAL_SERVER_ERROR : $exception->getCode();
         if ($errorCode === Response::HTTP_INTERNAL_SERVER_ERROR) {
@@ -158,27 +159,32 @@ class ResultUtil
     /**
      * @param array $arrayData
      * @return string
+     * @throws Exception
      */
     public static function getMessageStringFromErrorResult(array $arrayData): string
     {
-        $results = $arrayData[JsonInputConstant::RESULT];
-        if (key_exists(Constant::MESSAGE_NAMESPACE, $results)) {
-            $message = $results[Constant::MESSAGE_NAMESPACE];
-            if (key_exists(Constant::DATA, $results)) {
-                $message .= $results[Constant::DATA];
+        if (key_exists(JsonInputConstant::RESULT, $arrayData)) {
+            $results = $arrayData[JsonInputConstant::RESULT];
+            if (key_exists(Constant::MESSAGE_NAMESPACE, $results)) {
+                $message = $results[Constant::MESSAGE_NAMESPACE];
+                if (key_exists(Constant::DATA, $results)) {
+                    $message .= $results[Constant::DATA];
+                }
+                return $message;
+            }
+
+            $message = '';
+            $prefix = '';
+            foreach ($results as $result) {
+                if (key_exists(Constant::MESSAGE_NAMESPACE, $results)) {
+                    $message .= $prefix . $results[Constant::MESSAGE_NAMESPACE];
+                    $prefix = '  ';
+                }
             }
             return $message;
+        } else {
+           return self::errorResult('No result found.', Response::HTTP_INTERNAL_SERVER_ERROR);
         }
-
-        $message = '';
-        $prefix = '';
-        foreach ($results as $result) {
-            if (key_exists(Constant::MESSAGE_NAMESPACE, $results)) {
-                $message .= $prefix . $results[Constant::MESSAGE_NAMESPACE];
-                $prefix = '  ';
-            }
-        }
-        return $message;
     }
 
 
