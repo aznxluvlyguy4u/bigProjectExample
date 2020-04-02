@@ -4,19 +4,24 @@ namespace AppBundle\FormInput;
 
 use AppBundle\Component\Utils;
 use AppBundle\Constant\JsonInputConstant;
+use AppBundle\Entity\Animal;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\LocationHealth;
 use AppBundle\Entity\MaediVisna;
 use AppBundle\Entity\Scrapie;
 use AppBundle\Enumerator\MaediVisnaStatus;
+use AppBundle\Enumerator\ScrapieGenotypeType;
 use AppBundle\Enumerator\ScrapieStatus;
 use AppBundle\Util\DateUtil;
+use AppBundle\Util\ExceptionUtil;
 use AppBundle\Util\Finder;
 use AppBundle\Util\LocationHealthUpdater;
 use AppBundle\Util\NullChecker;
 use AppBundle\Util\StringUtil;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
+use Exception;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Class LocationHealthEditor
@@ -32,6 +37,7 @@ class LocationHealthEditor
      * @param ArrayCollection $content
      * @param Location $location
      * @return Location
+     * @throws Exception
      */
     public static function edit(ObjectManager $em, Location $location, ArrayCollection $content)
     {
@@ -50,13 +56,15 @@ class LocationHealthEditor
         //Get the latest locationHealth status to use as a benchmark
         $latestIllnessStatuses = Finder::findLatestActiveIllnessStatusesOfLocation($location, $em);
 
-        
         /* Scrapie values */
-        
         $lastScrapieStatus = $latestIllnessStatuses->get(JsonInputConstant::SCRAPIE_STATUS);
         $lastScrapieStatus = Utils::fillNullOrEmptyString($lastScrapieStatus, self::defaultScrapieStatus);
         $lastScrapieCheckDate = $latestIllnessStatuses->get(JsonInputConstant::SCRAPIE_CHECK_DATE);
         $lastReasonOfScrapieEdit = $latestIllnessStatuses->get(JsonInputConstant::SCRAPIE_REASON_OF_EDIT);
+        $newScrapieCheckDate = null;
+        $newScrapieEndDate = null;
+
+        $resistantScrapieStatusEditIsValid = true;
 
         if ($content->containsKey(JsonInputConstant::SCRAPIE_STATUS)) {
             $newScrapieStatus = StringUtil::replaceUnderscoresWithSpaces(
@@ -68,6 +76,11 @@ class LocationHealthEditor
         if (strtoupper($newScrapieStatus) === ScrapieStatus::BLANK) {
             $newScrapieCheckDate = DateUtil::endOfTime();
             $newScrapieEndDate = DateUtil::endOfTime();
+        } elseif(strtoupper($newScrapieStatus) === ScrapieStatus::RESISTANT) {
+            $countArrArrAnimals = self::countArrArrAnimals($location);
+            if (!$countArrArrAnimals['hasOnlyArrArrAnimals']) {
+                throw new \Exception('Not all animals on the livestock list got ARR/ARR as scrapie genotype', Response::HTTP_EXPECTATION_FAILED);
+            }
         } else {
             $newScrapieCheckDate = Utils::getNullCheckedArrayCollectionDateValue(JsonInputConstant::SCRAPIE_CHECK_DATE, $content, true);
             $newScrapieEndDate = Utils::getNullCheckedArrayCollectionDateValue(JsonInputConstant::SCRAPIE_END_DATE, $content, true);
@@ -123,19 +136,25 @@ class LocationHealthEditor
         
         /* LocationHealth Entity */
 
-        //Only create a new Scrapie if there was any change in the values
-        if($scrapieStatusChanged || $scrapieDatesChanged || $scrapieReasonOfEditChanged) {
-            //First hide the obsolete scrapies
-            LocationHealthUpdater::hideAllFollowingScrapies($em, $location, $newScrapieCheckDate);
+        /*
+         * Only create a new Scrapie if there was any change in the values
+         * and when the status is resistant all the animals on the location
+         * must have arr/arr genotype
+         */
+        if ($resistantScrapieStatusEditIsValid) {
+            if($scrapieStatusChanged || $scrapieDatesChanged || $scrapieReasonOfEditChanged) {
+                //First hide the obsolete scrapies
+                LocationHealthUpdater::hideAllFollowingScrapies($em, $location, $newScrapieCheckDate);
 
-            $scrapie = new Scrapie($newScrapieStatus);
-            $scrapie->setCheckDate($newScrapieCheckDate);
-            $scrapie->setEndDate($newScrapieEndDate);
-            $scrapie->setIsManualEdit(true);
-            $locationHealth->addScrapie($scrapie);
-            $scrapie->setLocationHealth($locationHealth);
-            $scrapie->setReasonOfEdit($newReasonOfScrapieEdit);
-            $em->persist($scrapie);
+                $scrapie = new Scrapie($newScrapieStatus);
+                $scrapie->setCheckDate($newScrapieCheckDate);
+                $scrapie->setEndDate($newScrapieEndDate);
+                $scrapie->setIsManualEdit(true);
+                $locationHealth->addScrapie($scrapie);
+                $scrapie->setLocationHealth($locationHealth);
+                $scrapie->setReasonOfEdit($newReasonOfScrapieEdit);
+                $em->persist($scrapie);
+            }
         }
 
         //Only create a new MaediVisna if there was any change in the values
@@ -162,7 +181,26 @@ class LocationHealthEditor
             $em->flush();
         }
 
-
         return $location;
+    }
+
+    /**
+     * @param Location $location
+     * @return array
+     */
+    private static function countArrArrAnimals($location)
+    {
+        $animals = $location->getAnimals();
+
+        $animalsWithArrArrGenotype = array_filter($animals->toArray(), function(Animal $animal) {
+            return $animal->getScrapieGenotype() === ScrapieGenotypeType::ARR_ARR;
+        });
+
+        $count = count($animalsWithArrArrGenotype);
+
+        return [
+            'hasOnlyArrArrAnimals' => $count === $animals->count(),
+            'count' => $count
+        ];
     }
 }

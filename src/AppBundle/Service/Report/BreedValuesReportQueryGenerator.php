@@ -5,6 +5,7 @@ namespace AppBundle\Service\Report;
 
 
 use AppBundle\Constant\BreedValueTypeConstant;
+use AppBundle\Entity\Location;
 use AppBundle\Enumerator\Locale;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Util\DateUtil;
@@ -409,6 +410,8 @@ class BreedValuesReportQueryGenerator
         $sql = "SELECT DISTINCT
                     CONCAT(a.uln_country_code, a.uln_number) as a_uln,
                     CONCAT(a.pedigree_country_code, a.pedigree_number) as a_stn,
+                    a.collar_color as a_collar_color,
+                    a.collar_number as a_collar_number,
                     CONCAT(mom.uln_country_code, mom.uln_number) as m_uln,
                     CONCAT(mom.pedigree_country_code, mom.pedigree_number) as m_stn,
                     CONCAT(dad.uln_country_code, dad.uln_number) as f_uln,
@@ -951,7 +954,7 @@ LEFT JOIN (
             $ignoreHiddenBreedValueTypes);
 
         $locationId = $location ? $location->getId() : null;
-        $locationFilter = $locationId ? "AND a.location_id = $locationId -- location filter (for user)" : "";
+        $locationFilter = $locationId ? "AND (r.location_id = $locationId OR a.location_id = $locationId)" : "";
 
         $mainFilter =
                     "WHERE
@@ -959,8 +962,6 @@ LEFT JOIN (
                         $locationFilter
                     ";
         $mainFilter .= ' ' . $this->animalShouldHaveAtleastOneExistingBreedValueFilter;
-
-
 
         $selectBirthProgress = $this->translator->getLocale() === Locale::NL ?
             'birth_progress.dutch_description' : 'a.birth_progress';
@@ -1030,6 +1031,7 @@ LEFT JOIN (
                   LEFT JOIN result_table_normalized_breed_grades nbg ON nbg.animal_id = a.id
                   LEFT JOIN animal_cache c ON c.animal_id = a.id
                   LEFT JOIN inbreeding_coefficient ic ON ic.id = a.inbreeding_coefficient_id
+                  LEFT JOIN animal_residence r ON r.animal_id = a.id 
                   LEFT JOIN (VALUES ".$this->getGenderLetterTranslationValues().") AS gender(english_full, translated_char) ON a.gender = gender.english_full
                   LEFT JOIN (
                       SELECT

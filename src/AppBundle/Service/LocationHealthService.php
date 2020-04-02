@@ -17,6 +17,7 @@ use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
 use AppBundle\Validation\AdminValidator;
 use AppBundle\Validation\HealthEditValidator;
+use Exception;
 use Symfony\Component\HttpFoundation\Request;
 
 class LocationHealthService extends ControllerServiceBase implements HealthAPIControllerInterface
@@ -57,6 +58,7 @@ class LocationHealthService extends ControllerServiceBase implements HealthAPICo
             return AdminValidator::getStandardErrorResponse();
         }
 
+        /** @var Location $location */
         $location = $this->getManager()->getRepository(Location::class)->findOneByActiveUbn($ubn);
 
         if($location == null) {
