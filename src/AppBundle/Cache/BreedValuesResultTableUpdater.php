@@ -373,19 +373,21 @@ class BreedValuesResultTableUpdater
      * @throws \Doctrine\DBAL\DBALException
      */
     private function maxGenerationDate($breedTypeValueVar, $previousProcessLogs): ?string {
-        if (key_exists($breedTypeValueVar, $previousProcessLogs)) {
-            $generationDate = $previousProcessLogs[$breedTypeValueVar]->getSubCategory();
-            if (!empty($generationDate)) {
-                return $generationDate;
-            }
-        }
-
-        $sql = "SELECT
-                    MAX(generation_date)
-                FROM breed_value WHERE type_id = (
-                    SELECT id FROM breed_value_type WHERE result_table_value_variable = '$breedTypeValueVar'
-                    )";
-        return $this->conn->query($sql)->fetch()['max'];
+        return '2020-04-03 09:22:40';
+//
+//        if (key_exists($breedTypeValueVar, $previousProcessLogs)) {
+//            $generationDate = $previousProcessLogs[$breedTypeValueVar]->getSubCategory();
+//            if (!empty($generationDate)) {
+//                return $generationDate;
+//            }
+//        }
+//
+//        $sql = "SELECT
+//                    MAX(generation_date)
+//                FROM breed_value WHERE type_id = (
+//                    SELECT id FROM breed_value_type WHERE result_table_value_variable = '$breedTypeValueVar'
+//                    )";
+//        return $this->conn->query($sql)->fetch()['max'];
     }
 
 
