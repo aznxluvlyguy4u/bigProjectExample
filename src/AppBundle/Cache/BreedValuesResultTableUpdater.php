@@ -138,23 +138,23 @@ class BreedValuesResultTableUpdater
                            $updateBreedIndexes = false, $updateNormalDistributions = false,
                            $generationDateString = null)
     {
-        if ($insertMissingResultTableAndGeneticBaseRecords) {
-            $this->insertMissingBlankRecords();
-            /*
-             * NOTE! Without genetic bases the corrected breedValues cannot be calculated, so do this first!
-             */
-            $this->breedValueService->initializeBlankGeneticBases();
-        } else {
-            $this->logger->notice("Skip insert missing blank resultTable records");
-            $this->logger->notice("Skip initializing blank genetic base records");
-        }
-
-        if ($updateBreedIndexes) {
-            $generationDateStringForBenchMarkValues = $this->getGenerationDateString($generationDateString);
-            $this->updateBreedIndexesByOutputFileType($generationDateStringForBenchMarkValues, $analysisTypes);
-        } else {
-            $this->logger->notice("Skip updating breed indexes");
-        }
+//        if ($insertMissingResultTableAndGeneticBaseRecords) {
+//            $this->insertMissingBlankRecords();
+//            /*
+//             * NOTE! Without genetic bases the corrected breedValues cannot be calculated, so do this first!
+//             */
+//            $this->breedValueService->initializeBlankGeneticBases();
+//        } else {
+//            $this->logger->notice("Skip insert missing blank resultTable records");
+//            $this->logger->notice("Skip initializing blank genetic base records");
+//        }
+//
+//        if ($updateBreedIndexes) {
+//            $generationDateStringForBenchMarkValues = $this->getGenerationDateString($generationDateString);
+//            $this->updateBreedIndexesByOutputFileType($generationDateStringForBenchMarkValues, $analysisTypes);
+//        } else {
+//            $this->logger->notice("Skip updating breed indexes");
+//        }
 
         if ($updateNormalDistributions) {
             $this->updateNormalDistributions($analysisTypes);
@@ -204,7 +204,13 @@ class BreedValuesResultTableUpdater
             $useNormalDistribution = $result['use_normal_distribution'];
             $analysisTypeNl = $result['analysis_type_nl'];
 
-            if (count($analysisTypes) === 0 || in_array($analysisTypeNl, $analysisTypes)) {
+
+            $skipAlreadyProcessed = $this->skipBreedValueResultTableValue($valueVar);
+
+            if (
+                !$skipAlreadyProcessed &&
+                (count($analysisTypes) === 0 || in_array($analysisTypeNl, $analysisTypes))
+            ) {
 
                 $this->write(self::PROCESSING.$valueVar);
 
@@ -908,7 +914,7 @@ class BreedValuesResultTableUpdater
                       )";
         return SqlUtil::updateWithCount($this->conn, $sql);
     }
-    
+
 
     /**
      * @param array $analysisTypes
@@ -980,39 +986,46 @@ class BreedValuesResultTableUpdater
      */
     private function updateNormalDistributions($analysisTypes)
     {
-        $processLambMeatIndexAnalysis = $this->processLambMeatIndexAnalysis($analysisTypes);
-        $processFertilityAnalysis = $this->processFertilityAnalysis($analysisTypes);
+//        $processLambMeatIndexAnalysis = $this->processLambMeatIndexAnalysis($analysisTypes);
+//        $processFertilityAnalysis = $this->processFertilityAnalysis($analysisTypes);
         $processExteriorAnalysis = $this->processExteriorAnalysis($analysisTypes);
-        $processWormAnalysis = $this->processWormAnalysis($analysisTypes);
+//        $processWormAnalysis = $this->processWormAnalysis($analysisTypes);
 
         // Indexes
 
-        if ($processLambMeatIndexAnalysis) {
-            $this->logger->notice(self::PROCESSING.'LambMeatIndex NormalDistribution...');
-            $generationDateString = $this->getLatestBreedIndexGenerationDateString(BreedIndexDiscriminatorTypeConstant::LAMB_MEAT);
-            if ($generationDateString) {
-                $this->normalDistributionService->persistLambMeatIndexMeanAndStandardDeviation($generationDateString, false);
-            }
-        }
+//        if ($processLambMeatIndexAnalysis) {
+//            $this->logger->notice(self::PROCESSING.'LambMeatIndex NormalDistribution...');
+//            $generationDateString = $this->getLatestBreedIndexGenerationDateString(BreedIndexDiscriminatorTypeConstant::LAMB_MEAT);
+//            if ($generationDateString) {
+//                $this->normalDistributionService->persistLambMeatIndexMeanAndStandardDeviation($generationDateString, false);
+//            }
+//        }
 
 
         // Breed Values
 
         foreach ($this->getBreedValueTypesWithNormalDistribution() as $breedValueType)
         {
+            $normalDistributionLabel = $breedValueType->getNl();
+
+            if ($this->skipBreedValue($breedValueType)) {
+                $this->logger->notice('SKIP ALREADY PROCESSED '. self::PROCESSING.$normalDistributionLabel.' NormalDistribution...');
+                continue;
+            }
+
             $analysisTypeNl = $breedValueType->getMixBlupAnalysisType()
                 ? $breedValueType->getMixBlupAnalysisType()->getNl() : null;
 
             switch ($analysisTypeNl) {
-                case MixBlupType::LAMB_MEAT_INDEX: $generate = $processLambMeatIndexAnalysis; break;
-                case MixBlupType::FERTILITY: $generate = $processFertilityAnalysis; break;
+//                case MixBlupType::LAMB_MEAT_INDEX: $generate = $processLambMeatIndexAnalysis; break;
+//                case MixBlupType::FERTILITY: $generate = $processFertilityAnalysis; break;
                 case MixBlupType::EXTERIOR: $generate = $processExteriorAnalysis; break;
-                case MixBlupType::WORM: $generate = $processWormAnalysis; break;
+//                case MixBlupType::WORM: $generate = $processWormAnalysis; break;
                 default: $generate = false; break;
             }
 
             if ($generate) {
-                $normalDistributionLabel = $breedValueType->getNl();
+
                 $this->logger->notice(self::PROCESSING.$normalDistributionLabel.' NormalDistribution...');
 
                 $generationDateString = $this->getLatestBreedValueGenerationDateString($breedValueType->getId());
@@ -1020,10 +1033,32 @@ class BreedValuesResultTableUpdater
                     continue;
                 }
 
+                //TODO
                 $this->normalDistributionService
                     ->persistBreedValueTypeMeanAndStandardDeviation($normalDistributionLabel, $generationDateString, false);
             }
         }
+    }
+
+
+
+    private function skipBreedValueResultTableValue(string $resultTableValueVariable): bool
+    {
+        $alreadyProcessedBreedValueTypes = [
+            'leg_work_vg_m',
+            'leg_work_df',
+            'muscularity_vg_v',
+            'muscularity_vg_m',
+        ];
+
+        return in_array($resultTableValueVariable, $alreadyProcessedBreedValueTypes);
+    }
+
+
+
+    private function skipBreedValue(BreedValueType $breedValueType): bool
+    {
+        return $this->skipBreedValueResultTableValue($breedValueType->getResultTableValueVariable());
     }
 
 
