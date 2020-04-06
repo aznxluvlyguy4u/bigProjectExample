@@ -4,6 +4,7 @@
 namespace AppBundle\Service;
 
 
+use AppBundle\Cache\BreedValuesResultTableUpdater;
 use AppBundle\Entity\BreedValue;
 use AppBundle\Entity\LambMeatBreedIndex;
 use AppBundle\Entity\NormalDistribution;
@@ -108,7 +109,9 @@ class NormalDistributionService
 
         foreach ([true, false] as $isIncludingOnlyAliveAnimals) {
             $valuesArray = $this->getManager()->getRepository(BreedValue::class)
-                ->getReliableBreedValues($breedValueTypeConstant, $generationDate, $isIncludingOnlyAliveAnimals);
+                ->getReliableBreedValues($breedValueTypeConstant, $generationDate,
+                    BreedValuesResultTableUpdater::MIN_BREED_VALUE_ID,
+                    $isIncludingOnlyAliveAnimals);
 
             self::upsertMeanAndStandardDeviation($breedValueTypeConstant,
                 $generationYear, $isIncludingOnlyAliveAnimals, $valuesArray, $overwriteExisting);

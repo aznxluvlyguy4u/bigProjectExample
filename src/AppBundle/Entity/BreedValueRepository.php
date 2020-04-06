@@ -1,6 +1,7 @@
 <?php
 
 namespace AppBundle\Entity;
+use AppBundle\Cache\BreedValuesResultTableUpdater;
 use AppBundle\Enumerator\DateTimeFormats;
 use AppBundle\Setting\BreedGradingSetting;
 use AppBundle\Util\ArrayUtil;
@@ -17,11 +18,12 @@ class BreedValueRepository extends BaseRepository
     /**
      * @param string $breedValueTypeConstant
      * @param string|\DateTime $generationDate
+     * @param int $minBreedValueId
      * @param boolean $isIncludingOnlyAliveAnimals
      * @return array
      * @throws \Doctrine\DBAL\DBALException|\Exception
      */
-    public function getReliableBreedValues($breedValueTypeConstant, $generationDate, $isIncludingOnlyAliveAnimals)
+    public function getReliableBreedValues($breedValueTypeConstant, $generationDate, int $minBreedValueId, $isIncludingOnlyAliveAnimals)
     {
         $generationDateString = $generationDate instanceof \DateTime ? $generationDate->format(SqlUtil::DATE_TIME_FORMAT) : $generationDate;
         $generationYear = DateUtil::getYearFromDateStringOrDateTime($generationDateString);
@@ -41,7 +43,7 @@ class BreedValueRepository extends BaseRepository
                 WHERE 
                     DATE_PART('year', a.date_of_birth) = ".$yearOfBirth." AND
                     t.nl = '".$breedValueTypeConstant."' AND
-                    b.generation_date = '".$generationDateString."' AND
+                    b.id >= '".$minBreedValueId."' AND
                     b.reliability >= t.min_reliability ".$animalIsAliveFilter;
 
         return SqlUtil::getSingleValueGroupedFloatsFromSqlResults(

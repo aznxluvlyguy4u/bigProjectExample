@@ -30,6 +30,8 @@ use Symfony\Bridge\Monolog\Logger;
  */
 class BreedValuesResultTableUpdater
 {
+    const MIN_BREED_VALUE_ID = '116642735';
+
     /** @var ObjectManager|EntityManagerInterface */
     private $em;
     /** @var Connection */
@@ -401,11 +403,11 @@ class BreedValuesResultTableUpdater
     /**
      * @param $valueVar
      * @param $accuracyVar
-     * @param $generationDate
+     * @param int $minBreedValueId
      * @param $useBatchProcessing
      * @return string
      */
-    private function updateResultTableQuery($valueVar, $accuracyVar, $generationDate, $useBatchProcessing): string {
+    private function updateResultTableQuery($valueVar, $accuracyVar, int $minBreedValueId, $useBatchProcessing): string {
         // Default: Using genetic base
         $sqlResultTableValues = "SELECT
                           b.animal_id,
@@ -416,7 +418,7 @@ class BreedValuesResultTableUpdater
                          INNER JOIN result_table_breed_grades r ON r.animal_id = b.animal_id
                          INNER JOIN breed_value_genetic_base gb ON gb.breed_value_type_id = t.id AND gb.year = DATE_PART('year', b.generation_date)
                        WHERE
-                         b.generation_date = '$generationDate' AND
+                         b.id >= $minBreedValueId AND
                          t.result_table_value_variable = '$valueVar' AND
                          b.reliability >= t.min_reliability AND
                          (b.value - gb.value <> r.$valueVar OR SQRT(b.reliability) <> r.$accuracyVar OR
@@ -453,7 +455,7 @@ class BreedValuesResultTableUpdater
             $this->logger->notice("Batch processing ".$valueVar);
             $this->logger->notice("...");
             do {
-                $sql = $this->updateResultTableQuery($valueVar, $accuracyVar, $generationDate, true);
+                $sql = $this->updateResultTableQuery($valueVar, $accuracyVar, self::MIN_BREED_VALUE_ID, true);
                 $localUpdateCount = SqlUtil::updateWithCount($this->conn, $sql);
                 $updateCount += $localUpdateCount;
 
@@ -478,7 +480,7 @@ class BreedValuesResultTableUpdater
 
             } while ($localUpdateCount > 0);
         } else {
-            $sql = $this->updateResultTableQuery($valueVar, $accuracyVar, $generationDate, false);
+            $sql = $this->updateResultTableQuery($valueVar, $accuracyVar, self::MIN_BREED_VALUE_ID, false);
             $updateCount = SqlUtil::updateWithCount($this->conn, $sql);
         }
 
@@ -489,11 +491,11 @@ class BreedValuesResultTableUpdater
          * NOTE! This should be done BEFORE calculating the values for the children,
          * to prevent cascading calculation for children breedValues based on other calculated values
          */
-        $removeCount = $this->setResultTableValueToNullWhereBreedValueIsMissingIncludingForAnyParent($valueVar, $accuracyVar, $generationDate);
+        $removeCount = $this->setResultTableValueToNullWhereBreedValueIsMissingIncludingForAnyParent($valueVar, $accuracyVar);
         $updateCount += $removeCount;
 
         //Calculate breed values and accuracies of children without one, based on the values of both parents
-        $childrenUpdateCount = $this->updateResultTableBreedValuesOfChildrenBasedOnValuesOfParents($valueVar, $accuracyVar, $generationDate);
+        $childrenUpdateCount = $this->updateResultTableBreedValuesOfChildrenBasedOnValuesOfParents($valueVar, $accuracyVar);
         $updateCount += $childrenUpdateCount;
 
         $records = $valueVar.' and '.$accuracyVar. ' records';
@@ -511,12 +513,12 @@ class BreedValuesResultTableUpdater
     /**
      * @param $valueVar
      * @param $accuracyVar
-     * @param $generationDate
      * @return int
      * @throws \Doctrine\DBAL\DBALException
      */
-    private function setResultTableValueToNullWhereBreedValueIsMissingIncludingForAnyParent($valueVar, $accuracyVar, $generationDate)
+    private function setResultTableValueToNullWhereBreedValueIsMissingIncludingForAnyParent($valueVar, $accuracyVar)
     {
+        $minId = self::MIN_BREED_VALUE_ID;
         $sql = "UPDATE result_table_breed_grades
                     SET $valueVar = NULL, $accuracyVar = NULL
                     WHERE animal_id IN (
@@ -527,22 +529,22 @@ class BreedValuesResultTableUpdater
                         (
                           SELECT b.id, b.animal_id FROM breed_value b
                             INNER JOIN breed_value_type t ON t.id = b.type_id
-                          WHERE b.reliability >= t.min_reliability AND t.result_table_value_variable = '$valueVar'
-                            AND b.generation_date = '$generationDate'
+                          WHERE b.id >= $minId AND b.reliability >= t.min_reliability AND t.result_table_value_variable = '$valueVar'
+                            
                         )i ON r.animal_id = i.animal_id
                         LEFT JOIN
                         (
                           SELECT b.id, b.animal_id FROM breed_value b
                             INNER JOIN breed_value_type t ON t.id = b.type_id
-                          WHERE b.reliability >= t.min_reliability AND t.result_table_value_variable = '$valueVar'
-                            AND b.generation_date = '$generationDate'
+                          WHERE b.id >= $minId AND b.reliability >= t.min_reliability AND t.result_table_value_variable = '$valueVar'
+                            
                         )im ON a.parent_mother_id = im.animal_id
                         LEFT JOIN
                         (
                           SELECT b.id, b.animal_id FROM breed_value b
                             INNER JOIN breed_value_type t ON t.id = b.type_id
-                          WHERE b.reliability >= t.min_reliability AND t.result_table_value_variable = '$valueVar'
-                            AND b.generation_date = '$generationDate'
+                          WHERE b.id >= $minId AND  b.reliability >= t.min_reliability AND t.result_table_value_variable = '$valueVar'
+                            
                         )if ON a.parent_father_id = if.animal_id                      
                       WHERE
                         i.id ISNULL AND 
@@ -558,12 +560,12 @@ class BreedValuesResultTableUpdater
     /**
      * @param string $valueVar
      * @param string $accuracyVar
-     * @param string $generationDate
      * @return int
      * @throws \Doctrine\DBAL\DBALException
      */
-    private function updateResultTableBreedValuesOfChildrenBasedOnValuesOfParents($valueVar, $accuracyVar, $generationDate)
+    private function updateResultTableBreedValuesOfChildrenBasedOnValuesOfParents($valueVar, $accuracyVar)
     {
+        $minId = self::MIN_BREED_VALUE_ID;
         $sql = "UPDATE result_table_breed_grades SET $valueVar = calc.breed_value, $accuracyVar = calc.accuracy
                 FROM (
                   SELECT
@@ -576,8 +578,7 @@ class BreedValuesResultTableUpdater
                          SELECT b.id, b.animal_id
                          FROM breed_value b
                                   INNER JOIN breed_value_type t ON t.id = b.type_id
-                         WHERE b.reliability >= t.min_reliability AND t.result_table_value_variable = '$valueVar'
-                           AND b.generation_date = '$generationDate'
+                         WHERE b.id >= $minId AND b.reliability >= t.min_reliability AND t.result_table_value_variable = '$valueVar'
                      )i ON ra.animal_id = i.animal_id                      
                     INNER JOIN animal a ON ra.animal_id = a.id
                     INNER JOIN
@@ -587,8 +588,8 @@ class BreedValuesResultTableUpdater
                       FROM breed_value b
                         INNER JOIN breed_value_type t ON t.id = b.type_id
                         INNER JOIN breed_value_genetic_base gb ON gb.breed_value_type_id = t.id AND gb.year = DATE_PART('year', b.generation_date)
-                      WHERE b.reliability >= t.min_reliability AND t.result_table_value_variable = '$valueVar'
-                        AND b.generation_date = '$generationDate'
+                      WHERE b.id >= $minId AND b.reliability >= t.min_reliability AND t.result_table_value_variable = '$valueVar'
+                        
                     )im ON a.parent_mother_id = im.animal_id
                     INNER JOIN
                     (
@@ -597,8 +598,8 @@ class BreedValuesResultTableUpdater
                       FROM breed_value b
                         INNER JOIN breed_value_type t ON t.id = b.type_id
                         INNER JOIN breed_value_genetic_base gb ON gb.breed_value_type_id = t.id AND gb.year = DATE_PART('year', b.generation_date)
-                      WHERE b.reliability >= t.min_reliability AND t.result_table_value_variable = '$valueVar'
-                        AND b.generation_date = '$generationDate'
+                      WHERE b.id >= $minId AND b.reliability >= t.min_reliability AND t.result_table_value_variable = '$valueVar'
+                        
                     )if ON a.parent_father_id = if.animal_id                     
                   WHERE
                     i.id ISNULL AND -- ONLY OVERWRITE VALUES IF ANIMAL DOES NOT ALREADY HAVE IT'S OWN BREED VALUE
@@ -693,7 +694,7 @@ class BreedValuesResultTableUpdater
     }
 
 
-    private function updateNormalizedResultTableQuery($valueVar, $generationDate, bool $useBatchProcessing): string {
+    private function updateNormalizedResultTableQuery($valueVar, int $minBreedValueId, bool $useBatchProcessing): string {
         $sqlResultTableValues = "SELECT
                           b.animal_id,
                           ROUND(100 + (b.value - n.mean) * (t.standard_deviation_step_size / n.standard_deviation) 
@@ -706,7 +707,7 @@ class BreedValuesResultTableUpdater
                               SELECT * FROM normal_distribution WHERE is_including_only_alive_animals = FALSE 
                            )n ON n.type = t.nl AND n.year = DATE_PART('year', b.generation_date)
                         WHERE
-                          b.generation_date = '$generationDate' AND
+                          b.id >= $minBreedValueId AND
                           t.result_table_value_variable = '$valueVar' AND
                           b.reliability >= t.min_reliability AND
                           (
@@ -747,7 +748,7 @@ class BreedValuesResultTableUpdater
             $this->logger->notice("Batch processing ".$valueVar);
             $this->logger->notice("...");
             do {
-                $sql = $this->updateNormalizedResultTableQuery($valueVar, $generationDate, true);
+                $sql = $this->updateNormalizedResultTableQuery($valueVar, self::MIN_BREED_VALUE_ID, true);
                 $localUpdateCount = SqlUtil::updateWithCount($this->conn, $sql);
                 $updateCount += $localUpdateCount;
 
@@ -773,7 +774,7 @@ class BreedValuesResultTableUpdater
             } while ($localUpdateCount > 0);
 
         } else {
-            $sql = $this->updateNormalizedResultTableQuery($valueVar, $generationDate, false);
+            $sql = $this->updateNormalizedResultTableQuery($valueVar, self::MIN_BREED_VALUE_ID, false);
             $updateCount = SqlUtil::updateWithCount($this->conn, $sql);
         }
 
@@ -784,11 +785,11 @@ class BreedValuesResultTableUpdater
          * NOTE! This should be done BEFORE calculating the values for the children,
          * to prevent cascading calculation for children breedValues based on other calculated values
          */
-        $removeCount = $this->setNormalizedResultTableValueToNullWhereBreedValueIsMissing($valueVar, $generationDate);
+        $removeCount = $this->setNormalizedResultTableValueToNullWhereBreedValueIsMissing($valueVar);
         $updateCount += $removeCount;
 
         //Calculate breed values and accuracies of children without one, based on the values of both parents
-        $childrenUpdateCount = $this->updateNormalizedResultTableBreedValuesOfChildrenBasedOnValuesOfParents($valueVar, $generationDate);
+        $childrenUpdateCount = $this->updateNormalizedResultTableBreedValuesOfChildrenBasedOnValuesOfParents($valueVar);
         $updateCount += $childrenUpdateCount;
 
         $records = $valueVar. ' records';
@@ -808,8 +809,9 @@ class BreedValuesResultTableUpdater
      * @return int
      * @throws \Doctrine\DBAL\DBALException
      */
-    private function setNormalizedResultTableValueToNullWhereBreedValueIsMissing($valueVar, $generationDate)
+    private function setNormalizedResultTableValueToNullWhereBreedValueIsMissing($valueVar)
     {
+        $minId = self::MIN_BREED_VALUE_ID;
         $sql = "UPDATE $this->normalizedResultTableName
                     SET $valueVar = NULL
                     WHERE animal_id IN (
@@ -826,15 +828,13 @@ class BreedValuesResultTableUpdater
                         (
                           SELECT b.id, b.animal_id FROM breed_value b
                             INNER JOIN breed_value_type t ON t.id = b.type_id
-                          WHERE b.reliability >= t.min_reliability AND t.result_table_value_variable = '$valueVar'
-                            AND b.generation_date = '$generationDate'
+                          WHERE b.id >= $minId AND b.reliability >= t.min_reliability AND t.result_table_value_variable = '$valueVar'
                         )im ON a.parent_mother_id = im.animal_id
                         LEFT JOIN
                         (
                           SELECT b.id, b.animal_id FROM breed_value b
                             INNER JOIN breed_value_type t ON t.id = b.type_id
-                          WHERE b.reliability >= t.min_reliability AND t.result_table_value_variable = '$valueVar'
-                            AND b.generation_date = '$generationDate'
+                          WHERE b.id >= $minId AND b.reliability >= t.min_reliability AND t.result_table_value_variable = '$valueVar'
                         )if ON a.parent_father_id = if.animal_id                         
                       WHERE
                         i.id ISNULL AND 
@@ -849,13 +849,12 @@ class BreedValuesResultTableUpdater
 
     /**
      * @param string $valueVar
-     * @param string $accuracyVar
-     * @param string $generationDate
      * @return int
      * @throws \Doctrine\DBAL\DBALException
      */
-    private function updateNormalizedResultTableBreedValuesOfChildrenBasedOnValuesOfParents($valueVar, $generationDate)
+    private function updateNormalizedResultTableBreedValuesOfChildrenBasedOnValuesOfParents($valueVar)
     {
+        $minId = self::MIN_BREED_VALUE_ID;
         $sql = "UPDATE $this->normalizedResultTableName SET $valueVar = calc.normalized_breed_value
                 FROM (
                   SELECT
@@ -877,7 +876,7 @@ class BreedValuesResultTableUpdater
                               SELECT * FROM normal_distribution WHERE is_including_only_alive_animals = FALSE 
                            )n ON n.type = t.nl AND n.year = DATE_PART('year', b.generation_date)
                         WHERE
-                          b.generation_date = '$generationDate' AND
+                              b.id >= $minId AND
                           t.result_table_value_variable = '$valueVar' AND
                           b.reliability >= t.min_reliability AND
                           t.use_normal_distribution
@@ -895,7 +894,7 @@ class BreedValuesResultTableUpdater
                               SELECT * FROM normal_distribution WHERE is_including_only_alive_animals = FALSE 
                            )n ON n.type = t.nl AND n.year = DATE_PART('year', b.generation_date) 
                         WHERE
-                          b.generation_date = '$generationDate' AND
+                              b.id >= $minId AND
                           t.result_table_value_variable = '$valueVar' AND
                           b.reliability >= t.min_reliability AND
                           t.use_normal_distribution                        
@@ -1033,7 +1032,6 @@ class BreedValuesResultTableUpdater
                     continue;
                 }
 
-                //TODO
                 $this->normalDistributionService
                     ->persistBreedValueTypeMeanAndStandardDeviation($normalDistributionLabel, $generationDateString, false);
             }
