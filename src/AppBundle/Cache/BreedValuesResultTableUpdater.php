@@ -580,6 +580,8 @@ class BreedValuesResultTableUpdater
      */
     private function createTemporaryBreedValueCalculationTable(string $valueVar, int  $minBreedValueId)
     {
+        $this->write('Create temporary calculation table for '.$valueVar);
+
         $tableName = $this->temporaryTableName($valueVar);
         $sql = "SELECT
     b.id as breed_value_id,
@@ -626,6 +628,7 @@ WHERE b.id >= $minBreedValueId AND b.reliability >= t.min_reliability AND t.resu
      */
     private function setResultTableValueToNullWhereBreedValueIsMissingIncludingForAnyParent($valueVar, $accuracyVar)
     {
+        $this->write('Remove invalid breed values for '.$valueVar);
         $tempTableName = $this->temporaryTableName($valueVar);
         $sql = "UPDATE result_table_breed_grades
                     SET $valueVar = NULL, $accuracyVar = NULL
@@ -657,6 +660,7 @@ WHERE b.id >= $minBreedValueId AND b.reliability >= t.min_reliability AND t.resu
      */
     private function updateResultTableBreedValuesOfChildrenBasedOnValuesOfParents($valueVar, $accuracyVar)
     {
+        $this->write('Fill breed values for '.$valueVar.' based on breed values of parents');
         $tempTableName = $this->temporaryTableName($valueVar);
         $sql = "UPDATE result_table_breed_grades SET $valueVar = calc.breed_value, $accuracyVar = calc.accuracy
                 FROM (
@@ -875,6 +879,7 @@ WHERE b.id >= $minBreedValueId AND b.reliability >= t.min_reliability AND t.resu
      */
     private function setNormalizedResultTableValueToNullWhereBreedValueIsMissing($valueVar)
     {
+        $this->write('Remove invalid normalized breed values for '.$valueVar);
         $tempTableName = $this->temporaryTableName($valueVar);
         $sql = "UPDATE $this->normalizedResultTableName
                     SET $valueVar = NULL
@@ -905,6 +910,7 @@ WHERE b.id >= $minBreedValueId AND b.reliability >= t.min_reliability AND t.resu
      */
     private function updateNormalizedResultTableBreedValuesOfChildrenBasedOnValuesOfParents($valueVar)
     {
+        $this->write('Fill normalized breed values for '.$valueVar.' using normalized breed values of parents');
         $tempTableName = $this->temporaryTableName($valueVar);
         $sql = "UPDATE $this->normalizedResultTableName SET $valueVar = calc.normalized_breed_value
                 FROM (
