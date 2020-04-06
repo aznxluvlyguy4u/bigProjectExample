@@ -207,12 +207,7 @@ class BreedValuesResultTableUpdater
             $analysisTypeNl = $result['analysis_type_nl'];
 
 
-            $skipAlreadyProcessed = $this->skipBreedValueResultTableValue($valueVar);
-
-            if (
-                !$skipAlreadyProcessed &&
-                (count($analysisTypes) === 0 || in_array($analysisTypeNl, $analysisTypes))
-            ) {
+            if (count($analysisTypes) === 0 || in_array($analysisTypeNl, $analysisTypes)) {
 
                 $this->write(self::PROCESSING.$valueVar);
 
@@ -492,6 +487,8 @@ class BreedValuesResultTableUpdater
          * Update obsolete value to null
          * NOTE! This should be done BEFORE calculating the values for the children,
          * to prevent cascading calculation for children breedValues based on other calculated values
+         *
+         * Only run this after updateResultTableQuery()
          */
         $removeCount = $this->setResultTableValueToNullWhereBreedValueIsMissingIncludingForAnyParent($valueVar, $accuracyVar);
         $updateCount += $removeCount;
@@ -513,6 +510,9 @@ class BreedValuesResultTableUpdater
 
 
     /**
+     * Warning only run this after updateResultTableQuery()
+     * when all the latest direct breed values are updated in the result_table_breed_grades table
+     *
      * @param $valueVar
      * @param $accuracyVar
      * @return int
@@ -824,7 +824,7 @@ class BreedValuesResultTableUpdater
                         (
                           SELECT b.id, b.animal_id FROM breed_value b
                             INNER JOIN breed_value_type t ON t.id = b.type_id
-                          WHERE b.reliability >= t.min_reliability AND t.result_table_value_variable = '$valueVar'
+                          WHERE b.id >= $minId AND b.reliability >= t.min_reliability AND t.result_table_value_variable = '$valueVar'
                         )i ON r.animal_id = i.animal_id
                         LEFT JOIN
                         (
@@ -987,20 +987,20 @@ class BreedValuesResultTableUpdater
      */
     private function updateNormalDistributions($analysisTypes)
     {
-//        $processLambMeatIndexAnalysis = $this->processLambMeatIndexAnalysis($analysisTypes);
-//        $processFertilityAnalysis = $this->processFertilityAnalysis($analysisTypes);
+        $processLambMeatIndexAnalysis = $this->processLambMeatIndexAnalysis($analysisTypes);
+        $processFertilityAnalysis = $this->processFertilityAnalysis($analysisTypes);
         $processExteriorAnalysis = $this->processExteriorAnalysis($analysisTypes);
-//        $processWormAnalysis = $this->processWormAnalysis($analysisTypes);
+        $processWormAnalysis = $this->processWormAnalysis($analysisTypes);
 
         // Indexes
 
-//        if ($processLambMeatIndexAnalysis) {
-//            $this->logger->notice(self::PROCESSING.'LambMeatIndex NormalDistribution...');
-//            $generationDateString = $this->getLatestBreedIndexGenerationDateString(BreedIndexDiscriminatorTypeConstant::LAMB_MEAT);
-//            if ($generationDateString) {
-//                $this->normalDistributionService->persistLambMeatIndexMeanAndStandardDeviation($generationDateString, false);
-//            }
-//        }
+        if ($processLambMeatIndexAnalysis) {
+            $this->logger->notice(self::PROCESSING.'LambMeatIndex NormalDistribution...');
+            $generationDateString = $this->getLatestBreedIndexGenerationDateString(BreedIndexDiscriminatorTypeConstant::LAMB_MEAT);
+            if ($generationDateString) {
+                $this->normalDistributionService->persistLambMeatIndexMeanAndStandardDeviation($generationDateString, false);
+            }
+        }
 
 
         // Breed Values
@@ -1009,19 +1009,14 @@ class BreedValuesResultTableUpdater
         {
             $normalDistributionLabel = $breedValueType->getNl();
 
-            if ($this->skipBreedValue($breedValueType)) {
-                $this->logger->notice('SKIP ALREADY PROCESSED '. self::PROCESSING.$normalDistributionLabel.' NormalDistribution...');
-                continue;
-            }
-
             $analysisTypeNl = $breedValueType->getMixBlupAnalysisType()
                 ? $breedValueType->getMixBlupAnalysisType()->getNl() : null;
 
             switch ($analysisTypeNl) {
-//                case MixBlupType::LAMB_MEAT_INDEX: $generate = $processLambMeatIndexAnalysis; break;
-//                case MixBlupType::FERTILITY: $generate = $processFertilityAnalysis; break;
+                case MixBlupType::LAMB_MEAT_INDEX: $generate = $processLambMeatIndexAnalysis; break;
+                case MixBlupType::FERTILITY: $generate = $processFertilityAnalysis; break;
                 case MixBlupType::EXTERIOR: $generate = $processExteriorAnalysis; break;
-//                case MixBlupType::WORM: $generate = $processWormAnalysis; break;
+                case MixBlupType::WORM: $generate = $processWormAnalysis; break;
                 default: $generate = false; break;
             }
 
@@ -1038,27 +1033,6 @@ class BreedValuesResultTableUpdater
                     ->persistBreedValueTypeMeanAndStandardDeviation($normalDistributionLabel, $generationDateString, false);
             }
         }
-    }
-
-
-
-    private function skipBreedValueResultTableValue(string $resultTableValueVariable): bool
-    {
-        $alreadyProcessedBreedValueTypes = [
-            'leg_work_vg_m',
-            'leg_work_df',
-            'muscularity_vg_v',
-            'muscularity_vg_m',
-        ];
-
-        return in_array($resultTableValueVariable, $alreadyProcessedBreedValueTypes);
-    }
-
-
-
-    private function skipBreedValue(BreedValueType $breedValueType): bool
-    {
-        return $this->skipBreedValueResultTableValue($breedValueType->getResultTableValueVariable());
     }
 
 
