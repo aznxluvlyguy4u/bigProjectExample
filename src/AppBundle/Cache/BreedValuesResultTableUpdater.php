@@ -6,6 +6,7 @@ namespace AppBundle\Cache;
 
 use AppBundle\Constant\BreedIndexDiscriminatorTypeConstant;
 use AppBundle\Entity\BreedIndex;
+use AppBundle\Entity\BreedValue;
 use AppBundle\Entity\BreedValueType;
 use AppBundle\Entity\ProcessLog;
 use AppBundle\Entity\ProcessLogRepository;
@@ -125,6 +126,22 @@ class BreedValuesResultTableUpdater
     }
 
 
+    public function updateForCli(array $analysisTypes = [],
+        $insertMissingResultTableAndGeneticBaseRecords = true,
+        $ignorePreviouslyFinishedProcesses = false,
+        bool $useOverallMaxGenerationDate)
+    {
+        $generationDate = $useOverallMaxGenerationDate ? $this->overallMaxGenerationDate() : null;
+
+        return $this->update($analysisTypes,
+            $insertMissingResultTableAndGeneticBaseRecords,
+            $ignorePreviouslyFinishedProcesses,
+            false,
+            false,
+            $generationDate);
+    }
+
+
     /**
      * @param array $analysisTypes
      * @param boolean $updateBreedIndexes
@@ -140,23 +157,23 @@ class BreedValuesResultTableUpdater
                            $updateBreedIndexes = false, $updateNormalDistributions = false,
                            $generationDateString = null)
     {
-//        if ($insertMissingResultTableAndGeneticBaseRecords) {
-//            $this->insertMissingBlankRecords();
-//            /*
-//             * NOTE! Without genetic bases the corrected breedValues cannot be calculated, so do this first!
-//             */
-//            $this->breedValueService->initializeBlankGeneticBases();
-//        } else {
-//            $this->logger->notice("Skip insert missing blank resultTable records");
-//            $this->logger->notice("Skip initializing blank genetic base records");
-//        }
-//
-//        if ($updateBreedIndexes) {
-//            $generationDateStringForBenchMarkValues = $this->getGenerationDateString($generationDateString);
-//            $this->updateBreedIndexesByOutputFileType($generationDateStringForBenchMarkValues, $analysisTypes);
-//        } else {
-//            $this->logger->notice("Skip updating breed indexes");
-//        }
+        if ($insertMissingResultTableAndGeneticBaseRecords) {
+            $this->insertMissingBlankRecords();
+            /*
+             * NOTE! Without genetic bases the corrected breedValues cannot be calculated, so do this first!
+             */
+            $this->breedValueService->initializeBlankGeneticBases();
+        } else {
+            $this->logger->notice("Skip insert missing blank resultTable records");
+            $this->logger->notice("Skip initializing blank genetic base records");
+        }
+
+        if ($updateBreedIndexes) {
+            $generationDateStringForBenchMarkValues = $this->getGenerationDateString($generationDateString);
+            $this->updateBreedIndexesByOutputFileType($generationDateStringForBenchMarkValues, $analysisTypes);
+        } else {
+            $this->logger->notice("Skip updating breed indexes");
+        }
 
         if ($updateNormalDistributions) {
             $this->updateNormalDistributions($analysisTypes);
@@ -361,6 +378,18 @@ class BreedValuesResultTableUpdater
     }
 
 
+    private function overallMaxGenerationDate(): string
+    {
+        $generationDate = $this->em->getRepository(BreedValue::class)
+            ->getBreedValueLastGenerationDate(false);
+        if (empty($generationDate)) {
+            throw new \Exception('There are no breed_value records in the database');
+        }
+
+        return $generationDate;
+    }
+
+
     /**
      * @param string $breedTypeValueVar
      * @param array|ProcessLog[] $previousProcessLogs
@@ -368,21 +397,19 @@ class BreedValuesResultTableUpdater
      * @throws \Doctrine\DBAL\DBALException
      */
     private function maxGenerationDate($breedTypeValueVar, $previousProcessLogs): ?string {
-        return '2020-04-03 09:22:40';
-//
-//        if (key_exists($breedTypeValueVar, $previousProcessLogs)) {
-//            $generationDate = $previousProcessLogs[$breedTypeValueVar]->getSubCategory();
-//            if (!empty($generationDate)) {
-//                return $generationDate;
-//            }
-//        }
-//
-//        $sql = "SELECT
-//                    MAX(generation_date)
-//                FROM breed_value WHERE type_id = (
-//                    SELECT id FROM breed_value_type WHERE result_table_value_variable = '$breedTypeValueVar'
-//                    )";
-//        return $this->conn->query($sql)->fetch()['max'];
+        if (key_exists($breedTypeValueVar, $previousProcessLogs)) {
+            $generationDate = $previousProcessLogs[$breedTypeValueVar]->getSubCategory();
+            if (!empty($generationDate)) {
+                return $generationDate;
+            }
+        }
+
+        $sql = "SELECT
+                    MAX(generation_date)
+                FROM breed_value WHERE type_id = (
+                    SELECT id FROM breed_value_type WHERE result_table_value_variable = '$breedTypeValueVar'
+                    )";
+        return $this->conn->query($sql)->fetch()['max'];
     }
 
 
