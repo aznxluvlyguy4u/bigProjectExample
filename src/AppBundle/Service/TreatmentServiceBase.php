@@ -109,33 +109,6 @@ class TreatmentServiceBase extends ControllerServiceBase
         return true;
     }
 
-
-    /**
-     * @param $medications
-     * @return JsonResponse|bool
-     */
-    protected function hasDuplicateMedicationDescriptions($medications)
-    {
-        $descriptions = [];
-        $duplicateDescriptions = [];
-        /** @var MedicationOption $medication */
-        foreach ($medications as $medication)
-        {
-            $description = $medication->getDescription();
-            if (in_array($description, $descriptions)) {
-                $duplicateDescriptions[] = $description;
-            } else {
-                $descriptions[] = $description;
-            }
-        }
-
-        if (count($duplicateDescriptions) > 0) {
-            return Validator::createJsonResponse('Een medicijn mag alleen 1x in de medicijnen lijst voorkomen', 428);
-        }
-        return false;
-    }
-
-
     /**
      * @param int $templateId
      * @param string $type

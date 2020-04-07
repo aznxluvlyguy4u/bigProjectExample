@@ -5,7 +5,9 @@ namespace AppBundle\Service;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Controller\TreatmentTemplateAPIControllerInterface;
 use AppBundle\Entity\MedicationOption;
+use AppBundle\Entity\TreatmentMedication;
 use AppBundle\Entity\TreatmentTemplate;
+use AppBundle\Entity\TreatmentType;
 use AppBundle\Enumerator\QueryParameter;
 use AppBundle\Enumerator\TreatmentTypeOption;
 use AppBundle\Util\AdminActionLogWriter;
@@ -13,6 +15,7 @@ use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
 use AppBundle\Util\Validator;
 use AppBundle\Validation\AdminValidator;
+use Exception;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
@@ -83,6 +86,7 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
 
         $activeOnly = RequestUtil::getBooleanQuery($request, QueryParameter::ACTIVE_ONLY, true);
         $templates = $this->treatmentTemplateRepository->findLocationTypeByLocation($location, $activeOnly);
+
         $output = $this->getBaseSerializer()->getDecodedJson($templates, $this->getJmsGroupByQuery($request));
 
         return ResultUtil::successResult($output);
@@ -91,6 +95,7 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
     /**
      * @param Request $request
      * @return JsonResponse
+     * @throws Exception
      */
     function createIndividualTemplate(Request $request)
     {
@@ -100,6 +105,7 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
     /**
      * @param Request $request
      * @return JsonResponse
+     * @throws Exception
      */
     function createLocationTemplate(Request $request)
     {
@@ -110,6 +116,7 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
      * @param Request $request
      * @param $type
      * @return JsonResponse
+     * @throws Exception
      */
     private function createTemplate(Request $request, $type)
     {
@@ -118,6 +125,7 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
 
         /** @var TreatmentTemplate $template */
         $template = $this->getBaseSerializer()->deserializeToObject($request->getContent(), TreatmentTemplate::class);
+
         if (!($template instanceof TreatmentTemplate)) {
             return Validator::createJsonResponse('Json body must have the TreatmentTemplate structure', 428);
         }
@@ -132,6 +140,10 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
         /** @var MedicationOption $medication */
         foreach ($template->getMedications() as $medication)
         {
+            /** @var TreatmentMedication $treatmentMedication */
+            $treatmentMedication = $this->treatmentMedicationRepository->findOneBy(['name' => $medication->getTreatmentMedication()->getName()]);
+
+            $medication->setTreatmentMedication($treatmentMedication);
             $medication->setTreatmentTemplate($template);
         }
 
@@ -139,6 +151,7 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
         $template->setCreationBy($this->getUser());
 
         $this->getManager()->persist($template);
+
         $this->getManager()->flush();
 
         AdminActionLogWriter::createTreatmentTemplate($this->getManager(), $admin, $request, $template);
@@ -152,6 +165,7 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
     /**
      * @param TreatmentTemplate $template
      * @return JsonResponse|TreatmentTemplate
+     * @throws Exception
      */
     private function baseValidateDeserializedTreatmentTemplate(TreatmentTemplate $template)
     {
@@ -183,9 +197,6 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
             }
         }
 
-        $medicationValidation = $this->hasDuplicateMedicationDescriptions($template->getMedications());
-        if ($medicationValidation instanceof JsonResponse) { return $medicationValidation; }
-
         $template
             ->setLocation($location)
             ->setTreatmentType($treatmentType)
@@ -199,6 +210,7 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
      * @param Request $request
      * @param $templateId
      * @return JsonResponse
+     * @throws Exception
      */
     function editIndividualTemplate(Request $request, $templateId)
     {
@@ -209,24 +221,26 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
      * @param Request $request
      * @param $templateId
      * @return JsonResponse
+     * @throws Exception
      */
     function editLocationTemplate(Request $request, $templateId)
     {
         return $this->editTemplate($request, $templateId, TreatmentTypeOption::LOCATION);
     }
 
-
     /**
      * @param Request $request
      * @param int $templateId
      * @param $type
      * @return JsonResponse
+     * @throws Exception
      */
     private function editTemplate(Request $request, $templateId, $type)
     {
         $admin = $this->getEmployee();
         if($admin === null) { return AdminValidator::getStandardErrorResponse(); }
 
+        /** @var TreatmentTemplate $templateInDatabase */
         $templateInDatabase = $this->getTemplateByIdAndType($templateId, $type);
         if ($templateInDatabase instanceof JsonResponse) { return $templateInDatabase; }
 
@@ -237,7 +251,6 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
         }
 
         /* Validation */
-
         if ($template->getType() !== null && $template->getType() !== $type) {
             //Prevent unpredictable results by blocking the editing of the type.
             return Validator::createJsonResponse('Template type may not be edited!', 428);
@@ -246,14 +259,12 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
         $template->setType($type); //Necessary for baseValidation
 
         $template = $this->baseValidateDeserializedTreatmentTemplate($template);
-        if ($template instanceof JsonResponse) { return $template; }
 
+        if ($template instanceof JsonResponse) { return $template; }
 
         //TODO check for duplicates
 
-
         /* Update */
-
         $isAnyValueUpdated = false;
         $this->actionLogDescription = '';
 
@@ -283,6 +294,7 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
         }
 
         //Update TreatmentType
+        /** @var TreatmentType $currentTreatmentType */
         $currentTreatmentType = $templateInDatabase->getTreatmentType();
         if ($currentTreatmentType->getId() !== $template->getTreatmentType()->getId()) {
             $templateInDatabase->setTreatmentType($template->getTreatmentType());
@@ -301,25 +313,26 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
         /** @var MedicationOption $medication */
         foreach ($template->getMedications() as $medication)
         {
-            $newMedicationDosagesByDescription[$medication->getDescription()] = $medication->getDosage();
+            $newMedicationDosagesByDescription[$medication->getTreatmentMedication()->getName()] = $medication->getDosage();
         }
 
         $currentMedicationByDescription = [];
         foreach ($templateInDatabase->getMedications() as $medication)
         {
-            $currentMedicationByDescription[$medication->getDescription()] = $medication;
+            $treatmentMedication = $medication->getTreatmentMedication();
+            $currentMedicationByDescription[$treatmentMedication->getName()] = $medication;
 
-            if (key_exists($medication->getDescription(), $newMedicationDosagesByDescription)) {
-                $newMedicationDosage = $newMedicationDosagesByDescription[$medication->getDescription()];
+            if (key_exists($treatmentMedication->getName(), $newMedicationDosagesByDescription)) {
+                $newMedicationDosage = $newMedicationDosagesByDescription[$treatmentMedication->getName()];
                 if ($medication->getDosage() !== $newMedicationDosage) {
                     //Update dosage
-                    $this->appendDescription($medication->getDescription(). ' dosage => '.$newMedicationDosage);
+                    $this->appendDescription($treatmentMedication->getName(). ' dosage => '.$newMedicationDosage);
                     $medication->setDosage($newMedicationDosage);
                     $isAnyValueUpdated = true;
                 }
             } else {
                 //Remove medication
-                $this->appendDescription('remove '.$medication->getDescription());
+                $this->appendDescription('remove '.$treatmentMedication->getName());
                 $templateInDatabase->removeMedication($medication);
                 $this->getManager()->remove($medication);
                 $isAnyValueUpdated = true;
@@ -329,14 +342,14 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
         /** @var MedicationOption $newMedication */
         foreach ($template->getMedications() as $newMedication)
         {
-            if (!key_exists($newMedication->getDescription(), $currentMedicationByDescription)) {
+            $treatmentMedication = $newMedication->getTreatmentMedication();
+            if (!key_exists($treatmentMedication->getName(), $currentMedicationByDescription)) {
                 $templateInDatabase->addMedication($newMedication);
                 $newMedication->setTreatmentTemplate($templateInDatabase);
-                $this->appendDescription('add '.$newMedication->getDescription().'['.$newMedication->getDosage().']');
+                $this->appendDescription('add '.$treatmentMedication->getName().'['.$newMedication->getDosage().']');
                 $isAnyValueUpdated = true;
             }
         }
-
 
         if ($isAnyValueUpdated) {
             $templateInDatabase

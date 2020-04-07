@@ -5,6 +5,7 @@ namespace AppBundle\Entity;
 use AppBundle\Traits\EntityClassInfo;
 use AppBundle\Util\Translation;
 use DateTime;
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as JMS;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -61,6 +62,11 @@ class TreatmentMedication
      */
     private $medications;
 
+    public function __construct()
+    {
+        $this->medications = new ArrayCollection();
+    }
+
     /**
      * @return int
      */
@@ -113,5 +119,16 @@ class TreatmentMedication
     public function getMedications(): array
     {
         return $this->medications;
+    }
+
+    public function addMedication(MedicationOption $medicationOption): ?self
+    {
+        if ($this->medications->contains($medicationOption)) {
+            return null;
+        }
+
+        $this->medications->add($medicationOption);
+
+        return $this;
     }
 }

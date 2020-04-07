@@ -163,14 +163,11 @@ class TreatmentTemplateAPIController extends APIController implements TreatmentT
      *          {
      *              "dutchType": "UBN",
      *              "id": 8,
-     *              "description": "Myiasisbehandeling",
      *              "medications": [
      *                  {
-     *                      "description": "Neogenic recombinator 666%",
      *                      "dosage": 10000000
      *                  },
      *                  {
-     *                      "description": "sledgehammer",
      *                      "dosage": 0.0001
      *                  }
      *              ],
@@ -232,14 +229,11 @@ class TreatmentTemplateAPIController extends APIController implements TreatmentT
      *              "location": {
      *                  "ubn": "1674459"
      *              },
-     *              "description": "Diarrhea",
      *              "medications": [
      *                  {
-     *                      "description": "purple elixer",
      *                      "dosage": 999
      *                  },
      *                  {
-     *                      "description": "sledgehammer",
      *                      "dosage": 0.0001
      *                  }
      *              ],
