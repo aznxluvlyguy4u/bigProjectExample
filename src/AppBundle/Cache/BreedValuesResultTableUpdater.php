@@ -555,6 +555,7 @@ class BreedValuesResultTableUpdater
          * Only run this after updateResultTableQuery()
          */
         $removeCount = $this->setResultTableValueToNullWhereBreedValueIsMissingIncludingForAnyParent($valueVar, $accuracyVar);
+        $this->write('removed: '.$removeCount);
         $updateCount += $removeCount;
 
         //Calculate breed values and accuracies of children without one, based on the values of both parents
@@ -573,6 +574,13 @@ class BreedValuesResultTableUpdater
     }
 
 
+    private function getBreedTypeId($valueVar): int
+    {
+        $sql = "SELECT id FROM breed_value_type WHERE result_table_value_variable = '$valueVar' LIMIT 1";
+        return intval($this->conn->query($sql)->fetch()['id']);
+    }
+
+
     /**
      * @param  string  $valueVar
      * @param  int  $minBreedValueId
@@ -583,6 +591,8 @@ class BreedValuesResultTableUpdater
         $this->write('Create temporary calculation table for '.$valueVar);
 
         $tableName = $this->temporaryTableName($valueVar);
+        $breedTypeId = $this->getBreedTypeId($valueVar);
+
         $sql = "SELECT
     b.id as breed_value_id,
     b.animal_id,
@@ -599,7 +609,21 @@ FROM breed_value b
         INNER JOIN (
           SELECT * FROM normal_distribution WHERE is_including_only_alive_animals = FALSE 
         )n ON n.type = t.nl AND n.year = DATE_PART('year', b.generation_date)
-WHERE b.id >= $minBreedValueId AND b.reliability >= t.min_reliability AND t.result_table_value_variable = '$valueVar'";
+WHERE b.id >= $minBreedValueId AND b.reliability >= t.min_reliability AND t.id = $breedTypeId AND
+EXISTS (
+        SELECT
+            id
+        FROM (
+                 SELECT DISTINCT ON (animal_id)
+                     --animal_id,
+                     b.id
+                 FROM breed_value b
+                          INNER JOIN breed_value_type t ON t.id = b.type_id
+                 WHERE t.id = $breedTypeId
+                 ORDER BY animal_id, b.id DESC
+        )w WHERE b.id = w.id
+    )
+";
         $this->conn->exec($sql);
     }
 
@@ -630,23 +654,43 @@ WHERE b.id >= $minBreedValueId AND b.reliability >= t.min_reliability AND t.resu
     {
         $this->write('Remove invalid breed values for '.$valueVar);
         $tempTableName = $this->temporaryTableName($valueVar);
+
         $sql = "UPDATE result_table_breed_grades
                     SET $valueVar = NULL, $accuracyVar = NULL
-                    WHERE animal_id IN (
+                    WHERE EXISTS (
                         
-                        SELECT r.animal_id
-                        FROM result_table_breed_grades r
-                                 INNER JOIN animal a ON r.animal_id = a.id
-                                 LEFT JOIN $tempTableName i ON i.animal_id = a.id
-                                 LEFT JOIN $tempTableName im ON a.parent_mother_id = im.animal_id
-                                 LEFT JOIN $tempTableName if ON a.parent_father_id = if.animal_id
-                        WHERE
-                            i.animal_id ISNULL AND
-                            (r.$valueVar NOTNULL OR r.$accuracyVar NOTNULL) AND
-                            (
-                                if.animal_id ISNULL OR im.animal_id ISNULL
-                            )
-                        
+                            SELECT
+                                animal_id
+                            FROM(
+                                    SELECT
+                                        r.animal_id
+                                    FROM result_table_breed_grades r
+                                             INNER JOIN animal a ON r.animal_id = a.id
+                                    WHERE NOT EXISTS(
+                                            SELECT
+                                                animal_id
+                                            FROM $tempTableName i
+                                            WHERE a.id = i.animal_id
+                                        ) AND
+                                        (r.$valueVar NOTNULL OR r.$accuracyVar NOTNULL)
+                                      AND (
+                                            a.parent_mother_id ISNULL OR
+                                            a.parent_father_id ISNULL OR
+                                            NOT EXISTS(
+                                                    SELECT
+                                                        animal_id
+                                                    FROM $tempTableName im
+                                                    WHERE a.parent_mother_id = im.animal_id
+                                                ) OR
+                                            NOT EXISTS(
+                                                    SELECT
+                                                        animal_id
+                                                    FROM $tempTableName if
+                                                    WHERE a.parent_father_id = if.animal_id
+                                                )
+                                        )
+                            ) v 
+                        WHERE result_table_breed_grades.animal_id = v.animal_id
                       )";
         return SqlUtil::updateWithCount($this->conn, $sql);
     }
@@ -662,6 +706,8 @@ WHERE b.id >= $minBreedValueId AND b.reliability >= t.min_reliability AND t.resu
     {
         $this->write('Fill breed values for '.$valueVar.' based on breed values of parents');
         $tempTableName = $this->temporaryTableName($valueVar);
+        $breedTypeId = $this->getBreedTypeId($valueVar);
+
         $sql = "UPDATE result_table_breed_grades SET $valueVar = calc.breed_value, $accuracyVar = calc.accuracy
                 FROM (
 
@@ -673,13 +719,17 @@ WHERE b.id >= $minBreedValueId AND b.reliability >= t.min_reliability AND t.resu
                              INNER JOIN animal a ON ra.animal_id = a.id
                              INNER JOIN $tempTableName im ON a.parent_mother_id = im.animal_id
                              INNER JOIN $tempTableName if ON a.parent_father_id = if.animal_id
-                             LEFT JOIN $tempTableName i ON i.animal_id = a.id
                     WHERE
-                        i.animal_id ISNULL AND -- ONLY OVERWRITE VALUES IF ANIMAL DOES NOT ALREADY HAVE IT'S OWN BREED VALUE
+                        NOT EXISTS(
+                            SELECT
+                                animal_id
+                            FROM $tempTableName i
+                            WHERE a.id = i.animal_id
+                        ) AND -- ONLY OVERWRITE VALUES IF ANIMAL DOES NOT ALREADY HAVE IT'S OWN BREED VALUE
                         a.parent_father_id NOTNULL AND
                         a.parent_mother_id NOTNULL AND
                             SQRT(0.25*if.accuracy*if.accuracy + 0.25*im.accuracy*im.accuracy)
-                            >= (SELECT SQRT(min_reliability) as min_accuracy FROM breed_value_type WHERE result_table_value_variable = '$valueVar') AND
+                            >= (SELECT SQRT(min_reliability) as min_accuracy FROM breed_value_type WHERE id = $breedTypeId) AND
                         (
                             ra.$valueVar ISNULL OR
                             ra.$accuracyVar ISNULL OR
@@ -883,21 +933,40 @@ WHERE b.id >= $minBreedValueId AND b.reliability >= t.min_reliability AND t.resu
         $tempTableName = $this->temporaryTableName($valueVar);
         $sql = "UPDATE $this->normalizedResultTableName
                     SET $valueVar = NULL
-                    WHERE animal_id IN (
-                      
-                        SELECT r.animal_id
-                        FROM result_table_breed_grades r
-                                 INNER JOIN animal a ON r.animal_id = a.id
-                                 LEFT JOIN $tempTableName i ON i.animal_id = a.id
-                                 LEFT JOIN $tempTableName im ON a.parent_mother_id = im.animal_id
-                                 LEFT JOIN $tempTableName if ON a.parent_father_id = if.animal_id
-                        WHERE
-                            i.animal_id ISNULL AND
-                            (r.$valueVar NOTNULL) AND
-                            (
-                                if.animal_id ISNULL OR im.animal_id ISNULL
-                            )
-                                    
+                    WHERE EXISTS (
+                        
+                            SELECT
+                                animal_id
+                            FROM(
+                                    SELECT
+                                        r.animal_id
+                                    FROM result_table_breed_grades r
+                                             INNER JOIN animal a ON r.animal_id = a.id
+                                    WHERE NOT EXISTS(
+                                            SELECT
+                                                animal_id
+                                            FROM $tempTableName i
+                                            WHERE a.id = i.animal_id
+                                        ) AND
+                                        (r.$valueVar NOTNULL)
+                                      AND (
+                                            a.parent_mother_id ISNULL OR
+                                            a.parent_father_id ISNULL OR
+                                            NOT EXISTS(
+                                                    SELECT
+                                                        animal_id
+                                                    FROM $tempTableName im
+                                                    WHERE a.parent_mother_id = im.animal_id
+                                                ) OR
+                                            NOT EXISTS(
+                                                    SELECT
+                                                        animal_id
+                                                    FROM $tempTableName if
+                                                    WHERE a.parent_father_id = if.animal_id
+                                                )
+                                        )
+                            ) v 
+                        WHERE $this->normalizedResultTableName.animal_id = v.animal_id
                       )";
         return SqlUtil::updateWithCount($this->conn, $sql);
     }
@@ -912,6 +981,8 @@ WHERE b.id >= $minBreedValueId AND b.reliability >= t.min_reliability AND t.resu
     {
         $this->write('Fill normalized breed values for '.$valueVar.' using normalized breed values of parents');
         $tempTableName = $this->temporaryTableName($valueVar);
+        $breedTypeId = $this->getBreedTypeId($valueVar);
+
         $sql = "UPDATE $this->normalizedResultTableName SET $valueVar = calc.normalized_breed_value
                 FROM (
                   SELECT
@@ -919,17 +990,23 @@ WHERE b.id >= $minBreedValueId AND b.reliability >= t.min_reliability AND t.resu
                     (nf.normalized_value + nm.normalized_value) / 2 as calculated_normalized_breed_value
                   FROM $this->resultTableName ra
                     INNER JOIN animal a ON ra.animal_id = a.id
-                    INNER JOIN $this->normalizedResultTableName nra ON nra.animal_id = a.id
                     INNER JOIN $tempTableName nm ON nm.animal_id = a.parent_mother_id
                     INNER JOIN $tempTableName nf ON nf.animal_id = a.parent_father_id        
                   WHERE
+                    NOT EXISTS( -- use this instead of INNER JOIN WHERE nra.$valueVar ISNULL AND
+                        SELECT
+                            animal_id
+                        FROM $this->normalizedResultTableName nra
+                        WHERE a.id = nra.animal_id
+                    ) AND -- ONLY OVERWRITE VALUES IF ANIMAL DOES NOT ALREADY HAVE IT'S OWN NORMALIZED BREED VALUE      
+                        
                     a.parent_father_id NOTNULL AND
                     a.parent_mother_id NOTNULL AND
                     nm.use_normal_distribution AND
                     nf.use_normal_distribution AND
-                    nra.$valueVar ISNULL AND
+
                     SQRT(0.25*nf.accuracy*nf.accuracy + 0.25*nm.accuracy*nm.accuracy)
-                    >= (SELECT SQRT(min_reliability) as min_accuracy FROM breed_value_type WHERE result_table_value_variable = '$valueVar')
+                    >= (SELECT SQRT(min_reliability) as min_accuracy FROM breed_value_type WHERE id = $breedTypeId)
                 ) AS calc(animal_id, normalized_breed_value)
                 WHERE $this->normalizedResultTableName.animal_id = calc.animal_id
                   AND (
