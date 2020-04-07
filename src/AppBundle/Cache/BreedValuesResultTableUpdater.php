@@ -661,36 +661,19 @@ EXISTS (
                     SET $valueVar = NULL, $accuracyVar = NULL
                     WHERE EXISTS (
                         
-                            SELECT
-                                animal_id
-                            FROM(
-                                    SELECT
-                                        r.animal_id
-                                    FROM result_table_breed_grades r
-                                             INNER JOIN animal a ON r.animal_id = a.id
-                                    WHERE NOT EXISTS(
-                                            SELECT
-                                                animal_id
-                                            FROM $tempTableName i
-                                            WHERE a.id = i.animal_id
-                                        ) AND
-                                        (r.$valueVar NOTNULL OR r.$accuracyVar NOTNULL)
-                                      AND (
-                                            a.parent_mother_id ISNULL OR
-                                            a.parent_father_id ISNULL OR
-                                            NOT EXISTS(
-                                                    SELECT
-                                                        animal_id
-                                                    FROM $tempTableName im
-                                                    WHERE a.parent_mother_id = im.animal_id
-                                                ) OR
-                                            NOT EXISTS(
-                                                    SELECT
-                                                        animal_id
-                                                    FROM $tempTableName if
-                                                    WHERE a.parent_father_id = if.animal_id
-                                                )
-                                        )
+                            SELECT 
+                             animal_id
+                            FROM (
+                                SELECT
+                                    r.animal_id
+                                FROM result_table_breed_grades r
+                                    INNER JOIN animal a ON a.id = r.animal_id
+                                    LEFT JOIN $tempTableName i on r.animal_id = i.animal_id
+                                    LEFT JOIN $tempTableName im on a.parent_mother_id = im.animal_id
+                                    LEFT JOIN $tempTableName if on a.parent_father_id = if.animal_id
+                                WHERE 
+                                      (r.$valueVar NOTNULL OR r.$accuracyVar NOTNULL)
+                                  AND i.animal_id ISNULL AND im.animal_id ISNULL AND if.animal_id ISNULL
                             ) v 
                         WHERE result_table_breed_grades.animal_id = v.animal_id
                       )";
@@ -936,37 +919,20 @@ EXISTS (
         $sql = "UPDATE $this->normalizedResultTableName
                     SET $valueVar = NULL
                     WHERE EXISTS (
-                        
-                            SELECT
-                                animal_id
-                            FROM(
-                                    SELECT
-                                        r.animal_id
-                                    FROM result_table_breed_grades r
-                                             INNER JOIN animal a ON r.animal_id = a.id
-                                    WHERE NOT EXISTS(
-                                            SELECT
-                                                animal_id
-                                            FROM $tempTableName i
-                                            WHERE a.id = i.animal_id
-                                        ) AND
-                                        (r.$valueVar NOTNULL)
-                                      AND (
-                                            a.parent_mother_id ISNULL OR
-                                            a.parent_father_id ISNULL OR
-                                            NOT EXISTS(
-                                                    SELECT
-                                                        animal_id
-                                                    FROM $tempTableName im
-                                                    WHERE a.parent_mother_id = im.animal_id
-                                                ) OR
-                                            NOT EXISTS(
-                                                    SELECT
-                                                        animal_id
-                                                    FROM $tempTableName if
-                                                    WHERE a.parent_father_id = if.animal_id
-                                                )
-                                        )
+                            SELECT 
+                             animal_id
+                            FROM (
+                                SELECT
+                                    r.animal_id
+                                FROM result_table_breed_grades r
+                                    INNER JOIN animal a ON a.id = r.animal_id
+                                    LEFT JOIN $tempTableName i on r.animal_id = i.animal_id
+                                    LEFT JOIN $tempTableName im on a.parent_mother_id = im.animal_id
+                                    LEFT JOIN $tempTableName if on a.parent_father_id = if.animal_id
+                                WHERE 
+                                    r.$valueVar NOTNULL
+                                  AND i.animal_id ISNULL AND im.animal_id ISNULL AND if.animal_id ISNULL
+
                             ) v 
                         WHERE $this->normalizedResultTableName.animal_id = v.animal_id
                       )";
