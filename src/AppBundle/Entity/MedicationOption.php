@@ -38,16 +38,11 @@ class MedicationOption
     private $treatmentTemplate;
 
     /**
-     * @var string
-     * @JMS\Type("string")
-     * @Assert\NotBlank
-     * @ORM\Column(type="string")
-     * @JMS\Groups({
-     *     "TREATMENT_TEMPLATE",
-     *     "TREATMENT_TEMPLATE_MIN"
-     * })
+     * @var TreatmentMedication
+     * @ORM\ManyToOne(targetEntity="TreatmentMedication", inversedBy="medications")
+     * @JMS\Type("AppBundle\Entity\TreatmentMedication")
      */
-    private $description;
+    private $treatmentMedication;
 
     /**
      * @var float

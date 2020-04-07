@@ -12,6 +12,8 @@ use AppBundle\Entity\TreatmentAnimal;
 use AppBundle\Entity\TreatmentAnimalRepository;
 use AppBundle\Entity\TreatmentLocation;
 use AppBundle\Entity\TreatmentLocationRepository;
+use AppBundle\Entity\TreatmentMedication;
+use AppBundle\Entity\TreatmentMedicationRepository;
 use AppBundle\Entity\TreatmentTemplate;
 use AppBundle\Entity\TreatmentTemplateRepository;
 use AppBundle\Entity\TreatmentType;
@@ -36,10 +38,14 @@ class TreatmentServiceBase extends ControllerServiceBase
     protected $treatmentTemplateRepository;
     /** @var TreatmentTypeRepository */
     protected $treatmentTypeRepository;
+    /** @var TreatmentMedicationRepository */
+    protected $treatmentMedicationRepository;
 
     /** @var string */
     protected $actionLogDescription;
 
+    /** @var string */
+    protected $actionLogName;
 
     /**
      * @required
@@ -50,6 +56,7 @@ class TreatmentServiceBase extends ControllerServiceBase
         $this->treatmentLocationRepository = $this->getManager()->getRepository(TreatmentLocation::class);
         $this->treatmentTemplateRepository = $this->getManager()->getRepository(TreatmentTemplate::class);
         $this->treatmentTypeRepository = $this->getManager()->getRepository(TreatmentType::class);
+        $this->treatmentMedicationRepository = $this->getManager()->getRepository(TreatmentMedication::class);
     }
 
 
