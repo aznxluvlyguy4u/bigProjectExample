@@ -593,6 +593,8 @@ class BreedValuesResultTableUpdater
         $tableName = $this->temporaryTableName($valueVar);
         $breedTypeId = $this->getBreedTypeId($valueVar);
 
+        $this->conn->exec("DROP TABLE IF EXISTS $tableName");
+
         $sql = "SELECT
     b.id as breed_value_id,
     b.animal_id,
