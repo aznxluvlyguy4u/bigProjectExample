@@ -670,16 +670,17 @@ class PedigreeDataGenerator
                     ->count() > 0;
 
         }
-        // animal is Ewe
+        // animal is Ewe and parent is Mother
 
         return (
-                    $this->isPureBredAndTE100($parent) ||
-                    BreedCodeUtil::hasBreedCodePart($parent->getBreedCode(), 'TE', 88) ||
-                    BreedCodeUtil::hasBreedCodePart($parent->getBreedCode(), '', 12)
-               )
-                && $parent->getExteriorMeasurements()
-                ->matching(ExteriorCriteria::pureBredTEMotherOfEweExterior())
-                ->count() > 0;
+                    $this->isPureBredAndTE100($parent)
+                    // No exterior measurement qualification is required in this case
+               ) || (
+                    BreedCodeUtil::hasBreedCodePart($parent->getBreedCode(), 'TE', 88)
+                    && $parent->getExteriorMeasurements()
+                        ->matching(ExteriorCriteria::pureBredTEMotherOfEweExterior())
+                        ->count() > 0
+               );
     }
 
 
