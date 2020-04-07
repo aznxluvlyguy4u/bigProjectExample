@@ -187,14 +187,18 @@ class MixBlupCliOptionsService
                 break;
 
             case 13: $this->updateAllResultTableValuesAndPrerequisites(); break;
-            case 14: $this->breedValuesResultTableUpdater->update([MixBlupType::LAMB_MEAT_INDEX],
-                $this->insertMissingResultTableAndGeneticBaseRecords(), $this->ignorePreviouslyFinishedProcesses()); break;
-            case 15: $this->breedValuesResultTableUpdater->update([MixBlupType::FERTILITY],
-                $this->insertMissingResultTableAndGeneticBaseRecords(), $this->ignorePreviouslyFinishedProcesses()); break;
-            case 16: $this->breedValuesResultTableUpdater->update([MixBlupType::WORM],
-                $this->insertMissingResultTableAndGeneticBaseRecords(), $this->ignorePreviouslyFinishedProcesses()); break;
-            case 17: $this->breedValuesResultTableUpdater->update([MixBlupType::EXTERIOR],
-                $this->insertMissingResultTableAndGeneticBaseRecords(), $this->ignorePreviouslyFinishedProcesses()); break;
+            case 14: $this->breedValuesResultTableUpdater->updateForCli([MixBlupType::LAMB_MEAT_INDEX],
+                $this->insertMissingResultTableAndGeneticBaseRecords(), $this->ignorePreviouslyFinishedProcesses(),
+                $this->askUseOverallMaxGenerationDate()); break;
+            case 15: $this->breedValuesResultTableUpdater->updateForCli([MixBlupType::FERTILITY],
+                $this->insertMissingResultTableAndGeneticBaseRecords(), $this->ignorePreviouslyFinishedProcesses(),
+                $this->askUseOverallMaxGenerationDate()); break;
+            case 16: $this->breedValuesResultTableUpdater->updateForCli([MixBlupType::WORM],
+                $this->insertMissingResultTableAndGeneticBaseRecords(), $this->ignorePreviouslyFinishedProcesses(),
+                $this->askUseOverallMaxGenerationDate()); break;
+            case 17: $this->breedValuesResultTableUpdater->updateForCli([MixBlupType::EXTERIOR],
+                $this->insertMissingResultTableAndGeneticBaseRecords(), $this->ignorePreviouslyFinishedProcesses(),
+                $this->askUseOverallMaxGenerationDate()); break;
 
             case 18: $this->lambMeatIndexMigrator->migrate(); break;
             case 19: $this->wormResistanceIndexMigrator->migrate(); break;
@@ -283,14 +287,21 @@ class MixBlupCliOptionsService
 
 
     private function ignorePreviouslyFinishedProcesses(): bool {
-        $ignorePreviouslyFinishedProcesses = $this->cmdUtil->generateConfirmationQuestion('Ignore previously finished processes? (y/n, default is false)', false);
+        $ignorePreviouslyFinishedProcesses = $this->cmdUtil->generateConfirmationQuestion('Ignore previously finished processes?', true);
         $this->logger->notice('Ignore previously finished processes: '. StringUtil::getBooleanAsString($ignorePreviouslyFinishedProcesses));
         return $ignorePreviouslyFinishedProcesses;
     }
 
+    private function askUseOverallMaxGenerationDate(): bool {
+        $answer = $this->cmdUtil->generateConfirmationQuestion('Force using the overall max generation date? '.
+            'Note! if the calculated breed value type is not in the last generated set, nothing will be processed', true);
+        $this->cmdUtil->writeln('Force using the overall max generation date: '. StringUtil::getBooleanAsString($answer));
+        return $answer;
+    }
+
     private function insertMissingResultTableAndGeneticBaseRecords(): bool {
         $question = 'Insert missing resultTable and genetic base records';
-        $choice = $this->cmdUtil->generateConfirmationQuestion($question.'? (y/n, default is true)', true);
+        $choice = $this->cmdUtil->generateConfirmationQuestion($question.'?', true);
         $this->logger->notice($question.': '. StringUtil::getBooleanAsString($choice));
         return $choice;
     }
