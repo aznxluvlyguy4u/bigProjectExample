@@ -173,18 +173,32 @@ class ResultUtil
                 return $message;
             }
 
-            $message = '';
-            $prefix = '';
-            foreach ($results as $result) {
-                if (key_exists(Constant::MESSAGE_NAMESPACE, $results)) {
-                    $message .= $prefix . $results[Constant::MESSAGE_NAMESPACE];
-                    $prefix = '  ';
-                }
-            }
-            return $message;
+            return self::getMessageFromErrorArray($arrayData);
+
         } else {
-           return self::errorResult('No result found.', Response::HTTP_INTERNAL_SERVER_ERROR);
+
+           if (key_exists(Constant::MESSAGE_NAMESPACE, $arrayData)) {
+               $message = $arrayData[Constant::MESSAGE_NAMESPACE];
+           } else {
+               $message = self::getMessageFromErrorArray($arrayData);
+           }
+
+           return empty($message) ? 'No result found.' : $message;
         }
+    }
+
+
+    private static function getMessageFromErrorArray(array $arrayData): string
+    {
+        $message = '';
+        $prefix = '';
+        foreach ($arrayData as $result) {
+            if (key_exists(Constant::MESSAGE_NAMESPACE, $result)) {
+                $message .= $prefix . $result[Constant::MESSAGE_NAMESPACE];
+                $prefix = '  ';
+            }
+        }
+        return $message;
     }
 
 
