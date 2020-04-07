@@ -194,6 +194,29 @@ class BreedValuesResultTableUpdater
     }
 
 
+    private function killCurrentlyRunningResultTableUpdateDatabaseProcesses()
+    {
+        foreach ([
+            'result_table_breed_grades',
+            'result_table_normalized_breed_grades',
+                 ] as $tableName) {
+
+            $sql = "SELECT pid FROM pg_stat_activity
+                WHERE query LIKE '%$tableName%'
+                  AND query LIKE '%UPDATE%'
+                  AND query LIKE '%temp_breed_value_%'
+                  AND query NOT LIKE '%pg_stat_activity%';";
+            $results = $this->conn->query($sql)->fetchAll();
+
+            foreach ($results as $result) {
+                $pid = intval($result['pid']);
+                $this->conn->exec("SELECT pg_cancel_backend($pid)");
+                $this->write('Kill database process updating $tableName');
+            }
+        }
+    }
+
+
     /**
      * @param $analysisTypes
      * @param bool $ignorePreviouslyFinishedProcesses
@@ -210,6 +233,8 @@ class BreedValuesResultTableUpdater
         $totalBreedValueUpdateCount = 0;
         $totalNormalizedBreedValueUpdateCount = 0;
 
+        $this->killCurrentlyRunningResultTableUpdateDatabaseProcesses();
+        
         $processLogRepository = $this->em->getRepository(ProcessLog::class);
 
         $previousProcessLogs = [];
