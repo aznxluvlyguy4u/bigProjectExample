@@ -234,7 +234,7 @@ class BreedValuesResultTableUpdater
         $totalNormalizedBreedValueUpdateCount = 0;
 
         $this->killCurrentlyRunningResultTableUpdateDatabaseProcesses();
-        
+
         $processLogRepository = $this->em->getRepository(ProcessLog::class);
 
         $previousProcessLogs = [];

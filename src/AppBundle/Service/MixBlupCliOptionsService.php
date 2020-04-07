@@ -294,7 +294,7 @@ class MixBlupCliOptionsService
 
     private function askUseOverallMaxGenerationDate(): bool {
         $answer = $this->cmdUtil->generateConfirmationQuestion('Force using the overall max generation date? '.
-            'Note! if the calculated breed value type is not in the last generated set. This calculation will crash!', true);
+            'Note! if the calculated breed value type is not in the last generated set, nothing will be processed', true);
         $this->cmdUtil->writeln('Force using the overall max generation date: '. StringUtil::getBooleanAsString($answer));
         return $answer;
     }
