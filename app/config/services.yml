@@ -1083,6 +1083,7 @@ services:
         arguments:
           - '@doctrine.orm.entity_manager'
           - '@logger'
+          - '@app.health.locationhealth.updater'
 
     app.pedigree_data_reprocessor.base:
         abstract: true
