@@ -614,6 +614,8 @@ class LocationHealthUpdater
 
         $locationHealthMessage = LocationHealthMessageBuilder::prepare($animal->getLatestBirth());
 
+        $this->persistNewDefaultScrapieAndHideFollowingOnes($locationHealth, $animal->getDateOfBirth(), false);
+
         $this->emailService->sendPossibleSickAnimalArrivalNotificationEmail($locationHealthMessage);
 
         return $locationHealth;

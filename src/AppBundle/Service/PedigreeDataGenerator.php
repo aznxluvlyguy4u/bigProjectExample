@@ -513,10 +513,7 @@ class PedigreeDataGenerator
                 $animal->setScrapieGenotype(null);
                 $animal->setScrapieGenotypeSource(null);
 
-                $locationHealth = $location->getLocationHealth();
-
-                $locationHealth = $this->locationHealthUpdater->setScrapieStatusToUnderObservationWhenParentsAreNonArrArrAndSendEmail($locationHealth, $animal);
-                $this->locationHealthUpdater->persistNewDefaultScrapieAndHideFollowingOnes($locationHealth, new DateTime(), false);
+                $this->locationHealthUpdater->setScrapieStatusToUnderObservationWhenParentsAreNonArrArrAndSendEmail($location->getLocationHealth(), $animal);
             }
         }
 
