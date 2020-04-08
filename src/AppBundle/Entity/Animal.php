@@ -374,7 +374,7 @@ abstract class Animal
     /**
      * @var array
      * @JMS\Type("ArrayCollection<AppBundle\Entity\DeclareBirth>")
-     * @ORM\OneToMany(targetEntity="DeclareBirth", mappedBy="animal", cascade={"persist","remove"})
+     * @ORM\OneToMany(targetEntity="DeclareBirth", mappedBy="animal", cascade={"persist","remove"}, fetch="EAGER")
      */
     protected $births;
 
@@ -2085,6 +2085,7 @@ abstract class Animal
             )
             ->orderBy([Variable::LOG_DATE => Criteria::DESC])
             ->setMaxResults(1);
+
         $result = $this->births->matching($criteria)->first();
         return ($result instanceof DeclareBirth) ? $result : null;
     }
