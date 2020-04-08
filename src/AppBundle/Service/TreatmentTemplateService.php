@@ -346,6 +346,9 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
             if (!key_exists($treatmentMedication->getName(), $currentMedicationByDescription)) {
                 $templateInDatabase->addMedication($newMedication);
                 $newMedication->setTreatmentTemplate($templateInDatabase);
+
+                $this->getManager()->merge($treatmentMedication);
+
                 $this->appendDescription('add '.$treatmentMedication->getName().'['.$newMedication->getDosage().']');
                 $isAnyValueUpdated = true;
             }

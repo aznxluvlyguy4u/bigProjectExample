@@ -114,9 +114,9 @@ class TreatmentMedication
     }
 
     /**
-     * @return MedicationOption[]
+     * @return ArrayCollection|MedicationOption[]
      */
-    public function getMedications(): array
+    public function getMedications(): ?ArrayCollection
     {
         return $this->medications;
     }
