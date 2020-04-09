@@ -29,6 +29,7 @@ use Doctrine\Common\Collections\Criteria;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Types\Type;
 use Doctrine\ORM\Mapping\ClassMetadata;
+use Doctrine\ORM\NonUniqueResultException;
 use Doctrine\ORM\Query\Expr;
 use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\ORM\Query\Parameter;
@@ -2287,5 +2288,30 @@ WHERE animal_id IN (
         ORDER BY company_id";
 
         return $this->getManager()->getConnection()->query($sql)->fetchAll(\PDO::FETCH_GROUP);
+    }
+
+    /**
+     * @param $animalId
+     * @return mixed
+     * @throws NonUniqueResultException
+     */
+    public function getLatestBirth($animalId)
+    {
+        $result =  $this->createQueryBuilder('animal')
+            ->innerJoin('animal.births', 'births')
+            ->where('animal.id = :id')
+            ->orWhere('births.requestState = :finished')
+            ->orWhere('births.requestState = :finished_with_warning')
+            ->orWhere('births.requestState = :imported')
+            ->setParameter('id', $animalId)
+            ->setParameter('finished', RequestStateType::FINISHED)
+            ->setParameter('finished_with_warning', RequestStateType::FINISHED_WITH_WARNING)
+            ->setParameter('imported', RequestStateType::IMPORTED)
+            ->orderBy('births.id', 'desc')
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
+
+        return $result->getBirths()->last();
     }
 }

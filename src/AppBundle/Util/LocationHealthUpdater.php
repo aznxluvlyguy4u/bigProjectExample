@@ -612,7 +612,9 @@ class LocationHealthUpdater
     {
         $locationHealth->setCurrentScrapieStatus(ScrapieStatus::UNDER_OBSERVATION);
 
-        $locationHealthMessage = LocationHealthMessageBuilder::prepare($animal->getLatestBirth());
+        $latestBirth = $this->em->getRepository(Animal::class)->getLatestBirth($animal->getId());
+
+        $locationHealthMessage = LocationHealthMessageBuilder::prepare($latestBirth);
 
         $this->persistNewDefaultScrapieAndHideFollowingOnes($locationHealth, $animal->getDateOfBirth(), false);
 
