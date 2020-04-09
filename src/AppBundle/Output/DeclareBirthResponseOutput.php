@@ -174,6 +174,7 @@ class DeclareBirthResponseOutput extends Output
               "date_of_birth" => Utils::fillNull($declaration['date_of_birth']),
               "mother_uln_country_code" => Utils::fillNull($declaration['mother_uln_country_code']),
               "mother_uln_number" => Utils::fillNull($declaration['mother_uln_number']),
+              "mother_collar_code" => Utils::fillNull($declaration['mother_collar_color'])." ".Utils::fillNull($declaration['mother_collar_number']),
               "father_uln_country_code" => Utils::fillNull($declaration['father_uln_country_code']),
               "father_uln_number" => Utils::fillNull($declaration['father_uln_number']),
               "stillborn_count" => Utils::fillNull($declaration['stillborn_count']),
