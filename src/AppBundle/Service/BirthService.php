@@ -1056,6 +1056,7 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
             JsonInputConstant::PEDIGREE_COUNTRY_CODE => $animal->getPedigreeCountryCode(),
             JsonInputConstant::PEDIGREE_NUMBER => $animal->getPedigreeNumber(),
             JsonInputConstant::WORK_NUMBER => $animal->getAnimalOrderNumber(),
+            JsonInputConstant::COLLAR => $animal->getCollarColor()." ".$animal->getCollarNumber(),
             JsonInputConstant::GENDER => $animal->getGender(),
             JsonInputConstant::DATE_OF_BIRTH => $animal->getDateOfBirth(),
             JsonInputConstant::DATE_OF_DEATH => $animal->getDateOfDeath(),
