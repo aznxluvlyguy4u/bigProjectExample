@@ -374,7 +374,7 @@ abstract class Animal
     /**
      * @var array
      * @JMS\Type("ArrayCollection<AppBundle\Entity\DeclareBirth>")
-     * @ORM\OneToMany(targetEntity="DeclareBirth", mappedBy="animal", cascade={"persist","remove"}, fetch="EAGER")
+     * @ORM\OneToMany(targetEntity="DeclareBirth", mappedBy="animal", cascade={"persist","remove"})
      */
     protected $births;
 
