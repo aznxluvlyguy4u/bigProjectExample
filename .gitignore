@@ -60,6 +60,7 @@ Temporary Items
 
 ### Symfony ###
 /app/config/parameters.yml
+/app/config/parameters.backup.yml
 app/*.cache
 /bin/
 /build/
