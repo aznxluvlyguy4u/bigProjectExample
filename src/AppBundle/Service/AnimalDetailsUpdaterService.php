@@ -186,8 +186,6 @@ class AnimalDetailsUpdaterService extends ControllerServiceBase
             $this->clearLivestockCacheForLocation($animal->getLocation());
         }
 
-        dump($animal);die;
-
         return ResultUtil::successResult(
             $this->animalDetailsOutput->getForUserEnvironment(
                 $animal,
