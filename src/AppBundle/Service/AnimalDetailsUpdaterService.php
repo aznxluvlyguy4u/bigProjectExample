@@ -26,6 +26,8 @@ use AppBundle\Util\Validator;
 use AppBundle\Validation\AdminValidator;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Doctrine\DBAL\DBALException;
+use Exception;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
@@ -114,6 +116,7 @@ class AnimalDetailsUpdaterService extends ControllerServiceBase
      * @param Request $request
      * @param $ulnString
      * @return JsonResponse
+     * @throws Exception
      */
     public function updateAnimalDetails(Request $request, $ulnString)
     {
@@ -183,6 +186,8 @@ class AnimalDetailsUpdaterService extends ControllerServiceBase
             $this->clearLivestockCacheForLocation($animal->getLocation());
         }
 
+        dump($animal);die;
+
         return ResultUtil::successResult(
             $this->animalDetailsOutput->getForUserEnvironment(
                 $animal,
@@ -198,6 +203,7 @@ class AnimalDetailsUpdaterService extends ControllerServiceBase
      * @param Collection $content
      * @param bool $isAdmin
      * @return Animal
+     * @throws DBALException
      */
     private function updateValues(Animal $animal, Collection $content, bool $isAdmin)
     {
@@ -345,8 +351,6 @@ class AnimalDetailsUpdaterService extends ControllerServiceBase
             //Update heterosis and recombination values of parent and children if breedCode of parent was changed
             GeneDiversityUpdater::updateByParentId($this->getConnection(), $animal->getId());
         }
-
-        $this->updateLitterData($isSurrogateUpdated, $animal->getId());
 
         return $animal;
     }
