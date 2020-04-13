@@ -935,7 +935,7 @@ LEFT JOIN (
 
     /**
      * @param $yearOfBirth
-     * @param $location
+     * @param Location $location
      * @param bool $concatBreedValuesAndAccuracies
      * @param bool $includeAnimalsWithoutAnyBreedValues
      * @param bool $ignoreHiddenBreedValueTypes
@@ -944,7 +944,7 @@ LEFT JOIN (
      */
     public function createAnimalFeaturesPerYearOfBirthReportQuery(
         $yearOfBirth,
-        $location,
+        Location $location,
         $concatBreedValuesAndAccuracies = true,
         $includeAnimalsWithoutAnyBreedValues = true,
         $ignoreHiddenBreedValueTypes = true
@@ -954,14 +954,15 @@ LEFT JOIN (
             $ignoreHiddenBreedValueTypes);
 
         $locationId = $location ? $location->getId() : null;
-        $locationFilter = $locationId ? "AND (r.location_id = $locationId OR a.location_id = $locationId)" : "";
+        $locationUBN = $location ? $location->getUbn() : null;
+        $locationFilter = $location ? "AND (r.location_id = $locationId OR a.location_id = $locationId OR a.ubn_of_birth = '$locationUBN')" : "";
 
         $mainFilter =
-                    "WHERE
-                        date_part('year', a.date_of_birth) = $yearOfBirth -- Year filter (for user and admin)
+                    "WHERE (
+                        date_part('year', a.date_of_birth) = $yearOfBirth -- Year filter (for user and admin) 
                         $locationFilter
                     ";
-        $mainFilter .= ' ' . $this->animalShouldHaveAtleastOneExistingBreedValueFilter;
+        $mainFilter .= ' ' . $this->animalShouldHaveAtleastOneExistingBreedValueFilter.' )';
 
         $selectBirthProgress = $this->translator->getLocale() === Locale::NL ?
             'birth_progress.dutch_description' : 'a.birth_progress';
