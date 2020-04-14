@@ -49,6 +49,7 @@ use AppBundle\Util\ErrorLogUtil;
 use AppBundle\Util\LitterUtil;
 use AppBundle\Util\MainCommandUtil;
 use AppBundle\Util\MeasurementsUtil;
+use AppBundle\Util\ScanMeasurementsSetFixer;
 use AppBundle\Util\StringUtil;
 use AppBundle\Util\TimeUtil;
 use AppBundle\Util\Validator;
@@ -622,6 +623,7 @@ class NsfoMainCommand extends ContainerAwareCommand
                 '================== SCAN MEASUREMENTS ===================', "\n",
                 '60: Fix duplicate measurements', "\n",
                 '61: Create and link scan measurement set records for unlinked scan measurements', "\n",
+                '62: Fix is_active value of sub measurements of set', "\n",
 
                 'other: exit submenu', "\n"
             ], self::DEFAULT_OPTION);
@@ -660,6 +662,7 @@ class NsfoMainCommand extends ContainerAwareCommand
 
             case 60: $this->getDuplicateMeasurementsFixer()->deactivateDuplicateMeasurements(); break;
             case 61: MeasurementsUtil::createAndLinkScanMeasurementSetsByUnlinkedData($this->em, $this->getLogger(), $this->getDuplicateMeasurementsFixer()); break;
+            case 62: ScanMeasurementsSetFixer::fixSubMeasurementsIsActiveStatus($this->conn, $this->getLogger()); break;
 
             default: $this->writeMenuExit(); return;
         }
