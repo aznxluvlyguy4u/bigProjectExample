@@ -312,6 +312,7 @@ class AnimalDetailsUpdaterService extends ControllerServiceBase
         }
 
         $oldSurrogateId = $animal->getSurrogate() ? $animal->getSurrogate()->getId() : null;
+
         $oldLambar = $animal->getLambar();
         $isSurrogateUpdated = false;
 
@@ -349,6 +350,8 @@ class AnimalDetailsUpdaterService extends ControllerServiceBase
             //Update heterosis and recombination values of parent and children if breedCode of parent was changed
             GeneDiversityUpdater::updateByParentId($this->getConnection(), $animal->getId());
         }
+
+        $this->updateLitterData($isSurrogateUpdated, $animal->getId());
 
         return $animal;
     }
