@@ -961,7 +961,6 @@ LEFT JOIN (
                         date_part('year', a.date_of_birth) = $yearOfBirth -- Year filter (for user and admin)
                         $locationFilter
                     ";
-        $mainFilter .= ' ' . $this->animalShouldHaveAtleastOneExistingBreedValueFilter;
 
         $selectBirthProgress = $this->translator->getLocale() === Locale::NL ?
             'birth_progress.dutch_description' : 'a.birth_progress';

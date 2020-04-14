@@ -34,7 +34,7 @@ class LocationHealthMessageBuilder
             return self::prepareByHealthCheckTask($declareIn);
         }
 
-        if ($declareIn === null) {
+        if ($declareIn === null || $declareIn === false) {
            throw new Exception('No declare or health check task entity found');
         }
 
