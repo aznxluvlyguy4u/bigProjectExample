@@ -51,10 +51,12 @@ use AppBundle\Worker\Task\WorkerMessageBodyLitter;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\DBAL\Exception\ForeignKeyConstraintViolationException;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
+use Exception;
 use Symfony\Bridge\Monolog\Logger;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\PreconditionRequiredHttpException;
+use Symfony\Component\Validator\Constraints\Time;
 
 class BirthService extends DeclareControllerServiceBase implements BirthAPIControllerInterface
 {
@@ -250,7 +252,7 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
                 return $actionLog->getId();
             }, $logs);
 
-        } catch (\Exception $exception) {
+        } catch (Exception $exception) {
             //Roll back tag and animal changes
             $this->rollBackCreateBirth($requestMessages, $litter, $clientId, $locationId);
             throw $exception;
@@ -296,7 +298,7 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
             if (!$successfulFlush) {
                 $this->rollBackCreateBirth($requestMessagesByPrimaryKeys, $litter, $clientId, $locationId);
                 throw $uniqueConstraintViolationException ? $uniqueConstraintViolationException :
-                    new \Exception($this->translateUcFirstLower(
+                    new Exception($this->translateUcFirstLower(
                         $this->translateUcFirstLower('SOMETHING WENT WRONG')
                     ));
             }
@@ -351,7 +353,7 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
     /**
      * @param int $litterId
      * @return JsonResponse|\Symfony\Component\HttpFoundation\JsonResponse
-     * @throws \Exception
+     * @throws Exception
      */
     public function resendCreateBirthsByLitterId($litterId)
     {
@@ -918,7 +920,11 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
     private function isSurrogateMotherDateValid(\DateTime $newLitterDate, \DateTime $surrogateMotherOffsetDate, \DateTime $surrogateMotherLitterDate)
     {
         $diffNewLitterDateAndSurrogateMotherLitterDate = TimeUtil::getDaysBetween($surrogateMotherLitterDate, $newLitterDate);
-        $isValidSurrogateByLitterBornRightBefore = (0 <= $diffNewLitterDateAndSurrogateMotherLitterDate && $diffNewLitterDateAndSurrogateMotherLitterDate <= self::SURROGATE_MOTHER_MAX_BIRTH_OFFSET_FROM_NEW_BIRTH);
+        $isValidSurrogateByLitterBornRightBefore = (
+            0 <= $diffNewLitterDateAndSurrogateMotherLitterDate
+            &&
+            $diffNewLitterDateAndSurrogateMotherLitterDate <= self::SURROGATE_MOTHER_MAX_BIRTH_OFFSET_FROM_NEW_BIRTH
+        );
 
         return
             abs(TimeUtil::getDaysBetween($newLitterDate, $surrogateMotherOffsetDate)) > self::MINIMUM_DAYS_BETWEEN_BIRTHS ||
@@ -931,6 +937,7 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
      * @param Request $request
      * @param string $uln
      * @return JsonResponse
+     * @throws Exception
      */
     public function getCandidateSurrogateMothers(Request $request, $uln)
     {
@@ -974,7 +981,6 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
         $surrogateMotherCandidates = $this->getManager()->getRepository(DeclareBirth::class)->getCandidateSurrogateMothers($location, $mother);
 
         $offsetDateFromNow = $dateOfBirth->modify('-' . self::SURROGATE_MOTHER_OFFSET_DAYS .'days');
-
         /** @var Ewe $animal */
         foreach ($surrogateMotherCandidates as $animal) {
 
@@ -982,13 +988,17 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
 
             /** @var Litter $litter */
             $isSurrogateByLitterData = false;
+
             foreach ($animal->getLitters() as $litter) {
                 if($litter->getStatus() !== RequestStateType::COMPLETED && $litter->getStatus() !== RequestStateType::IMPORTED) {
                     continue;
                 }
 
                 //Add as a true candidate surrogate to list
-                if($this->isSurrogateMotherDateValid($dateOfBirth, $offsetDateFromNow, $litter->getLitterDate())) {
+                if(
+                    $this->isSurrogateMotherDateValid($dateOfBirth, $offsetDateFromNow, $litter->getLitterDate()) ||
+                    TimeUtil::getDaysBetween($animal->getDateOfBirth(), new \DateTime()) >= 180
+                ) {
                     $suggestedCandidatesResult[] = $this->getAnimalResult($animal, $location);
                     $isSurrogateByLitterData = true;
                     break;
@@ -1018,7 +1028,6 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
                         $addToOtherCandidates = false;
                         break;
                     }
-
                 }
             }
 
@@ -1030,7 +1039,6 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
                 $otherCandidatesResult[] = $this->getAnimalResult($animal, $location);
             }
         }
-
 
         $result['suggested_candidate_surrogates'] = $suggestedCandidatesResult;
         $result['other_candidate_surrogates'] = $otherCandidatesResult;
