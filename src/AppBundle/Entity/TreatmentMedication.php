@@ -50,7 +50,8 @@ class TreatmentMedication
      * @ORM\Column(type="boolean", options={"default":true})
      * @JMS\Type("boolean")
      * @JMS\Groups({
-     *     "TREATMENT_TEMPLATE"
+     *     "TREATMENT_TEMPLATE",
+     *     "TREATMENT_TEMPLATE_MIN"
      * })
      */
     private $isActive = true;

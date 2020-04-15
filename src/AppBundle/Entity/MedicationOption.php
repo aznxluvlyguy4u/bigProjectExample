@@ -59,6 +59,7 @@ class MedicationOption
      *     "TREATMENT_TEMPLATE_MIN"
      * })
      * @Assert\NotBlank
+     * @Assert\Regex("/aantal|mg|ml|g|l/m")
      */
     private $dosage;
 
@@ -90,7 +91,7 @@ class MedicationOption
     /**
      * @var string
      *
-     * @ORM\Column(type="string")
+     * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")
      * @JMS\Groups({
      *     "TREATMENT_TEMPLATE",
@@ -99,7 +100,7 @@ class MedicationOption
      */
     private $regNl;
 
-    //don't remove this because when you try to retrieve the entity that will cause an error.
+    //don't remove this because when you try to retrieve the entity there will be an error.
     private $description;
 
     /**
@@ -208,9 +209,9 @@ class MedicationOption
     }
 
     /**
-     * @return int
+     * @return int|null
      */
-    public function getWaitingDays(): int
+    public function getWaitingDays(): ?int
     {
         return $this->waitingDays;
     }

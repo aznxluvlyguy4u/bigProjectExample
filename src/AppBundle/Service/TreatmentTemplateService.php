@@ -123,6 +123,8 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
         $admin = $this->getEmployee();
         if($admin === null) { return AdminValidator::getStandardErrorResponse(); }
 
+        $data = json_decode($request->getContent(), true);
+
         /** @var TreatmentTemplate $template */
         $template = $this->getBaseSerializer()->deserializeToObject($request->getContent(), TreatmentTemplate::class);
 
@@ -136,15 +138,24 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
         if ($template instanceof JsonResponse) { return $template; }
 
         //TODO check for duplicates
-
+        $waitingDaysIsNull = true;
         /** @var MedicationOption $medication */
         foreach ($template->getMedications() as $medication)
         {
+            if ($medication->getWaitingDays() === null) {
+                continue;
+            }
+
+            $waitingDaysIsNull = false;
             /** @var TreatmentMedication $treatmentMedication */
             $treatmentMedication = $this->treatmentMedicationRepository->findOneBy(['name' => $medication->getTreatmentMedication()->getName()]);
 
             $medication->setTreatmentMedication($treatmentMedication);
             $medication->setTreatmentTemplate($template);
+        }
+
+        if ($waitingDaysIsNull) {
+            return  Validator::createJsonResponse('No waiting days have been filled in.', 428);
         }
 
         $template->__construct();
@@ -310,13 +321,50 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
 
         //Update medications
         $newMedicationDosagesByDescription = [];
+        $treatmentMedicationOld = [];
+
+        /** @var MedicationOption $medication */
+        foreach ($templateInDatabase->getMedications() as $medication)
+        {
+            $treatmentMedicationOld[] = $medication->getTreatmentMedication();
+        }
+
+        $index = 0;
+
         /** @var MedicationOption $medication */
         foreach ($template->getMedications() as $medication)
         {
             $newMedicationDosagesByDescription[$medication->getTreatmentMedication()->getName()] = $medication->getDosage();
+
+            $treatmentMedication = $medication->getTreatmentMedication();
+
+            /** @var TreatmentMedication $existingTreatmentMedication */
+            $existingTreatmentMedication = $this->getManager()
+                ->getRepository(TreatmentMedication::class)
+                ->find($treatmentMedication->getId());
+
+            if ($existingTreatmentMedication == null) {
+                if (
+                    (
+                        key_exists($index, $treatmentMedicationOld) &&
+                        $treatmentMedicationOld[$index]->getId() !== $treatmentMedication->getId()
+                    ) || !key_exists($index, $treatmentMedicationOld)
+                ) {
+                    $this->getManager()->persist($medication->getTreatmentMedication());
+                }
+            } else {
+                $medication->setTreatmentMedication($existingTreatmentMedication);
+                $existingTreatmentMedication->addMedication($medication);
+                $this->getManager()->persist($existingTreatmentMedication);
+                $this->getManager()->persist($medication);
+            }
+
+            $index++;
         }
 
         $currentMedicationByDescription = [];
+
+        /** @var MedicationOption $medication */
         foreach ($templateInDatabase->getMedications() as $medication)
         {
             $treatmentMedication = $medication->getTreatmentMedication();
