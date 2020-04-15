@@ -958,11 +958,10 @@ LEFT JOIN (
         $locationFilter = $location ? "AND (r.location_id = $locationId OR a.location_id = $locationId OR a.ubn_of_birth = '$locationUBN')" : "";
 
         $mainFilter =
-                    "WHERE (
-                        date_part('year', a.date_of_birth) = $yearOfBirth -- Year filter (for user and admin) 
-                        $locationFilter
-                    ";
-        $mainFilter .= ' ' . $this->animalShouldHaveAtleastOneExistingBreedValueFilter.' )';
+        "WHERE (
+            date_part('year', a.date_of_birth) = $yearOfBirth -- Year filter (for user and admin) 
+            $locationFilter
+        ";
 
         $selectBirthProgress = $this->translator->getLocale() === Locale::NL ?
             'birth_progress.dutch_description' : 'a.birth_progress';
