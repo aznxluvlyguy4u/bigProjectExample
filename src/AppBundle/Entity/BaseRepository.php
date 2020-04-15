@@ -36,7 +36,7 @@ class BaseRepository extends EntityRepository
         return $this->getManager()->getConnection();
     }
 
-    
+
     public function persist($entity)
     {
         $this->getManager()->persist($entity);
@@ -57,6 +57,13 @@ class BaseRepository extends EntityRepository
         $this->getManager()->remove($entity);
 
         return $entity;
+    }
+
+
+    protected function truncateBase(string $tableName)
+    {
+        $sql = 'TRUNCATE TABLE '.$tableName;
+        $this->_em->getConnection()->query($sql)->execute();
     }
 
 
@@ -97,7 +104,7 @@ class BaseRepository extends EntityRepository
 
         return $filteredRequests;
     }
-    
+
     protected function getRequestByRequestId($requests, $requestId)
     {
         foreach($requests as $request) {
@@ -262,12 +269,12 @@ class BaseRepository extends EntityRepository
         if($latestBirthLogdate == null) {
             $latestBirthLogdate = $errorMessageForDateIsNull;
         }
-        
+
         $latestMateLogDate = $repository->getLatestNsfoDeclarationLogDatePerUbn($ubn,RequestTypeNonIR::MATE);
         if($latestMateLogDate == null) {
             $latestMateLogDate = $errorMessageForDateIsNull;
         }
-        
+
         $declarationLogDate = new ArrayCollection();
         $declarationLogDate->set(RequestType::DECLARE_ARRIVAL_ENTITY, $latestArrivalLogdate);
         $declarationLogDate->set(RequestType::DECLARE_DEPART_ENTITY, $latestDepartLogdate);
@@ -278,12 +285,12 @@ class BaseRepository extends EntityRepository
 
         return $declarationLogDate;
     }
-    
-    
+
+
     public function getArrivalsAndImportsAfterLogDateInChronologicalOrder(Location $location, \DateTime $logDate)
     {
         //TODO A LOT MORE OPTIMIZATION IS NEEDED HERE
-        
+
         $ubn = $location->getUbn();
 
         $arrivalType = RequestType::DECLARE_ARRIVAL_ENTITY;
