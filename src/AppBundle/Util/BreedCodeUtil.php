@@ -333,4 +333,21 @@ class BreedCodeUtil
     {
         return strpos($breedCodeString, $breedCodePart.$partSize) !== false;
     }
+
+    /**
+     * @param $breedCodeString
+     * @return integer
+     */
+    public static function getNumberOfBiggestBreedCodePart($breedCodeString)
+    {
+        $breedCodeParts = self::getBreedCodePartsFromBreedCodeString($breedCodeString);
+
+        $biggestBreedCodePart = self::getBiggestBreedCodePartFromValidatedBreedCodeString($breedCodeString);
+
+        if (!key_exists($biggestBreedCodePart, $breedCodeParts)) {
+            return 0;
+        }
+
+        return $breedCodeParts[$biggestBreedCodePart];
+    }
 }
