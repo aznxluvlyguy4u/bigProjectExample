@@ -12,6 +12,7 @@ use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\QueryBuilder;
+use Psr\Log\LoggerInterface;
 
 /**
  * Class BaseRepository
@@ -60,10 +61,11 @@ class BaseRepository extends EntityRepository
     }
 
 
-    protected function truncateBase(string $tableName)
+    protected function truncateBase(string $tableName, ?LoggerInterface $logger = null)
     {
         $sql = 'TRUNCATE TABLE '.$tableName;
         $this->_em->getConnection()->query($sql)->execute();
+        SqlUtil::bumpPrimaryKeySeq($this->getConnection(), $tableName, $logger);
     }
 
 

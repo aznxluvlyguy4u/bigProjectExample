@@ -36,6 +36,12 @@ class CalcInbreedingCoefficientParent
     private $animalId;
 
     /**
+     * @var bool
+     * @ORM\Column(type="boolean", nullable=false)
+     */
+    private $isPrimaryAnimal;
+
+    /**
      * @return int
      */
     public function getId(): int
@@ -69,6 +75,24 @@ class CalcInbreedingCoefficientParent
     public function setAnimalId(int $animalId): CalcInbreedingCoefficientParent
     {
         $this->animalId = $animalId;
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isPrimaryAnimal(): bool
+    {
+        return $this->isPrimaryAnimal;
+    }
+
+    /**
+     * @param  bool  $isPrimaryAnimal
+     * @return CalcInbreedingCoefficientParent
+     */
+    public function setIsPrimaryAnimal(bool $isPrimaryAnimal): CalcInbreedingCoefficientParent
+    {
+        $this->isPrimaryAnimal = $isPrimaryAnimal;
         return $this;
     }
 
