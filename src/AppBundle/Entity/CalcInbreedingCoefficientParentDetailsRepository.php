@@ -8,7 +8,7 @@ use Psr\Log\LoggerInterface;
  * Class CalcInbreedingCoefficientParentRepository
  * @package AppBundle\Entity
  */
-class CalcInbreedingCoefficientParentDetailsRepository extends CalcTableBaseRepository implements CalcTableRepositoryInterface {
+class CalcInbreedingCoefficientParentDetailsRepository extends CalcInbreedingCoefficientBaseRepository implements CalcTableRepositoryInterface {
 
     function tableName(): string
     {
@@ -18,7 +18,7 @@ class CalcInbreedingCoefficientParentDetailsRepository extends CalcTableBaseRepo
     function truncate(?LoggerInterface $logger = null)
     {
         $this->logClearingTable($logger, $this->tableName());
-        $this->truncateBase(CalcInbreedingCoefficientParentDetails::getTableName());
+        $this->truncateBase($this->tableName(), $logger);
     }
 
     function fillAll(LoggerInterface $logger = null)
@@ -38,16 +38,12 @@ class CalcInbreedingCoefficientParentDetailsRepository extends CalcTableBaseRepo
                     a.parent_mother_id as parent_id,
                     parent.date_of_birth as parent_date_of_birth,
                     parent.type as parent_type,
-                    ic.value as parent_inbreeding_coefficient
+                    ic.value as parent_inbreeding_coefficient,
+                    cp.is_primary_animal
                 FROM animal a
+                    INNER JOIN calc_inbreeding_coefficient_parent cp ON cp.animal_id = a.id
                     INNER JOIN animal parent ON parent.id = a.$animalParentColumn
-                    LEFT JOIN inbreeding_coefficient ic on parent.inbreeding_coefficient_id = ic.id
-                WHERE EXISTS (
-                                SELECT
-                                       animal_id
-                                FROM calc_inbreeding_coefficient_parent p
-                                WHERE a.id = p.animal_id
-                              )";
+                    LEFT JOIN inbreeding_coefficient ic on parent.inbreeding_coefficient_id = ic.id";
         }
 
         $motherSubQuery = subQuery('parent_mother_id');
@@ -59,7 +55,7 @@ class CalcInbreedingCoefficientParentDetailsRepository extends CalcTableBaseRepo
                 $fatherSubQuery
                 ";
 
-        $this->getConnection()->query($sql)->execute();
+        $this->getConnection()->executeQuery($sql);
 
         $this->logFillingTableEnd($logger, $this->tableName());
     }
