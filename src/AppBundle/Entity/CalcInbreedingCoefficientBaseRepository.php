@@ -17,4 +17,20 @@ class CalcInbreedingCoefficientBaseRepository extends CalcTableBaseRepository
     {
         return "(date_part('YEAR', a.date_of_birth) = $year AND date_part('MONTH', a.date_of_birth) = $month)";
     }
+
+    protected function precision(): int
+    {
+        $precision = InbreedingCoefficientSetting::DECIMAL_PRECISION;
+        $minValue = 4;
+        $maxValue = 12;
+        $constant = 'InbreedingCoefficientSetting::DECIMAL_PRECISION';
+
+        switch (true) {
+            case !intval($precision): throw new \Exception($constant.' must be an integer');
+            case $precision < 0: throw new \Exception($constant.' must be positive');
+            case $precision < $minValue: throw new \Exception($constant.' must be at least '.$minValue);
+            case $precision > $maxValue: throw new \Exception($constant.' cannot be greater than '.$maxValue);
+            default: return $precision;
+        }
+    }
 }

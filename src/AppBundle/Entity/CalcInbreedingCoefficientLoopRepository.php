@@ -2,6 +2,7 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Setting\InbreedingCoefficientSetting;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -79,5 +80,47 @@ class CalcInbreedingCoefficientLoopRepository extends CalcInbreedingCoefficientB
         $this->getConnection()->executeQuery($sql);
 
         $this->logFillingTableEnd($logger, $this->tableName());
+    }
+
+
+    public function calculateInbreedingCoefficientFromLoopsAndParentDetails(): float
+    {
+        $precision = $this->precision();
+
+        $sql = "SELECT
+                    round(
+                        CAST (sum(path_inbreeding_factor * parent_inbreeding_coefficient_factor) AS NUMERIC)
+                    ,$precision) as inbreeding_coefficient
+                FROM (
+                         SELECT
+                             -- loop details
+                             1 as group_id,
+                             power(0.5, loop_size + 1) as path_inbreeding_factor, -- (1/2)^(number of parents in loop)
+                             1 + COALESCE(parent_inbreeding_coefficient, 0) as parent_inbreeding_coefficient_factor
+                         FROM calc_inbreeding_coefficient_loop l
+                         WHERE
+                             -- Remove loops for which another smaller loop already exists
+                             -- where the last_parent_id of the smaller loop
+                             -- does not exist in the middle of the bigger loop
+                             NOT EXISTS (
+                                     SELECT
+                                         l3.id
+                                     FROM calc_inbreeding_coefficient_loop l3
+                                              INNER JOIN calc_inbreeding_coefficient_loop l2 ON
+                                                 l.last_parent_id <> l2.last_parent_id AND
+                                                 l2.last_parent_id = ANY (
+                                                     -- The path of origin 1, excluding the last parent
+                                                     (l.origin1parents::int[])[1:array_length(l.origin1parents::int[],1)-1]
+                                                     ) AND
+                                                 l2.last_parent_id = ANY (
+                                                     -- The path of origin 2, excluding the last parent
+                                                     (l.origin2parents::int[])[1:array_length(l.origin2parents::int[],1)-1]
+                                                     ) AND
+                                                 l2.loop_size < l.loop_size
+                                     WHERE l.id = l3.id
+                                 )
+                         )d
+                GROUP BY d.group_id";
+        return $this->getConnection()->query($sql)->fetch()['inbreeding_coefficient'] ?? 0;
     }
 }
