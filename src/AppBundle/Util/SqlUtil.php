@@ -22,7 +22,7 @@ use AppBundle\Service\Report\ReportServiceWithBreedValuesBase;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
-use Monolog\Logger;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
 use Symfony\Component\HttpKernel\Exception\PreconditionRequiredHttpException;
@@ -43,14 +43,14 @@ class SqlUtil
     /**
      * @param Connection $conn
      * @param $tableName
-     * @param Logger|null $logger
+     * @param LoggerInterface|null $logger
      * @throws \Doctrine\DBAL\DBALException
      */
-    public static function bumpPrimaryKeySeq(Connection $conn, $tableName, ?Logger $logger = null)
+    public static function bumpPrimaryKeySeq(Connection $conn, $tableName, ?LoggerInterface $logger = null)
     {
         $tableName = strtolower($tableName);
         $sequenceName = $tableName.'_id_seq';
-        $sql = "SELECT setval('".$sequenceName."', (SELECT MAX(id) FROM ".$tableName.")+1)";
+        $sql = "SELECT setval('".$sequenceName."', (SELECT COALESCE(MAX(id),0) FROM ".$tableName.")+1)";
         $conn->exec($sql);
 
         if ($logger) {
