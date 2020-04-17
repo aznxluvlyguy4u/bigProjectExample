@@ -1,6 +1,7 @@
 <?php
 
 namespace AppBundle\Entity;
+use AppBundle\Cache\AnimalCacher;
 use AppBundle\Util\PedigreeUtil;
 
 /**
@@ -121,10 +122,17 @@ class AnimalCacheRepository extends BaseRepository {
 
     /**
      * @param  int  $animalId
-     * @return AnimalCache
+     * @return AnimalCache|null
      */
-    public function findByAnimalId(int $animalId): AnimalCache
+    public function findByAnimalId(int $animalId): ?AnimalCache
     {
+        /** @var AnimalCache|null $animalCache */
+        $animalCache = $this->findOneBy(['animalId' => $animalId]);
+        if ($animalCache) {
+            return $animalCache;
+        }
+
+        AnimalCacher::cacheByAnimalIds($this->getConnection(), [$animalId]);
         return $this->findOneBy(['animalId' => $animalId]);
     }
 }
