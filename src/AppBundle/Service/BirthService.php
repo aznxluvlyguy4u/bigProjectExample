@@ -933,7 +933,6 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
         );
 
         return
-            abs(TimeUtil::getDaysBetween($newLitterDate, $surrogateMotherOffsetDate)) > self::MINIMUM_DAYS_BETWEEN_BIRTHS ||
             $isValidSurrogateByLitterBornRightBefore ||
             TimeUtil::getDaysBetween($animal->getDateOfBirth(), new \DateTime()) >= 180
         ;
