@@ -5,6 +5,7 @@ namespace AppBundle\Component;
 
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\DeclareArrival;
+use AppBundle\Entity\DeclareBirth;
 use AppBundle\Entity\DeclareImport;
 use AppBundle\Entity\HealthCheckTask;
 use AppBundle\Entity\LocationHealth;
@@ -17,18 +18,24 @@ use AppBundle\Exception\InvalidSwitchCaseException;
 use AppBundle\Util\HealthChecker;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
+use Exception;
 
 class LocationHealthMessageBuilder
 {
     /**
-     * @param DeclareArrival|DeclareImport|HealthCheckTask $declareIn
+     * @param DeclareArrival|DeclareImport|HealthCheckTask|DeclareBirth $declareIn
      * @return LocationHealthMessage
      * @throws InvalidSwitchCaseException
+     * @throws Exception
      */
     public static function prepare($declareIn)
     {
         if ($declareIn instanceof HealthCheckTask) {
             return self::prepareByHealthCheckTask($declareIn);
+        }
+
+        if ($declareIn === null || $declareIn === false) {
+           throw new Exception('No declare or health check task entity found');
         }
 
         $location = $declareIn->getLocation();
