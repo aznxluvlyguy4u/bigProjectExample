@@ -42,11 +42,11 @@ class LoggerUtil
      * @param LoggerInterface $logger
      * @param string $line
      */
-    public static function overwriteDebugLoggerInterface(LoggerInterface $logger, $line)
+    public static function overwriteNoticeLoggerInterface(LoggerInterface $logger, $line)
     {
-        $logger->debug(
+        $logger->notice(
             sprintf(self::OVERWRITE_FORMAT,self::OVERWRITE_ARGS)
         );
-        $logger->debug($line);
+        $logger->notice($line);
     }
 }

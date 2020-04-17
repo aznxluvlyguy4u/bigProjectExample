@@ -2,7 +2,8 @@
 
 namespace AppBundle\Entity;
 
-use AppBundle\Setting\InbreedingCoefficientSetting;
+use AppBundle\model\metadata\YearMonthData;
+use AppBundle\Util\SqlUtil;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -22,7 +23,7 @@ class CalcInbreedingCoefficientParentRepository extends CalcInbreedingCoefficien
         $this->truncateBase($this->tableName(), $logger);
     }
 
-    function fill(string $filter = '', ?LoggerInterface $logger = null, string $logSuffix = '')
+    private function fill(string $filter = '', ?LoggerInterface $logger = null, string $logSuffix = '')
     {
         $this->logFillingTableStart($logger, $this->tableName(), $logSuffix);
 
@@ -40,9 +41,9 @@ class CalcInbreedingCoefficientParentRepository extends CalcInbreedingCoefficien
                          INNER JOIN animal mom ON mom.id = a.parent_mother_id
                          INNER JOIN animal dad ON dad.id = a.parent_father_id
                 WHERE
-                    a.id < 100 AND
-                    a.parent_father_id NOTNULL AND a.parent_mother_id NOTNULL
-                  AND a.date_of_birth NOTNULL AND mom.date_of_birth NOTNULL AND dad.date_of_birth NOTNULL
+                    $filter
+                      a.parent_father_id NOTNULL AND a.parent_mother_id NOTNULL AND 
+                      a.date_of_birth NOTNULL AND mom.date_of_birth NOTNULL AND dad.date_of_birth NOTNULL
                 UNION ALL
                 SELECT
                     a.id as animal_id,
@@ -73,5 +74,39 @@ class CalcInbreedingCoefficientParentRepository extends CalcInbreedingCoefficien
         $filter = $this->animalYearAndMonthFilter($year, $month) . " AND ";
         $logSuffix = " table for animal with a birth date within year-month $year-$month";
         return $this->fill($filter, $logger, $logSuffix);
+    }
+
+
+    function fillByParentPairs(array $parentIdsPairs, ?LoggerInterface $logger = null)
+    {
+        $count = count($parentIdsPairs);
+        $filter = SqlUtil::getParentsAsAnimalIdsFilterFromParentIdsPairs($parentIdsPairs, 'a') . " AND ";
+        $logSuffix = " table for $count custom parent pairs";
+        return $this->fill($filter, $logger, $logSuffix);
+    }
+
+
+    /**
+     * @return array|YearMonthData[]
+     */
+    function getAllYearsAndMonths(): array
+    {
+        $sql = "SELECT date_part('YEAR', a.date_of_birth) as year,
+                       date_part('MONTH', a.date_of_birth) as month,
+                       COUNT(*) as count
+                FROM animal a
+                WHERE date_of_birth NOTNULL AND inbreeding_coefficient_match_updated_at ISNULL
+AND date_part('YEAR', a.date_of_birth) >= 2018
+
+                GROUP BY date_part('YEAR', a.date_of_birth), date_part('MONTH', a.date_of_birth)
+                ORDER BY date_part('YEAR', a.date_of_birth), date_part('MONTH', a.date_of_birth)";
+        $results = $this->getConnection()->query($sql)->fetchAll();
+        return array_map(function ($result) {
+            return new YearMonthData(
+                $result['year'],
+                $result['month'],
+                $result['count']
+            );
+        }, $results);
     }
 }

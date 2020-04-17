@@ -94,7 +94,7 @@ class InbreedingCoefficient
      * @JMS\Type("AppBundle\Entity\Litter")
      */
     private $litters;
-    
+
     /**
      * Last dateTime when inbreedingCoefficient was matched with this animal
      *
@@ -280,7 +280,7 @@ class InbreedingCoefficient
     {
         return $this->litters;
     }
-    
+
 
     /**
      * @return DateTime
@@ -290,12 +290,8 @@ class InbreedingCoefficient
         return $this->updatedAt;
     }
 
-    public function equalsPrimaryVariableValues(
-        bool $isFindGlobalMatches,
-        float $value
-    ): bool
+    public function equalsPrimaryVariableValues(float $value): bool
     {
-        return $this->isFindGlobalMatches() === $isFindGlobalMatches &&
-            NumberUtil::areFloatsEqual($value, $this->getValue());
+        return NumberUtil::areFloatsEqual($value, $this->getValue());
     }
 }

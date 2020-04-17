@@ -82,7 +82,7 @@ class InbreedingCoefficientUpdaterServiceV1 implements InbreedingCoefficientUpda
         }
 
         foreach ($parentIdsPairs as $parentIdsPair) {
-            $this->generateInbreedingCoefficientForPair(
+            $this->upsertInbreedingCoefficientForPair(
                 $parentIdsPair,
                 $recalculate,
                 $findGlobalMatch
@@ -109,11 +109,11 @@ class InbreedingCoefficientUpdaterServiceV1 implements InbreedingCoefficientUpda
         if ($totalCount == 0) {
             $this->logger->debug($message);
         } else {
-            LoggerUtil::overwriteDebugLoggerInterface($this->logger, $message);
+            LoggerUtil::overwriteNoticeLoggerInterface($this->logger, $message);
         }
     }
 
-    private function generateInbreedingCoefficientForPair(
+    private function upsertInbreedingCoefficientForPair(
         ParentIdsPair $parentIdsPairs,
         bool $recalculate = false,
         bool $findGlobalMatch = false
@@ -143,10 +143,7 @@ class InbreedingCoefficientUpdaterServiceV1 implements InbreedingCoefficientUpda
                 if ($recalculate) {
                     $value = $this->getInbreedingCoefficientValue($ramId, $eweId);
                     // only update if values have changed
-                    if (!$inbreedingCoefficient->equalsPrimaryVariableValues(
-                        $findGlobalMatch,
-                        $value
-                    )) {
+                    if (!$inbreedingCoefficient->equalsPrimaryVariableValues($value)) {
                         $inbreedingCoefficient
                             ->setValue($value)
                             ->setFindGlobalMatches($findGlobalMatch)

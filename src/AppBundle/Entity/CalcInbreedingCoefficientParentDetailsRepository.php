@@ -21,18 +21,9 @@ class CalcInbreedingCoefficientParentDetailsRepository extends CalcInbreedingCoe
         $this->truncateBase($this->tableName(), $logger);
     }
 
-    function fillAll(LoggerInterface $logger = null)
+    private function subQuery(string $animalParentColumn)
     {
-        $this->fill('', $logger);
-    }
-
-    function fill(string $filter = '', ?LoggerInterface $logger = null, string $logSuffix = '')
-    {
-        $this->logFillingTableStart($logger, $this->tableName(), $logSuffix);
-
-        function subQuery(string $animalParentColumn)
-        {
-            return "SELECT
+        return "SELECT
                     a.id as animal_id,
                     a.date_of_birth,
                     a.parent_mother_id as parent_id,
@@ -44,12 +35,17 @@ class CalcInbreedingCoefficientParentDetailsRepository extends CalcInbreedingCoe
                     INNER JOIN calc_inbreeding_coefficient_parent cp ON cp.animal_id = a.id
                     INNER JOIN animal parent ON parent.id = a.$animalParentColumn
                     LEFT JOIN inbreeding_coefficient ic on parent.inbreeding_coefficient_id = ic.id";
-        }
+    }
 
-        $motherSubQuery = subQuery('parent_mother_id');
-        $fatherSubQuery = subQuery('parent_father_id');
+    function fill(?LoggerInterface $logger = null)
+    {
+        $this->logFillingTableStart($logger, $this->tableName());
 
-        $sql = "INSERT INTO calc_inbreeding_coefficient_parent_details (animal_id, date_of_birth, parent_id, parent_date_of_birth, parent_type, parent_inbreeding_coefficient)
+        $motherSubQuery = $this->subQuery('parent_mother_id');
+        $fatherSubQuery = $this->subQuery('parent_father_id');
+
+        $sql = "INSERT INTO calc_inbreeding_coefficient_parent_details
+                    (animal_id, date_of_birth, parent_id, parent_date_of_birth, parent_type, parent_inbreeding_coefficient, is_primary_animal)
                 $motherSubQuery
                 UNION ALL
                 $fatherSubQuery
