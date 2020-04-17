@@ -27,15 +27,25 @@ class InbreedingCoefficientRepository extends BaseRepository {
     }
 
     /**
+     * @param  int  $ramId
+     * @param  int  $eweId
+     * @return InbreedingCoefficient|null
+     */
+    function findByParentIds(int $ramId, int $eweId): ?InbreedingCoefficient
+    {
+        return $this->findOneBy([
+            'ram' => $ramId,
+            'ewe' => $eweId
+        ]);
+    }
+
+    /**
      * @param ParentIdsPair $parentIdsPair
      * @return InbreedingCoefficient|null
      */
     function findByPair(ParentIdsPair $parentIdsPair): ?InbreedingCoefficient
     {
-        return $this->findOneBy([
-           'ram' => $parentIdsPair->getRamId(),
-           'ewe' => $parentIdsPair->getEweId()
-        ]);
+        return $this->findByParentIds($parentIdsPair->getRamId(),$parentIdsPair->getEweId());
     }
 
     /**

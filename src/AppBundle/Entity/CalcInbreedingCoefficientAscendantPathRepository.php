@@ -21,25 +21,12 @@ class CalcInbreedingCoefficientAscendantPathRepository extends CalcInbreedingCoe
         $this->truncateBase($this->tableName(), $logger);
     }
 
-    function fillAll(?LoggerInterface $logger = null)
-    {
-        $this->fill('', $logger);
-    }
-
     /**
-     *
-     * Example of $filter:
-     * - AND animal_id IN (1,10)
-     * - AND animal_id IN (SELECT id FROM animal a WHERE .... )
-     *
-     * @param  string  $filter
      * @param  LoggerInterface|null  $logger
-     * @param  string  $logSuffix
-     * @throws \Doctrine\DBAL\DBALException
      */
-    function fill(string $filter = '', ?LoggerInterface $logger = null, string $logSuffix = '')
+    function fill(?LoggerInterface $logger = null)
     {
-        $this->logFillingTableStart($logger, $this->tableName(), $logSuffix);
+        $this->logFillingTableStart($logger, $this->tableName());
 
         $maxGenerations = $this->maxGenerations();
 
@@ -56,7 +43,7 @@ class CalcInbreedingCoefficientAscendantPathRepository extends CalcInbreedingCoe
                         WHERE parent_id NOTNULL AND
                           -- Make sure to check that the child is always younger than the parent
                                 c.date_of_birth > c.parent_date_of_birth
-                                AND c.is_primary_animal $filter
+                                AND c.is_primary_animal
 
                         UNION ALL
 
@@ -74,10 +61,10 @@ class CalcInbreedingCoefficientAscendantPathRepository extends CalcInbreedingCoe
                         WHERE c.last_parent_id is not null AND p.parent_id IS NOT NULL AND
                           -- Make sure to check that the child is always younger than the parent
                                 p.date_of_birth > p.parent_date_of_birth AND
-                                depth <= $maxGenerations -- LOOP PROTECTION, actually not necessary but added just in case
+                                depth <= ($maxGenerations - 1) -- LOOP PROTECTION
                     )
                  SELECT
-                     *
+                     DISTINCT animal_id, last_parent_id, depth, path, parents
                  FROM ctetable
                  ORDER BY animal_id, last_parent_id";
 

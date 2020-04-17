@@ -2,7 +2,6 @@
 
 namespace AppBundle\Entity;
 
-use AppBundle\Setting\InbreedingCoefficientSetting;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -22,27 +21,14 @@ class CalcInbreedingCoefficientLoopRepository extends CalcInbreedingCoefficientB
         $this->truncateBase($this->tableName(), $logger);
     }
 
-    function fillByAnimalIds(int $animalIdOrigin1, int $animalIdOrigin2, ?LoggerInterface $logger = null)
-    {
-        $this->fill(
-            "origin1.animal_id = $animalIdOrigin1 AND origin2.animal_id = $animalIdOrigin2 AND",
-            $logger
-        );
-    }
-
     /**
-     *
-     * Example of $filter:
-     * - AND animal_id IN (1,10)
-     * - AND animal_id IN (SELECT id FROM animal a WHERE .... )
-     *
-     * @param  string  $filter
+     * @param  int  $animalIdOrigin1
+     * @param  int  $animalIdOrigin2
      * @param  LoggerInterface|null  $logger
-     * @param  string  $logSuffix
-     * @throws \Doctrine\DBAL\DBALException
      */
-    function fill(string $filter = '', ?LoggerInterface $logger = null, string $logSuffix = '')
+    function fill(int $animalIdOrigin1, int $animalIdOrigin2, ?LoggerInterface $logger = null)
     {
+        $logSuffix = '';
         $this->logFillingTableStart($logger, $this->tableName(), $logSuffix);
 
         $sql = "INSERT INTO calc_inbreeding_coefficient_loop 
@@ -71,7 +57,7 @@ class CalcInbreedingCoefficientLoopRepository extends CalcInbreedingCoefficientB
                             GROUP BY parent_id
                         )i ON i.animal_id = origin1.last_parent_id
                 WHERE
-                     $filter
+                     origin1.animal_id = $animalIdOrigin1 AND origin2.animal_id = $animalIdOrigin2 AND
                 --Make sure the test_ascendant_paths only include origins that start with the primary origin animals
                     origin1.animal_id <> origin2.animal_id AND
                     NOT (origin1.path = origin2.path AND origin1.depth = origin2.depth AND origin1.depth > 1) -- exclude paths with closed ends
