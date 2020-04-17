@@ -56,6 +56,35 @@ class BreedCodeUtil
 
 
     /**
+     * The logic also checks in case multiple biggest parts exist
+     *
+     * @param  string|null  $breedCodeString
+     * @param  string  $breedCode
+     * @return bool
+     */
+    public static function isBiggestBreedCodePart(?string $breedCodeString, string $breedCode): bool
+    {
+        if (empty($breedCodeString) || empty($breedCode)) {
+            return false;
+        }
+
+        $parts = self::getBreedCodePartsFromBreedCodeString($breedCodeString);
+
+        $number = self::getNumberOfBiggestBreedCodePart($breedCodeString);
+        if ($number === 0) {
+            // The breedCode has an invalid format
+            return false;
+        }
+
+        $filteredParts = array_filter($parts,function ($part) use ($number) {
+            return $part === $number;
+        });
+
+        return key_exists($breedCode, $filteredParts);
+    }
+
+
+    /**
      * @param string $breedCodeString
      * @param boolean $isBy8Parts
      * @return array
@@ -203,7 +232,7 @@ class BreedCodeUtil
         return self::verifySumOfBreedCodeParts($breedCodeParts, 8);
     }
 
-    
+
     /**
      * @param array $breedCodeParts
      * @return bool
@@ -226,7 +255,7 @@ class BreedCodeUtil
 
         return array_sum($breedCodeParts) == $totalCorrectSum;
     }
-    
+
 
     /**
      * Both parents must have a known breedCode

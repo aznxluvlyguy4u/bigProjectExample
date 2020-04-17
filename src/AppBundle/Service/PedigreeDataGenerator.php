@@ -778,8 +778,7 @@ class PedigreeDataGenerator
         if ($animal->getDateOfBirth()
             && $this->hasPureBredValidatedParent($animal, true)
             && $this->hasPureBredValidatedParent($animal, false)
-            && BreedCodeUtil::getBiggestBreedCodePartFromValidatedBreedCodeString($animalBreedCode) === BreedCodeType::ME
-            && BreedCodeUtil::getNumberOfBiggestBreedCodePart($animalBreedCode) >= 50
+            && BreedCodeUtil::isBiggestBreedCodePart($animalBreedCode, BreedCodeType::ME)
         ) {
             $calculatedBreedType = BreedType::PURE_BRED;
         }
@@ -801,8 +800,7 @@ class PedigreeDataGenerator
         if ($animal->getDateOfBirth()
             && $this->hasPureBredValidatedParent($animal, true)
             && $this->hasPureBredValidatedParent($animal, false)
-            && BreedCodeUtil::getBiggestBreedCodePartFromValidatedBreedCodeString($animalBreedCode) === BreedCodeType::BS
-            && BreedCodeUtil::getNumberOfBiggestBreedCodePart($animalBreedCode) >= 50
+            && BreedCodeUtil::isBiggestBreedCodePart($animalBreedCode, BreedCodeType::BS)
         ) {
             $calculatedBreedType = BreedType::PURE_BRED;
         }
