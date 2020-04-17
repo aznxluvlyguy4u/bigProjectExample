@@ -231,15 +231,13 @@ class DepartArrivalTransaction
         return $this;
     }
 
-
     /**
      * @return Client|null
      */
     public function getArrivalOwner(): ?Client
     {
-        return $this->arrival->getLocation() ? $this->arrival->getLocation()->getOwner() : null;
+        return $this->arrival !== null && $this->arrival->getLocation() ? $this->arrival->getLocation()->getOwner() : null;
     }
-
 
     /**
      * @return Client|null

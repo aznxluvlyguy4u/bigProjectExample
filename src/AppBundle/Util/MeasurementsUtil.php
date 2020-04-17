@@ -392,7 +392,7 @@ FROM (
              FROM scan_measurement_set scan_set
                       INNER JOIN measurement m on scan_set.id = m.id
                       INNER JOIN animal a on scan_set.animal_id = a.id
-             WHERE a.scan_measurement_set_id ISNULL AND m.is_active
+             WHERE a.scan_measurement_set_id ISNULL AND m.is_active AND m.measurement_date::date <> '2010-01-01'
              GROUP BY animal_id
          )scan_set ON scan_set.animal_id = scan_measurement_set.animal_id AND m.animal_id_and_date = max_animal_id_data
          WHERE m.is_active

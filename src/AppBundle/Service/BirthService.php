@@ -49,6 +49,7 @@ use AppBundle\Validation\AdminValidator;
 use AppBundle\Worker\DirectProcessor\DeclareProcessorBase;
 use AppBundle\Worker\Task\WorkerMessageBodyLitter;
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\DBAL\DBALException;
 use Doctrine\DBAL\Exception\ForeignKeyConstraintViolationException;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Exception;
@@ -158,6 +159,7 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
     /**
      * @param Request $request
      * @return JsonResponse
+     * @throws DBALException
      */
     public function getHistoryBirths(Request $request)
     {
@@ -177,6 +179,8 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
                     litter.status AS status,
                     mother.uln_country_code AS mother_uln_country_code,
                     mother.uln_number AS mother_uln_number,
+                    mother.collar_color AS mother_collar_color,
+                    mother.collar_number AS mother_collar_number,
                     father.uln_country_code AS father_uln_country_code,
                     father.uln_number AS father_uln_number
                 FROM declare_nsfo_base
@@ -1062,6 +1066,7 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
             JsonInputConstant::PEDIGREE_COUNTRY_CODE => $animal->getPedigreeCountryCode(),
             JsonInputConstant::PEDIGREE_NUMBER => $animal->getPedigreeNumber(),
             JsonInputConstant::WORK_NUMBER => $animal->getAnimalOrderNumber(),
+            JsonInputConstant::COLLAR => $animal->getCollarColor()." ".$animal->getCollarNumber(),
             JsonInputConstant::GENDER => $animal->getGender(),
             JsonInputConstant::DATE_OF_BIRTH => $animal->getDateOfBirth(),
             JsonInputConstant::DATE_OF_DEATH => $animal->getDateOfDeath(),
@@ -1377,7 +1382,7 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
 
     /**
      * @param WorkerMessageBodyLitter $workerMessageBodyLitter
-     * @throws \Doctrine\DBAL\DBALException
+     * @throws DBALException
      */
     private function removeAnimalCacheOfRemovedChildren(WorkerMessageBodyLitter $workerMessageBodyLitter)
     {
@@ -1391,7 +1396,7 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
      * @param array $reservedTagUlns
      * @param int $clientId
      * @param int $locationId
-     * @throws \Doctrine\DBAL\DBALException
+     * @throws DBALException
      */
     private function rollBackTags(array $reservedTagUlns, int $clientId, int $locationId)
     {
@@ -1461,7 +1466,7 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
      * It is also possible to just create a new EntityManager.
      *
      * @param array $animalIds
-     * @throws \Doctrine\DBAL\DBALException
+     * @throws DBALException
      */
     private function removeAnimals(array $animalIds)
     {
@@ -1477,7 +1482,7 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
      * It is also possible to just create a new EntityManager.
      *
      * @param $litterId
-     * @throws \Doctrine\DBAL\DBALException
+     * @throws DBALException
      */
     private function removeLitter($litterId)
     {
