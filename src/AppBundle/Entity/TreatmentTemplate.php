@@ -70,7 +70,6 @@ class TreatmentTemplate
 
     /**
      * @var ArrayCollection
-     * @ORM\OrderBy({"description" = "ASC"})
      * @ORM\OneToMany(targetEntity="AppBundle\Entity\MedicationOption", mappedBy="treatmentTemplate", cascade={"persist", "remove"})
      * @JMS\Type("ArrayCollection<AppBundle\Entity\MedicationOption>")
      * @JMS\Groups({
@@ -234,6 +233,11 @@ class TreatmentTemplate
     
     /**
      * @return ArrayCollection
+     *
+     * @JMS\Groups({
+     *     "TREATMENT_TEMPLATE",
+     *     "TREATMENT_TEMPLATE_MIN"
+     * })
      */
     public function getMedications()
     {
