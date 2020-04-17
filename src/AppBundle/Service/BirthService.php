@@ -915,9 +915,11 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
      * @param \DateTime $newLitterDate
      * @param \DateTime $surrogateMotherOffsetDate
      * @param \DateTime $surrogateMotherLitterDate
+     * @param Animal $animal
      * @return bool
+     * @throws Exception
      */
-    private function isSurrogateMotherDateValid(\DateTime $newLitterDate, \DateTime $surrogateMotherOffsetDate, \DateTime $surrogateMotherLitterDate)
+    private function isSurrogateMotherDateValid(\DateTime $newLitterDate, \DateTime $surrogateMotherOffsetDate, \DateTime $surrogateMotherLitterDate, Animal $animal)
     {
         $diffNewLitterDateAndSurrogateMotherLitterDate = TimeUtil::getDaysBetween($surrogateMotherLitterDate, $newLitterDate);
         $isValidSurrogateByLitterBornRightBefore = (
@@ -928,7 +930,8 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
 
         return
             abs(TimeUtil::getDaysBetween($newLitterDate, $surrogateMotherOffsetDate)) > self::MINIMUM_DAYS_BETWEEN_BIRTHS ||
-            $isValidSurrogateByLitterBornRightBefore
+            $isValidSurrogateByLitterBornRightBefore ||
+            TimeUtil::getDaysBetween($animal->getDateOfBirth(), new \DateTime()) >= 180
         ;
     }
 
@@ -996,8 +999,7 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
 
                 //Add as a true candidate surrogate to list
                 if(
-                    $this->isSurrogateMotherDateValid($dateOfBirth, $offsetDateFromNow, $litter->getLitterDate()) ||
-                    TimeUtil::getDaysBetween($animal->getDateOfBirth(), new \DateTime()) >= 180
+                    $this->isSurrogateMotherDateValid($dateOfBirth, $offsetDateFromNow, $litter->getLitterDate(), $animal)
                 ) {
                     $suggestedCandidatesResult[] = $this->getAnimalResult($animal, $location);
                     $isSurrogateByLitterData = true;
