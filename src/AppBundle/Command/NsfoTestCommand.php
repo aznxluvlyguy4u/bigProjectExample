@@ -9,6 +9,7 @@ use AppBundle\Entity\LocationRepository;
 use AppBundle\Entity\ResultTableBreedGrades;
 use AppBundle\Service\AwsExternalTestQueueService;
 use AppBundle\Service\AwsInternalTestQueueService;
+use AppBundle\Util\BreedCodeUtil;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\DoctrineUtil;
 use AppBundle\Util\NullChecker;
@@ -115,8 +116,8 @@ class NsfoTestCommand extends ContainerAwareCommand
                 break;
         }
         $output->writeln('DONE');
-        
-        
+
+
     }
 
 

@@ -16,4 +16,6 @@ class BreedCodeType
   const HD = "HD";
   const OV = "OV";
   const NN = "NN";
+  const ME = "ME";
+  const BS = "BS";
 }
