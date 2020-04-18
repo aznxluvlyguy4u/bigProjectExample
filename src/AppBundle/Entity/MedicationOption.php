@@ -16,7 +16,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 class MedicationOption
 {
     use EntityClassInfo;
-    
+
     /**
      * @var integer
      *
@@ -66,7 +66,7 @@ class MedicationOption
     /**
      * @var string
      *
-     * @ORM\Column(type="string")
+     * @ORM\Column(type="string", nullable=false)
      * @JMS\Type("string")
      * @JMS\Groups({
      *     "TREATMENT_TEMPLATE",
@@ -79,7 +79,7 @@ class MedicationOption
     /**
      * @var integer
      *
-     * @ORM\Column(type="integer")
+     * @ORM\Column(type="integer", nullable=true)
      * @JMS\Type("integer")
      * @JMS\Groups({
      *     "TREATMENT_TEMPLATE",
