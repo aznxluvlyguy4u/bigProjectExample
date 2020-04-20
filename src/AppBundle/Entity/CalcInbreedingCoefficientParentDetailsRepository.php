@@ -26,7 +26,7 @@ class CalcInbreedingCoefficientParentDetailsRepository extends CalcInbreedingCoe
         return "SELECT
                     a.id as animal_id,
                     a.date_of_birth,
-                    a.parent_mother_id as parent_id,
+                    a.$animalParentColumn as parent_id,
                     parent.date_of_birth as parent_date_of_birth,
                     parent.type as parent_type,
                     ic.value as parent_inbreeding_coefficient,
