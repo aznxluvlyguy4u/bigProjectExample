@@ -13,9 +13,9 @@ class CalcInbreedingCoefficientBaseRepository extends CalcTableBaseRepository
         return InbreedingCoefficientSetting::DEFAULT_GENERATION_OF_ASCENDANTS;
     }
 
-    public function animalYearAndMonthFilter(int $year, int $month): string
+    public function animalYearAndMonthFilter(int $year, int $month, string $alias): string
     {
-        return "(date_part('YEAR', a.date_of_birth) = $year AND date_part('MONTH', a.date_of_birth) = $month)";
+        return "(date_part('YEAR', $alias.date_of_birth) = $year AND date_part('MONTH', $alias.date_of_birth) = $month)";
     }
 
     protected function precision(): int

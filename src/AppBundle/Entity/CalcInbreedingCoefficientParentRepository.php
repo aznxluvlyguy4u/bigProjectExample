@@ -71,7 +71,26 @@ class CalcInbreedingCoefficientParentRepository extends CalcInbreedingCoefficien
 
     function fillByYearAndMonth(int $year, int $month, ?LoggerInterface $logger = null)
     {
-        $filter = $this->animalYearAndMonthFilter($year, $month) . " AND ";
+        $alias = 'child';
+        $yearMonthFilter = $this->animalYearAndMonthFilter($year, $month, $alias);
+        $filter = "(
+            EXISTS (
+                    SELECT
+                        $alias.parent_father_id
+                    FROM animal $alias
+                    WHERE $yearMonthFilter
+                        AND $alias.parent_father_id = a.id
+                )
+            OR
+            EXISTS (
+                    SELECT
+                        $alias.parent_mother_id
+                    FROM animal $alias
+                    WHERE $yearMonthFilter
+                      AND $alias.parent_mother_id = a.id
+                )
+            ) AND ";
+
         $logSuffix = " table for animal with a birth date within year-month $year-$month";
         return $this->fill($filter, $logger, $logSuffix);
     }
@@ -96,7 +115,6 @@ class CalcInbreedingCoefficientParentRepository extends CalcInbreedingCoefficien
                        COUNT(*) as count
                 FROM animal a
                 WHERE date_of_birth NOTNULL AND inbreeding_coefficient_match_updated_at ISNULL
-AND date_part('YEAR', a.date_of_birth) >= 2018
 
                 GROUP BY date_part('YEAR', a.date_of_birth), date_part('MONTH', a.date_of_birth)
                 ORDER BY date_part('YEAR', a.date_of_birth), date_part('MONTH', a.date_of_birth)";
