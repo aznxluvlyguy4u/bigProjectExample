@@ -1006,6 +1006,17 @@ abstract class Animal
      */
     private $animalRelocations;
 
+    /**
+     * @var Litter
+     * @JMS\Type("AppBundle\Entity\Litter")
+     * @ORM\ManyToOne(targetEntity="AppBundle\Entity\Litter", inversedBy="surrogates")
+     * @ORM\JoinColumn(name="surrogate_litter_id", referencedColumnName="id")
+     * @JMS\Groups({
+     *     "ANIMAL_DETAILS",
+     *     "LITTER"
+     * })
+     */
+    private $surrogateLitter;
 
     /**
      * @JMS\VirtualProperty

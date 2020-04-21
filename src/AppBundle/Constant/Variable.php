@@ -31,4 +31,6 @@ class Variable
     const START_DATE = 'startDate';
 
     const USER_ACCOUNT = 'userAccount';
+
+    const MAX_AGE_LITTER_CHILD = 60;
 }
