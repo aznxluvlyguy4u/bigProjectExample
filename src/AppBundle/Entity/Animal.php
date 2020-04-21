@@ -3584,4 +3584,13 @@ abstract class Animal
         $this->surrogateLitter = $surrogateLitter;
         return $this;
     }
+
+    function getSuckleCount(): ?int
+    {
+        if ($this->getSurrogateLitter()) {
+            return $this->getSurrogateLitter()->getSuckleCount();
+        }
+
+        return $this->getLitter() ? $this->getLitter()->getSuckleCount() : null;
+    }
 }

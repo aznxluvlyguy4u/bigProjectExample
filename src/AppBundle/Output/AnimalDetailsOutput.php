@@ -120,15 +120,12 @@ class AnimalDetailsOutput extends OutputServiceBase
         $replacementString = "";
 
         $litterSize = $animal->getNLing();
-        $suckleCount = $replacementString;
+        $suckleCount = $animal->getSuckleCount();
         $litter = $animal->getLitter();
         if ($litter) {
             $litterSize = $litter->getSize();
-            $suckleCount = $litter->getSuckleCount();
         } else if ($viewMinimalAnimalDetails) {
             $litterSize = $viewMinimalAnimalDetails->getNLing();
-        } else if ($animal->getSurrogateLitter() !== null) {
-            $suckleCount = $animal->getSurrogateLitter()->getSuckleCount();
         }
 
         //Birth
