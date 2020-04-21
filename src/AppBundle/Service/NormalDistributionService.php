@@ -108,7 +108,9 @@ class NormalDistributionService
 
         foreach ([true, false] as $isIncludingOnlyAliveAnimals) {
             $valuesArray = $this->getManager()->getRepository(BreedValue::class)
-                ->getReliableBreedValues($breedValueTypeConstant, $generationDate, $isIncludingOnlyAliveAnimals);
+                ->getReliableBreedValues($breedValueTypeConstant, $generationDate,
+                    0,
+                    $isIncludingOnlyAliveAnimals);
 
             self::upsertMeanAndStandardDeviation($breedValueTypeConstant,
                 $generationYear, $isIncludingOnlyAliveAnimals, $valuesArray, $overwriteExisting);

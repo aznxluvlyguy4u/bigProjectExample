@@ -49,6 +49,7 @@ use AppBundle\Util\ErrorLogUtil;
 use AppBundle\Util\LitterUtil;
 use AppBundle\Util\MainCommandUtil;
 use AppBundle\Util\MeasurementsUtil;
+use AppBundle\Util\ScanMeasurementsSetFixer;
 use AppBundle\Util\StringUtil;
 use AppBundle\Util\TimeUtil;
 use AppBundle\Util\Validator;
@@ -622,6 +623,7 @@ class NsfoMainCommand extends ContainerAwareCommand
                 '================== SCAN MEASUREMENTS ===================', "\n",
                 '60: Fix duplicate measurements', "\n",
                 '61: Create and link scan measurement set records for unlinked scan measurements', "\n",
+                '62: Fix is_active value of sub measurements of set', "\n",
 
                 'other: exit submenu', "\n"
             ], self::DEFAULT_OPTION);
@@ -660,6 +662,7 @@ class NsfoMainCommand extends ContainerAwareCommand
 
             case 60: $this->getDuplicateMeasurementsFixer()->deactivateDuplicateMeasurements(); break;
             case 61: MeasurementsUtil::createAndLinkScanMeasurementSetsByUnlinkedData($this->em, $this->getLogger(), $this->getDuplicateMeasurementsFixer()); break;
+            case 62: ScanMeasurementsSetFixer::fixSubMeasurementsIsActiveStatus($this->conn, $this->getLogger()); break;
 
             default: $this->writeMenuExit(); return;
         }
@@ -887,14 +890,18 @@ class NsfoMainCommand extends ContainerAwareCommand
                 break;
 
             case 13: $this->updateAllResultTableValuesAndPrerequisites(); break;
-            case 14: $this->getBreedValuesResultTableUpdater()->update([MixBlupType::LAMB_MEAT_INDEX],
-                $this->insertMissingResultTableAndGeneticBaseRecords(), $this->ignorePreviouslyFinishedProcesses()); break;
-            case 15: $this->getBreedValuesResultTableUpdater()->update([MixBlupType::FERTILITY],
-                $this->insertMissingResultTableAndGeneticBaseRecords(), $this->ignorePreviouslyFinishedProcesses()); break;
-            case 16: $this->getBreedValuesResultTableUpdater()->update([MixBlupType::WORM],
-                $this->insertMissingResultTableAndGeneticBaseRecords(), $this->ignorePreviouslyFinishedProcesses()); break;
-            case 17: $this->getBreedValuesResultTableUpdater()->update([MixBlupType::EXTERIOR],
-                $this->insertMissingResultTableAndGeneticBaseRecords(), $this->ignorePreviouslyFinishedProcesses()); break;
+            case 14: $this->getBreedValuesResultTableUpdater()->updateForCli([MixBlupType::LAMB_MEAT_INDEX],
+                $this->insertMissingResultTableAndGeneticBaseRecords(), $this->ignorePreviouslyFinishedProcesses(),
+                $this->askUseOverallMaxGenerationDate()); break;
+            case 15: $this->getBreedValuesResultTableUpdater()->updateForCli([MixBlupType::FERTILITY],
+                $this->insertMissingResultTableAndGeneticBaseRecords(), $this->ignorePreviouslyFinishedProcesses(),
+                $this->askUseOverallMaxGenerationDate()); break;
+            case 16: $this->getBreedValuesResultTableUpdater()->updateForCli([MixBlupType::WORM],
+                $this->insertMissingResultTableAndGeneticBaseRecords(), $this->ignorePreviouslyFinishedProcesses(),
+                $this->askUseOverallMaxGenerationDate()); break;
+            case 17: $this->getBreedValuesResultTableUpdater()->updateForCli([MixBlupType::EXTERIOR],
+                $this->insertMissingResultTableAndGeneticBaseRecords(), $this->ignorePreviouslyFinishedProcesses(),
+                $this->askUseOverallMaxGenerationDate()); break;
 
             case 18: $this->getLambMeatIndexMigrator()->migrate(); break;
             case 19: $this->getWormResistanceIndexMigrator()->migrate(); break;
@@ -932,15 +939,23 @@ class NsfoMainCommand extends ContainerAwareCommand
 
 
     private function ignorePreviouslyFinishedProcesses(): bool {
-        $ignorePreviouslyFinishedProcesses = $this->cmdUtil->generateConfirmationQuestion('Ignore previously finished processes? (y/n, default is false)', false);
+        $ignorePreviouslyFinishedProcesses = $this->cmdUtil->generateConfirmationQuestion('Ignore previously finished processes?', true);
         $this->cmdUtil->writeln('Ignore previously finished processes: '. StringUtil::getBooleanAsString($ignorePreviouslyFinishedProcesses));
         return $ignorePreviouslyFinishedProcesses;
     }
 
 
+    private function askUseOverallMaxGenerationDate(): bool {
+        $answer = $this->cmdUtil->generateConfirmationQuestion('Use overall max generation date?'.
+            ' Note! if the calculated breed value type is not in the last generated set, nothing will be processed', true);
+        $this->cmdUtil->writeln('Using overall max generation date: '. StringUtil::getBooleanAsString($answer));
+        return $answer;
+    }
+
+
     private function insertMissingResultTableAndGeneticBaseRecords(): bool {
         $question = 'Insert missing resultTable and genetic base records';
-        $choice = $this->cmdUtil->generateConfirmationQuestion($question.'? (y/n, default is true)', true);
+        $choice = $this->cmdUtil->generateConfirmationQuestion($question.'?', true);
         $this->cmdUtil->writeln($question.': '. StringUtil::getBooleanAsString($choice));
         return $choice;
     }
