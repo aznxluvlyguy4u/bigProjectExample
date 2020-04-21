@@ -11,12 +11,12 @@ use Doctrine\ORM\Mapping as ORM;
  * So no Java Hibernate class is necessary, if no relations to normal tables are used.
  * Quick writes are necessary, so no index is used.
  *
- * Class CalcInbreedingCoefficientParent
- * @ORM\Table(name="calc_inbreeding_coefficient_parent")
- * @ORM\Entity(repositoryClass="AppBundle\Entity\CalcInbreedingCoefficientParentRepository")
+ * Class CalcIcParent
+ * @ORM\Table(name="calc_ic_parent")
+ * @ORM\Entity(repositoryClass="AppBundle\Entity\CalcIcParentRepository")
  * @package AppBundle\Entity
  */
-class CalcInbreedingCoefficientParent
+class CalcIcParent
 {
     use EntityClassInfo;
 
@@ -51,9 +51,9 @@ class CalcInbreedingCoefficientParent
 
     /**
      * @param  int  $id
-     * @return CalcInbreedingCoefficientParent
+     * @return CalcIcParent
      */
-    public function setId(int $id): CalcInbreedingCoefficientParent
+    public function setId(int $id): CalcIcParent
     {
         $this->id = $id;
         return $this;
@@ -70,9 +70,9 @@ class CalcInbreedingCoefficientParent
 
     /**
      * @param  int  $animalId
-     * @return CalcInbreedingCoefficientParent
+     * @return CalcIcParent
      */
-    public function setAnimalId(int $animalId): CalcInbreedingCoefficientParent
+    public function setAnimalId(int $animalId): CalcIcParent
     {
         $this->animalId = $animalId;
         return $this;
@@ -88,9 +88,9 @@ class CalcInbreedingCoefficientParent
 
     /**
      * @param  bool  $isPrimaryAnimal
-     * @return CalcInbreedingCoefficientParent
+     * @return CalcIcParent
      */
-    public function setIsPrimaryAnimal(bool $isPrimaryAnimal): CalcInbreedingCoefficientParent
+    public function setIsPrimaryAnimal(bool $isPrimaryAnimal): CalcIcParent
     {
         $this->isPrimaryAnimal = $isPrimaryAnimal;
         return $this;

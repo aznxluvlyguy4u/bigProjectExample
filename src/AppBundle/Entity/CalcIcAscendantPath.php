@@ -11,12 +11,12 @@ use Doctrine\ORM\Mapping as ORM;
  * So no Java Hibernate class is necessary, if no relations to normal tables are used.
  * Quick writes are necessary, so no index is used.
  *
- * Class CalcInbreedingCoefficientAscendantPath
- * @ORM\Table(name="calc_inbreeding_coefficient_ascendant_path")
- * @ORM\Entity(repositoryClass="AppBundle\Entity\CalcInbreedingCoefficientAscendantPathRepository")
+ * Class CalcIcAscendantPath
+ * @ORM\Table(name="calc_ic_ascendant_path")
+ * @ORM\Entity(repositoryClass="AppBundle\Entity\CalcIcAscendantPathRepository")
  * @package AppBundle\Entity
  */
-class CalcInbreedingCoefficientAscendantPath
+class CalcIcAscendantPath
 {
     use EntityClassInfo;
 
@@ -70,9 +70,9 @@ class CalcInbreedingCoefficientAscendantPath
 
     /**
      * @param  int  $id
-     * @return CalcInbreedingCoefficientAscendantPath
+     * @return CalcIcAscendantPath
      */
-    public function setId(int $id): CalcInbreedingCoefficientAscendantPath
+    public function setId(int $id): CalcIcAscendantPath
     {
         $this->id = $id;
         return $this;
@@ -89,9 +89,9 @@ class CalcInbreedingCoefficientAscendantPath
 
     /**
      * @param  int  $animalId
-     * @return CalcInbreedingCoefficientAscendantPath
+     * @return CalcIcAscendantPath
      */
-    public function setAnimalId(int $animalId): CalcInbreedingCoefficientAscendantPath
+    public function setAnimalId(int $animalId): CalcIcAscendantPath
     {
         $this->animalId = $animalId;
         return $this;
@@ -107,9 +107,9 @@ class CalcInbreedingCoefficientAscendantPath
 
     /**
      * @param  int  $lastParentId
-     * @return CalcInbreedingCoefficientAscendantPath
+     * @return CalcIcAscendantPath
      */
-    public function setLastParentId(int $lastParentId): CalcInbreedingCoefficientAscendantPath
+    public function setLastParentId(int $lastParentId): CalcIcAscendantPath
     {
         $this->lastParentId = $lastParentId;
         return $this;
@@ -125,9 +125,9 @@ class CalcInbreedingCoefficientAscendantPath
 
     /**
      * @param  int  $depth
-     * @return CalcInbreedingCoefficientAscendantPath
+     * @return CalcIcAscendantPath
      */
-    public function setDepth(int $depth): CalcInbreedingCoefficientAscendantPath
+    public function setDepth(int $depth): CalcIcAscendantPath
     {
         $this->depth = $depth;
         return $this;
@@ -143,9 +143,9 @@ class CalcInbreedingCoefficientAscendantPath
 
     /**
      * @param  string  $path
-     * @return CalcInbreedingCoefficientAscendantPath
+     * @return CalcIcAscendantPath
      */
-    public function setPath(string $path): CalcInbreedingCoefficientAscendantPath
+    public function setPath(string $path): CalcIcAscendantPath
     {
         $this->path = $path;
         return $this;
@@ -161,9 +161,9 @@ class CalcInbreedingCoefficientAscendantPath
 
     /**
      * @param  array  $parents
-     * @return CalcInbreedingCoefficientAscendantPath
+     * @return CalcIcAscendantPath
      */
-    public function setParents(array $parents): CalcInbreedingCoefficientAscendantPath
+    public function setParents(array $parents): CalcIcAscendantPath
     {
         $this->parents = $parents;
         return $this;

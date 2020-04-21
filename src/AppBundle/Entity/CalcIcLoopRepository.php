@@ -5,14 +5,14 @@ namespace AppBundle\Entity;
 use Psr\Log\LoggerInterface;
 
 /**
- * Class CalcInbreedingCoefficientLoopRepository
+ * Class CalcIcLoopRepository
  * @package AppBundle\Entity
  */
-class CalcInbreedingCoefficientLoopRepository extends CalcInbreedingCoefficientBaseRepository implements CalcTableRepositoryInterface {
+class CalcIcLoopRepository extends CalcInbreedingCoefficientBaseRepository implements CalcTableRepositoryInterface {
 
     function tableName(): string
     {
-        return CalcInbreedingCoefficientLoop::getTableName();
+        return CalcIcLoop::getTableName();
     }
 
     function truncate(?LoggerInterface $logger = null)
@@ -21,6 +21,7 @@ class CalcInbreedingCoefficientLoopRepository extends CalcInbreedingCoefficientB
         $this->truncateBase($this->tableName(), $logger);
     }
 
+
     /**
      * @param  int  $animalIdOrigin1
      * @param  int  $animalIdOrigin2
@@ -28,10 +29,35 @@ class CalcInbreedingCoefficientLoopRepository extends CalcInbreedingCoefficientB
      */
     function fill(int $animalIdOrigin1, int $animalIdOrigin2, ?LoggerInterface $logger = null)
     {
+        $this->fillBase(
+            $animalIdOrigin1,
+            $animalIdOrigin2,
+            $logger,
+            $this->tableName(),
+            CalcIcAscendantPath::getTableName(),
+            CalcIcParentDetails::getTableName()
+        );
+    }
+
+
+    /**
+     * @param  int  $animalIdOrigin1
+     * @param  int  $animalIdOrigin2
+     * @param  LoggerInterface|null  $logger
+     */
+    protected function fillBase(
+        int $animalIdOrigin1,
+        int $animalIdOrigin2,
+        ?LoggerInterface $logger = null,
+        string $loopTableName,
+        string $ascendantsTableName,
+        string $parentDetailsTableName
+    )
+    {
         $logSuffix = '';
         $this->logFillingTableStart($logger, $this->tableName(), $logSuffix);
 
-        $sql = "INSERT INTO calc_inbreeding_coefficient_loop 
+        $sql = "INSERT INTO $loopTableName 
                     (loop_size, last_parent_id, parent_inbreeding_coefficient, origin1path, origin2path, origin1parents, origin2parents)  
                 SELECT
                     -- origin1.animal_id as origin1_animal_id,
@@ -45,15 +71,15 @@ class CalcInbreedingCoefficientLoopRepository extends CalcInbreedingCoefficientB
                     origin2.path as origin2path,
                     origin1.parents as origin1parents,
                     origin2.parents as origin2parents
-                FROM calc_inbreeding_coefficient_ascendant_path origin1
-                         INNER JOIN calc_inbreeding_coefficient_ascendant_path origin2 ON
+                FROM $ascendantsTableName origin1
+                         INNER JOIN $ascendantsTableName origin2 ON
                             origin1.last_parent_id = origin2.last_parent_id AND
                             origin1.animal_id <> origin2.animal_id
                          INNER JOIN (
                             SELECT
                                 parent_id as animal_id,
                                 MAX(parent_inbreeding_coefficient) as inbreeding_coefficient
-                            FROM calc_inbreeding_coefficient_parent_details d
+                            FROM $parentDetailsTableName d
                             GROUP BY parent_id
                         )i ON i.animal_id = origin1.last_parent_id
                 WHERE
@@ -71,6 +97,12 @@ class CalcInbreedingCoefficientLoopRepository extends CalcInbreedingCoefficientB
 
     public function calculateInbreedingCoefficientFromLoopsAndParentDetails(): float
     {
+        return $this->calculateInbreedingCoefficientFromLoopsBase($this->tableName());
+    }
+
+
+    protected function calculateInbreedingCoefficientFromLoopsBase(string $loopsTableName): float
+    {
         $precision = $this->precision();
 
         $sql = "SELECT
@@ -83,7 +115,7 @@ class CalcInbreedingCoefficientLoopRepository extends CalcInbreedingCoefficientB
                              1 as group_id,
                              power(0.5, loop_size + 1) as path_inbreeding_factor, -- (1/2)^(number of parents in loop)
                              1 + COALESCE(parent_inbreeding_coefficient, 0) as parent_inbreeding_coefficient_factor
-                         FROM calc_inbreeding_coefficient_loop l
+                         FROM $loopsTableName l
                          WHERE
                              -- Remove loops for which another smaller loop already exists
                              -- where the last_parent_id of the smaller loop
@@ -91,8 +123,8 @@ class CalcInbreedingCoefficientLoopRepository extends CalcInbreedingCoefficientB
                              NOT EXISTS (
                                      SELECT
                                          l3.id
-                                     FROM calc_inbreeding_coefficient_loop l3
-                                              INNER JOIN calc_inbreeding_coefficient_loop l2 ON
+                                     FROM $loopsTableName l3
+                                              INNER JOIN $loopsTableName l2 ON
                                                  l.last_parent_id <> l2.last_parent_id AND
                                                  l2.last_parent_id = ANY (
                                                      -- The path of origin 1, excluding the last parent

@@ -7,14 +7,14 @@ use AppBundle\Util\SqlUtil;
 use Psr\Log\LoggerInterface;
 
 /**
- * Class CalcInbreedingCoefficientParentRepository
+ * Class CalcIcParentRepository
  * @package AppBundle\Entity
  */
-class CalcInbreedingCoefficientParentRepository extends CalcInbreedingCoefficientBaseRepository implements CalcTableRepositoryInterface {
+class CalcIcParentRepository extends CalcInbreedingCoefficientBaseRepository implements CalcTableRepositoryInterface {
 
     function tableName(): string
     {
-        return CalcInbreedingCoefficientParent::getTableName();
+        return CalcIcParent::getTableName();
     }
 
     function truncate(?LoggerInterface $logger = null)
@@ -23,13 +23,19 @@ class CalcInbreedingCoefficientParentRepository extends CalcInbreedingCoefficien
         $this->truncateBase($this->tableName(), $logger);
     }
 
-    private function fill(string $filter = '', ?LoggerInterface $logger = null, string $logSuffix = '')
+
+    protected function fillBase(
+        string $parentTableName,
+        string $filter = '',
+        ?LoggerInterface $logger = null,
+        string $logSuffix = ''
+    )
     {
         $this->logFillingTableStart($logger, $this->tableName(), $logSuffix);
 
         $maxGenerations = $this->maxGenerations();
 
-        $sql = "INSERT INTO calc_inbreeding_coefficient_parent (animal_id, is_primary_animal)
+        $sql = "INSERT INTO $parentTableName (animal_id, is_primary_animal)
                 WITH RECURSIVE parents(animal_id, parents_array, depth)
                            AS (
                 SELECT
@@ -68,8 +74,7 @@ class CalcInbreedingCoefficientParentRepository extends CalcInbreedingCoefficien
         $this->logFillingTableEnd($logger, $this->tableName());
     }
 
-
-    function fillByYearAndMonth(int $year, int $month, ?LoggerInterface $logger = null)
+    protected function fillByYearAndMonthBase(string $parentTableName, int $year, int $month, ?LoggerInterface $logger = null)
     {
         $alias = 'child';
         $yearMonthFilter = $this->animalYearAndMonthFilter($year, $month, $alias);
@@ -92,16 +97,28 @@ class CalcInbreedingCoefficientParentRepository extends CalcInbreedingCoefficien
             ) AND ";
 
         $logSuffix = " table for animal with a birth date within year-month $year-$month";
-        return $this->fill($filter, $logger, $logSuffix);
+        return $this->fillBase($parentTableName, $filter, $logger, $logSuffix);
+    }
+
+
+    protected function fillByParentPairsBase(string $parentTableName, array $parentIdsPairs, ?LoggerInterface $logger = null)
+    {
+        $count = count($parentIdsPairs);
+        $filter = SqlUtil::getParentsAsAnimalIdsFilterFromParentIdsPairs($parentIdsPairs, 'a') . " AND ";
+        $logSuffix = " table for $count custom parent pairs";
+        $this->fillBase($parentTableName, $filter, $logger, $logSuffix);
+    }
+
+
+    function fillByYearAndMonth(int $year, int $month, ?LoggerInterface $logger = null)
+    {
+        return $this->fillByYearAndMonthBase($this->tableName(), $year, $month, $logger);
     }
 
 
     function fillByParentPairs(array $parentIdsPairs, ?LoggerInterface $logger = null)
     {
-        $count = count($parentIdsPairs);
-        $filter = SqlUtil::getParentsAsAnimalIdsFilterFromParentIdsPairs($parentIdsPairs, 'a') . " AND ";
-        $logSuffix = " table for $count custom parent pairs";
-        return $this->fill($filter, $logger, $logSuffix);
+        $this->fillByParentPairsBase($this->tableName(), $parentIdsPairs, $logger);
     }
 
 

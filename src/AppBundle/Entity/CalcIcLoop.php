@@ -11,12 +11,12 @@ use Doctrine\ORM\Mapping as ORM;
  * So no Java Hibernate class is necessary, if no relations to normal tables are used.
  * Quick writes are necessary, so no index is used.
  *
- * Class CalcInbreedingCoefficientLoop
- * @ORM\Table(name="calc_inbreeding_coefficient_loop")
- * @ORM\Entity(repositoryClass="AppBundle\Entity\CalcInbreedingCoefficientLoopRepository")
+ * Class CalcIcLoop
+ * @ORM\Table(name="calc_ic_loop")
+ * @ORM\Entity(repositoryClass="AppBundle\Entity\CalcIcLoopRepository")
  * @package AppBundle\Entity
  */
-class CalcInbreedingCoefficientLoop
+class CalcIcLoop
 {
     use EntityClassInfo;
 
@@ -81,9 +81,9 @@ class CalcInbreedingCoefficientLoop
 
     /**
      * @param  int  $id
-     * @return CalcInbreedingCoefficientLoop
+     * @return CalcIcLoop
      */
-    public function setId(int $id): CalcInbreedingCoefficientLoop
+    public function setId(int $id): CalcIcLoop
     {
         $this->id = $id;
         return $this;
@@ -99,9 +99,9 @@ class CalcInbreedingCoefficientLoop
 
     /**
      * @param  int  $loopSize
-     * @return CalcInbreedingCoefficientLoop
+     * @return CalcIcLoop
      */
-    public function setLoopSize(int $loopSize): CalcInbreedingCoefficientLoop
+    public function setLoopSize(int $loopSize): CalcIcLoop
     {
         $this->loopSize = $loopSize;
         return $this;
@@ -117,9 +117,9 @@ class CalcInbreedingCoefficientLoop
 
     /**
      * @param  int  $lastParentId
-     * @return CalcInbreedingCoefficientLoop
+     * @return CalcIcLoop
      */
-    public function setLastParentId(int $lastParentId): CalcInbreedingCoefficientLoop
+    public function setLastParentId(int $lastParentId): CalcIcLoop
     {
         $this->lastParentId = $lastParentId;
         return $this;
@@ -135,9 +135,9 @@ class CalcInbreedingCoefficientLoop
 
     /**
      * @param  string  $parentInbreedingCoefficient
-     * @return CalcInbreedingCoefficientLoop
+     * @return CalcIcLoop
      */
-    public function setParentInbreedingCoefficient(string $parentInbreedingCoefficient): CalcInbreedingCoefficientLoop
+    public function setParentInbreedingCoefficient(string $parentInbreedingCoefficient): CalcIcLoop
     {
         $this->parentInbreedingCoefficient = $parentInbreedingCoefficient;
         return $this;
@@ -153,9 +153,9 @@ class CalcInbreedingCoefficientLoop
 
     /**
      * @param  string  $origin1Path
-     * @return CalcInbreedingCoefficientLoop
+     * @return CalcIcLoop
      */
-    public function setOrigin1Path(string $origin1Path): CalcInbreedingCoefficientLoop
+    public function setOrigin1Path(string $origin1Path): CalcIcLoop
     {
         $this->origin1Path = $origin1Path;
         return $this;
@@ -171,9 +171,9 @@ class CalcInbreedingCoefficientLoop
 
     /**
      * @param  string  $origin2Path
-     * @return CalcInbreedingCoefficientLoop
+     * @return CalcIcLoop
      */
-    public function setOrigin2Path(string $origin2Path): CalcInbreedingCoefficientLoop
+    public function setOrigin2Path(string $origin2Path): CalcIcLoop
     {
         $this->origin2Path = $origin2Path;
         return $this;
@@ -189,9 +189,9 @@ class CalcInbreedingCoefficientLoop
 
     /**
      * @param  array  $origin1Parents
-     * @return CalcInbreedingCoefficientLoop
+     * @return CalcIcLoop
      */
-    public function setOrigin1Parents(array $origin1Parents): CalcInbreedingCoefficientLoop
+    public function setOrigin1Parents(array $origin1Parents): CalcIcLoop
     {
         $this->origin1Parents = $origin1Parents;
         return $this;
@@ -207,9 +207,9 @@ class CalcInbreedingCoefficientLoop
 
     /**
      * @param  array  $origin2Parents
-     * @return CalcInbreedingCoefficientLoop
+     * @return CalcIcLoop
      */
-    public function setOrigin2Parents(array $origin2Parents): CalcInbreedingCoefficientLoop
+    public function setOrigin2Parents(array $origin2Parents): CalcIcLoop
     {
         $this->origin2Parents = $origin2Parents;
         return $this;

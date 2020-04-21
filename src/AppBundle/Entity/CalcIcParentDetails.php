@@ -12,12 +12,12 @@ use Doctrine\ORM\Mapping as ORM;
  * So no Java Hibernate class is necessary, if no relations to normal tables are used.
  * Quick writes are necessary, so no index is used.
  *
- * Class CalcInbreedingCoefficientParentDetails
- * @ORM\Table(name="calc_inbreeding_coefficient_parent_details")
- * @ORM\Entity(repositoryClass="AppBundle\Entity\CalcInbreedingCoefficientParentDetailsRepository")
+ * Class CalcIcParentDetails
+ * @ORM\Table(name="calc_ic_parent_details")
+ * @ORM\Entity(repositoryClass="AppBundle\Entity\CalcIcParentDetailsRepository")
  * @package AppBundle\Entity
  */
-class CalcInbreedingCoefficientParentDetails
+class CalcIcParentDetails
 {
     use EntityClassInfo;
 
@@ -82,9 +82,9 @@ class CalcInbreedingCoefficientParentDetails
 
     /**
      * @param  int  $id
-     * @return CalcInbreedingCoefficientParentDetails
+     * @return CalcIcParentDetails
      */
-    public function setId(int $id): CalcInbreedingCoefficientParentDetails
+    public function setId(int $id): CalcIcParentDetails
     {
         $this->id = $id;
         return $this;
@@ -104,9 +104,9 @@ class CalcInbreedingCoefficientParentDetails
 
     /**
      * @param  int  $animalId
-     * @return CalcInbreedingCoefficientParentDetails
+     * @return CalcIcParentDetails
      */
-    public function setAnimalId(int $animalId): CalcInbreedingCoefficientParentDetails
+    public function setAnimalId(int $animalId): CalcIcParentDetails
     {
         $this->animalId = $animalId;
         return $this;
@@ -122,9 +122,9 @@ class CalcInbreedingCoefficientParentDetails
 
     /**
      * @param  DateTime  $dateOfBirth
-     * @return CalcInbreedingCoefficientParentDetails
+     * @return CalcIcParentDetails
      */
-    public function setDateOfBirth(DateTime $dateOfBirth): CalcInbreedingCoefficientParentDetails
+    public function setDateOfBirth(DateTime $dateOfBirth): CalcIcParentDetails
     {
         $this->dateOfBirth = $dateOfBirth;
         return $this;
@@ -140,9 +140,9 @@ class CalcInbreedingCoefficientParentDetails
 
     /**
      * @param  int  $parentId
-     * @return CalcInbreedingCoefficientParentDetails
+     * @return CalcIcParentDetails
      */
-    public function setParentId(int $parentId): CalcInbreedingCoefficientParentDetails
+    public function setParentId(int $parentId): CalcIcParentDetails
     {
         $this->parentId = $parentId;
         return $this;
@@ -158,9 +158,9 @@ class CalcInbreedingCoefficientParentDetails
 
     /**
      * @param  DateTime  $parentDateOfBirth
-     * @return CalcInbreedingCoefficientParentDetails
+     * @return CalcIcParentDetails
      */
-    public function setParentDateOfBirth(DateTime $parentDateOfBirth): CalcInbreedingCoefficientParentDetails
+    public function setParentDateOfBirth(DateTime $parentDateOfBirth): CalcIcParentDetails
     {
         $this->parentDateOfBirth = $parentDateOfBirth;
         return $this;
@@ -176,9 +176,9 @@ class CalcInbreedingCoefficientParentDetails
 
     /**
      * @param  string  $parentType
-     * @return CalcInbreedingCoefficientParentDetails
+     * @return CalcIcParentDetails
      */
-    public function setParentType(string $parentType): CalcInbreedingCoefficientParentDetails
+    public function setParentType(string $parentType): CalcIcParentDetails
     {
         $this->parentType = $parentType;
         return $this;
@@ -194,10 +194,10 @@ class CalcInbreedingCoefficientParentDetails
 
     /**
      * @param  string  $parentInbreedingCoefficient
-     * @return CalcInbreedingCoefficientParentDetails
+     * @return CalcIcParentDetails
      */
     public function setParentInbreedingCoefficient(string $parentInbreedingCoefficient
-    ): CalcInbreedingCoefficientParentDetails {
+    ): CalcIcParentDetails {
         $this->parentInbreedingCoefficient = $parentInbreedingCoefficient;
         return $this;
     }
@@ -212,9 +212,9 @@ class CalcInbreedingCoefficientParentDetails
 
     /**
      * @param  bool  $isPrimaryAnimal
-     * @return CalcInbreedingCoefficientParentDetails
+     * @return CalcIcParentDetails
      */
-    public function setIsPrimaryAnimal(bool $isPrimaryAnimal): CalcInbreedingCoefficientParentDetails
+    public function setIsPrimaryAnimal(bool $isPrimaryAnimal): CalcIcParentDetails
     {
         $this->isPrimaryAnimal = $isPrimaryAnimal;
         return $this;

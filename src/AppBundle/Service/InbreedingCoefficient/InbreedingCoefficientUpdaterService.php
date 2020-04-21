@@ -4,14 +4,14 @@
 namespace AppBundle\Service\InbreedingCoefficient;
 
 
-use AppBundle\Entity\CalcInbreedingCoefficientAscendantPath;
-use AppBundle\Entity\CalcInbreedingCoefficientAscendantPathRepository;
-use AppBundle\Entity\CalcInbreedingCoefficientLoop;
-use AppBundle\Entity\CalcInbreedingCoefficientLoopRepository;
-use AppBundle\Entity\CalcInbreedingCoefficientParent;
-use AppBundle\Entity\CalcInbreedingCoefficientParentDetails;
-use AppBundle\Entity\CalcInbreedingCoefficientParentDetailsRepository;
-use AppBundle\Entity\CalcInbreedingCoefficientParentRepository;
+use AppBundle\Entity\CalcIcAscendantPath;
+use AppBundle\Entity\CalcIcAscendantPathRepository;
+use AppBundle\Entity\CalcIcLoop;
+use AppBundle\Entity\CalcIcLoopRepository;
+use AppBundle\Entity\CalcIcParent;
+use AppBundle\Entity\CalcIcParentDetails;
+use AppBundle\Entity\CalcIcParentDetailsRepository;
+use AppBundle\Entity\CalcIcParentRepository;
 use AppBundle\Entity\Ewe;
 use AppBundle\Entity\InbreedingCoefficient;
 use AppBundle\Entity\InbreedingCoefficientRepository;
@@ -31,13 +31,13 @@ class InbreedingCoefficientUpdaterService implements InbreedingCoefficientUpdate
     /** @var LoggerInterface */
     private $logger;
 
-    /** @var CalcInbreedingCoefficientParentRepository */
+    /** @var CalcIcParentRepository */
     private $calcInbreedingCoefficientParentRepository;
-    /** @var CalcInbreedingCoefficientParentDetailsRepository */
+    /** @var CalcIcParentDetailsRepository */
     private $calcInbreedingCoefficientParentDetailsRepository;
-    /** @var CalcInbreedingCoefficientAscendantPathRepository */
+    /** @var CalcIcAscendantPathRepository */
     private $calcInbreedingCoefficientAscendantPathRepository;
-    /** @var CalcInbreedingCoefficientLoopRepository */
+    /** @var CalcIcLoopRepository */
     private $calcInbreedingCoefficientLoopRepository;
 
     /** @var InbreedingCoefficientRepository */
@@ -62,10 +62,10 @@ class InbreedingCoefficientUpdaterService implements InbreedingCoefficientUpdate
         $this->logger = $logger;
 
         $this->inbreedingCoefficientRepository = $this->em->getRepository(InbreedingCoefficient::class);
-        $this->calcInbreedingCoefficientParentRepository = $this->em->getRepository(CalcInbreedingCoefficientParent::class);
-        $this->calcInbreedingCoefficientParentDetailsRepository = $this->em->getRepository(CalcInbreedingCoefficientParentDetails::class);
-        $this->calcInbreedingCoefficientAscendantPathRepository = $this->em->getRepository(CalcInbreedingCoefficientAscendantPath::class);
-        $this->calcInbreedingCoefficientLoopRepository = $this->em->getRepository(CalcInbreedingCoefficientLoop::class);
+        $this->calcInbreedingCoefficientParentRepository = $this->em->getRepository(CalcIcParent::class);
+        $this->calcInbreedingCoefficientParentDetailsRepository = $this->em->getRepository(CalcIcParentDetails::class);
+        $this->calcInbreedingCoefficientAscendantPathRepository = $this->em->getRepository(CalcIcAscendantPath::class);
+        $this->calcInbreedingCoefficientLoopRepository = $this->em->getRepository(CalcIcLoop::class);
     }
 
 
