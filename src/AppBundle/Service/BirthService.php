@@ -1305,11 +1305,6 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
                 [$parentIdsPair],
                 false
             );
-
-            $this->inbreedingCoefficientUpdaterService->matchAnimalsAndLitters(
-                $litter->getChildrenIds(),
-                [$litter->getId()]
-            );
         }
     }
 

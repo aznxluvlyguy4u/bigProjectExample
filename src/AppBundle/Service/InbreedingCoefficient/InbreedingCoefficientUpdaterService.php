@@ -16,6 +16,7 @@ use AppBundle\Entity\Ewe;
 use AppBundle\Entity\InbreedingCoefficient;
 use AppBundle\Entity\InbreedingCoefficientRepository;
 use AppBundle\Entity\Ram;
+use AppBundle\model\metadata\YearMonthData;
 use AppBundle\model\ParentIdsPair;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\LoggerUtil;
@@ -25,6 +26,11 @@ use Psr\Log\LoggerInterface;
 
 class InbreedingCoefficientUpdaterService implements InbreedingCoefficientUpdaterServiceInterface
 {
+    const PARENTS_ACTION_NEW = 'NEW';
+    const PARENTS_ACTION_UPDATE = 'UPD';
+    const PARENTS_ACTION_EMPTY = '---';
+    const MATCHING_MESSAGE = 'matching';
+    const MATCHED_MESSAGE = 'MATCHED!';
 
     /** @var EntityManagerInterface */
     private $em;
@@ -48,6 +54,8 @@ class InbreedingCoefficientUpdaterService implements InbreedingCoefficientUpdate
     /** @var int */
     private $newCount = 0;
     /** @var int */
+    private $skipped = 0;
+    /** @var int */
     private $batchCount = 0;
 
     /** @var int */
@@ -55,6 +63,16 @@ class InbreedingCoefficientUpdaterService implements InbreedingCoefficientUpdate
     /** @var int */
     private $matchLitterCount = 0;
 
+    /** @var string */
+    private $logMessageGroup;
+    /** @var string */
+    private $logMessageParents;
+    /** @var string */
+    private $logMessageParentsAction;
+    /** @var int */
+    private $processedInbreedingCoefficientPairs;
+    /** @var int */
+    private $totalInbreedingCoefficientPairs;
 
     public function __construct(EntityManagerInterface $em, LoggerInterface $logger)
     {
@@ -73,15 +91,36 @@ class InbreedingCoefficientUpdaterService implements InbreedingCoefficientUpdate
     {
         $this->newCount = 0;
         $this->updateCount = 0;
+        $this->skipped = 0;
         $this->batchCount = 0;
         $this->matchAnimalCount = 0;
         $this->matchLitterCount = 0;
+        $this->logMessageGroup = '';
+        $this->logMessageParents = '';
+        $this->logMessageParentsAction = '';
+        $this->processedInbreedingCoefficientPairs = 0;
+        $this->totalInbreedingCoefficientPairs = 0;
     }
 
-    private function writeBatchCount() {
-        $totalCount = $this->updateCount + $this->newCount;
-        $message = 'InbreedingCoefficient records: new '.$this->newCount.', updated '.$this->updateCount. ', total '.$totalCount;
-        if ($totalCount == 0) {
+    private function writeBatchCount(string $suffix = '') {
+        $modificationCount = $this->updateCount + $this->newCount;
+
+        $progressOverview = "total $modificationCount";
+        if (!empty($this->totalInbreedingCoefficientPairs)) {
+            $percentage = round(
+                $this->processedInbreedingCoefficientPairs / $this->totalInbreedingCoefficientPairs * 100,
+                0
+            );
+            $progressOverview = "($percentage% - $modificationCount/".$this->totalInbreedingCoefficientPairs.")";
+        }
+
+        $message = "InbreedingCoefficient records $progressOverview: "
+            . $this->newCount.'|'.$this->updateCount . " [new|updated]"
+            . ' | '. $this->logMessageGroup
+            . ' | '. $this->logMessageParents
+            . (empty($this->logMessageParentsAction) ? '' : '['. $this->logMessageParentsAction. ']')
+            . (empty($suffix) ? '' : ' | ' . $suffix);
+        if ($modificationCount == 0) {
             $this->logger->notice($message);
         } else {
             LoggerUtil::overwriteNoticeLoggerInterface($this->logger, $message);
@@ -345,9 +384,14 @@ class InbreedingCoefficientUpdaterService implements InbreedingCoefficientUpdate
         $this->calcInbreedingCoefficientAscendantPathRepository->fill($this->logger);
 
         $groupedAnimalIdsSets = $this->getParentGroupedAnimalIdsByPairs($parentIdsPairs);
+        $setCount = count($groupedAnimalIdsSets);
+
+        $this->totalInbreedingCoefficientPairs = $setCount;
+        $this->logMessageGroup = $setCount.' parent groups';
+
         $this->processGroupedAnimalIdsSets($groupedAnimalIdsSets, $recalculate, $setFindGlobalMatch);
 
-        $this->writeBatchCount();
+        $this->writeBatchCount('Completed!');
 
         $this->clearParentsCalculationTables();
     }
@@ -362,15 +406,23 @@ class InbreedingCoefficientUpdaterService implements InbreedingCoefficientUpdate
             $animalIdsArrayString = $groupedAnimalIdSet['animal_ids'];
             $litterIdsArrayString = $groupedAnimalIdSet['litter_ids'];
 
+            $this->logMessageParentsAction = '';
+            $this->logMessageParents = "dad: $fatherId, mom: $fatherId";
+
+            $this->writeBatchCount();
+
             $this->calcInbreedingCoefficientLoopRepository->fill($fatherId, $motherId, $this->logger);
 
             $this->upsertInbreedingCoefficientForPair($fatherId, $motherId, $recalculate, $setFindGlobalMatch);
-            $this->writeBatchCount();
+
+            $this->writeBatchCount(self::MATCHING_MESSAGE);
 
             $animalIds = SqlUtil::getArrayFromPostgreSqlArrayString($animalIdsArrayString);
             $litterIds = SqlUtil::getArrayFromPostgreSqlArrayString($litterIdsArrayString);
 
             $this->matchAnimalsAndLitters($animalIds, $litterIds);
+
+            $this->writeBatchCount(self::MATCHED_MESSAGE);
 
             $this->calcInbreedingCoefficientLoopRepository->truncate($this->logger);
         }
@@ -384,10 +436,43 @@ class InbreedingCoefficientUpdaterService implements InbreedingCoefficientUpdate
         $this->updateAnimalsWithoutParents();
         $this->clearParentsCalculationTables();
 
-        foreach ($this->calcInbreedingCoefficientParentRepository->getAllYearsAndMonths() as $period)
+        $yearsAndMonthsAnimalIdsSets = $this->calcInbreedingCoefficientParentRepository->getAllYearsAndMonths();
+
+        if ($recalculate) {
+            $this->totalInbreedingCoefficientPairs = array_sum(
+                array_map(function (YearMonthData $yearMonthData) {
+                    return $yearMonthData->getCount();
+                }, $yearsAndMonthsAnimalIdsSets)
+            );
+        } else {
+            $this->totalInbreedingCoefficientPairs = array_sum(
+                array_map(function (YearMonthData $yearMonthData) {
+                    return $yearMonthData->getMissingInbreedingCoefficientCount();
+                }, $yearsAndMonthsAnimalIdsSets)
+            );
+
+            $alreadyExistsCount = array_sum(
+                array_map(function (YearMonthData $yearMonthData) {
+                    return $yearMonthData->getNonMissingCount();
+                }, $yearsAndMonthsAnimalIdsSets)
+            );
+            $this->logger->notice("$alreadyExistsCount inbreeding coefficient pairs skipped (already exist). Includes animals without both parents.");
+
+            $yearsAndMonthsAnimalIdsSets = array_filter(
+                $yearsAndMonthsAnimalIdsSets, function (YearMonthData $yearMonthData) {
+                    return $yearMonthData->hasMissingInbreedingCoefficients();
+                }
+            );
+        }
+
+        foreach ($yearsAndMonthsAnimalIdsSets as $period)
         {
             $year = $period->getYear();
             $month = $period->getMonth();
+
+            $this->logMessageGroup = "$year-$month (year-month)";
+            $this->logMessageParentsAction = '';
+            $this->logMessageParents = '';
 
             $this->calcInbreedingCoefficientParentRepository->fillByYearAndMonth($year, $month, $this->logger);
             $this->calcInbreedingCoefficientParentDetailsRepository->fill($this->logger);
@@ -398,7 +483,7 @@ class InbreedingCoefficientUpdaterService implements InbreedingCoefficientUpdate
             $this->processGroupedAnimalIdsSets($groupedAnimalIdsSets, $recalculate, $setFindGlobalMatch);
         }
 
-        $this->writeBatchCount();
+        $this->writeBatchCount('Completed!');
 
         $this->clearParentsCalculationTables();
     }
@@ -433,6 +518,11 @@ class InbreedingCoefficientUpdaterService implements InbreedingCoefficientUpdate
         if ($createNew) {
             $this->createNewInbreedingCoefficientRecord($fatherId, $motherId, $setFindGlobalMatch);
         }
+
+        if (!$updateExisting && !$createNew) {
+            $this->skipped++;
+            $this->logMessageParentsAction = self::PARENTS_ACTION_EMPTY;
+        }
     }
 
 
@@ -459,6 +549,8 @@ class InbreedingCoefficientUpdaterService implements InbreedingCoefficientUpdate
                     $this->em->flush();
 
                     $this->updateCount++;
+
+                    $this->logMessageParentsAction = self::PARENTS_ACTION_UPDATE;
                 }
             } else if ($inbreedingCoefficient->isFindGlobalMatches() !== $setFindGlobalMatch) {
                 $inbreedingCoefficient
@@ -496,6 +588,8 @@ class InbreedingCoefficientUpdaterService implements InbreedingCoefficientUpdate
 
         $this->newCount++;
         $this->batchCount++;
+
+        $this->logMessageParentsAction = self::PARENTS_ACTION_NEW;
     }
 
 

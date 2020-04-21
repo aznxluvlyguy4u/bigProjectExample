@@ -188,7 +188,6 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
                             );
 
                             $this->inbreedingCoefficientUpdaterService->regenerateInbreedingCoefficients([$parentIdsPair]);
-                            $this->inbreedingCoefficientUpdaterService->matchAnimalsAndLitters([$animalId], []);
                         }
                     }
                 }

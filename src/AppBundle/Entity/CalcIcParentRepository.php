@@ -129,9 +129,11 @@ class CalcIcParentRepository extends CalcInbreedingCoefficientBaseRepository imp
     {
         $sql = "SELECT date_part('YEAR', a.date_of_birth) as year,
                        date_part('MONTH', a.date_of_birth) as month,
-                       COUNT(*) as count
+                       COUNT(*) as count,
+                       COUNT(CASE WHEN a.inbreeding_coefficient_match_updated_at ISNULL THEN 1 END)
+                           as missing_inbreeding_coefficient_count
                 FROM animal a
-                WHERE date_of_birth NOTNULL AND inbreeding_coefficient_match_updated_at ISNULL
+                WHERE date_of_birth NOTNULL
 
                 GROUP BY date_part('YEAR', a.date_of_birth), date_part('MONTH', a.date_of_birth)
                 ORDER BY date_part('YEAR', a.date_of_birth), date_part('MONTH', a.date_of_birth)";
@@ -140,7 +142,8 @@ class CalcIcParentRepository extends CalcInbreedingCoefficientBaseRepository imp
             return new YearMonthData(
                 $result['year'],
                 $result['month'],
-                $result['count']
+                $result['count'],
+                $result['missing_inbreeding_coefficient_count']
             );
         }, $results);
     }

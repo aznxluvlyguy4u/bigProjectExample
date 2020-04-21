@@ -15,17 +15,22 @@ class YearMonthData
     /** @var int|null */
     private $count;
 
+    /** @var int|null */
+    private $missingInbreedingCoefficientCount;
+
     /**
      * YearMonthData constructor.
      * @param  int  $year
      * @param  int  $month
      * @param  int|null  $count
+     * @param  int|null  $missingInbreedingCoefficientCount
      */
-    public function __construct(int $year, int $month, ?int $count)
+    public function __construct(int $year, int $month, ?int $count, ?int $missingInbreedingCoefficientCount)
     {
         $this->year = $year;
         $this->month = $month;
         $this->count = $count;
+        $this->missingInbreedingCoefficientCount = $missingInbreedingCoefficientCount;
     }
 
     /**
@@ -82,5 +87,33 @@ class YearMonthData
         return $this;
     }
 
+    /**
+     * @return int|null
+     */
+    public function getMissingInbreedingCoefficientCount(): ?int
+    {
+        return $this->missingInbreedingCoefficientCount;
+    }
+
+    /**
+     * @param  int|null  $missingInbreedingCoefficientCount
+     * @return YearMonthData
+     */
+    public function setMissingInbreedingCoefficientCount(?int $missingInbreedingCoefficientCount): YearMonthData
+    {
+        $this->missingInbreedingCoefficientCount = $missingInbreedingCoefficientCount;
+        return $this;
+    }
+
+    public function hasMissingInbreedingCoefficients(): bool
+    {
+        return $this->missingInbreedingCoefficientCount === null || $this->missingInbreedingCoefficientCount > 0;
+    }
+
+    public function getNonMissingCount(): int
+    {
+        $nonMissingCount = $this->getCount() - $this->getMissingInbreedingCoefficientCount();
+        return empty($nonMissingCount) ? 0 : intval($nonMissingCount);
+    }
 
 }
