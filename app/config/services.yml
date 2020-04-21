@@ -1239,11 +1239,6 @@ services:
           - '@doctrine.orm.entity_manager'
           - '@logger'
 
-    AppBundle\Service\InbreedingCoefficient\InbreedingCoefficientUpdaterServiceV1:
-      arguments:
-        - '@doctrine.orm.entity_manager'
-        - '@logger'
-
     AppBundle\Worker\DirectProcessor\DeclareArrivalProcessorInterface:
         class: AppBundle\Worker\DirectProcessor\DeclareArrivalProcessor
         parent: app.abstract_base.direct_processor
