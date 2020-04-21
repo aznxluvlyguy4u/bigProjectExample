@@ -125,7 +125,7 @@ class CalcIcParentRepository extends CalcInbreedingCoefficientBaseRepository imp
     /**
      * @return array|YearMonthData[]
      */
-    function getAllYearsAndMonths(): array
+    public function getAllYearsAndMonths(): array
     {
         $sql = "SELECT date_part('YEAR', a.date_of_birth) as year,
                        date_part('MONTH', a.date_of_birth) as month,

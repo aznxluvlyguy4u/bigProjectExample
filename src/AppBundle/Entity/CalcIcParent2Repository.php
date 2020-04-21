@@ -1,0 +1,36 @@
+<?php
+
+namespace AppBundle\Entity;
+
+use Psr\Log\LoggerInterface;
+
+/**
+ * Class CalcIcParent2Repository
+ * @package AppBundle\Entity
+ */
+class CalcIcParent2Repository extends CalcIcParentRepository implements CalcTableRepositoryInterface {
+
+    function tableName(): string
+    {
+        return CalcIcParent2::getTableName();
+    }
+
+    function truncate(?LoggerInterface $logger = null)
+    {
+        $this->logClearingTable($logger, $this->tableName());
+        $this->truncateBase($this->tableName(), $logger);
+    }
+
+
+    function fillByYearAndMonth(int $year, int $month, ?LoggerInterface $logger = null)
+    {
+        return $this->fillByYearAndMonthBase($this->tableName(), $year, $month, $logger);
+    }
+
+
+    function fillByParentPairs(array $parentIdsPairs, ?LoggerInterface $logger = null)
+    {
+        $this->fillByParentPairsBase($this->tableName(), $parentIdsPairs, $logger);
+    }
+
+}
