@@ -18,7 +18,7 @@ class CalcIcAscendantPath2Repository extends CalcIcAscendantPathRepository imple
     function clearTable(?LoggerInterface $logger = null)
     {
         $this->logClearingTable($logger, $this->tableName());
-        $this->clearTableBase($this->tableName(), $logger);
+        $this->clearTableBase($this->tableName());
     }
 
     /**

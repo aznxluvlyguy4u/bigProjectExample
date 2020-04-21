@@ -20,7 +20,7 @@ class CalcIcParentRepository extends CalcInbreedingCoefficientBaseRepository imp
     function clearTable(?LoggerInterface $logger = null)
     {
         $this->logClearingTable($logger, $this->tableName());
-        $this->clearTableBase($this->tableName(), $logger);
+        $this->clearTableBase($this->tableName());
     }
 
 

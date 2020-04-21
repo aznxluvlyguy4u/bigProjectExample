@@ -18,7 +18,7 @@ class CalcIcParent2Repository extends CalcIcParentRepository implements CalcIcPa
     function clearTable(?LoggerInterface $logger = null)
     {
         $this->logClearingTable($logger, $this->tableName());
-        $this->clearTableBase($this->tableName(), $logger);
+        $this->clearTableBase($this->tableName());
     }
 
 

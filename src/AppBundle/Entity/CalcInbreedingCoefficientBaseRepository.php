@@ -5,6 +5,7 @@ namespace AppBundle\Entity;
 
 
 use AppBundle\Setting\InbreedingCoefficientSetting;
+use Psr\Log\LoggerInterface;
 
 class CalcInbreedingCoefficientBaseRepository extends CalcTableBaseRepository
 {
@@ -31,6 +32,27 @@ class CalcInbreedingCoefficientBaseRepository extends CalcTableBaseRepository
             case $precision < $minValue: throw new \Exception($constant.' must be at least '.$minValue);
             case $precision > $maxValue: throw new \Exception($constant.' cannot be greater than '.$maxValue);
             default: return $precision;
+        }
+    }
+
+    protected function logClearingTable(?LoggerInterface $logger, string $tableName)
+    {
+        if (InbreedingCoefficientSetting::LOG_LOOP_DETAILS) {
+            parent::logClearingTable($logger, $tableName);
+        }
+    }
+
+    protected function logFillingTableStart(?LoggerInterface $logger, string $tableName, string $suffix = '')
+    {
+        if (InbreedingCoefficientSetting::LOG_LOOP_DETAILS) {
+            parent::logFillingTableStart($logger, $tableName, $suffix);
+        }
+    }
+
+    protected function logFillingTableEnd(?LoggerInterface $logger, string $tableName)
+    {
+        if (InbreedingCoefficientSetting::LOG_LOOP_DETAILS) {
+            parent::logFillingTableEnd($logger, $tableName);
         }
     }
 }

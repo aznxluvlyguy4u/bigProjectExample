@@ -31,6 +31,8 @@ use Psr\Log\LoggerInterface;
 
 class InbreedingCoefficientUpdaterServiceBase
 {
+    const LOG_LOOPS_ON_NEW_LINE = false;
+
     const PARENTS_ACTION_NEW = 'NEW';
     const PARENTS_ACTION_UPDATE = 'UPD';
     const PARENTS_ACTION_EMPTY = '---';
@@ -151,7 +153,7 @@ class InbreedingCoefficientUpdaterServiceBase
             .' | '.$this->logMessageParents
             .(empty($this->logMessageParentsAction) ? '' : '['.$this->logMessageParentsAction.']')
             .(empty($suffix) ? '' : ' | '.$suffix);
-        if ($modificationCount == 0) {
+        if ($modificationCount == 0 || self::LOG_LOOPS_ON_NEW_LINE) {
             $this->logger->notice($message);
         } else {
             LoggerUtil::overwriteNoticeLoggerInterface($this->logger, $message);
