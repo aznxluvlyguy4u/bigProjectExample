@@ -159,8 +159,7 @@ class LambMeatIndexDataFile extends MixBlupDataFileBase implements MixBlupDataFi
                  CONCAT(mom.uln_country_code, mom.uln_number,'_', LPAD(CAST(l.litter_ordinal AS TEXT), 2, '0')) as ".JsonInputConstant::LITTER_GROUP.",
                  a.".JsonInputConstant::BREED_CODE.",
                  l.born_alive_count + l.stillborn_count as ".JsonInputConstant::N_LING.",
-                 l.".JsonInputConstant::SUCKLE_COUNT.",
-                 surrogate_litter.".JsonInputConstant::SUCKLE_COUNT." as surrogate_suckle_count
+                 COALESCE(surrogate_litter.suckle_count, l.suckle_count) as ".JsonInputConstant::SUCKLE_COUNT."
                  a.".JsonInputConstant::UBN_OF_BIRTH.",
                  a.".JsonInputConstant::HETEROSIS.",
                  a.".JsonInputConstant::RECOMBINATION.",
@@ -176,7 +175,7 @@ class LambMeatIndexDataFile extends MixBlupDataFileBase implements MixBlupDataFi
                   INNER JOIN animal mom ON mom.id = a.parent_mother_id
                   LEFT JOIN animal dad ON dad.id = a.parent_father_id
                   INNER JOIN litter l ON l.id = a.litter_id
-                  INNER JOIN litter surrogate_litter ON l.id = a.surrogate_litter_id
+                  LEFT JOIN litter surrogate_litter ON surrogate_litter.id = a.surrogate_litter_id
                   LEFT JOIN animal_cache c ON c.animal_id = a.id
                 WHERE 
                   ".self::getSqlBaseFilter()."
