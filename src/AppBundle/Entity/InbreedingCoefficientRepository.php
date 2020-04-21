@@ -145,6 +145,8 @@ WHERE dnb.ubn = $ubn)";
             $animalFilterPrefix .= $this->historicAnimalFilter($ubnParameterValue);
         }
 
+        $limitFilter = $limit === 0 ? '' : "LIMIT $limit";
+
         $pairsFromAnimalSql = "SELECT
                                     parent_father_id as $ramIdKey,
                                     parent_mother_id as $eweIdKey,
@@ -154,7 +156,7 @@ WHERE dnb.ubn = $ubn)";
                                       $animalFilterPrefix
                                 GROUP BY parent_father_id, parent_mother_id
                                 ORDER BY sum(location_id)
-                                LIMIT $limit";
+                                $limitFilter";
 
         $pairs = $this->getConnection()->query($pairsFromAnimalSql)->fetchAll();
 
@@ -175,7 +177,7 @@ WHERE dnb.ubn = $ubn)";
                                 WHERE animal_father_id NOTNULL AND animal_mother_id NOTNULL
                                       $litterFilterPrefix
                                 GROUP BY animal_father_id, animal_mother_id
-                                LIMIT $limit";
+                                $limitFilter";
 
             $pairs = $this->getConnection()->query($pairsFromLitterSql)->fetchAll();
         }
