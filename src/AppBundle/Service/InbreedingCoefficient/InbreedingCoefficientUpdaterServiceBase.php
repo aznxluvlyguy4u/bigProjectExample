@@ -379,9 +379,7 @@ class InbreedingCoefficientUpdaterServiceBase
 
         $this->clearParentsCalculationTables();
 
-        $this->calcInbreedingCoefficientParentRepository->fillByParentPairs($parentIdsPairs);
-        $this->calcInbreedingCoefficientParentDetailsRepository->fill($this->logger);
-        $this->calcInbreedingCoefficientAscendantPathRepository->fill($this->logger);
+        $this->fillCalcTablesExceptForLoopsForParentIdsPairs($parentIdsPairs);
 
         $groupedAnimalIdsSets = $this->getParentGroupedAnimalIdsByPairs($parentIdsPairs);
         $setCount = count($groupedAnimalIdsSets);
@@ -394,6 +392,16 @@ class InbreedingCoefficientUpdaterServiceBase
         $this->writeBatchCount('Completed!');
 
         $this->clearParentsCalculationTables();
+    }
+
+    /**
+     * @param array|ParentIdsPair[] $parentIdsPairs
+     */
+    protected function fillCalcTablesExceptForLoopsForParentIdsPairs($parentIdsPairs)
+    {
+        $this->calcInbreedingCoefficientParentRepository->fillByParentPairs($parentIdsPairs);
+        $this->calcInbreedingCoefficientParentDetailsRepository->fill($this->logger);
+        $this->calcInbreedingCoefficientAscendantPathRepository->fill($this->logger);
     }
 
 
@@ -471,16 +479,29 @@ class InbreedingCoefficientUpdaterServiceBase
             $month = $period->getMonth();
 
             $this->logMessageGroup = "$year-$month (year-month)";
-            $this->logMessageParentsAction = '';
-            $this->logMessageParents = '';
-
-            $this->calcInbreedingCoefficientParentRepository->fillByYearAndMonth($year, $month, $this->logger);
-            $this->calcInbreedingCoefficientParentDetailsRepository->fill($this->logger);
-            $this->calcInbreedingCoefficientAscendantPathRepository->fill($this->logger);
-
 
             $groupedAnimalIdsSets = $this->getParentGroupedAnimalIdsByYearAndMonth($year, $month);
-            $this->processGroupedAnimalIdsSets($groupedAnimalIdsSets, $recalculate, $setFindGlobalMatch);
+            $this->writeBatchCount();
+
+            foreach ($groupedAnimalIdsSets as $groupedAnimalIdsSet)
+            {
+                $this->logMessageParentsAction = '';
+                $this->logMessageParents = '';
+
+                $parentIdsPairs = [
+                    new ParentIdsPair(
+                        $groupedAnimalIdsSet['father_id'],
+                        $groupedAnimalIdsSet['mother_id']
+                    )
+                ];
+
+                $this->fillCalcTablesExceptForLoopsForParentIdsPairs($parentIdsPairs);
+                $this->processGroupedAnimalIdsSets([$groupedAnimalIdsSet], $recalculate, $setFindGlobalMatch);
+
+                $this->writeBatchCount();
+
+                $this->clearParentsCalculationTables();
+            }
         }
 
         $this->writeBatchCount('Completed!');
