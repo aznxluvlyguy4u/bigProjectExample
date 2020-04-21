@@ -15,10 +15,10 @@ class CalcIcAscendantPathRepository extends CalcInbreedingCoefficientBaseReposit
         return CalcIcAscendantPath::getTableName();
     }
 
-    function truncate(?LoggerInterface $logger = null)
+    function clearTable(?LoggerInterface $logger = null)
     {
         $this->logClearingTable($logger, $this->tableName());
-        $this->truncateBase($this->tableName(), $logger);
+        $this->clearTableBase($this->tableName(), $logger);
     }
 
     /**

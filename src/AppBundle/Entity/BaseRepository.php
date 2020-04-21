@@ -61,9 +61,10 @@ class BaseRepository extends EntityRepository
     }
 
 
-    protected function truncateBase(string $tableName, ?LoggerInterface $logger = null)
+    protected function clearTableBase(string $tableName, ?LoggerInterface $logger = null)
     {
-        $sql = 'TRUNCATE TABLE '.$tableName;
+        // DO NOT USE 'TRUNCATE TABLE table_name' because it does not lock the table, and can cause race condition bugs
+        $sql = 'DELETE FROM '.$tableName;
         $this->_em->getConnection()->query($sql)->execute();
         SqlUtil::bumpPrimaryKeySeq($this->getConnection(), $tableName, $logger);
     }

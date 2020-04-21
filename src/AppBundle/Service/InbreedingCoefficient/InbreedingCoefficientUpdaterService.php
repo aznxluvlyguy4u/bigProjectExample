@@ -355,9 +355,9 @@ class InbreedingCoefficientUpdaterService implements InbreedingCoefficientUpdate
 
     private function clearParentsCalculationTables()
     {
-        $this->calcInbreedingCoefficientParentRepository->truncate($this->logger);
-        $this->calcInbreedingCoefficientParentDetailsRepository->truncate($this->logger);
-        $this->calcInbreedingCoefficientAscendantPathRepository->truncate($this->logger);
+        $this->calcInbreedingCoefficientParentRepository->clearTable($this->logger);
+        $this->calcInbreedingCoefficientParentDetailsRepository->clearTable($this->logger);
+        $this->calcInbreedingCoefficientAscendantPathRepository->clearTable($this->logger);
     }
 
 
@@ -424,7 +424,7 @@ class InbreedingCoefficientUpdaterService implements InbreedingCoefficientUpdate
 
             $this->writeBatchCount(self::MATCHED_MESSAGE);
 
-            $this->calcInbreedingCoefficientLoopRepository->truncate($this->logger);
+            $this->calcInbreedingCoefficientLoopRepository->clearTable($this->logger);
         }
     }
 
@@ -595,13 +595,13 @@ class InbreedingCoefficientUpdaterService implements InbreedingCoefficientUpdate
 
     private function calculateInbreedingCoefficientValue(int $fatherId, int $motherId)
     {
-        $this->calcInbreedingCoefficientLoopRepository->truncate($this->logger);
+        $this->calcInbreedingCoefficientLoopRepository->clearTable($this->logger);
 
         $this->calcInbreedingCoefficientLoopRepository->fill($fatherId, $motherId, $this->logger);
         $inbreedingCoefficientValue = $this->calcInbreedingCoefficientLoopRepository
             ->calculateInbreedingCoefficientFromLoopsAndParentDetails();
 
-        $this->calcInbreedingCoefficientLoopRepository->truncate($this->logger);
+        $this->calcInbreedingCoefficientLoopRepository->clearTable($this->logger);
         return $inbreedingCoefficientValue;
     }
 
