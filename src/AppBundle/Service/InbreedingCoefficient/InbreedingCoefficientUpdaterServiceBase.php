@@ -543,6 +543,7 @@ class InbreedingCoefficientUpdaterServiceBase
                         ->refreshUpdatedAt();
                     $this->em->persist($inbreedingCoefficient);
                     $this->em->flush();
+                    $this->em->clear();
 
                     $this->updateCount++;
 
@@ -553,6 +554,7 @@ class InbreedingCoefficientUpdaterServiceBase
                     ->setFindGlobalMatches($setFindGlobalMatch);
                 $this->em->persist($inbreedingCoefficient);
                 $this->em->flush();
+                $this->em->clear();
 
                 $this->updateCount++;
             }
@@ -581,6 +583,7 @@ class InbreedingCoefficientUpdaterServiceBase
         ;
         $this->em->persist($inbreedingCoefficient);
         $this->em->flush();
+        $this->em->clear();
 
         $this->newCount++;
         $this->batchCount++;
