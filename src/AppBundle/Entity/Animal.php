@@ -3567,5 +3567,21 @@ abstract class Animal
         $this->annotations->removeElement($annotation);
     }
 
+    /**
+     * @return Litter
+     */
+    public function getSurrogateLitter()
+    {
+        return $this->surrogateLitter;
+    }
 
+    /**
+     * @param Litter $surrogateLitter
+     * @return Animal
+     */
+    public function setSurrogateLitter(Litter $surrogateLitter)
+    {
+        $this->surrogateLitter = $surrogateLitter;
+        return $this;
+    }
 }

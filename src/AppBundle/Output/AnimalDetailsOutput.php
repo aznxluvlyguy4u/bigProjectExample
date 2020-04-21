@@ -127,6 +127,8 @@ class AnimalDetailsOutput extends OutputServiceBase
             $suckleCount = $litter->getSuckleCount();
         } else if ($viewMinimalAnimalDetails) {
             $litterSize = $viewMinimalAnimalDetails->getNLing();
+        } else if ($animal->getSurrogateLitter() !== null) {
+            $suckleCount = $animal->getSurrogateLitter()->getSuckleCount();
         }
 
         //Birth
