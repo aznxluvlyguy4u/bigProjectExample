@@ -5,17 +5,22 @@ namespace AppBundle\Service\InbreedingCoefficient;
 
 
 use AppBundle\Entity\CalcIcAscendantPath;
-use AppBundle\Entity\CalcIcAscendantPathRepository;
+use AppBundle\Entity\CalcIcAscendantPath2;
+use AppBundle\Entity\CalcIcAscendantPathRepositoryInterface;
 use AppBundle\Entity\CalcIcLoop;
-use AppBundle\Entity\CalcIcLoopRepository;
+use AppBundle\Entity\CalcIcLoop2;
+use AppBundle\Entity\CalcIcLoopRepositoryInterface;
 use AppBundle\Entity\CalcIcParent;
+use AppBundle\Entity\CalcIcParent2;
 use AppBundle\Entity\CalcIcParentDetails;
-use AppBundle\Entity\CalcIcParentDetailsRepository;
-use AppBundle\Entity\CalcIcParentRepository;
+use AppBundle\Entity\CalcIcParentDetails2;
+use AppBundle\Entity\CalcIcParentDetailsRepositoryInterface;
+use AppBundle\Entity\CalcIcParentRepositoryInterface;
 use AppBundle\Entity\Ewe;
 use AppBundle\Entity\InbreedingCoefficient;
 use AppBundle\Entity\InbreedingCoefficientRepository;
 use AppBundle\Entity\Ram;
+use AppBundle\Enumerator\InbreedingCoefficientProcessSlot;
 use AppBundle\model\metadata\YearMonthData;
 use AppBundle\model\ParentIdsPair;
 use AppBundle\Util\ArrayUtil;
@@ -32,18 +37,21 @@ class InbreedingCoefficientUpdaterServiceBase
     const MATCHING_MESSAGE = 'matching';
     const MATCHED_MESSAGE = 'MATCHED!';
 
+    /** @var string */
+    protected $processSlot;
+
     /** @var EntityManagerInterface */
     private $em;
     /** @var LoggerInterface */
     private $logger;
 
-    /** @var CalcIcParentRepository */
+    /** @var CalcIcParentRepositoryInterface */
     private $calcInbreedingCoefficientParentRepository;
-    /** @var CalcIcParentDetailsRepository */
+    /** @var CalcIcParentDetailsRepositoryInterface */
     private $calcInbreedingCoefficientParentDetailsRepository;
-    /** @var CalcIcAscendantPathRepository */
+    /** @var CalcIcAscendantPathRepositoryInterface */
     private $calcInbreedingCoefficientAscendantPathRepository;
-    /** @var CalcIcLoopRepository */
+    /** @var CalcIcLoopRepositoryInterface */
     private $calcInbreedingCoefficientLoopRepository;
 
     /** @var InbreedingCoefficientRepository */
@@ -80,10 +88,30 @@ class InbreedingCoefficientUpdaterServiceBase
         $this->logger = $logger;
 
         $this->inbreedingCoefficientRepository = $this->em->getRepository(InbreedingCoefficient::class);
-        $this->calcInbreedingCoefficientParentRepository = $this->em->getRepository(CalcIcParent::class);
-        $this->calcInbreedingCoefficientParentDetailsRepository = $this->em->getRepository(CalcIcParentDetails::class);
-        $this->calcInbreedingCoefficientAscendantPathRepository = $this->em->getRepository(CalcIcAscendantPath::class);
-        $this->calcInbreedingCoefficientLoopRepository = $this->em->getRepository(CalcIcLoop::class);
+
+        // Set default process slot value
+        $this->setProcessSlot(InbreedingCoefficientProcessSlot::_1);
+    }
+
+
+    protected function setProcessSlot(string $processSlot)
+    {
+        $this->processSlot = $processSlot;
+        switch ($this->processSlot) {
+            case InbreedingCoefficientProcessSlot::_2:
+                $this->calcInbreedingCoefficientParentRepository = $this->em->getRepository(CalcIcParent2::class);
+                $this->calcInbreedingCoefficientParentDetailsRepository = $this->em->getRepository(CalcIcParentDetails2::class);
+                $this->calcInbreedingCoefficientAscendantPathRepository = $this->em->getRepository(CalcIcAscendantPath2::class);
+                $this->calcInbreedingCoefficientLoopRepository = $this->em->getRepository(CalcIcLoop2::class);
+                break;
+            case InbreedingCoefficientProcessSlot::_1:
+            default:
+                $this->calcInbreedingCoefficientParentRepository = $this->em->getRepository(CalcIcParent::class);
+                $this->calcInbreedingCoefficientParentDetailsRepository = $this->em->getRepository(CalcIcParentDetails::class);
+                $this->calcInbreedingCoefficientAscendantPathRepository = $this->em->getRepository(CalcIcAscendantPath::class);
+                $this->calcInbreedingCoefficientLoopRepository = $this->em->getRepository(CalcIcLoop::class);
+                break;
+        }
     }
 
 

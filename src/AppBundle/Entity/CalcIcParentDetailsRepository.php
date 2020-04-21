@@ -8,7 +8,7 @@ use Psr\Log\LoggerInterface;
  * Class CalcIcParentDetailsRepository
  * @package AppBundle\Entity
  */
-class CalcIcParentDetailsRepository extends CalcInbreedingCoefficientBaseRepository implements CalcTableRepositoryInterface {
+class CalcIcParentDetailsRepository extends CalcInbreedingCoefficientBaseRepository implements CalcIcParentDetailsRepositoryInterface {
 
     function tableName(): string
     {

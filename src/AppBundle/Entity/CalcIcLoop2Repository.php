@@ -8,7 +8,7 @@ use Psr\Log\LoggerInterface;
  * Class CalcIcLoop2Repository
  * @package AppBundle\Entity
  */
-class CalcIcLoop2Repository extends CalcIcLoopRepository implements CalcTableRepositoryInterface {
+class CalcIcLoop2Repository extends CalcIcLoopRepository implements CalcIcLoopRepositoryInterface {
 
     function tableName(): string
     {

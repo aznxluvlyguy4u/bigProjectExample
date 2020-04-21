@@ -4,10 +4,24 @@
 namespace AppBundle\Service\InbreedingCoefficient;
 
 
+use AppBundle\Enumerator\InbreedingCoefficientProcessSlot;
 use AppBundle\model\ParentIdsPair;
 
 class InbreedingCoefficientUpdaterService extends InbreedingCoefficientUpdaterServiceBase implements InbreedingCoefficientUpdaterServiceInterface
 {
+
+
+    public function setManualAdminProcessSlot()
+    {
+        $this->setProcessSlot(InbreedingCoefficientProcessSlot::_1);
+    }
+
+
+    public function setReportProcessSlot()
+    {
+        $this->setProcessSlot(InbreedingCoefficientProcessSlot::_2);
+    }
+
 
     /**
      * @param  array|ParentIdsPair[] $parentIdsPairs
