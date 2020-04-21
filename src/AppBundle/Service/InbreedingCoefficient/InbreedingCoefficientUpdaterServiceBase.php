@@ -134,13 +134,15 @@ class InbreedingCoefficientUpdaterServiceBase
     {
         $modificationCount = $this->updateCount + $this->newCount;
 
-        $progressOverview = "total $modificationCount";
+        $memoryUsage = LoggerUtil::getMemoryUsageInMb()."Mb";
         if (!empty($this->totalInbreedingCoefficientPairs)) {
             $percentage = round(
                 $this->processedInbreedingCoefficientPairs / $this->totalInbreedingCoefficientPairs * 100,
                 0
             );
-            $progressOverview = "($percentage% - $modificationCount/".$this->totalInbreedingCoefficientPairs.")";
+            $progressOverview = "($percentage% - $modificationCount/".$this->totalInbreedingCoefficientPairs." - $memoryUsage)";
+        } else {
+            $progressOverview = "total $modificationCount - $memoryUsage";
         }
 
         $message = "InbreedingCoefficient records $progressOverview: "

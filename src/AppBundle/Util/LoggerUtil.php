@@ -36,6 +36,11 @@ class LoggerUtil
         }
     }
 
+    public static function getMemoryUsageInMb(): string
+    {
+        return intval(memory_get_usage(false)/1048576);
+    }
+
 
     /**
      * @param Logger $logger
