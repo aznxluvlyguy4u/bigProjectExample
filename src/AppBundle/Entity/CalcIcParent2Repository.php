@@ -21,13 +21,6 @@ class CalcIcParent2Repository extends CalcIcParentRepository implements CalcIcPa
         $this->clearTableBase($this->tableName());
     }
 
-
-    function fillByYearAndMonth(int $year, int $month, ?LoggerInterface $logger = null)
-    {
-        return $this->fillByYearAndMonthBase($this->tableName(), $year, $month, $logger);
-    }
-
-
     function fillByParentPairs(array $parentIdsPairs, ?LoggerInterface $logger = null)
     {
         $this->fillByParentPairsBase($this->tableName(), $parentIdsPairs, $logger);

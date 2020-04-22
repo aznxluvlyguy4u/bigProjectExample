@@ -74,32 +74,6 @@ class CalcIcParentRepository extends CalcInbreedingCoefficientBaseRepository imp
         $this->logFillingTableEnd($logger, $this->tableName());
     }
 
-    protected function fillByYearAndMonthBase(string $parentTableName, int $year, int $month, ?LoggerInterface $logger = null)
-    {
-        $alias = 'child';
-        $yearMonthFilter = $this->animalYearAndMonthFilter($year, $month, $alias);
-        $filter = "(
-            EXISTS (
-                    SELECT
-                        $alias.parent_father_id
-                    FROM animal $alias
-                    WHERE $yearMonthFilter
-                        AND $alias.parent_father_id = a.id
-                )
-            OR
-            EXISTS (
-                    SELECT
-                        $alias.parent_mother_id
-                    FROM animal $alias
-                    WHERE $yearMonthFilter
-                      AND $alias.parent_mother_id = a.id
-                )
-            ) AND ";
-
-        $logSuffix = " table for animal with a birth date within year-month $year-$month";
-        return $this->fillBase($parentTableName, $filter, $logger, $logSuffix);
-    }
-
 
     protected function fillByParentPairsBase(string $parentTableName, array $parentIdsPairs, ?LoggerInterface $logger = null)
     {
@@ -107,12 +81,6 @@ class CalcIcParentRepository extends CalcInbreedingCoefficientBaseRepository imp
         $filter = SqlUtil::getParentsAsAnimalIdsFilterFromParentIdsPairs($parentIdsPairs, 'a') . " AND ";
         $logSuffix = " table for $count custom parent pairs";
         $this->fillBase($parentTableName, $filter, $logger, $logSuffix);
-    }
-
-
-    function fillByYearAndMonth(int $year, int $month, ?LoggerInterface $logger = null)
-    {
-        return $this->fillByYearAndMonthBase($this->tableName(), $year, $month, $logger);
     }
 
 

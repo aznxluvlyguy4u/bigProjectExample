@@ -11,13 +11,6 @@ use Psr\Log\LoggerInterface;
 interface CalcIcParentRepositoryInterface extends CalcTableRepositoryInterface {
 
     /**
-     * @param  int  $year
-     * @param  int  $month
-     * @param  LoggerInterface|null  $logger
-     */
-    function fillByYearAndMonth(int $year, int $month, ?LoggerInterface $logger = null);
-
-    /**
      * @param  array  $parentIdsPairs
      * @param  LoggerInterface|null  $logger
      */
