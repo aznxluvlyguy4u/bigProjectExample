@@ -6,14 +6,18 @@ namespace AppBundle\Service\InbreedingCoefficient;
 
 use AppBundle\Entity\CalcIcAscendantPath;
 use AppBundle\Entity\CalcIcAscendantPath2;
+use AppBundle\Entity\CalcIcAscendantPath3;
 use AppBundle\Entity\CalcIcAscendantPathRepositoryInterface;
 use AppBundle\Entity\CalcIcLoop;
 use AppBundle\Entity\CalcIcLoop2;
+use AppBundle\Entity\CalcIcLoop3;
 use AppBundle\Entity\CalcIcLoopRepositoryInterface;
 use AppBundle\Entity\CalcIcParent;
 use AppBundle\Entity\CalcIcParent2;
+use AppBundle\Entity\CalcIcParent3;
 use AppBundle\Entity\CalcIcParentDetails;
 use AppBundle\Entity\CalcIcParentDetails2;
+use AppBundle\Entity\CalcIcParentDetails3;
 use AppBundle\Entity\CalcIcParentDetailsRepositoryInterface;
 use AppBundle\Entity\CalcIcParentRepositoryInterface;
 use AppBundle\Entity\Ewe;
@@ -98,18 +102,24 @@ class InbreedingCoefficientUpdaterServiceBase
     {
         $this->processSlot = $processSlot;
         switch ($this->processSlot) {
+            case InbreedingCoefficientProcessSlot::ADMIN:
+                $this->calcInbreedingCoefficientParentRepository = $this->em->getRepository(CalcIcParent::class);
+                $this->calcInbreedingCoefficientParentDetailsRepository = $this->em->getRepository(CalcIcParentDetails::class);
+                $this->calcInbreedingCoefficientAscendantPathRepository = $this->em->getRepository(CalcIcAscendantPath::class);
+                $this->calcInbreedingCoefficientLoopRepository = $this->em->getRepository(CalcIcLoop::class);
+                break;
             case InbreedingCoefficientProcessSlot::REPORT:
                 $this->calcInbreedingCoefficientParentRepository = $this->em->getRepository(CalcIcParent2::class);
                 $this->calcInbreedingCoefficientParentDetailsRepository = $this->em->getRepository(CalcIcParentDetails2::class);
                 $this->calcInbreedingCoefficientAscendantPathRepository = $this->em->getRepository(CalcIcAscendantPath2::class);
                 $this->calcInbreedingCoefficientLoopRepository = $this->em->getRepository(CalcIcLoop2::class);
                 break;
-            case InbreedingCoefficientProcessSlot::ADMIN:
+            case InbreedingCoefficientProcessSlot::SMALL:
             default:
-                $this->calcInbreedingCoefficientParentRepository = $this->em->getRepository(CalcIcParent::class);
-                $this->calcInbreedingCoefficientParentDetailsRepository = $this->em->getRepository(CalcIcParentDetails::class);
-                $this->calcInbreedingCoefficientAscendantPathRepository = $this->em->getRepository(CalcIcAscendantPath::class);
-                $this->calcInbreedingCoefficientLoopRepository = $this->em->getRepository(CalcIcLoop::class);
+                $this->calcInbreedingCoefficientParentRepository = $this->em->getRepository(CalcIcParent3::class);
+                $this->calcInbreedingCoefficientParentDetailsRepository = $this->em->getRepository(CalcIcParentDetails3::class);
+                $this->calcInbreedingCoefficientAscendantPathRepository = $this->em->getRepository(CalcIcAscendantPath3::class);
+                $this->calcInbreedingCoefficientLoopRepository = $this->em->getRepository(CalcIcLoop3::class);
                 break;
         }
     }
