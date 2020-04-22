@@ -41,8 +41,7 @@ class MedicationOption
      * @var TreatmentMedication
      * @ORM\ManyToOne(targetEntity="TreatmentMedication", inversedBy="medications")
      * @JMS\Type("AppBundle\Entity\TreatmentMedication")
-     *
-     * * @JMS\Groups({
+     * @JMS\Groups({
      *     "TREATMENT_TEMPLATE",
      *     "TREATMENT_TEMPLATE_MIN"
      * })
@@ -228,9 +227,9 @@ class MedicationOption
     }
 
     /**
-     * @return string
+     * @return string|null
      */
-    public function getRegNl(): string
+    public function getRegNl(): ?string
     {
         return $this->regNl;
     }

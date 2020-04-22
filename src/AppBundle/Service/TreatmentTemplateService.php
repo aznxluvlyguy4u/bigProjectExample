@@ -138,24 +138,24 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
         if ($template instanceof JsonResponse) { return $template; }
 
         //TODO check for duplicates
-        $waitingDaysIsNull = true;
+
         /** @var MedicationOption $medication */
         foreach ($template->getMedications() as $medication)
         {
             if ($medication->getWaitingDays() === null) {
-                continue;
+                return  Validator::createJsonResponse('No waiting days have been filled in.', 428);
             }
 
-            $waitingDaysIsNull = false;
             /** @var TreatmentMedication $treatmentMedication */
             $treatmentMedication = $this->treatmentMedicationRepository->findOneBy(['name' => $medication->getTreatmentMedication()->getName()]);
 
             $medication->setTreatmentMedication($treatmentMedication);
-            $medication->setTreatmentTemplate($template);
-        }
+            $treatmentMedication->addMedication($medication);
 
-        if ($waitingDaysIsNull) {
-            return  Validator::createJsonResponse('No waiting days have been filled in.', 428);
+            $this->getManager()->persist($medication);
+            $this->getManager()->persist($treatmentMedication);
+
+            $medication->setTreatmentTemplate($template);
         }
 
         $template->__construct();
@@ -251,10 +251,12 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
         $admin = $this->getEmployee();
         if($admin === null) { return AdminValidator::getStandardErrorResponse(); }
 
+        //existing template data
         /** @var TreatmentTemplate $templateInDatabase */
         $templateInDatabase = $this->getTemplateByIdAndType($templateId, $type);
         if ($templateInDatabase instanceof JsonResponse) { return $templateInDatabase; }
 
+        //new template data
         /** @var TreatmentTemplate $template */
         $template = $this->getBaseSerializer()->deserializeToObject($request->getContent(), TreatmentTemplate::class);
         if (!($template instanceof TreatmentTemplate)) {
@@ -272,6 +274,13 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
         $template = $this->baseValidateDeserializedTreatmentTemplate($template);
 
         if ($template instanceof JsonResponse) { return $template; }
+
+        /** @var MedicationOption $medication */
+        foreach ($template->getMedications() as $medication) {
+            if ($medication->getWaitingDays() === null) {
+                return  Validator::createJsonResponse('No waiting days have been filled in.', 428);
+            }
+        }
 
         //TODO check for duplicates
 
@@ -321,6 +330,8 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
 
         //Update medications
         $newMedicationDosagesByDescription = [];
+        $newMedicationWaitingDaysByDescription = [];
+        $newMedicationRegNLByDescription = [];
         $treatmentMedicationOld = [];
 
         /** @var MedicationOption $medication */
@@ -335,6 +346,8 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
         foreach ($template->getMedications() as $medication)
         {
             $newMedicationDosagesByDescription[$medication->getTreatmentMedication()->getName()] = $medication->getDosage();
+            $newMedicationWaitingDaysByDescription[$medication->getTreatmentMedication()->getName()] = $medication->getWaitingDays();
+            $newMedicationRegNLByDescription[$medication->getTreatmentMedication()->getName()] = $medication->getRegNl();
 
             $treatmentMedication = $medication->getTreatmentMedication();
 
@@ -370,12 +383,32 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
             $treatmentMedication = $medication->getTreatmentMedication();
             $currentMedicationByDescription[$treatmentMedication->getName()] = $medication;
 
-            if (key_exists($treatmentMedication->getName(), $newMedicationDosagesByDescription)) {
+            if (
+                key_exists($treatmentMedication->getName(), $newMedicationDosagesByDescription) &&
+                key_exists($treatmentMedication->getName(), $newMedicationWaitingDaysByDescription) &&
+                key_exists($treatmentMedication->getName(), $newMedicationRegNLByDescription)
+            ) {
                 $newMedicationDosage = $newMedicationDosagesByDescription[$treatmentMedication->getName()];
+                $newWaitingDays = $newMedicationWaitingDaysByDescription[$treatmentMedication->getName()];
+                $newRegNL = $newMedicationRegNLByDescription[$treatmentMedication->getName()];
                 if ($medication->getDosage() !== $newMedicationDosage) {
                     //Update dosage
                     $this->appendDescription($treatmentMedication->getName(). ' dosage => '.$newMedicationDosage);
                     $medication->setDosage($newMedicationDosage);
+                    $isAnyValueUpdated = true;
+                }
+
+                if ($medication->getWaitingDays() !== $newWaitingDays) {
+                    //Update dosage
+                    $this->appendDescription($treatmentMedication->getName(). ' waiting days => '.$newWaitingDays);
+                    $medication->setWaitingDays($newWaitingDays);
+                    $isAnyValueUpdated = true;
+                }
+
+                if ($medication->getRegNl() !== $newRegNL) {
+                    //Update regNL
+                    $this->appendDescription($treatmentMedication->getName(). ' regNL => '.$newWaitingDays);
+                    $medication->setRegNl($newRegNL);
                     $isAnyValueUpdated = true;
                 }
             } else {
