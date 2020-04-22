@@ -146,9 +146,9 @@ services:
     AppBundle\Service\AnimalDetailsBatchUpdaterService:
         parent: app.abstract_base.controller
         calls:
-          - method: setInbreedingCoefficientUpdaterService
+          - method: setInbreedingCoefficientParentPairsUpdaterService
             arguments:
-              - '@AppBundle\Service\InbreedingCoefficient\InbreedingCoefficientUpdaterService'
+              - '@AppBundle\Service\InbreedingCoefficient\InbreedingCoefficientParentPairsUpdaterService'
 
     app.animallocation.history:
         class: AppBundle\Service\AnimalLocationHistoryService
@@ -515,9 +515,9 @@ services:
         class: AppBundle\Service\Report\InbreedingCoefficientReportService
         lazy: true
         calls:
-          - method: setInbreedingCoefficientUpdaterService
+          - method: setInbreedingCoefficientReportUpdaterService
             arguments:
-              - '@AppBundle\Service\InbreedingCoefficient\InbreedingCoefficientUpdaterService'
+              - '@AppBundle\Service\InbreedingCoefficient\InbreedingCoefficientReportUpdaterService'
 
     AppBundle\Service\Report\FertilizerAccountingReport:
         parent: app.report.base
@@ -657,7 +657,7 @@ services:
       arguments:
         - '@doctrine.orm.entity_manager'
         - '@logger'
-        - '@AppBundle\Service\InbreedingCoefficient\InbreedingCoefficientUpdaterService'
+        - '@AppBundle\Service\InbreedingCoefficient\InbreedingCoefficientAllAnimalsUpdaterService'
 
     AppBundle\Service\TaskService:
         arguments:
@@ -857,9 +857,9 @@ services:
           - method: setInternalQueueService
             arguments:
               - '@AppBundle\Service\AwsInternalQueueService'
-          - method: setInbreedingCoefficientUpdaterService
+          - method: setInbreedingCoefficientParentPairsUpdaterService
             arguments:
-              - '@AppBundle\Service\InbreedingCoefficient\InbreedingCoefficientUpdaterService'
+              - '@AppBundle\Service\InbreedingCoefficient\InbreedingCoefficientParentPairsUpdaterService'
 
     app.breed_type:
         parent: app.abstract_base.controller
@@ -1234,11 +1234,24 @@ services:
             arguments:
               - '@AppBundle\Service\AwsInternalQueueService'
 
-    AppBundle\Service\InbreedingCoefficient\InbreedingCoefficientUpdaterService:
+    app.inbreeding_coefficient.updater.base:
+        abstract: true
         arguments:
           - '@doctrine.orm.entity_manager'
           - '@logger'
           - '%log_extra_details_for_development%'
+
+    AppBundle\Service\InbreedingCoefficient\InbreedingCoefficientAllAnimalsUpdaterService:
+        parent: app.inbreeding_coefficient.updater.base
+
+    AppBundle\Service\InbreedingCoefficient\InbreedingCoefficientParentPairsUpdaterService:
+        parent: app.inbreeding_coefficient.updater.base
+
+    AppBundle\Service\InbreedingCoefficient\InbreedingCoefficientReportUpdaterService:
+      parent: app.inbreeding_coefficient.updater.base
+
+    AppBundle\Service\InbreedingCoefficient\InbreedingCoefficientUbnUpdaterService:
+        parent: app.inbreeding_coefficient.updater.base
 
     AppBundle\Worker\DirectProcessor\DeclareArrivalProcessorInterface:
         class: AppBundle\Worker\DirectProcessor\DeclareArrivalProcessor

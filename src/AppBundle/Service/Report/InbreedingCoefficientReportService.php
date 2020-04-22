@@ -14,7 +14,7 @@ use AppBundle\Enumerator\FileType;
 use AppBundle\Enumerator\Locale;
 use AppBundle\model\ParentIdsPair;
 use AppBundle\Report\InbreedingCoefficientReportData;
-use AppBundle\Service\InbreedingCoefficient\InbreedingCoefficientUpdaterService;
+use AppBundle\Service\InbreedingCoefficient\InbreedingCoefficientReportUpdaterService;
 use AppBundle\Util\NullChecker;
 use AppBundle\Util\ResultUtil;
 use AppBundle\Util\SqlUtil;
@@ -62,8 +62,8 @@ class InbreedingCoefficientReportService extends ReportServiceBase
     /** @var array */
     private $ewesData;
 
-    /** @var InbreedingCoefficientUpdaterService */
-    private $inbreedingCoefficientUpdaterService;
+    /** @var InbreedingCoefficientReportUpdaterService */
+    private $inbreedingCoefficientReportUpdaterService;
     /** @var ParentIdsPair[]|array */
     private $parentIdsPairs;
 
@@ -86,11 +86,11 @@ class InbreedingCoefficientReportService extends ReportServiceBase
     ];
 
     /**
-     * @param InbreedingCoefficientUpdaterService $inbreedingCoefficientUpdaterService
+     * @param InbreedingCoefficientReportUpdaterService $inbreedingCoefficientReportUpdaterService
      */
-    public function setInbreedingCoefficientUpdaterService(InbreedingCoefficientUpdaterService $inbreedingCoefficientUpdaterService)
+    public function setInbreedingCoefficientReportUpdaterService(InbreedingCoefficientReportUpdaterService $inbreedingCoefficientReportUpdaterService)
     {
-        $this->inbreedingCoefficientUpdaterService = $inbreedingCoefficientUpdaterService;
+        $this->inbreedingCoefficientReportUpdaterService = $inbreedingCoefficientReportUpdaterService;
     }
 
     /**
@@ -173,7 +173,7 @@ class InbreedingCoefficientReportService extends ReportServiceBase
                 }
             }
 
-            $this->inbreedingCoefficientUpdaterService->generateInbreedingCoefficients($pairsWithoutInbreedingCoefficient,false);
+            $this->inbreedingCoefficientReportUpdaterService->generateInbreedingCoefficients($pairsWithoutInbreedingCoefficient,false);
         } catch (UniqueConstraintViolationException $exception) {
             if ($loopCount <= $maxTries) {
                 $this->generateAndRetrieveInbreedingCoefficients(++$loopCount);

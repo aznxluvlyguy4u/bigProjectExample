@@ -16,7 +16,7 @@ use AppBundle\Entity\PedigreeRegister;
 use AppBundle\Entity\Ram;
 use AppBundle\Enumerator\QueryType;
 use AppBundle\model\ParentIdsPair;
-use AppBundle\Service\InbreedingCoefficient\InbreedingCoefficientUpdaterService;
+use AppBundle\Service\InbreedingCoefficient\InbreedingCoefficientParentPairsUpdaterService;
 use AppBundle\Util\ActionLogWriter;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\RequestUtil;
@@ -64,8 +64,8 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
     /** @var array */
     private $animalIdsWithUpdatedNLingValues;
 
-    /** @var InbreedingCoefficientUpdaterService */
-    private $inbreedingCoefficientUpdaterService;
+    /** @var InbreedingCoefficientParentPairsUpdaterService */
+    private $inbreedingCoefficientParentPairsUpdaterService;
 
     /* Parent error messages */
     const ERROR_NOT_FOUND = 'ERROR_NOT_FOUND';
@@ -89,11 +89,11 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
     ];
 
     /**
-     * @param InbreedingCoefficientUpdaterService $inbreedingCoefficientUpdaterService
+     * @param InbreedingCoefficientParentPairsUpdaterService $inbreedingCoefficientParentPairsUpdaterService
      */
-    public function setInbreedingCoefficientUpdaterService(InbreedingCoefficientUpdaterService $inbreedingCoefficientUpdaterService)
+    public function setInbreedingCoefficientParentPairsUpdaterService(InbreedingCoefficientParentPairsUpdaterService $inbreedingCoefficientParentPairsUpdaterService)
     {
-        $this->inbreedingCoefficientUpdaterService = $inbreedingCoefficientUpdaterService;
+        $this->inbreedingCoefficientParentPairsUpdaterService = $inbreedingCoefficientParentPairsUpdaterService;
     }
 
     /**
@@ -187,7 +187,7 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
                                 $toBeUpdatedAnimal->getParentMotherId()
                             );
 
-                            $this->inbreedingCoefficientUpdaterService->regenerateInbreedingCoefficients([$parentIdsPair]);
+                            $this->inbreedingCoefficientParentPairsUpdaterService->regenerateInbreedingCoefficients([$parentIdsPair]);
                         }
                     }
                 }

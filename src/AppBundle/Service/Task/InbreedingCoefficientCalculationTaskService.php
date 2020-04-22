@@ -3,7 +3,7 @@
 
 namespace AppBundle\Service\Task;
 
-use AppBundle\Service\InbreedingCoefficient\InbreedingCoefficientUpdaterService;
+use AppBundle\Service\InbreedingCoefficient\InbreedingCoefficientAllAnimalsUpdaterService;
 use AppBundle\Util\ResultUtil;
 use Doctrine\ORM\EntityManager;
 use Symfony\Bridge\Monolog\Logger;
@@ -18,24 +18,24 @@ class InbreedingCoefficientCalculationTaskService
     /** @var Logger  */
     private $logger;
 
-    /** @var InbreedingCoefficientUpdaterService */
-    private $inbreedingCoefficientUpdaterService;
+    /** @var InbreedingCoefficientAllAnimalsUpdaterService */
+    private $inbreedingCoefficientAllAnimalsUpdaterService;
 
     /**
      * InbreedingCoefficientCalculationTaskService constructor.
      * @param EntityManager $em
      * @param Logger $logger
-     * @param InbreedingCoefficientUpdaterService $inbreedingCoefficientUpdaterService
+     * @param InbreedingCoefficientAllAnimalsUpdaterService $inbreedingCoefficientAllAnimalsUpdaterService
      */
     public function __construct(
         EntityManager $em,
         Logger $logger,
-        InbreedingCoefficientUpdaterService $inbreedingCoefficientUpdaterService
+        InbreedingCoefficientAllAnimalsUpdaterService $inbreedingCoefficientAllAnimalsUpdaterService
     )
     {
         $this->em = $em;
         $this->logger = $logger;
-        $this->inbreedingCoefficientUpdaterService = $inbreedingCoefficientUpdaterService;
+        $this->inbreedingCoefficientAllAnimalsUpdaterService = $inbreedingCoefficientAllAnimalsUpdaterService;
     }
 
     /**
@@ -44,7 +44,7 @@ class InbreedingCoefficientCalculationTaskService
     function calculate()
     {
         try {
-            $this->inbreedingCoefficientUpdaterService->generateForAllAnimalsAndLitters();
+            $this->inbreedingCoefficientAllAnimalsUpdaterService->generateForAllAnimalsAndLitters();
             return ResultUtil::successResult('ok');
         } catch (\Exception $exception) {
             return ResultUtil::errorResult($exception->getMessage(), $exception->getCode());
@@ -57,7 +57,7 @@ class InbreedingCoefficientCalculationTaskService
     function recalculate()
     {
         try {
-            $this->inbreedingCoefficientUpdaterService->regenerateForAllAnimalsAndLitters();
+            $this->inbreedingCoefficientAllAnimalsUpdaterService->regenerateForAllAnimalsAndLitters();
             return ResultUtil::successResult('ok');
         } catch (\Exception $exception) {
             return ResultUtil::errorResult($exception->getMessage(), $exception->getCode());

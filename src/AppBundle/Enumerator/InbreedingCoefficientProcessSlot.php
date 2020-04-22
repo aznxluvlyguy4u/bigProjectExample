@@ -10,6 +10,7 @@ class InbreedingCoefficientProcessSlot
 {
     use EnumInfo;
 
-    const _1 = 1;
-    const _2 = 2;
+    const ADMIN = 1;
+    const REPORT = 2;
+    const SMALL = 3;
 }

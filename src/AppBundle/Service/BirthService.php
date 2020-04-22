@@ -34,7 +34,7 @@ use AppBundle\Enumerator\RequestType;
 use AppBundle\Enumerator\TagStateType;
 use AppBundle\model\ParentIdsPair;
 use AppBundle\Output\DeclareBirthResponseOutput;
-use AppBundle\Service\InbreedingCoefficient\InbreedingCoefficientUpdaterService;
+use AppBundle\Service\InbreedingCoefficient\InbreedingCoefficientParentPairsUpdaterService;
 use AppBundle\Util\ActionLogWriter;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\DoctrineUtil;
@@ -57,7 +57,6 @@ use Symfony\Bridge\Monolog\Logger;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\PreconditionRequiredHttpException;
-use Symfony\Component\Validator\Constraints\Time;
 
 class BirthService extends DeclareControllerServiceBase implements BirthAPIControllerInterface
 {
@@ -82,15 +81,15 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
     /** @var Logger */
     private $logger;
 
-    /** @var InbreedingCoefficientUpdaterService */
-    private $inbreedingCoefficientUpdaterService;
+    /** @var InbreedingCoefficientParentPairsUpdaterService */
+    private $inbreedingCoefficientParentPairsUpdaterService;
 
     /**
-     * @param InbreedingCoefficientUpdaterService $inbreedingCoefficientUpdaterService
+     * @param InbreedingCoefficientParentPairsUpdaterService $inbreedingCoefficientParentPairsUpdaterService
      */
-    public function setInbreedingCoefficientUpdaterService(InbreedingCoefficientUpdaterService $inbreedingCoefficientUpdaterService)
+    public function setInbreedingCoefficientParentPairsUpdaterService(InbreedingCoefficientParentPairsUpdaterService $inbreedingCoefficientParentPairsUpdaterService)
     {
-        $this->inbreedingCoefficientUpdaterService = $inbreedingCoefficientUpdaterService;
+        $this->inbreedingCoefficientParentPairsUpdaterService = $inbreedingCoefficientParentPairsUpdaterService;
     }
 
     /**
@@ -1301,7 +1300,7 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
                 $litter->getAnimalMother()->getId()
             );
 
-            $this->inbreedingCoefficientUpdaterService->generateInbreedingCoefficients(
+            $this->inbreedingCoefficientParentPairsUpdaterService->generateInbreedingCoefficients(
                 [$parentIdsPair],
                 false
             );

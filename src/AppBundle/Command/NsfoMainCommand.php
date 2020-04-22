@@ -31,7 +31,8 @@ use AppBundle\Service\BreedValueService;
 use AppBundle\Service\CacheService;
 use AppBundle\Service\DataFix\DuplicateMeasurementsFixer;
 use AppBundle\Service\ExcelService;
-use AppBundle\Service\InbreedingCoefficient\InbreedingCoefficientUpdaterService;
+use AppBundle\Service\InbreedingCoefficient\InbreedingCoefficientAllAnimalsUpdaterService;
+use AppBundle\Service\InbreedingCoefficient\InbreedingCoefficientUbnUpdaterService;
 use AppBundle\Service\Migration\LambMeatIndexMigrator;
 use AppBundle\Service\Migration\MixBlupAnalysisTypeMigrator;
 use AppBundle\Service\Migration\WormResistanceIndexMigrator;
@@ -769,9 +770,9 @@ class NsfoMainCommand extends ContainerAwareCommand
             case 3: $this->getContainer()->get('AppBundle\Service\Migration\PedigreeDataReprocessor')->run($this->cmdUtil); break;
             case 4: $this->getContainer()->get('AppBundle\Service\Migration\ScrapieGenotypeReprocessor')->run($this->cmdUtil); break;
             case 5: $this->getContainer()->get('AppBundle\Service\Migration\PedigreeDataReprocessor')->batchMatchMissingPedigreeRegisterByBreederNumberInStn(); break;
-            case 6: $this->getContainer()->get(InbreedingCoefficientUpdaterService::class)->generateForAllAnimalsAndLitters(); break;
-            case 7: $this->getContainer()->get(InbreedingCoefficientUpdaterService::class)->generateForAnimalsAndLittersOfUbn($this->askForUbn()); break;
-            case 8: $this->getContainer()->get(InbreedingCoefficientUpdaterService::class)->regenerateForAnimalsAndLittersOfUbn($this->askForUbn()); break;
+            case 6: $this->getContainer()->get(InbreedingCoefficientAllAnimalsUpdaterService::class)->generateForAllAnimalsAndLitters(); break;
+            case 7: $this->getContainer()->get(InbreedingCoefficientUbnUpdaterService::class)->generateForAnimalsAndLittersOfUbn($this->askForUbn()); break;
+            case 8: $this->getContainer()->get(InbreedingCoefficientUbnUpdaterService::class)->regenerateForAnimalsAndLittersOfUbn($this->askForUbn()); break;
 
             default: $this->writeMenuExit(); return;
         }
