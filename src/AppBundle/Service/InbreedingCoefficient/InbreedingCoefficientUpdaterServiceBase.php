@@ -134,7 +134,7 @@ class InbreedingCoefficientUpdaterServiceBase
 
     private function writeBatchCount(string $suffix = '')
     {
-        $modificationCount = $this->updateCount + $this->newCount;
+        $processedCount = $this->processedInbreedingCoefficientPairs;
 
         $memoryUsage = LoggerUtil::getMemoryUsageInMb()."Mb";
         if (!empty($this->totalInbreedingCoefficientPairs)) {
@@ -142,9 +142,9 @@ class InbreedingCoefficientUpdaterServiceBase
                 $this->processedInbreedingCoefficientPairs / $this->totalInbreedingCoefficientPairs * 100,
                 0
             );
-            $progressOverview = "($percentage% - $modificationCount/".$this->totalInbreedingCoefficientPairs." - $memoryUsage)";
+            $progressOverview = "($percentage% - $processedCount/".$this->totalInbreedingCoefficientPairs." - $memoryUsage)";
         } else {
-            $progressOverview = "total $modificationCount - $memoryUsage";
+            $progressOverview = "total $processedCount - $memoryUsage";
         }
 
         $message = "InbreedingCoefficient records $progressOverview: "
@@ -153,11 +153,12 @@ class InbreedingCoefficientUpdaterServiceBase
             .' | '.$this->logMessageParents
             .(empty($this->logMessageParentsAction) ? '' : '['.$this->logMessageParentsAction.']')
             .(empty($suffix) ? '' : ' | '.$suffix);
-        if ($modificationCount == 0 || self::LOG_LOOPS_ON_NEW_LINE) {
+        if ($processedCount <= 1 || self::LOG_LOOPS_ON_NEW_LINE) {
             $this->logger->notice($message);
         } else {
             LoggerUtil::overwriteNoticeLoggerInterface($this->logger, $message);
         }
+        $message = null;
     }
 
 
@@ -381,7 +382,7 @@ class InbreedingCoefficientUpdaterServiceBase
 
         $this->fillCalcTablesExceptForLoopsForParentIdsPairs($parentIdsPairs);
 
-        $groupedAnimalIdsSets = $this->getParentGroupedAnimalIdsByPairs($parentIdsPairs);
+        $groupedAnimalIdsSets = $this->getParentGroupedAnimalIdsByPairs($parentIdsPairs, $recalculate);
         $setCount = count($groupedAnimalIdsSets);
 
         $this->totalInbreedingCoefficientPairs = $setCount;
@@ -409,31 +410,34 @@ class InbreedingCoefficientUpdaterServiceBase
     {
         foreach ($groupedAnimalIdsSets as $groupedAnimalIdSet)
         {
-            $motherId = $groupedAnimalIdSet['mother_id'];
-            $fatherId = $groupedAnimalIdSet['father_id'];
-            $animalIdsArrayString = $groupedAnimalIdSet['animal_ids'];
-            $litterIdsArrayString = $groupedAnimalIdSet['litter_ids'];
+            $this->processGroupedAnimalIdsSet($groupedAnimalIdSet, $recalculate, $setFindGlobalMatch);
+        }
+    }
 
-            $this->logMessageParentsAction = '';
-            $this->logMessageParents = "dad: $fatherId, mom: $fatherId";
 
-            $this->writeBatchCount();
+    private function processGroupedAnimalIdsSet(array $groupedAnimalIdsSet, bool $recalculate, bool $setFindGlobalMatch)
+    {
+        $motherId = $groupedAnimalIdsSet['mother_id'];
+        $fatherId = $groupedAnimalIdsSet['father_id'];
+        $animalIdsArrayString = $groupedAnimalIdsSet['animal_ids'];
+        $litterIdsArrayString = $groupedAnimalIdsSet['litter_ids'];
 
-            $this->calcInbreedingCoefficientLoopRepository->fill($fatherId, $motherId, $this->logger);
+        $this->logMessageParentsAction = '';
+        $this->logMessageParents = "dad: $fatherId, mom: $fatherId";
 
-            $this->upsertInbreedingCoefficientForPair($fatherId, $motherId, $recalculate, $setFindGlobalMatch);
+        $this->writeBatchCount();
 
+        $isSkipped = $this->upsertInbreedingCoefficientForPair($fatherId, $motherId, $recalculate, $setFindGlobalMatch);
+
+        if (!$isSkipped) {
             $this->writeBatchCount(self::MATCHING_MESSAGE);
-
             $animalIds = SqlUtil::getArrayFromPostgreSqlArrayString($animalIdsArrayString);
             $litterIds = SqlUtil::getArrayFromPostgreSqlArrayString($litterIdsArrayString);
-
             $this->matchAnimalsAndLitters($animalIds, $litterIds);
-
             $this->writeBatchCount(self::MATCHED_MESSAGE);
-
-            $this->calcInbreedingCoefficientLoopRepository->clearTable($this->logger);
         }
+
+        $this->processedInbreedingCoefficientPairs++;
     }
 
 
@@ -475,36 +479,61 @@ class InbreedingCoefficientUpdaterServiceBase
 
         foreach ($yearsAndMonthsAnimalIdsSets as $period)
         {
-            $year = $period->getYear();
-            $month = $period->getMonth();
-
-            $this->logMessageGroup = "$year-$month (year-month)";
-
-            $groupedAnimalIdsSets = $this->getParentGroupedAnimalIdsByYearAndMonth($year, $month);
-            $this->writeBatchCount();
-
-            foreach ($groupedAnimalIdsSets as $groupedAnimalIdsSet)
-            {
-                $this->logMessageParentsAction = '';
-                $this->logMessageParents = '';
-
-                $parentIdsPairs = [
-                    new ParentIdsPair(
-                        $groupedAnimalIdsSet['father_id'],
-                        $groupedAnimalIdsSet['mother_id']
-                    )
-                ];
-
-                $this->fillCalcTablesExceptForLoopsForParentIdsPairs($parentIdsPairs);
-                $this->processGroupedAnimalIdsSets([$groupedAnimalIdsSet], $recalculate, $setFindGlobalMatch);
-
-                $this->writeBatchCount();
-
-                $this->clearParentsCalculationTables();
-            }
+            $this->generateForAllAnimalsAndLitterBasePeriodLoop(
+                $period, $recalculate, $setFindGlobalMatch
+            );
+            gc_collect_cycles();
         }
 
         $this->writeBatchCount('Completed!');
+        $this->clearParentsCalculationTables();
+    }
+
+
+    private function generateForAllAnimalsAndLitterBasePeriodLoop(
+        YearMonthData $period, bool $recalculate, bool $setFindGlobalMatch
+    )
+    {
+        $year = $period->getYear();
+        $month = $period->getMonth();
+
+        $this->logMessageGroup = "$year-$month (year-month)";
+
+        $groupedAnimalIdsSets = $this->getParentGroupedAnimalIdsByYearAndMonth($year, $month);
+        $this->writeBatchCount();
+
+        foreach ($groupedAnimalIdsSets as $groupedAnimalIdsSet)
+        {
+            $this->generateForAllAnimalsAndLitterBaseGroupedAnimalIdsSetsLoop(
+                $groupedAnimalIdsSet, $recalculate, $setFindGlobalMatch
+            );
+        }
+
+        $groupedAnimalIdsSets = null;
+        gc_collect_cycles();
+    }
+
+
+    private function generateForAllAnimalsAndLitterBaseGroupedAnimalIdsSetsLoop(
+        array $groupedAnimalIdsSet, bool $recalculate, bool $setFindGlobalMatch
+    )
+    {
+        $this->logMessageParentsAction = '';
+        $this->logMessageParents = '';
+
+        $parentIdsPairs = [
+            new ParentIdsPair(
+                $groupedAnimalIdsSet['father_id'],
+                $groupedAnimalIdsSet['mother_id']
+            )
+        ];
+
+        $this->fillCalcTablesExceptForLoopsForParentIdsPairs($parentIdsPairs);
+        $this->processGroupedAnimalIdsSets([$groupedAnimalIdsSet], $recalculate, $setFindGlobalMatch);
+
+        $parentIdsPairs = null;
+
+        $this->writeBatchCount();
 
         $this->clearParentsCalculationTables();
     }
@@ -540,10 +569,14 @@ class InbreedingCoefficientUpdaterServiceBase
             $this->createNewInbreedingCoefficientRecord($fatherId, $motherId, $setFindGlobalMatch);
         }
 
-        if (!$updateExisting && !$createNew) {
+        $isSkipped = !$updateExisting && !$createNew;
+
+        if ($isSkipped) {
             $this->skipped++;
             $this->logMessageParentsAction = self::PARENTS_ACTION_EMPTY;
         }
+
+        return $isSkipped;
     }
 
 
@@ -653,27 +686,30 @@ WHERE EXISTS(
     }
 
 
-    private function getParentGroupedAnimalIdsByYearAndMonth(int $year, int $month): array
+    private function getParentGroupedAnimalIdsByYearAndMonth(int $year, int $month, bool $recalculate = false): array
     {
         return $this->getParentGroupedAnimalAndLitterIds(
-            "date_part('YEAR', date_of_birth) = $year AND date_part('MONTH', date_of_birth) = $month AND"
+            "date_part('YEAR', date_of_birth) = $year AND date_part('MONTH', date_of_birth) = $month AND",
+            $recalculate
         );
     }
 
 
     /**
      * @param  array|ParentIdsPair[] $parentIdsPairs
+     * @param  bool $recalculate
      * @return array
      */
-    private function getParentGroupedAnimalIdsByPairs(array $parentIdsPairs): array
+    private function getParentGroupedAnimalIdsByPairs(array $parentIdsPairs, bool $recalculate = false): array
     {
         $filter = SqlUtil::getParentIdsFilterFromParentIdsPairs($parentIdsPairs).' AND ';
-        return $this->getParentGroupedAnimalAndLitterIds($filter);
+        return $this->getParentGroupedAnimalAndLitterIds($filter, $recalculate);
     }
 
 
-    private function getParentGroupedAnimalAndLitterIds(string $filter): array
+    private function getParentGroupedAnimalAndLitterIds(string $filter, bool $recalculate = false): array
     {
+        $recalculateFilter = $recalculate ? '' : 'a.inbreeding_coefficient_match_updated_at ISNULL AND';
         $sql = "SELECT
                     --v.pair_id,
                     MAX(v.father_id) as father_id,
@@ -693,6 +729,7 @@ WHERE EXISTS(
                         -- Because it will include the same parent pair multiple times during multiple loops
                         -- LEFT JOIN litter l ON a.parent_mother_id = l.animal_mother_id AND a.parent_father_id = l.animal_father_id
                     WHERE $filter
+                      $recalculateFilter
                       parent_mother_id NOTNULL AND parent_father_id NOTNULL
                      )v
                 GROUP BY v.pair_id";
