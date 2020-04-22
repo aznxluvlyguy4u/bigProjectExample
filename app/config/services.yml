@@ -1238,6 +1238,7 @@ services:
         arguments:
           - '@doctrine.orm.entity_manager'
           - '@logger'
+          - '%log_extra_details_for_development%'
 
     AppBundle\Worker\DirectProcessor\DeclareArrivalProcessorInterface:
         class: AppBundle\Worker\DirectProcessor\DeclareArrivalProcessor

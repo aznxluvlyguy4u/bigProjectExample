@@ -36,8 +36,6 @@ class InbreedingCoefficientUpdaterServiceBase
     const PARENTS_ACTION_NEW = 'NEW';
     const PARENTS_ACTION_UPDATE = 'UPD';
     const PARENTS_ACTION_EMPTY = '---';
-    const MATCHING_MESSAGE = 'matching';
-    const MATCHED_MESSAGE = 'MATCHED!';
 
     /** @var string */
     protected $processSlot;
@@ -46,6 +44,8 @@ class InbreedingCoefficientUpdaterServiceBase
     private $em;
     /** @var LoggerInterface */
     private $logger;
+    /** @var boolean */
+    private $logExtraDetailsForDevelopment;
 
     /** @var CalcIcParentRepositoryInterface */
     private $calcInbreedingCoefficientParentRepository;
@@ -84,10 +84,15 @@ class InbreedingCoefficientUpdaterServiceBase
     /** @var int */
     private $totalInbreedingCoefficientPairs;
 
-    public function __construct(EntityManagerInterface $em, LoggerInterface $logger)
+    public function __construct(
+        EntityManagerInterface $em,
+        LoggerInterface $logger,
+        ?bool $logExtraDetailsForDevelopment = false
+    )
     {
         $this->em = $em;
         $this->logger = $logger;
+        $this->logExtraDetailsForDevelopment = $logExtraDetailsForDevelopment;
 
         $this->inbreedingCoefficientRepository = $this->em->getRepository(InbreedingCoefficient::class);
 
@@ -130,6 +135,13 @@ class InbreedingCoefficientUpdaterServiceBase
         $this->logMessageParentsAction = '';
         $this->processedInbreedingCoefficientPairs = 0;
         $this->totalInbreedingCoefficientPairs = 0;
+    }
+
+    private function writeBatchCountInnerLoop(string $suffix = '')
+    {
+        if ($this->logExtraDetailsForDevelopment) {
+            $this->writeBatchCount($suffix);
+        }
     }
 
     private function writeBatchCount(string $suffix = '')
@@ -425,16 +437,14 @@ class InbreedingCoefficientUpdaterServiceBase
         $this->logMessageParentsAction = '';
         $this->logMessageParents = "dad: $fatherId, mom: $fatherId";
 
-        $this->writeBatchCount();
+        $this->writeBatchCountInnerLoop();
 
         $isSkipped = $this->upsertInbreedingCoefficientForPair($fatherId, $motherId, $recalculate, $setFindGlobalMatch);
 
         if (!$isSkipped) {
-            $this->writeBatchCount(self::MATCHING_MESSAGE);
             $animalIds = SqlUtil::getArrayFromPostgreSqlArrayString($animalIdsArrayString);
             $litterIds = SqlUtil::getArrayFromPostgreSqlArrayString($litterIdsArrayString);
             $this->matchAnimalsAndLitters($animalIds, $litterIds);
-            $this->writeBatchCount(self::MATCHED_MESSAGE);
         }
 
         $this->processedInbreedingCoefficientPairs++;
@@ -533,7 +543,7 @@ class InbreedingCoefficientUpdaterServiceBase
 
         $parentIdsPairs = null;
 
-        $this->writeBatchCount();
+        $this->writeBatchCountInnerLoop();
 
         $this->clearParentsCalculationTables();
     }

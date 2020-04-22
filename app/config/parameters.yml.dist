@@ -72,3 +72,4 @@ parameters:
     output_reports_to_cache_folder_for_local_testing: false
     display_report_pdf_output_as_html: false
     use_test_data: false
+    log_extra_details_for_development: false
