@@ -4,9 +4,12 @@
 namespace AppBundle\Service;
 
 
+use AppBundle\Component\LocationHealthMessageBuilder;
 use AppBundle\Criteria\ExteriorCriteria;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\Location;
+use AppBundle\Entity\LocationHealth;
+use AppBundle\Entity\LocationHealthMessage;
 use AppBundle\Entity\Neuter;
 use AppBundle\Entity\PedigreeRegister;
 use AppBundle\Entity\PedigreeRegisterRegistration;
@@ -17,13 +20,17 @@ use AppBundle\Enumerator\BreedType;
 use AppBundle\Enumerator\GenderType;
 use AppBundle\Enumerator\ScrapieGenotypeType;
 use AppBundle\Enumerator\ScrapieStatus;
+use AppBundle\Exception\InvalidSwitchCaseException;
 use AppBundle\Util\BreedCodeUtil;
 use AppBundle\Util\CommandUtil;
+use AppBundle\Util\LocationHealthUpdater;
 use AppBundle\Util\SqlUtil;
 use AppBundle\Util\StringUtil;
 use AppBundle\Util\TimeUtil;
+use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Monolog\Logger;
+use Twig\Error\Error;
 
 class PedigreeDataGenerator
 {
@@ -54,11 +61,14 @@ class PedigreeDataGenerator
     private $lastCheckedAnimalId;
     /** @var int */
     private $startAnimalId;
+    /** @var LocationHealthUpdater */
+    private $locationHealthUpdater;
 
-    public function __construct(EntityManagerInterface $em, Logger $logger)
+    public function __construct(EntityManagerInterface $em, Logger $logger, LocationHealthUpdater $locationHealthUpdater)
     {
         $this->em = $em;
         $this->logger = $logger;
+        $this->locationHealthUpdater = $locationHealthUpdater;
     }
 
 
@@ -467,6 +477,8 @@ class PedigreeDataGenerator
     /**
      * @param Animal $animal
      * @return Animal
+     * @throws InvalidSwitchCaseException
+     * @throws Error
      */
     private function generateScrapieGenotype(Animal $animal)
     {
@@ -480,13 +492,29 @@ class PedigreeDataGenerator
             return $animal;
         }
 
-        if ($this->getLocation($animal) &&
-            $this->getLocation($animal)->getLocationHealth() &&
-            $this->getLocation($animal)->getLocationHealth()->getCurrentScrapieStatus() === ScrapieStatus::RESISTANT)
+        /** @var Location $location */
+        $location = $this->getLocation($animal);
+
+        if ($location &&
+            $location->getLocationHealth() &&
+            $location->getLocationHealth()->getCurrentScrapieStatus() === ScrapieStatus::RESISTANT)
         {
-            $animal->setScrapieGenotype(ScrapieGenotypeType::ARR_ARR);
-            $animal->setScrapieGenotypeSource($this->getScrapieGenotypeAdministrativeSource());
-            $this->valueWasUpdated();
+            $father = $animal->getParentFather();
+            $mother = $animal->getParentMother();
+
+            if (
+                $father->getScrapieGenotype() === ScrapieGenotypeType::ARR_ARR &&
+                $mother->getScrapieGenotype() === ScrapieGenotypeType::ARR_ARR
+            ) {
+                $animal->setScrapieGenotype(ScrapieGenotypeType::ARR_ARR);
+                $animal->setScrapieGenotypeSource($this->getScrapieGenotypeAdministrativeSource());
+                $this->valueWasUpdated();
+            } else {
+                $animal->setScrapieGenotype(null);
+                $animal->setScrapieGenotypeSource(null);
+
+                $this->locationHealthUpdater->setScrapieStatusToUnderObservationWhenParentsAreNonArrArrAndSendEmail($location->getLocationHealth(), $animal);
+            }
         }
 
         return $animal;

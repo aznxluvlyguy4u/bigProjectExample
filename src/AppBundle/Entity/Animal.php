@@ -2096,6 +2096,7 @@ abstract class Animal
             )
             ->orderBy([Variable::LOG_DATE => Criteria::DESC])
             ->setMaxResults(1);
+
         $result = $this->births->matching($criteria)->first();
         return ($result instanceof DeclareBirth) ? $result : null;
     }
