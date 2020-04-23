@@ -83,7 +83,9 @@ class InbreedingCoefficientAllAnimalsUpdaterService extends InbreedingCoefficien
 
         foreach ($groupedAnimalIdsSets as $groupedAnimalIdsSet)
         {
+            // Restart process here
             $this->processGroupedAnimalIdsSets([$groupedAnimalIdsSet], $recalculate, $setFindGlobalMatch);
+            // Break process here
         }
     }
 
