@@ -378,6 +378,14 @@ class Litter extends DeclareNsfoBase
     private $starEweBasePoints;
 
     /**
+     * @var ArrayCollection|Animal[]
+     *
+     * @ORM\OneToMany(targetEntity="AppBundle\Entity\Animal", mappedBy="surrogateLitter")
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\Animal>")
+     */
+    public $surrogates;
+
+    /**
      * Litter constructor.
      */
     public function __construct()
@@ -401,6 +409,7 @@ class Litter extends DeclareNsfoBase
         $this->preferentRamCount = 0;
         $this->hasMinimumOffspringMuscularity = false;
         $this->starEweBasePoints = 0;
+        $this->surrogates = new ArrayCollection();
     }
 
     /**
@@ -1132,6 +1141,42 @@ class Litter extends DeclareNsfoBase
     public function setStarEweBasePoints(int $starEweBasePoints): Litter
     {
         $this->starEweBasePoints = $starEweBasePoints;
+        return $this;
+    }
+
+    /**
+     * @return Animal[]|ArrayCollection
+     */
+    public function getSurrogates()
+    {
+        return $this->surrogates;
+    }
+
+    /**
+     * @param Animal $surrogate
+     * @return Litter|void
+     */
+    public function addSurrogate(Animal $surrogate)
+    {
+        if ($this->surrogates->contains($surrogate)) {
+            return;
+        }
+
+        $this->surrogates->add($surrogate);
+        return $this;
+    }
+
+    /**
+     * @param Animal $surrogate
+     * @return Litter|void
+     */
+    public function removeSurrogate(Animal $surrogate)
+    {
+        if (!$this->surrogates->contains($surrogate)) {
+            return;
+        }
+
+        $this->surrogates->removeElement($surrogate);
         return $this;
     }
 

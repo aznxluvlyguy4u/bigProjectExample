@@ -159,7 +159,7 @@ class LambMeatIndexDataFile extends MixBlupDataFileBase implements MixBlupDataFi
                  CONCAT(mom.uln_country_code, mom.uln_number,'_', LPAD(CAST(l.litter_ordinal AS TEXT), 2, '0')) as ".JsonInputConstant::LITTER_GROUP.",
                  a.".JsonInputConstant::BREED_CODE.",
                  l.born_alive_count + l.stillborn_count as ".JsonInputConstant::N_LING.",
-                 l.".JsonInputConstant::SUCKLE_COUNT.",
+                 COALESCE(surrogate_litter.suckle_count, l.suckle_count) as ".JsonInputConstant::SUCKLE_COUNT.",
                  a.".JsonInputConstant::UBN_OF_BIRTH.",
                  a.".JsonInputConstant::HETEROSIS.",
                  a.".JsonInputConstant::RECOMBINATION.",
@@ -175,6 +175,7 @@ class LambMeatIndexDataFile extends MixBlupDataFileBase implements MixBlupDataFi
                   INNER JOIN animal mom ON mom.id = a.parent_mother_id
                   LEFT JOIN animal dad ON dad.id = a.parent_father_id
                   INNER JOIN litter l ON l.id = a.litter_id
+                  LEFT JOIN litter surrogate_litter ON surrogate_litter.id = a.surrogate_litter_id
                   LEFT JOIN animal_cache c ON c.animal_id = a.id
                 WHERE 
                   ".self::getSqlBaseFilter()."
@@ -269,7 +270,7 @@ class LambMeatIndexDataFile extends MixBlupDataFileBase implements MixBlupDataFi
         $animalId = JsonInputConstant::ANIMAL_ID;
         $measurementAgeFromAnimalIdAndDate = "DATE_PART('day', DATE(substring(animal_id_and_date FROM '([0-9]{4}[-][0-9]{2}[-][0-9]{2})')) - a.date_of_birth)";
         $nullReplacement = MixBlupInstructionFileBase::MISSING_REPLACEMENT;
-        
+
         $sql = "
         SELECT
           a.id as $animalId,
@@ -368,7 +369,7 @@ class LambMeatIndexDataFile extends MixBlupDataFileBase implements MixBlupDataFi
                           
                 ) x GROUP BY animal_id_and_date, animal_id
                 ) g ON g.animal_id = a.id";
-        
+
         $scanResults = $conn->query($sql)->fetchAll();
         return $scanResults;
     }
@@ -400,7 +401,7 @@ class LambMeatIndexDataFile extends MixBlupDataFileBase implements MixBlupDataFi
      * @return string
      */
     private static function getFormattedTimedWeightDataRecord(array $timedWeightData)
-    {     
+    {
         return
             self::getFormattedBlankAge(). //Scan age
             self::getFormattedBlankWeight(). //Scan weight
@@ -489,6 +490,6 @@ class LambMeatIndexDataFile extends MixBlupDataFileBase implements MixBlupDataFi
             self::getFormattedMuscleThickness($scanData, JsonInputConstant::MUSCLE_THICKNESS);
     }
 
-    
+
 
 }
