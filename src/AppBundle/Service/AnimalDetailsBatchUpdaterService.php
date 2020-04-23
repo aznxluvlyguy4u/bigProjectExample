@@ -19,6 +19,7 @@ use AppBundle\model\ParentIdsPair;
 use AppBundle\Service\InbreedingCoefficient\InbreedingCoefficientUpdaterService;
 use AppBundle\Util\ActionLogWriter;
 use AppBundle\Util\ArrayUtil;
+use AppBundle\Util\LitterUtil;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
 use AppBundle\Util\SqlUtil;
@@ -27,6 +28,7 @@ use AppBundle\Util\TimeUtil;
 use AppBundle\Util\Translation;
 use AppBundle\Util\Validator;
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\DBAL\DBALException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -63,6 +65,9 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
 
     /** @var array */
     private $animalIdsWithUpdatedNLingValues;
+
+    /** @var array */
+    private $changedSurrogateMothers;
 
     /** @var InbreedingCoefficientUpdaterService */
     private $inbreedingCoefficientUpdaterService;
@@ -514,6 +519,7 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
      * @param Animal[] $animalsWithNewValues
      * @param Animal[] $retrievedAnimals
      * @return array|JsonResponse
+     * @throws DBALException
      */
     private function updateValues(array $animalsWithNewValues, array $retrievedAnimals)
     {
@@ -522,6 +528,7 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
         $updatedAnimals = [];
         $nonUpdatedAnimals = [];
         $this->animalIdsWithUpdatedNLingValues = [];
+        $this->changedSurrogateMothers = [];
 
         foreach ($animalsWithNewValues as $animalsWithNewValue) {
             $animalId = $animalsWithNewValue->getId();
@@ -556,6 +563,10 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
 
         foreach ($this->locationsWithRelocations as $locationsWithRelocation) {
             $this->clearLivestockCacheForLocation($locationsWithRelocation);
+        }
+
+        if (!empty($this->changedSurrogateMothers)) {
+            LitterUtil::updateSuckleCountForLittersOrMotherIds($this->getConnection(), $this->changedSurrogateMothers);
         }
 
         return [
@@ -673,6 +684,8 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
         $newSurrogate = $animalsWithNewValue->getSurrogate();
 
         if ($this->hasParentChanged($currentSurrogate, $newSurrogate)) {
+            $this->changedSurrogateMothers[] = $currentSurrogate->getParentMotherId();
+            $this->changedSurrogateMothers[] = $newSurrogate->getParentMotherId();
             $ulnStringCurrentSurrogate = $currentSurrogate ? $currentSurrogate->getUln() : $this->getEmptyLabel();
             if ($newSurrogate && $newSurrogate->getId()) {
                 /** @var Ram|Ewe $retrievedNewParent */
@@ -1557,7 +1570,7 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
     /**
      * @param array $setOfUniqueUlns
      * @return array
-     * @throws \Doctrine\DBAL\DBALException
+     * @throws DBALException
      */
     private function returnOnlyAlreadyExistingAnimalIdByUln(array $setOfUniqueUlns = [])
     {
@@ -1655,7 +1668,7 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
     /**
      * @param array $setOfUniqueStns
      * @return array
-     * @throws \Doctrine\DBAL\DBALException
+     * @throws DBALException
      */
     private function returnOnlyAlreadyExistingAnimalIdByStn(array $setOfUniqueStns = [])
     {

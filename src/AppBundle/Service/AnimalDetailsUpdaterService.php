@@ -351,7 +351,7 @@ class AnimalDetailsUpdaterService extends ControllerServiceBase
             GeneDiversityUpdater::updateByParentId($this->getConnection(), $animal->getId());
         }
 
-        $this->updateLitterData($isSurrogateUpdated, $animal->getId());
+        $this->updateLitterData($isSurrogateUpdated, $animal->getId(), $oldSurrogateId);
 
         return $animal;
     }
@@ -558,10 +558,20 @@ class AnimalDetailsUpdaterService extends ControllerServiceBase
             $this->getUser(), $this->animalIdLogPrefix . $this->actionLogMessage,true);
     }
 
-    private function updateLitterData(bool $isSurrogateUpdated, int $animalId)
+    /**
+     * @param bool $isSurrogateUpdated
+     * @param int $animalId
+     * @param int|null $oldSurrogateLitterId
+     * @throws DBALException
+     */
+    private function updateLitterData(bool $isSurrogateUpdated, int $animalId, ?int $oldSurrogateLitterId)
     {
         if ($isSurrogateUpdated) {
             LitterUtil::updateSuckleCountsForChildWithUpdatedSurrogateMother($this->getConnection(), $animalId);
+
+            if ($oldSurrogateLitterId) {
+                LitterUtil::updateSuckleCountsByLitterId($this->getConnection(), $oldSurrogateLitterId);
+            }
         }
     }
 }
