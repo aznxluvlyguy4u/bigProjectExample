@@ -8,8 +8,7 @@ use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\MedicationOption;
-use AppBundle\Entity\Treatment;
-use AppBundle\Entity\TreatmentRepository;
+use AppBundle\Entity\TreatmentAnimalRepository;
 use AppBundle\Entity\TreatmentLocation;
 use AppBundle\Entity\TreatmentLocationRepository;
 use AppBundle\Entity\TreatmentMedication;
@@ -30,7 +29,7 @@ use Symfony\Component\HttpFoundation\Request;
  */
 class TreatmentServiceBase extends ControllerServiceBase
 {
-    /** @var TreatmentRepository */
+    /** @var TreatmentAnimalRepository */
     protected $treatmentAnimalRepository;
     /** @var TreatmentLocationRepository */
     protected $treatmentLocationRepository;

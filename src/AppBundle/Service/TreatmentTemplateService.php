@@ -17,6 +17,7 @@ use AppBundle\Util\Validator;
 use AppBundle\Validation\AdminValidator;
 use Exception;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
 
 /**
  * Class TreatmentTemplateService
@@ -143,7 +144,7 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
         foreach ($template->getMedications() as $medication)
         {
             if ($medication->getWaitingDays() === null) {
-                return  Validator::createJsonResponse('No waiting days have been filled in.', 428);
+                throw new PreconditionFailedHttpException("'No waiting days have been filled in.'");
             }
 
             /** @var TreatmentMedication $treatmentMedication */
@@ -278,10 +279,11 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
         /** @var MedicationOption $medication */
         foreach ($template->getMedications() as $medication) {
             if ($medication->getWaitingDays() === null) {
-                return  Validator::createJsonResponse('No waiting days have been filled in.', 428);
+                throw new PreconditionFailedHttpException("'No waiting days have been filled in.'");
             }
         }
 
+        //TODO check if the todo beneath is done
         //TODO check for duplicates
 
         /* Update */

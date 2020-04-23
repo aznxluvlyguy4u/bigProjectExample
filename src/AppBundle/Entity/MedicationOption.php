@@ -88,7 +88,7 @@ class MedicationOption
     private $waitingDays;
 
     /**
-     * @var string
+     * @var string|null
      *
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")
@@ -235,10 +235,10 @@ class MedicationOption
     }
 
     /**
-     * @param string $regNl
+     * @param string|null $regNl
      * @return MedicationOption
      */
-    public function setRegNl(string $regNl): self
+    public function setRegNl(?string $regNl): self
     {
         $this->regNl = $regNl;
 
