@@ -15,6 +15,58 @@ use Symfony\Component\HttpFoundation\Request;
 class TreatmentAPIController extends APIController implements TreatmentAPIControllerInterface
 {
     /**
+     * Create a treatment for a location
+     *
+     * @ApiDoc(
+     *   section = "Treatment",
+     *   requirements={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "requirement"="",
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Create a treatment for a location",
+     * )
+     * @param Request $request the request object
+     * @return JsonResponse
+     * @Route("/location")
+     * @Method("POST")
+     */
+    function getCreateLocationTreatment(Request $request)
+    {
+        return $this->get('app.treatment')->createLocationTreatment($request);
+    }
+
+    /**
+     * Create a treatment for an individual
+     *
+     * @ApiDoc(
+     *   section = "Treatment",
+     *   requirements={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "requirement"="",
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Create a treatment for an individual",
+     * )
+     * @param Request $request the request object
+     * @return JsonResponse
+     * @Route("/individual")
+     * @Method("POST")
+     */
+    function getCreateIndividualTreatment(Request $request)
+    {
+        return $this->get('app.treatment')->createIndividualTreatment($request);
+    }
+
+    /**
      * Get treatments of the individual scope
      *
      * @ApiDoc(
@@ -87,9 +139,9 @@ class TreatmentAPIController extends APIController implements TreatmentAPIContro
      * @Route("/individual")
      * @Method("POST")
      */
-    function createIndividualTreatments(Request $request)
+    function createIndividualTreatment(Request $request)
     {
-        return $this->get('app.treatment')->createIndividualTreatments($request);
+        return $this->get('app.treatment')->createIndividualTreatment($request);
     }
 
     /**
@@ -113,9 +165,9 @@ class TreatmentAPIController extends APIController implements TreatmentAPIContro
      * @Route("/location")
      * @Method("POST")
      */
-    function createLocationTreatments(Request $request)
+    function createLocationTreatment(Request $request)
     {
-        return $this->get('app.treatment')->getLocationTreatments($request);
+        return $this->get('app.treatment')->getLocationTreatment($request);
     }
 
     /**
@@ -140,9 +192,9 @@ class TreatmentAPIController extends APIController implements TreatmentAPIContro
      * @Route("/individual/{treatmentId}")
      * @Method("PUT")
      */
-    function editIndividualTreatments(Request $request, $treatmentId)
+    function editIndividualTreatment(Request $request, $treatmentId)
     {
-        return $this->get('app.treatment')->editIndividualTreatments($request, $treatmentId);
+        return $this->get('app.treatment')->editIndividualTreatment($request, $treatmentId);
     }
 
     /**
@@ -167,9 +219,9 @@ class TreatmentAPIController extends APIController implements TreatmentAPIContro
      * @Route("/location/{treatmentId}")
      * @Method("PUT")
      */
-    function editLocationTreatments(Request $request, $treatmentId)
+    function editLocationTreatment(Request $request, $treatmentId)
     {
-        return $this->get('app.treatment')->editLocationTreatments($request, $treatmentId);
+        return $this->get('app.treatment')->editLocationTreatment($request, $treatmentId);
     }
 
     /**
@@ -194,9 +246,9 @@ class TreatmentAPIController extends APIController implements TreatmentAPIContro
      * @Route("/individual/{treatmentId}")
      * @Method("DELETE")
      */
-    function deleteIndividualTreatments(Request $request, $treatmentId)
+    function deleteIndividualTreatment(Request $request, $treatmentId)
     {
-        return $this->get('app.treatment')->deleteIndividualTreatments($request, $treatmentId);
+        return $this->get('app.treatment')->deleteIndividualTreatment($request, $treatmentId);
     }
 
     /**
@@ -221,9 +273,9 @@ class TreatmentAPIController extends APIController implements TreatmentAPIContro
      * @Route("/location/{treatmentId}")
      * @Method("DELETE")
      */
-    function deleteLocationTreatments(Request $request, $treatmentId)
+    function deleteLocationTreatment(Request $request, $treatmentId)
     {
-        return $this->get('app.treatment')->deleteLocationTreatments($request, $treatmentId);
+        return $this->get('app.treatment')->deleteLocationTreatment($request, $treatmentId);
     }
 
 

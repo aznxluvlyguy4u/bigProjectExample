@@ -42,7 +42,7 @@ class MedicationOption
      * @ORM\ManyToOne(targetEntity="TreatmentMedication", inversedBy="medications")
      * @JMS\Type("AppBundle\Entity\TreatmentMedication")
      *
-     * * @JMS\Groups({
+     * @JMS\Groups({
      *     "TREATMENT_TEMPLATE",
      *     "TREATMENT_TEMPLATE_MIN"
      * })

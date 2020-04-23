@@ -13,10 +13,10 @@ interface TreatmentAPIControllerInterface
 {
     function getIndividualTreatments(Request $request);
     function getLocationTreatments(Request $request);
-    function createIndividualTreatments(Request $request);
-    function createLocationTreatments(Request $request);
-    function editIndividualTreatments(Request $request, $treatmentId);
-    function editLocationTreatments(Request $request, $treatmentId);
-    function deleteIndividualTreatments(Request $request, $treatmentId);
-    function deleteLocationTreatments(Request $request, $treatmentId);
+    function createIndividualTreatment(Request $request);
+    function createLocationTreatment(Request $request);
+    function editIndividualTreatment(Request $request, $treatmentId);
+    function editLocationTreatment(Request $request, $treatmentId);
+    function deleteIndividualTreatment(Request $request, $treatmentId);
+    function deleteLocationTreatment(Request $request, $treatmentId);
 }

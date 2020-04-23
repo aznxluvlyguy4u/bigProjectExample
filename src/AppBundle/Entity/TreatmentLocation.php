@@ -43,7 +43,7 @@ class TreatmentLocation implements TreatmentInterface
      * @Assert\NotBlank
      * @JMS\Type("DateTime")
      */
-    private $logDate;
+    private $createDate;
 
     /**
      * @var \DateTime
@@ -119,11 +119,11 @@ class TreatmentLocation implements TreatmentInterface
     private $isActive;
 
     /**
-     * TreatmentAnimal constructor.
+     * Treatment constructor.
      */
     public function __construct()
     {
-        $this->logDate = new \DateTime();
+        $this->createDate = new \DateTime();
         $this->isActive = true;
     }
 
@@ -166,25 +166,25 @@ class TreatmentLocation implements TreatmentInterface
     /**
      * @return DateTime
      */
-    public function getLogDate()
+    public function getCreateDate()
     {
-        return $this->logDate;
+        return $this->createDate;
     }
 
     /**
-     * @param DateTime $logDate
+     * @param DateTime $createDate
      * @return TreatmentLocation
      */
-    public function setLogDate($logDate)
+    public function setCreateDate($createDate)
     {
-        $this->logDate = $logDate;
+        $this->createDate = $createDate;
         return $this;
     }
 
     /**
      * @return DateTime
      */
-    public function getTreatmentStartDate()
+    public function getStartDate()
     {
         return $this->treatmentStartDate;
     }
@@ -193,7 +193,7 @@ class TreatmentLocation implements TreatmentInterface
      * @param DateTime $treatmentStartDate
      * @return TreatmentLocation
      */
-    public function setTreatmentStartDate($treatmentStartDate)
+    public function setStartDate($treatmentStartDate)
     {
         $this->treatmentStartDate = $treatmentStartDate;
         return $this;
@@ -202,7 +202,7 @@ class TreatmentLocation implements TreatmentInterface
     /**
      * @return DateTime
      */
-    public function getTreatmentEndDate()
+    public function getEndDate()
     {
         return $this->treatmentEndDate;
     }
@@ -211,7 +211,7 @@ class TreatmentLocation implements TreatmentInterface
      * @param DateTime $treatmentEndDate
      * @return TreatmentLocation
      */
-    public function setTreatmentEndDate($treatmentEndDate)
+    public function setEndDate($treatmentEndDate)
     {
         $this->treatmentEndDate = $treatmentEndDate;
         return $this;

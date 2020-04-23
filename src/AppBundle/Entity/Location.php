@@ -33,7 +33,9 @@ class Location
    *     "INVOICE",
    *     "INVOICE_NO_COMPANY",
    *     "RESPONSE_PERSISTENCE",
-   *     "RVO"
+   *     "RVO",
+   *     "TREATMENT",
+   *     "TREATMEN_MIN"
    * })
    *
    */

@@ -80,6 +80,7 @@ abstract class Animal
      *     "PARENT_DATA",
      *     "RESPONSE_PERSISTENCE",
      *     "TREATMENT_TEMPLATE",
+     *     "TREATMENT",
      *     "USER_MEASUREMENT"
      * })
      */
@@ -209,7 +210,8 @@ abstract class Animal
      *     "MIXBLUP",
      *     "ERROR_DETAILS",
      *     "RESPONSE_PERSISTENCE",
-     *     "TREATMENT_TEMPLATE"
+     *     "TREATMENT_TEMPLATE",
+     *     "TREATMENT"
      * })
      */
     protected $dateOfBirth;
@@ -442,6 +444,7 @@ abstract class Animal
      *     "LIVESTOCK",
      *     "MIXBLUP",
      *     "TREATMENT_TEMPLATE",
+     *     "TREATMENT",
      *     "USER_MEASUREMENT"
      * })
      */
@@ -467,6 +470,8 @@ abstract class Animal
      *     "RESPONSE_PERSISTENCE",
      *     "TREATMENT_TEMPLATE",
      *     "TREATMENT_TEMPLATE_MIN",
+     *     "TREATMENT",
+     *     "TREATMENT_MIN",
      *     "USER_MEASUREMENT"
      * })
      */
@@ -494,6 +499,8 @@ abstract class Animal
      *     "RESPONSE_PERSISTENCE",
      *     "TREATMENT_TEMPLATE",
      *     "TREATMENT_TEMPLATE_MIN",
+     *     "TREATMENT",
+     *     "TREATMENT_MIN",
      *     "USER_MEASUREMENT"
      * })
      */
@@ -886,8 +893,8 @@ abstract class Animal
     /**
      * @var ArrayCollection
      * @ORM\OrderBy({"description" = "ASC"})
-     * @ORM\OneToMany(targetEntity="AppBundle\Entity\TreatmentAnimal", mappedBy="animal", cascade={"persist", "remove"})
-     * @JMS\Type("ArrayCollection<AppBundle\Entity\TreatmentAnimal>")
+     * @ORM\OneToMany(targetEntity="AppBundle\Entity\Treatment", mappedBy="animal", cascade={"persist", "remove"})
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\Treatment>")
      */
     protected $treatments;
 
@@ -3250,10 +3257,10 @@ abstract class Animal
 
     /**
      * Add treatment
-     * @param TreatmentAnimal $treatment
+     * @param Treatment $treatment
      * @return Animal
      */
-    public function addTreatment(TreatmentAnimal $treatment)
+    public function addTreatment(Treatment $treatment)
     {
         $this->treatments->add($treatment);
         return $this;
@@ -3261,10 +3268,10 @@ abstract class Animal
 
     /**
      * Remove treatment
-     * @param TreatmentAnimal $treatment
+     * @param Treatment $treatment
      * @return Animal
      */
-    public function removeTreatment(TreatmentAnimal $treatment)
+    public function removeTreatment(Treatment $treatment)
     {
         $this->treatments->removeElement($treatment);
         return $this;
