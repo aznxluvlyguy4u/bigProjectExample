@@ -159,7 +159,7 @@ class LambMeatIndexDataFile extends MixBlupDataFileBase implements MixBlupDataFi
                  CONCAT(mom.uln_country_code, mom.uln_number,'_', LPAD(CAST(l.litter_ordinal AS TEXT), 2, '0')) as ".JsonInputConstant::LITTER_GROUP.",
                  a.".JsonInputConstant::BREED_CODE.",
                  l.born_alive_count + l.stillborn_count as ".JsonInputConstant::N_LING.",
-                 COALESCE(surrogate_litter.suckle_count, l.suckle_count) as ".JsonInputConstant::SUCKLE_COUNT."
+                 COALESCE(surrogate_litter.suckle_count, l.suckle_count) as ".JsonInputConstant::SUCKLE_COUNT.",
                  a.".JsonInputConstant::UBN_OF_BIRTH.",
                  a.".JsonInputConstant::HETEROSIS.",
                  a.".JsonInputConstant::RECOMBINATION.",
