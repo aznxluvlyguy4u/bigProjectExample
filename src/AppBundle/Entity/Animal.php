@@ -886,8 +886,8 @@ abstract class Animal
     /**
      * @var ArrayCollection
      * @ORM\OrderBy({"description" = "ASC"})
-     * @ORM\ManyToMany(targetEntity="AppBundle\Entity\Treatment", mappedBy="animal", cascade={"persist", "remove"})
-     * @JMS\Type("ArrayCollection<AppBundle\Entity\Treatment>")
+     * @ORM\OneToMany(targetEntity="AppBundle\Entity\TreatmentAnimal", mappedBy="animal", cascade={"persist", "remove"})
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\TreatmentAnimal>")
      */
     protected $treatments;
 
@@ -3188,7 +3188,7 @@ abstract class Animal
      */
     public function setNickname($nickname)
     {
-    	  $nickname = $nickname === '' ? null : $nickname;
+        $nickname = $nickname === '' ? null : $nickname;
         $this->nickname = $nickname;
     }
 
@@ -3250,10 +3250,10 @@ abstract class Animal
 
     /**
      * Add treatment
-     * @param Treatment $treatment
+     * @param TreatmentAnimal $treatment
      * @return Animal
      */
-    public function addTreatment(Treatment $treatment)
+    public function addTreatment(TreatmentAnimal $treatment)
     {
         $this->treatments->add($treatment);
         return $this;
@@ -3261,10 +3261,10 @@ abstract class Animal
 
     /**
      * Remove treatment
-     * @param Treatment $treatment
+     * @param TreatmentAnimal $treatment
      * @return Animal
      */
-    public function removeTreatment(Treatment $treatment)
+    public function removeTreatment(TreatmentAnimal $treatment)
     {
         $this->treatments->removeElement($treatment);
         return $this;
@@ -3392,7 +3392,7 @@ abstract class Animal
     public function isOnLocation(Location $location): bool
     {
         if (!$this->getLocation() || !$location
-        || (
+            || (
                 (!$this->getLocation()->getId() && !$location->getId()) &&
                 (!$this->getLocation()->getLocationId() && !$location->getLocationId())
             )

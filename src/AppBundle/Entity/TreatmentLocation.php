@@ -43,7 +43,7 @@ class TreatmentLocation implements TreatmentInterface
      * @Assert\NotBlank
      * @JMS\Type("DateTime")
      */
-    private $createDate;
+    private $logDate;
 
     /**
      * @var \DateTime
@@ -68,7 +68,7 @@ class TreatmentLocation implements TreatmentInterface
      * @JMS\Type("AppBundle\Entity\Client")
      */
     private $owner;
-    
+
     /**
      * @var Employee
      * @ORM\ManyToOne(targetEntity="Employee")
@@ -118,14 +118,12 @@ class TreatmentLocation implements TreatmentInterface
      */
     private $isActive;
 
-    private $logDate;
-
     /**
-     * TreatmentLocation constructor.
+     * TreatmentAnimal constructor.
      */
     public function __construct()
     {
-        $this->createDate = new \DateTime();
+        $this->logDate = new \DateTime();
         $this->isActive = true;
     }
 
@@ -168,18 +166,18 @@ class TreatmentLocation implements TreatmentInterface
     /**
      * @return DateTime
      */
-    public function getCreateDate()
+    public function getLogDate()
     {
-        return $this->createDate;
+        return $this->logDate;
     }
 
     /**
-     * @param DateTime $createDate
+     * @param DateTime $logDate
      * @return TreatmentLocation
      */
-    public function setCreateDate($createDate)
+    public function setLogDate($logDate)
     {
-        $this->createDate = $createDate;
+        $this->logDate = $logDate;
         return $this;
     }
 
@@ -344,6 +342,6 @@ class TreatmentLocation implements TreatmentInterface
         $this->isActive = $isActive;
         return $this;
     }
-    
-    
+
+
 }
