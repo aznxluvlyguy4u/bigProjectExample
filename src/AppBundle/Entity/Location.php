@@ -21,23 +21,23 @@ class Location
 {
     use EntityClassInfo;
 
-  /**
-   * @var integer
-   *
-   * @ORM\Id
-   * @ORM\Column(type="integer")
-   * @ORM\GeneratedValue(strategy="IDENTITY")
-   * @Expose
-   * @JMS\Type("integer")
-   * @JMS\Groups({
-   *     "INVOICE",
-   *     "INVOICE_NO_COMPANY",
-   *     "RESPONSE_PERSISTENCE",
-   *     "RVO"
-   * })
-   *
-   */
-  protected $id;
+    /**
+     * @var integer
+     *
+     * @ORM\Id
+     * @ORM\Column(type="integer")
+     * @ORM\GeneratedValue(strategy="IDENTITY")
+     * @Expose
+     * @JMS\Type("integer")
+     * @JMS\Groups({
+     *     "INVOICE",
+     *     "INVOICE_NO_COMPANY",
+     *     "RESPONSE_PERSISTENCE",
+     *     "RVO"
+     * })
+     *
+     */
+    protected $id;
 
     /**
      * @var string
@@ -60,198 +60,198 @@ class Location
      */
     private $locationId;
 
-  /**
-   * @var string
-   *
-   * @ORM\Column(type="string")
-   * @Assert\NotBlank
-   * @Assert\Length(max = 12)
-   * @JMS\Type("string")
-   * @JMS\Groups({
-   *     "ANIMAL_DETAILS",
-   *     "ANIMALS_BATCH_EDIT",
-   *     "BASIC",
-   *     "EDIT_OVERVIEW",
-   *     "INVOICE",
-   *     "INVOICE_NO_COMPANY",
-   *     "LIVESTOCK",
-   *     "MINIMAL",
-   *     "RESPONSE_PERSISTENCE",
-   *     "RVO",
-   *     "TREATMENT_TEMPLATE",
-   *     "TREATMENT_TEMPLATE_MIN",
-   *     "UBN",
-   *     "DOSSIER"
-   * })
-   * @Expose
-   */
-  protected $ubn;
+    /**
+     * @var string
+     *
+     * @ORM\Column(type="string")
+     * @Assert\NotBlank
+     * @Assert\Length(max = 12)
+     * @JMS\Type("string")
+     * @JMS\Groups({
+     *     "ANIMAL_DETAILS",
+     *     "ANIMALS_BATCH_EDIT",
+     *     "BASIC",
+     *     "EDIT_OVERVIEW",
+     *     "INVOICE",
+     *     "INVOICE_NO_COMPANY",
+     *     "LIVESTOCK",
+     *     "MINIMAL",
+     *     "RESPONSE_PERSISTENCE",
+     *     "RVO",
+     *     "TREATMENT_TEMPLATE",
+     *     "TREATMENT_TEMPLATE_MIN",
+     *     "UBN",
+     *     "DOSSIER"
+     * })
+     * @Expose
+     */
+    protected $ubn;
 
-  /**
-   * @var string
-   *
-   * @ORM\Column(type="string", nullable=true)
-   * @JMS\Type("string")
-   * @JMS\Groups({
-   *     "ANIMAL_DETAILS",
-   *     "BASIC",
-   *     "DOSSIER"
-   * })
-   * @Expose
-   */
-  private $locationHolder;
+    /**
+     * @var string
+     *
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Type("string")
+     * @JMS\Groups({
+     *     "ANIMAL_DETAILS",
+     *     "BASIC",
+     *     "DOSSIER"
+     * })
+     * @Expose
+     */
+    private $locationHolder;
 
-  /**
-   * @var array
-   *
-   * @ORM\OneToMany(targetEntity="DeclareArrival", mappedBy="location")
-   * @ORM\OrderBy({"arrivalDate" = "ASC"})
-   */
-  protected $arrivals;
+    /**
+     * @var array
+     *
+     * @ORM\OneToMany(targetEntity="DeclareArrival", mappedBy="location")
+     * @ORM\OrderBy({"arrivalDate" = "ASC"})
+     */
+    protected $arrivals;
 
-  /**
-   * @var ArrayCollection
-   *
-   * @ORM\OneToMany(targetEntity="DeclareBirth", mappedBy="location")
-   * @ORM\OrderBy({"dateOfBirth" = "ASC"})
-   */
-  protected $births;
+    /**
+     * @var ArrayCollection
+     *
+     * @ORM\OneToMany(targetEntity="DeclareBirth", mappedBy="location")
+     * @ORM\OrderBy({"dateOfBirth" = "ASC"})
+     */
+    protected $births;
 
-  /**
-   * @var ArrayCollection
-   *
-   * @ORM\OneToMany(targetEntity="DeclareDepart", mappedBy="location")
-   * @ORM\OrderBy({"departDate" = "ASC"})
-   */
-  protected $departures;
+    /**
+     * @var ArrayCollection
+     *
+     * @ORM\OneToMany(targetEntity="DeclareDepart", mappedBy="location")
+     * @ORM\OrderBy({"departDate" = "ASC"})
+     */
+    protected $departures;
 
-  /**
-   * @var ArrayCollection
-   *
-   * @ORM\OneToMany(targetEntity="Animal", mappedBy="location")
-   * @JMS\Type("AppBundle\Entity\Animal")
-   */
-  protected $animals;
+    /**
+     * @var ArrayCollection
+     *
+     * @ORM\OneToMany(targetEntity="Animal", mappedBy="location")
+     * @JMS\Type("AppBundle\Entity\Animal")
+     */
+    protected $animals;
 
-  /**
-   * @var ArrayCollection
-   *
-   * @ORM\OneToMany(targetEntity="DeclareImport", mappedBy="location")
-   * @ORM\OrderBy({"importDate" = "ASC"})
-   */
-  protected $imports;
+    /**
+     * @var ArrayCollection
+     *
+     * @ORM\OneToMany(targetEntity="DeclareImport", mappedBy="location")
+     * @ORM\OrderBy({"importDate" = "ASC"})
+     */
+    protected $imports;
 
-  /**
-   * @var ArrayCollection
-   *
-   * @ORM\OneToMany(targetEntity="DeclareExport", mappedBy="location")
-   * @ORM\OrderBy({"exportDate" = "ASC"})
-   */
-  protected $exports;
+    /**
+     * @var ArrayCollection
+     *
+     * @ORM\OneToMany(targetEntity="DeclareExport", mappedBy="location")
+     * @ORM\OrderBy({"exportDate" = "ASC"})
+     */
+    protected $exports;
 
-  /**
-   * @var ArrayCollection
-   *
-   * @ORM\OneToMany(targetEntity="DeclareTagsTransfer", mappedBy="location")
-   */
-  protected $tagTransfers;
+    /**
+     * @var ArrayCollection
+     *
+     * @ORM\OneToMany(targetEntity="DeclareTagsTransfer", mappedBy="location")
+     */
+    protected $tagTransfers;
 
-  /**
-   * @var ArrayCollection
-   *
-   * @ORM\OneToMany(targetEntity="DeclareLoss", mappedBy="location")
-   * @ORM\OrderBy({"dateOfDeath" = "ASC"})
-   */
-  protected $losses;
+    /**
+     * @var ArrayCollection
+     *
+     * @ORM\OneToMany(targetEntity="DeclareLoss", mappedBy="location")
+     * @ORM\OrderBy({"dateOfDeath" = "ASC"})
+     */
+    protected $losses;
 
-  /**
-   * @var ArrayCollection
-   *
-   * @JMS\Type("AppBundle\Entity\DeclareAnimalFlag")
-   * @ORM\OneToMany(targetEntity="DeclareAnimalFlag", mappedBy="location", cascade={"persist"})
-   */
-  protected $flags;
+    /**
+     * @var ArrayCollection
+     *
+     * @JMS\Type("AppBundle\Entity\DeclareAnimalFlag")
+     * @ORM\OneToMany(targetEntity="DeclareAnimalFlag", mappedBy="location", cascade={"persist"})
+     */
+    protected $flags;
 
-  /**
-   * @var ArrayCollection
-   *
-   * @JMS\Type("AppBundle\Entity\Mate")
-   * @ORM\OneToMany(targetEntity="Mate", mappedBy="location", cascade={"persist"})
-   * @ORM\OrderBy({"startDate" = "ASC"})
-   */
-  protected $matings;
-
-
-  /**
-   * @var ArrayCollection
-   *
-   * @JMS\Type("AppBundle\Entity\DeclareWeight")
-   * @ORM\OneToMany(targetEntity="DeclareWeight", mappedBy="location", cascade={"persist"})
-   * @ORM\OrderBy({"measurementDate" = "ASC"})
-   */
-  protected $declareWeights;
+    /**
+     * @var ArrayCollection
+     *
+     * @JMS\Type("AppBundle\Entity\Mate")
+     * @ORM\OneToMany(targetEntity="Mate", mappedBy="location", cascade={"persist"})
+     * @ORM\OrderBy({"startDate" = "ASC"})
+     */
+    protected $matings;
 
 
-  /**
-   * @var Company
-   * @Assert\NotBlank
-   * @ORM\ManyToOne(targetEntity="Company", inversedBy="locations", cascade={"persist"}, fetch="EAGER")
-   * @JMS\Type("AppBundle\Entity\Company")
-   * @JMS\Groups({
-   *     "ANIMAL_DETAILS",
-   *     "ANIMALS_BATCH_EDIT",
-   * })
-   * @JMS\MaxDepth(depth=2)
-   * @Expose
-   */
-  protected $company;
+    /**
+     * @var ArrayCollection
+     *
+     * @JMS\Type("AppBundle\Entity\DeclareWeight")
+     * @ORM\OneToMany(targetEntity="DeclareWeight", mappedBy="location", cascade={"persist"})
+     * @ORM\OrderBy({"measurementDate" = "ASC"})
+     */
+    protected $declareWeights;
 
-  /**
-   * @var LocationAddress
-   *
-   * @ORM\OneToOne(targetEntity="LocationAddress", cascade={"persist"})
-   * @Expose
-   * @JMS\Type("AppBundle\Entity\LocationAddress")
-   * @JMS\Groups({
-   *     "ANIMAL_DETAILS",
-   *     "INVOICE",
-   *     "INVOICE_NO_COMPANY",
-   *     "DOSSIER"
-   * })
-   */
-  private $address;
 
-  /**
-   * @var ArrayCollection
-   *
-   * @JMS\Type("AppBundle\Entity\RevokeDeclaration")
-   * @ORM\OneToMany(targetEntity="RevokeDeclaration", mappedBy="location", cascade={"persist"})
-   */
-  protected $revokes;
+    /**
+     * @var Company
+     * @Assert\NotBlank
+     * @ORM\ManyToOne(targetEntity="Company", inversedBy="locations", cascade={"persist"}, fetch="EAGER")
+     * @JMS\Type("AppBundle\Entity\Company")
+     * @JMS\Groups({
+     *     "ANIMAL_DETAILS",
+     *     "ANIMALS_BATCH_EDIT",
+     * })
+     * @JMS\MaxDepth(depth=2)
+     * @Expose
+     */
+    protected $company;
 
-  /**
-   * @ORM\OneToOne(targetEntity="LocationHealth", inversedBy="location")
-   * @JMS\Type("AppBundle\Entity\LocationHealth")
-   */
-  private $locationHealth;
+    /**
+     * @var LocationAddress
+     *
+     * @ORM\OneToOne(targetEntity="LocationAddress", cascade={"persist"})
+     * @Expose
+     * @JMS\Type("AppBundle\Entity\LocationAddress")
+     * @JMS\Groups({
+     *     "ANIMAL_DETAILS",
+     *     "INVOICE",
+     *     "INVOICE_NO_COMPANY",
+     *     "DOSSIER"
+     * })
+     */
+    private $address;
 
-  /**
-   * @var ArrayCollection
-   *
-   * @ORM\OneToMany(targetEntity="LocationHealthMessage", mappedBy="location")
-   * @ORM\JoinColumn(name="health_message_id", referencedColumnName="id", nullable=true)
-   * @ORM\OrderBy({"arrivalDate" = "ASC"})
-   * @JMS\Type("AppBundle\Entity\LocationHealthMessage")
-   */
-  private $healthMessages;
+    /**
+     * @var ArrayCollection
+     *
+     * @JMS\Type("AppBundle\Entity\RevokeDeclaration")
+     * @ORM\OneToMany(targetEntity="RevokeDeclaration", mappedBy="location", cascade={"persist"})
+     */
+    protected $revokes;
 
-  /**
-   * @var ArrayCollection
-   *
-   * @ORM\OneToMany(targetEntity="AnimalResidence", mappedBy="location")
-   * @JMS\Type("AppBundle\Entity\AnimalResidence")
-   */
-  private $animalResidenceHistory;
+    /**
+     * @ORM\OneToOne(targetEntity="LocationHealth", inversedBy="location")
+     * @JMS\Type("AppBundle\Entity\LocationHealth")
+     */
+    private $locationHealth;
+
+    /**
+     * @var ArrayCollection
+     *
+     * @ORM\OneToMany(targetEntity="LocationHealthMessage", mappedBy="location")
+     * @ORM\JoinColumn(name="health_message_id", referencedColumnName="id", nullable=true)
+     * @ORM\OrderBy({"arrivalDate" = "ASC"})
+     * @JMS\Type("AppBundle\Entity\LocationHealthMessage")
+     */
+    private $healthMessages;
+
+    /**
+     * @var ArrayCollection
+     *
+     * @ORM\OneToMany(targetEntity="AnimalResidence", mappedBy="location")
+     * @JMS\Type("AppBundle\Entity\AnimalResidence")
+     */
+    private $animalResidenceHistory;
 
     /**
      * @var ArrayCollection
@@ -393,33 +393,33 @@ class Location
 
 
     /**
-    * Constructor
-    */
-  public function __construct()
-  {
-    $this->arrivals = new ArrayCollection();
-    $this->births = new ArrayCollection();
-    $this->departures = new ArrayCollection();
-    $this->imports = new ArrayCollection();
-    $this->exports = new ArrayCollection();
-    $this->losses = new ArrayCollection();
-    $this->animals = new ArrayCollection();
-    $this->tagTransfers = new ArrayCollection();
-    $this->flags = new ArrayCollection();
-    $this->revokes = new ArrayCollection();
-    $this->matings = new ArrayCollection();
-    $this->declareWeights = new ArrayCollection();
-    $this->healthMessages = new ArrayCollection();
-    $this->animalResidenceHistory = new ArrayCollection();
-    $this->tags = new ArrayCollection();
-    $this->treatmentTemplates = new ArrayCollection();
-    $this->treatments = new ArrayCollection();
-    $this->pedigreeRegisterRegistrations = new ArrayCollection();
-    $this->workers = new ArrayCollection();
-    $this->animalRelocations = new ArrayCollection();
-    $this->animalAnnotations = new ArrayCollection();
-    $this->setLocationId(Utils::generateTokenCode());
-  }
+     * Constructor
+     */
+    public function __construct()
+    {
+        $this->arrivals = new ArrayCollection();
+        $this->births = new ArrayCollection();
+        $this->departures = new ArrayCollection();
+        $this->imports = new ArrayCollection();
+        $this->exports = new ArrayCollection();
+        $this->losses = new ArrayCollection();
+        $this->animals = new ArrayCollection();
+        $this->tagTransfers = new ArrayCollection();
+        $this->flags = new ArrayCollection();
+        $this->revokes = new ArrayCollection();
+        $this->matings = new ArrayCollection();
+        $this->declareWeights = new ArrayCollection();
+        $this->healthMessages = new ArrayCollection();
+        $this->animalResidenceHistory = new ArrayCollection();
+        $this->tags = new ArrayCollection();
+        $this->treatmentTemplates = new ArrayCollection();
+        $this->treatments = new ArrayCollection();
+        $this->pedigreeRegisterRegistrations = new ArrayCollection();
+        $this->workers = new ArrayCollection();
+        $this->animalRelocations = new ArrayCollection();
+        $this->animalAnnotations = new ArrayCollection();
+        $this->setLocationId(Utils::generateTokenCode());
+    }
 
     /**
      * @return string
@@ -437,156 +437,156 @@ class Location
         $this->locationId = $locationId;
     }
 
-  /**
-   * Add arrival
-   *
-   * @param \AppBundle\Entity\DeclareArrival $arrival
-   *
-   * @return Location
-   */
-  public function addArrival(\AppBundle\Entity\DeclareArrival $arrival)
-  {
-    $this->arrivals[] = $arrival;
+    /**
+     * Add arrival
+     *
+     * @param \AppBundle\Entity\DeclareArrival $arrival
+     *
+     * @return Location
+     */
+    public function addArrival(\AppBundle\Entity\DeclareArrival $arrival)
+    {
+        $this->arrivals[] = $arrival;
 
-    return $this;
-  }
+        return $this;
+    }
 
-  /**
-   * Remove arrival
-   *
-   * @param \AppBundle\Entity\DeclareArrival $arrival
-   */
-  public function removeArrival(\AppBundle\Entity\DeclareArrival $arrival)
-  {
-    $this->arrivals->removeElement($arrival);
-  }
+    /**
+     * Remove arrival
+     *
+     * @param \AppBundle\Entity\DeclareArrival $arrival
+     */
+    public function removeArrival(\AppBundle\Entity\DeclareArrival $arrival)
+    {
+        $this->arrivals->removeElement($arrival);
+    }
 
-  /**
-   * Get arrivals
-   *
-   * @return \Doctrine\Common\Collections\Collection
-   */
-  public function getArrivals()
-  {
-    return $this->arrivals;
-  }
+    /**
+     * Get arrivals
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getArrivals()
+    {
+        return $this->arrivals;
+    }
 
-  /**
-   * Add birth
-   *
-   * @param \AppBundle\Entity\DeclareBirth $birth
-   *
-   * @return Location
-   */
-  public function addBirth(\AppBundle\Entity\DeclareBirth $birth)
-  {
-    $this->births[] = $birth;
+    /**
+     * Add birth
+     *
+     * @param \AppBundle\Entity\DeclareBirth $birth
+     *
+     * @return Location
+     */
+    public function addBirth(\AppBundle\Entity\DeclareBirth $birth)
+    {
+        $this->births[] = $birth;
 
-    return $this;
-  }
+        return $this;
+    }
 
-  /**
-   * Remove birth
-   *
-   * @param \AppBundle\Entity\DeclareBirth $birth
-   */
-  public function removeBirth(\AppBundle\Entity\DeclareBirth $birth)
-  {
-    $this->births->removeElement($birth);
-  }
+    /**
+     * Remove birth
+     *
+     * @param \AppBundle\Entity\DeclareBirth $birth
+     */
+    public function removeBirth(\AppBundle\Entity\DeclareBirth $birth)
+    {
+        $this->births->removeElement($birth);
+    }
 
-  /**
-   * Get births
-   *
-   * @return \Doctrine\Common\Collections\Collection
-   */
-  public function getBirths()
-  {
-    return $this->births;
-  }
+    /**
+     * Get births
+     *
+     * @return \Doctrine\Common\Collections\Collection
+     */
+    public function getBirths()
+    {
+        return $this->births;
+    }
 
 
-  /**
-   * Get id
-   *
-   * @return integer
-   */
-  public function getId()
-  {
-    return $this->id;
-  }
+    /**
+     * Get id
+     *
+     * @return integer
+     */
+    public function getId()
+    {
+        return $this->id;
+    }
 
-  /**
-   * Set ubn
-   *
-   * @param string $ubn
-   *
-   * @return Location
-   */
-  public function setUbn($ubn)
-  {
-    $this->ubn = trim($ubn);
+    /**
+     * Set ubn
+     *
+     * @param string $ubn
+     *
+     * @return Location
+     */
+    public function setUbn($ubn)
+    {
+        $this->ubn = trim($ubn);
 
-    return $this;
-  }
+        return $this;
+    }
 
-  /**
-   * Get ubn
-   *
-   * @return string
-   */
-  public function getUbn()
-  {
-    return $this->ubn;
-  }
+    /**
+     * Get ubn
+     *
+     * @return string
+     */
+    public function getUbn()
+    {
+        return $this->ubn;
+    }
 
-  /**
-   * Set company
-   *
-   * @param \AppBundle\Entity\Company $company
-   *
-   * @return Location
-   */
-  public function setCompany(\AppBundle\Entity\Company $company = null)
-  {
-    $this->company = $company;
+    /**
+     * Set company
+     *
+     * @param \AppBundle\Entity\Company $company
+     *
+     * @return Location
+     */
+    public function setCompany(\AppBundle\Entity\Company $company = null)
+    {
+        $this->company = $company;
 
-    return $this;
-  }
+        return $this;
+    }
 
-  /**
-   * Get company
-   *
-   * @return \AppBundle\Entity\Company
-   */
-  public function getCompany()
-  {
-    return $this->company;
-  }
+    /**
+     * Get company
+     *
+     * @return \AppBundle\Entity\Company
+     */
+    public function getCompany()
+    {
+        return $this->company;
+    }
 
-  /**
-   * Set address
-   *
-   * @param \AppBundle\Entity\LocationAddress $address
-   *
-   * @return Location
-   */
-  public function setAddress(\AppBundle\Entity\LocationAddress $address = null)
-  {
-    $this->address = $address;
+    /**
+     * Set address
+     *
+     * @param \AppBundle\Entity\LocationAddress $address
+     *
+     * @return Location
+     */
+    public function setAddress(\AppBundle\Entity\LocationAddress $address = null)
+    {
+        $this->address = $address;
 
-    return $this;
-  }
+        return $this;
+    }
 
-  /**
-   * Get address
-   *
-   * @return \AppBundle\Entity\LocationAddress
-   */
-  public function getAddress()
-  {
-    return $this->address;
-  }
+    /**
+     * Get address
+     *
+     * @return \AppBundle\Entity\LocationAddress
+     */
+    public function getAddress()
+    {
+        return $this->address;
+    }
 
     /**
      * Add import
@@ -665,9 +665,9 @@ class Location
      */
     public function addLoss(\AppBundle\Entity\DeclareLoss $loss)
     {
-      $this->losses[] = $loss;
+        $this->losses[] = $loss;
 
-      return $this;
+        return $this;
     }
 
     /**
@@ -677,7 +677,7 @@ class Location
      */
     public function removeLoss(\AppBundle\Entity\DeclareLoss $loss)
     {
-      $this->losses->removeElement($loss);
+        $this->losses->removeElement($loss);
     }
 
     /**
@@ -687,7 +687,7 @@ class Location
      */
     public function getLosses()
     {
-      return $this->losses;
+        return $this->losses;
     }
 
     /**
@@ -871,9 +871,9 @@ class Location
      */
     public function addMate(Mate $mate)
     {
-      $this->matings[] = $mate;
+        $this->matings[] = $mate;
 
-      return $this;
+        return $this;
     }
 
     /**
@@ -883,7 +883,7 @@ class Location
      */
     public function removeMate(Mate $mate)
     {
-      $this->matings->removeElement($mate);
+        $this->matings->removeElement($mate);
     }
 
     /**
@@ -893,7 +893,7 @@ class Location
      */
     public function getMatings()
     {
-      return $this->matings;
+        return $this->matings;
     }
 
     /**
@@ -901,32 +901,32 @@ class Location
      */
     public function getDeclareWeights()
     {
-      return $this->declareWeights;
+        return $this->declareWeights;
     }
 
-  /**
-   * Add DeclareWeight
-   *
-   * @param DeclareWeight $declareWeight
-   *
-   * @return Location
-   */
-  public function addDeclareWeight(DeclareWeight $declareWeight)
-  {
-    $this->declareWeights[] = $declareWeight;
+    /**
+     * Add DeclareWeight
+     *
+     * @param DeclareWeight $declareWeight
+     *
+     * @return Location
+     */
+    public function addDeclareWeight(DeclareWeight $declareWeight)
+    {
+        $this->declareWeights[] = $declareWeight;
 
-    return $this;
-  }
+        return $this;
+    }
 
-  /**
-   * Remove DeclareWeight
-   *
-   * @param DeclareWeight $declareWeight
-   */
-  public function removeDeclareWeight(DeclareWeight $declareWeight)
-  {
-    $this->declareWeights->removeElement($declareWeight);
-  }
+    /**
+     * Remove DeclareWeight
+     *
+     * @param DeclareWeight $declareWeight
+     */
+    public function removeDeclareWeight(DeclareWeight $declareWeight)
+    {
+        $this->declareWeights->removeElement($declareWeight);
+    }
 
     /**
      * Set locationHolder
@@ -1006,7 +1006,7 @@ class Location
      * @return \AppBundle\Entity\LocationHealth
      */
     public function getLocationHealth() {
-      return $this->locationHealth;
+        return $this->locationHealth;
     }
 
     /**
@@ -1065,7 +1065,7 @@ class Location
      */
     public function getTags()
     {
-      return $this->tags;
+        return $this->tags;
     }
 
     /**
@@ -1073,7 +1073,7 @@ class Location
      */
     public function setTags($tags)
     {
-      $this->tags = $tags;
+        $this->tags = $tags;
     }
 
     /**
@@ -1085,9 +1085,9 @@ class Location
      */
     public function addTag(\AppBundle\Entity\Tag $tag)
     {
-      $this->tags[] = $tag;
+        $this->tags[] = $tag;
 
-      return $this;
+        return $this;
     }
 
     /**
@@ -1097,7 +1097,7 @@ class Location
      */
     public function removeTag(\AppBundle\Entity\Tag $tag)
     {
-      $this->tags->removeElement($tag);
+        $this->tags->removeElement($tag);
     }
 
 

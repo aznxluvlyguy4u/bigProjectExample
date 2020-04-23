@@ -3199,7 +3199,7 @@ abstract class Animal
      */
     public function setNickname($nickname)
     {
-    	  $nickname = $nickname === '' ? null : $nickname;
+        $nickname = $nickname === '' ? null : $nickname;
         $this->nickname = $nickname;
     }
 
@@ -3403,7 +3403,7 @@ abstract class Animal
     public function isOnLocation(Location $location): bool
     {
         if (!$this->getLocation() || !$location
-        || (
+            || (
                 (!$this->getLocation()->getId() && !$location->getId()) &&
                 (!$this->getLocation()->getLocationId() && !$location->getLocationId())
             )
