@@ -119,15 +119,8 @@ class AnimalDetailsOutput extends OutputServiceBase
 
         $replacementString = "";
 
-        $litterSize = $animal->getNLing();
-        $suckleCount = $replacementString;
-        $litter = $animal->getLitter();
-        if ($litter) {
-            $litterSize = $litter->getSize();
-            $suckleCount = $litter->getSuckleCount();
-        } else if ($viewMinimalAnimalDetails) {
-            $litterSize = $viewMinimalAnimalDetails->getNLing();
-        }
+        $litterSize = $viewMinimalAnimalDetails->getNLing();
+        $suckleCount = $animal->getSuckleCount();
 
         //Birth
         $translatedCountryName = $replacementString;
