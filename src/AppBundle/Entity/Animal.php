@@ -886,8 +886,8 @@ abstract class Animal
     /**
      * @var ArrayCollection
      * @ORM\OrderBy({"description" = "ASC"})
-     * @ORM\OneToMany(targetEntity="AppBundle\Entity\TreatmentAnimal", mappedBy="animal", cascade={"persist", "remove"})
-     * @JMS\Type("ArrayCollection<AppBundle\Entity\TreatmentAnimal>")
+     * @ORM\ManyToMany(targetEntity="AppBundle\Entity\Treatment", mappedBy="animal", cascade={"persist", "remove"})
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\Treatment>")
      */
     protected $treatments;
 
@@ -3250,10 +3250,10 @@ abstract class Animal
 
     /**
      * Add treatment
-     * @param TreatmentAnimal $treatment
+     * @param Treatment $treatment
      * @return Animal
      */
-    public function addTreatment(TreatmentAnimal $treatment)
+    public function addTreatment(Treatment $treatment)
     {
         $this->treatments->add($treatment);
         return $this;
@@ -3261,10 +3261,10 @@ abstract class Animal
 
     /**
      * Remove treatment
-     * @param TreatmentAnimal $treatment
+     * @param Treatment $treatment
      * @return Animal
      */
-    public function removeTreatment(TreatmentAnimal $treatment)
+    public function removeTreatment(Treatment $treatment)
     {
         $this->treatments->removeElement($treatment);
         return $this;

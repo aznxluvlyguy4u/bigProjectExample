@@ -8,8 +8,8 @@ use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\MedicationOption;
-use AppBundle\Entity\TreatmentAnimal;
-use AppBundle\Entity\TreatmentAnimalRepository;
+use AppBundle\Entity\Treatment;
+use AppBundle\Entity\TreatmentRepository;
 use AppBundle\Entity\TreatmentLocation;
 use AppBundle\Entity\TreatmentLocationRepository;
 use AppBundle\Entity\TreatmentMedication;
@@ -30,7 +30,7 @@ use Symfony\Component\HttpFoundation\Request;
  */
 class TreatmentServiceBase extends ControllerServiceBase
 {
-    /** @var TreatmentAnimalRepository */
+    /** @var TreatmentRepository */
     protected $treatmentAnimalRepository;
     /** @var TreatmentLocationRepository */
     protected $treatmentLocationRepository;
@@ -52,7 +52,7 @@ class TreatmentServiceBase extends ControllerServiceBase
      */
     public function onInit()
     {
-        $this->treatmentAnimalRepository = $this->getManager()->getRepository(TreatmentAnimal::class);
+        $this->treatmentAnimalRepository = $this->getManager()->getRepository(Treatment::class);
         $this->treatmentLocationRepository = $this->getManager()->getRepository(TreatmentLocation::class);
         $this->treatmentTemplateRepository = $this->getManager()->getRepository(TreatmentTemplate::class);
         $this->treatmentTypeRepository = $this->getManager()->getRepository(TreatmentType::class);

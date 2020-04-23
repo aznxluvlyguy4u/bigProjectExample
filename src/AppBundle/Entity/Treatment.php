@@ -5,17 +5,18 @@ namespace AppBundle\Entity;
 
 use AppBundle\Traits\EntityClassInfo;
 use DateTime;
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as JMS;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
- * Class TreatmentAnimal
+ * Class Treatment
  *
- * @ORM\Entity(repositoryClass="AppBundle\Entity\TreatmentAnimalRepository")
+ * @ORM\Entity(repositoryClass="AppBundle\Entity\TreatmentRepository")
  * @package AppBundle\Entity
  */
-class TreatmentAnimal implements TreatmentInterface
+class Treatment implements TreatmentInterface
 {
     use EntityClassInfo;
 
@@ -29,24 +30,23 @@ class TreatmentAnimal implements TreatmentInterface
     private $id;
 
     /**
-     * @var Animal
-     * @ORM\ManyToOne(targetEntity="Animal", inversedBy="treatments")
-     * @ORM\JoinColumn(name="animal_id", referencedColumnName="id", onDelete="CASCADE")
-     * @JMS\Type("AppBundle\Entity\Animal")
+     * @var ArrayCollection|Animal[]
+     * @ORM\ManyToMany(targetEntity="Animal", inversedBy="treatments", cascade={"remove"})
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\Animal>")
      */
-    private $animal;
+    private $animals;
 
     /**
-     * @var \DateTime
+     * @var DateTime
      * @ORM\Column(type="datetime", options={"default":"CURRENT_TIMESTAMP"}, nullable=true)
      * @Assert\Date
      * @Assert\NotBlank
      * @JMS\Type("DateTime")
      */
-    private $logDate;
+    private $createDate;
 
     /**
-     * @var \DateTime
+     * @var DateTime
      * @ORM\Column(type="datetime", nullable=true)
      * @Assert\Date
      * @JMS\Type("DateTime")
@@ -54,7 +54,7 @@ class TreatmentAnimal implements TreatmentInterface
     private $treatmentStartDate;
 
     /**
-     * @var \DateTime
+     * @var DateTime
      * @ORM\Column(type="datetime", nullable=true)
      * @Assert\Date
      * @JMS\Type("DateTime")
@@ -102,15 +102,6 @@ class TreatmentAnimal implements TreatmentInterface
     private $description;
 
     /**
-     * @var float
-     *
-     * @ORM\Column(type="float", options={"default":0})
-     * @JMS\Type("float")
-     * @Assert\NotBlank
-     */
-    private $dosage;
-
-    /**
      * @var boolean
      * @ORM\Column(type="boolean", options={"default":true}, nullable=false)
      * @JMS\Type("boolean")
@@ -119,12 +110,37 @@ class TreatmentAnimal implements TreatmentInterface
     private $isActive;
 
     /**
-     * TreatmentAnimal constructor.
+     * @var string
+     * @ORM\Column(type="string", nullable=false)
+     * @JMS\Type("string")
+     * @Assert\NotBlank
+     */
+    private $type;
+
+    /**
+     * @var Location
+     * @ORM\ManyToOne(targetEntity="AppBundle\Entity\Location")
+     * @ORM\JoinColumn(name="location_id", referencedColumnName="id", nullable=false)
+     * @JMS\Type("AppBundle\Entity\Location")
+     * @Assert\NotBlank
+     */
+    private $location;
+
+    /**
+     * @var TreatmentTemplate
+     * @ORM\ManyToOne(targetEntity="AppBundle\Entity\TreatmentTemplate")
+     * @JMS\Type("AppBundle\Entity\TreatmentTemplate")
+     */
+    private $treatmentTemplate;
+
+    /**
+     * Treatment constructor.
      */
     public function __construct()
     {
-        $this->logDate = new \DateTime();
+        $this->createDate = new DateTime();
         $this->isActive = true;
+        $this->animals = new ArrayCollection();
     }
 
     /**
@@ -137,7 +153,7 @@ class TreatmentAnimal implements TreatmentInterface
 
     /**
      * @param int $id
-     * @return TreatmentAnimal
+     * @return Treatment
      */
     public function setId($id)
     {
@@ -146,38 +162,48 @@ class TreatmentAnimal implements TreatmentInterface
     }
 
     /**
-     * @return Animal
+     * @return ArrayCollection|Animal[]
      */
-    public function getAnimal()
+    public function getAnimals()
     {
-        return $this->animal;
+        return $this->animals;
     }
 
     /**
      * @param Animal $animal
-     * @return TreatmentAnimal
+     * @return Treatment
      */
-    public function setAnimal($animal)
+    public function addAnimal($animal)
     {
-        $this->animal = $animal;
+        $this->animals->add($animal);
+        return $this;
+    }
+
+    /**
+     * @param Animal $animal
+     * @return Treatment
+     */
+    public function removeAnimal($animal)
+    {
+        $this->animals->removeElement($animal);
         return $this;
     }
 
     /**
      * @return DateTime
      */
-    public function getLogDate()
+    public function getCreateDate()
     {
-        return $this->logDate;
+        return $this->createDate;
     }
 
     /**
-     * @param DateTime $logDate
-     * @return TreatmentAnimal
+     * @param DateTime $createDate
+     * @return Treatment
      */
-    public function setLogDate($logDate)
+    public function setCreateDate($createDate)
     {
-        $this->logDate = $logDate;
+        $this->createDate = $createDate;
         return $this;
     }
 
@@ -191,7 +217,7 @@ class TreatmentAnimal implements TreatmentInterface
 
     /**
      * @param DateTime $treatmentStartDate
-     * @return TreatmentAnimal
+     * @return Treatment
      */
     public function setTreatmentStartDate($treatmentStartDate)
     {
@@ -209,7 +235,7 @@ class TreatmentAnimal implements TreatmentInterface
 
     /**
      * @param DateTime $treatmentEndDate
-     * @return TreatmentAnimal
+     * @return Treatment
      */
     public function setTreatmentEndDate($treatmentEndDate)
     {
@@ -227,7 +253,7 @@ class TreatmentAnimal implements TreatmentInterface
 
     /**
      * @param Client $owner
-     * @return TreatmentAnimal
+     * @return Treatment
      */
     public function setOwner($owner)
     {
@@ -245,7 +271,7 @@ class TreatmentAnimal implements TreatmentInterface
 
     /**
      * @param Employee $creationBy
-     * @return TreatmentAnimal
+     * @return Treatment
      */
     public function setCreationBy($creationBy)
     {
@@ -263,7 +289,7 @@ class TreatmentAnimal implements TreatmentInterface
 
     /**
      * @param Employee $editedBy
-     * @return TreatmentAnimal
+     * @return Treatment
      */
     public function setEditedBy($editedBy)
     {
@@ -281,7 +307,7 @@ class TreatmentAnimal implements TreatmentInterface
 
     /**
      * @param Employee $deletedBy
-     * @return TreatmentAnimal
+     * @return Treatment
      */
     public function setDeletedBy($deletedBy)
     {
@@ -299,29 +325,11 @@ class TreatmentAnimal implements TreatmentInterface
 
     /**
      * @param string $description
-     * @return TreatmentAnimal
+     * @return Treatment
      */
     public function setDescription($description)
     {
         $this->description = $description;
-        return $this;
-    }
-
-    /**
-     * @return float
-     */
-    public function getDosage()
-    {
-        return $this->dosage;
-    }
-
-    /**
-     * @param float $dosage
-     * @return TreatmentAnimal
-     */
-    public function setDosage($dosage)
-    {
-        $this->dosage = $dosage;
         return $this;
     }
 
@@ -335,7 +343,7 @@ class TreatmentAnimal implements TreatmentInterface
 
     /**
      * @param bool $isActive
-     * @return TreatmentAnimal
+     * @return Treatment
      */
     public function setIsActive($isActive)
     {

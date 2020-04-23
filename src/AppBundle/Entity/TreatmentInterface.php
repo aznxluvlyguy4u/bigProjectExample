@@ -10,8 +10,8 @@ interface TreatmentInterface
 {
     public function getId();
     public function setId($id);
-    public function getLogDate();
-    public function setLogDate($logDate);
+    public function getCreateDate();
+    public function setCreateDate($createDate);
     public function getTreatmentStartDate();
     public function setTreatmentStartDate($treatmentStartDate);
     public function getTreatmentEndDate();
@@ -26,8 +26,6 @@ interface TreatmentInterface
     public function setDeletedBy($deletedBy);
     public function getDescription();
     public function setDescription($description);
-    public function getDosage();
-    public function setDosage($dosage);
     public function isActive();
     public function setIsActive($isActive);
 }
