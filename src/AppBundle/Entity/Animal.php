@@ -1007,7 +1007,7 @@ abstract class Animal
     private $animalRelocations;
 
     /**
-     * @var Litter
+     * @var Litter|null
      * @JMS\Type("AppBundle\Entity\Litter")
      * @ORM\ManyToOne(targetEntity="AppBundle\Entity\Litter", inversedBy="surrogates")
      * @ORM\JoinColumn(name="surrogate_litter_id", referencedColumnName="id")
@@ -3568,18 +3568,18 @@ abstract class Animal
     }
 
     /**
-     * @return Litter
+     * @return Litter|null
      */
-    public function getSurrogateLitter()
+    public function getSurrogateLitter(): ?Litter
     {
         return $this->surrogateLitter;
     }
 
     /**
-     * @param Litter $surrogateLitter
+     * @param Litter|null $surrogateLitter
      * @return Animal
      */
-    public function setSurrogateLitter(Litter $surrogateLitter)
+    public function setSurrogateLitter(?Litter $surrogateLitter)
     {
         $this->surrogateLitter = $surrogateLitter;
         return $this;
