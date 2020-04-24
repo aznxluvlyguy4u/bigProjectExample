@@ -161,6 +161,23 @@ class TimeUtil
         return $date >= $startDate && $date <= $endDate;
     }
 
+    public static function estimatedTimeOfArrival(
+        ?int $processedCount,
+        ?int $totalCount,
+        ?\DateTime $startDate,
+        ?\DateTime $processedEndDate
+    ): string
+    {
+        if (empty($processedCount) || empty($totalCount) || empty($startDate) || empty($processedEndDate)) {
+            return '-';
+        }
+
+        $durationPerLoop = TimeUtil::durationInSeconds($startDate, $processedEndDate) / $processedCount;
+        $loopsLeft = $totalCount - $processedCount;
+        $eta = $durationPerLoop * $loopsLeft;
+
+        return TimeUtil::secondsToTime($eta);
+    }
 
     /**
      * @param  \DateTime  $start
