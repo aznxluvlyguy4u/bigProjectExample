@@ -8,12 +8,12 @@ use JMS\Serializer\Annotation as JMS;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
- * Class MedicationOption
+ * Class MedicationSelection
  *
- * @ORM\Entity(repositoryClass="AppBundle\Entity\MedicationOptionRepository")
+ * @ORM\Entity(repositoryClass="AppBundle\Entity\MedicationSelectionRepository")
  * @package AppBundle\Entity
  */
-class MedicationOption
+class MedicationSelection
 {
     use EntityClassInfo;
 
@@ -24,27 +24,27 @@ class MedicationOption
      * @ORM\Column(type="integer")
      * @ORM\GeneratedValue(strategy="IDENTITY")
      * @JMS\Groups({
-     *     "TREATMENT_TEMPLATE"
+     *     "TREATMENT_MIN"
      * })
      */
     private $id;
 
     /**
-     * @var TreatmentTemplate
-     * @ORM\ManyToOne(targetEntity="TreatmentTemplate", inversedBy="medications")
-     * @ORM\JoinColumn(name="treatment_template_id", referencedColumnName="id", onDelete="CASCADE")
-     * @JMS\Type("AppBundle\Entity\TreatmentTemplate")
+     * @var Treatment
+     * @ORM\ManyToOne(targetEntity="AppBundle\Entity\Treatment", inversedBy="medicationSelections")
+     * @ORM\JoinColumn(name="treatment_id", referencedColumnName="id", onDelete="CASCADE")
+     * @JMS\Type("AppBundle\Entity\Treatment")
      */
-    private $treatmentTemplate;
+    private $treatment;
 
     /**
      * @var TreatmentMedication
-     * @ORM\ManyToOne(targetEntity="TreatmentMedication", inversedBy="medicationOptions")
+     * @ORM\ManyToOne(targetEntity="AppBundle\Entity\TreatmentMedication", inversedBy="medicationSelections")
      * @JMS\Type("AppBundle\Entity\TreatmentMedication")
      *
      * @JMS\Groups({
-     *     "TREATMENT_TEMPLATE",
-     *     "TREATMENT_TEMPLATE_MIN"
+     *     "TREATMENT",
+     *     "TREATMENT_MIN"
      * })
      */
     private $treatmentMedication;
@@ -55,11 +55,10 @@ class MedicationOption
      * @ORM\Column(type="float", options={"default":0})
      * @JMS\Type("float")
      * @JMS\Groups({
-     *     "TREATMENT_TEMPLATE",
-     *     "TREATMENT_TEMPLATE_MIN"
+     *     "TREATMENT",
+     *     "TREATMENT_MIN"
      * })
      * @Assert\NotBlank
-     * @Assert\Regex("/aantal|mg|ml|g|l/m")
      */
     private $dosage;
 
@@ -69,10 +68,11 @@ class MedicationOption
      * @ORM\Column(type="string", nullable=false)
      * @JMS\Type("string")
      * @JMS\Groups({
-     *     "TREATMENT_TEMPLATE",
-     *     "TREATMENT_TEMPLATE_MIN"
+     *     "TREATMENT",
+     *     "TREATMENT_MIN"
      * })
      * @Assert\NotBlank
+     * @Assert\Regex("/aantal|mg|ml|g|l/m")
      */
     private $dosageUnit;
 
@@ -82,8 +82,8 @@ class MedicationOption
      * @ORM\Column(type="integer", nullable=true)
      * @JMS\Type("integer")
      * @JMS\Groups({
-     *     "TREATMENT_TEMPLATE",
-     *     "TREATMENT_TEMPLATE_MIN"
+     *     "TREATMENT",
+     *     "TREATMENT_MIN"
      * })
      */
     private $waitingDays;
@@ -94,17 +94,18 @@ class MedicationOption
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")
      * @JMS\Groups({
-     *     "TREATMENT_TEMPLATE",
-     *     "TREATMENT_TEMPLATE_MIN"
+     *     "TREATMENT",
+     *     "TREATMENT_MIN"
      * })
      */
     private $regNl;
 
     //don't remove this because when you try to retrieve the entity there will be an error.
+    //TODO: fix "Can not find property 'description' of MedicationSelection" error when retrieving the entity
     private $description;
 
     /**
-     * MedicationOption constructor.
+     * MedicationSelection constructor.
      */
     public function __construct()
     {
@@ -121,7 +122,7 @@ class MedicationOption
 
     /**
      * @param int $id
-     * @return MedicationOption
+     * @return MedicationSelection
      */
     public function setId($id)
     {
@@ -130,30 +131,25 @@ class MedicationOption
     }
 
     /**
-     * @return TreatmentTemplate
+     * @return Treatment
      */
-    public function getTreatmentTemplate()
+    public function getTreatment()
     {
-        return $this->treatmentTemplate;
+        return $this->treatment;
     }
 
     /**
-     * @param TreatmentTemplate $treatmentTemplate
-     * @return MedicationOption
+     * @param Treatment $treatment
+     * @return MedicationSelection
      */
-    public function setTreatmentTemplate($treatmentTemplate)
+    public function setTreatment($treatment)
     {
-        $this->treatmentTemplate = $treatmentTemplate;
+        $this->treatment = $treatment;
         return $this;
     }
 
     /**
      * @return TreatmentMedication
-     *
-     * @JMS\Groups({
-     *     "TREATMENT_TEMPLATE",
-     *     "TREATMENT_TEMPLATE_MIN"
-     * })
      */
     public function getTreatmentMedication()
     {
@@ -162,7 +158,7 @@ class MedicationOption
 
     /**
      * @param TreatmentMedication $treatmentMedication
-     * @return MedicationOption
+     * @return MedicationSelection
      */
     public function setTreatmentMedication($treatmentMedication)
     {
@@ -180,7 +176,7 @@ class MedicationOption
 
     /**
      * @param float $dosage
-     * @return MedicationOption
+     * @return MedicationSelection
      */
     public function setDosage($dosage)
     {
@@ -199,7 +195,7 @@ class MedicationOption
 
     /**
      * @param string $dosageUnit
-     * @return MedicationOption
+     * @return MedicationSelection
      */
     public function setDosageUnit(string $dosageUnit): self
     {
@@ -218,7 +214,7 @@ class MedicationOption
 
     /**
      * @param int $waitingDays
-     * @return MedicationOption
+     * @return MedicationSelection
      */
     public function setWaitingDays(int $waitingDays): self
     {
@@ -228,18 +224,18 @@ class MedicationOption
     }
 
     /**
-     * @return string
+     * @return string|null
      */
-    public function getRegNl(): string
+    public function getRegNl(): ?string
     {
         return $this->regNl;
     }
 
     /**
-     * @param string $regNl
-     * @return MedicationOption
+     * @param string|null $regNl
+     * @return MedicationSelection
      */
-    public function setRegNl(string $regNl): self
+    public function setRegNl(?string $regNl): self
     {
         $this->regNl = $regNl;
 
@@ -247,7 +243,7 @@ class MedicationOption
     }
 
     /**
-     * @return mixed
+     * @return string
      */
     public function getDescription()
     {
@@ -255,10 +251,12 @@ class MedicationOption
     }
 
     /**
-     * @param mixed $description
+     * @param string $description
+     * @return MedicationSelection
      */
-    public function setDescription($description): void
+    public function setDescription($description): self
     {
         $this->description = $description;
+        return $this;
     }
 }

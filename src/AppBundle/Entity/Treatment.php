@@ -39,8 +39,7 @@ class Treatment implements TreatmentInterface
      * @ORM\ManyToOne(targetEntity="Location", inversedBy="treatmentTemplates")
      * @JMS\Type("AppBundle\Entity\Location")
      * @JMS\Groups({
-     *     "TREATMENT",
-     *     "TREATMENT_MIN"
+     *     "TREATMENT"
      * })
      */
     private $location;
@@ -51,8 +50,7 @@ class Treatment implements TreatmentInterface
      * @JMS\Type("ArrayCollection<AppBundle\Entity\Animal>")
      *
      * @JMS\Groups({
-     *     "TREATMENT",
-     *     "TREATMENT_MIN"
+     *     "TREATMENT"
      * })
      */
     private $animals;
@@ -190,8 +188,7 @@ class Treatment implements TreatmentInterface
      * @JMS\Type("AppBundle\Entity\TreatmentTemplate")
      *
      * @JMS\Groups({
-     *     "TREATMENT",
-     *     "TREATMENT_MIN"
+     *     "TREATMENT"
      * })
      */
     private $treatmentTemplate;
@@ -201,8 +198,7 @@ class Treatment implements TreatmentInterface
      * @ORM\OneToMany(targetEntity="AppBundle\Entity\MedicationSelection", mappedBy="treatment", cascade={"persist", "remove"})
      * @JMS\Type("ArrayCollection<AppBundle\Entity\MedicationSelection>")
      * @JMS\Groups({
-     *     "TREATMENT",
-     *     "TREATMENT_MIN"
+     *     "TREATMENT"
      * })
      */
     private $medicationSelections;
@@ -211,8 +207,8 @@ class Treatment implements TreatmentInterface
      * @JMS\VirtualProperty
      * @JMS\SerializedName("dutchType")
      * @JMS\Groups({
-     *     "TREATMENT_TEMPLATE",
-     *     "TREATMENT_TEMPLATE_MIN"
+     *     "TREATMENT",
+     *     "TREATMENT_MIN"
      * })
      */
     public function getDutchType() {

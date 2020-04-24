@@ -92,21 +92,17 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
 
         $treatment
             ->setType($type)
-            ->setLocation($location)
-        ;
+            ->setLocation($location);
 
         //Validation
         $treatment = $this->baseValidateDeserializedTreatment($treatment);
         if ($treatment instanceof JsonResponse) { return $treatment; }
 
-        /** @var ArrayCollection<Animal> $treatmentAnimals */
-        $treatmentAnimals = $treatment->getAnimals();
-
         /** @var ArrayCollection<Animal> $existingAnimals */
         $existingAnimals = new ArrayCollection();
 
         /** @var Animal $animal */
-        foreach ($treatmentAnimals as $animal) {
+        foreach ($treatment->getAnimals() as $animal) {
             $animalId = $animal->getId();
             $existingAnimal = $em->getRepository(Animal::class)->find($animalId);
             if ($existingAnimal !== null) {
@@ -116,14 +112,12 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
             }
         }
 
-        $medicationSelections = $treatment->getMedicationSelections();
-
+        // No duplicates are being created, so what is being meant with "duplicates"?
         //TODO check for duplicates
 
         /** @var MedicationSelection $medicationSelection */
-        foreach ($medicationSelections as $medicationSelection)
+        foreach ($treatment->getMedicationSelections() as $medicationSelection)
         {
-
             if ($medicationSelection->getWaitingDays() === null) {
                 throw new PreconditionFailedHttpException("No waiting days have been filled in.");
             }
@@ -141,18 +135,13 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
         /** @var TreatmentTemplate $treatmentTemplate */
         $treatmentTemplate = $this->treatmentTemplateRepository->find($treatmentTemplateId);
 
-        $treatment->__construct();
         $treatment
             ->setCreationBy($this->getUser())
             ->setAnimals($existingAnimals)
-            ->setTreatmentTemplate($treatmentTemplate);
+            ->setTreatmentTemplate($treatmentTemplate)
+            ->setIsActive(true);
 
         $em->persist($treatment);
-        /** @var MedicationSelection $medicationSelection */
-        foreach ($treatment->getMedicationSelections() as $medicationSelection) {
-            $medicationSelection->setTreatment($treatment);
-            $em->persist($medicationSelection);
-        }
         $em->flush();
 
         ActionLogWriter::createTreatment($em, $request, $loggedInUser, $treatment);
@@ -178,6 +167,7 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
 
         $treatmentTemplateId = $treatment->getTreatmentTemplate()->getId();
 
+        /** @var TreatmentTemplate $treatmentTemplate */
         $treatmentTemplate = $this->treatmentTemplateRepository->find($treatmentTemplateId);
 
         if ($treatmentTemplate === null) {
