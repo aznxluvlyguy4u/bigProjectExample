@@ -8,6 +8,7 @@ use Symfony\Component\Validator\Constraints\DateTime;
 
 class TimeUtil
 {
+    const TIME_FORMAT = '%hh%im%ss';
 
     /**
      * @param \DateTime $dateTime1
@@ -63,8 +64,8 @@ class TimeUtil
      */
     public static function getAgeYear($dateOfBirth, $dateOfDeath = null)
     {
-        
-        
+
+
         if($dateOfDeath != null) {
             $endDate = clone $dateOfDeath;
         } else {
@@ -125,9 +126,9 @@ class TimeUtil
     }
 
     /**
-     * Get the date count between two dates, positive range means $dt2 is still ahead, 
+     * Get the date count between two dates, positive range means $dt2 is still ahead,
      * negative ranges means $dt2 date has surpassed $dt1.
-     * 
+     *
      * @param \DateTime $dt1
      * @param \DateTime $dt2
      * @return bool|mixed
@@ -145,11 +146,11 @@ class TimeUtil
         $dti = $dt1Clone->diff($dt2Clone);
 
         // nb: ->days always positive
-        return $dti->days * ( $dti->invert ? -1 : 1);   
+        return $dti->days * ( $dti->invert ? -1 : 1);
     }
 
     /**
-     * Check if a given date is in between a given date range, returns true if it is 
+     * Check if a given date is in between a given date range, returns true if it is
      * in the date range.
      * @param  $date
      * @param  $startDate
@@ -159,7 +160,42 @@ class TimeUtil
     public static function isDateBetweenDates( $date, $startDate, $endDate) {
         return $date >= $startDate && $date <= $endDate;
     }
-    
+
+
+    /**
+     * @param  \DateTime  $start
+     * @param  \DateTime  $end
+     * @return int
+     */
+    public static function durationInSeconds(\DateTime $start, \DateTime $end): int
+    {
+        return $end->getTimestamp() - $start->getTimestamp();
+    }
+
+    public static function secondsToTime($seconds) {
+        $endTime = new \DateTime('@0');
+        $start = new \DateTime("@$seconds");
+        return self::durationText($start, $endTime);
+    }
+
+    public static function durationText(\DateTime $start, ?\DateTime $end)
+    {
+        $endTime = empty($end) ? new DateTime() : $end;
+        $diff = $endTime->diff($start);
+        return self::getTextFromDuration($diff);
+    }
+
+    private static function getTextFromDuration($diff): string
+    {
+        if ($diff instanceof \DateInterval) {
+            return empty($diff->d) ?
+                $diff->format(self::TIME_FORMAT) :
+                $diff->format("%d days ".self::TIME_FORMAT)
+                ;
+        }
+        return '-';
+    }
+
     /**
      * @param \DateTime $dateOfBirth
      * @param \DateTime $latestLitterDate
@@ -183,7 +219,7 @@ class TimeUtil
         }
     }
 
-    
+
     /**
      * @param \DateTime $dateOfBirth
      * @param \DateTime $earliestLitterDate
