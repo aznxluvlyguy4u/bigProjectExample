@@ -5,17 +5,13 @@ namespace AppBundle\Service;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Controller\TreatmentAPIControllerInterface;
 use AppBundle\Entity\Animal;
-use AppBundle\Entity\MedicationOption;
 use AppBundle\Entity\MedicationSelection;
 use AppBundle\Entity\Treatment;
 use AppBundle\Entity\TreatmentMedication;
 use AppBundle\Entity\TreatmentTemplate;
 use AppBundle\Enumerator\TreatmentTypeOption;
 use AppBundle\Util\ActionLogWriter;
-use AppBundle\Util\AdminActionLogWriter;
 use AppBundle\Util\ResultUtil;
-use AppBundle\Util\Validator;
-use AppBundle\Validation\AdminValidator;
 use Doctrine\Common\Collections\ArrayCollection;
 use Exception;
 use Symfony\Component\HttpFoundation\Request;
@@ -98,14 +94,27 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
         $treatment = $this->baseValidateDeserializedTreatment($treatment);
         if ($treatment instanceof JsonResponse) { return $treatment; }
 
+        $historicAnimalsIds = new ArrayCollection();
+
+        $historicAnimals = $em->getRepository(Animal::class)
+            ->getHistoricLiveStock($location, $this->getCacheService(), $this->getBaseSerializer());
+
+        /** @var Animal $historicAnimal */
+        foreach ($historicAnimals as $historicAnimal) {
+            $historicAnimalsIds->add($historicAnimal->getId());
+        }
+
         /** @var ArrayCollection<Animal> $existingAnimals */
         $existingAnimals = new ArrayCollection();
 
         /** @var Animal $animal */
         foreach ($treatment->getAnimals() as $animal) {
             $animalId = $animal->getId();
+
+            /** @var Animal $existingAnimal */
             $existingAnimal = $em->getRepository(Animal::class)->find($animalId);
-            if ($existingAnimal !== null) {
+
+            if ($existingAnimal !== null || in_array($animalId, $historicAnimalsIds->toArray())) {
                 $existingAnimals->add($existingAnimal);
             } else {
                 throw new PreconditionFailedHttpException("Animal with id ".$animalId." not found");
