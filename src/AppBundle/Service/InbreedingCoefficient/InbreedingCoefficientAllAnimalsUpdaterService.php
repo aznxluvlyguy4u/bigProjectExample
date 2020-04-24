@@ -4,30 +4,43 @@
 namespace AppBundle\Service\InbreedingCoefficient;
 
 
+use AppBundle\Entity\InbreedingCoefficientTaskAdmin;
+use AppBundle\Entity\InbreedingCoefficientTaskAdminRepository;
+use AppBundle\Entity\Person;
+use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\InbreedingCoefficientProcessSlot;
 use AppBundle\model\metadata\YearMonthData;
+use AppBundle\Util\ResultUtil;
+use AppBundle\Validation\AdminValidator;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 class InbreedingCoefficientAllAnimalsUpdaterService extends InbreedingCoefficientUpdaterServiceBase
 {
-
-    public function generateForAllAnimalsAndLitters()
+    private function taskRepository(): InbreedingCoefficientTaskAdminRepository
     {
-        $this->generateForAllAnimalsAndLitterBase(false, true);
+        return $this->em->getRepository(InbreedingCoefficientTaskAdmin::class);
     }
 
-    public function regenerateForAllAnimalsAndLitters()
+    public function start(Person $actionBy, bool $recalculate)
     {
-        $this->generateForAllAnimalsAndLitterBase(false, true);
-    }
+        AdminValidator::isAdmin($actionBy,AccessLevelType::SUPER_ADMIN,true);
 
+        $process = $this->processRepository()->getAdminProcess();
 
-    protected function generateForAllAnimalsAndLitterBase(bool $recalculate, bool $setFindGlobalMatch)
-    {
-        $this->setProcessSlot(InbreedingCoefficientProcessSlot::ADMIN);
-
-        $this->resetCounts();
+        if (!$process->isFinished()) {
+            if ($this->taskRepository()->next()) {
+                $this->taskRepository()->purgeQueue();
+            }
+            throw new BadRequestHttpException($this->translator->trans('process.duplicate'));
+        }
 
         $this->updateAnimalsWithoutParents();
+
+        $startedAt = new \DateTime();
+        $process->reset($startedAt, $recalculate);
+
+        $this->resetCounts();
 
         $yearsAndMonthsAnimalIdsSets = $this->calcInbreedingCoefficientParentRepository->getAllYearsAndMonths();
 
@@ -58,50 +71,154 @@ class InbreedingCoefficientAllAnimalsUpdaterService extends InbreedingCoefficien
             );
         }
 
-        foreach ($yearsAndMonthsAnimalIdsSets as $period)
-        {
-            $this->generateForAllAnimalsAndLitterBasePeriodLoop(
-                $period, $recalculate, $setFindGlobalMatch
-            );
+        $process->setTotal($this->totalInbreedingCoefficientPairs);
+        $this->em->persist($process);
+
+        $this->taskRepository()->add($yearsAndMonthsAnimalIdsSets, $startedAt);
+
+        $this->em->flush();
+
+        return ResultUtil::successResult('ok');
+    }
+
+    public function run(): bool
+    {
+        $process = $this->processRepository()->getAdminProcess();
+        $isLoopRunSuccessful = true;
+
+        if ($process->isLocked()) {
+            $this->validateLockedDuration($process);
+            return true;
         }
 
-        $this->writeBatchCount('Completed!');
+
+        try {
+            $task = $this->taskRepository()->next();
+
+            if (!$task) {
+
+                if (
+                    $process->getFinishedAt() == null ||
+                    $process->getProcessed() !== 100
+                ) {
+                    $now = new \DateTime();
+                    $process->setFinishedAt($now);
+                    $process->setBumpedAt($now);
+                    $process->setProgress(100);
+                    $process->setIsCancelled(false);
+                    $process->setIsLocked(false);
+                    $this->em->persist($process);
+                    $this->em->flush();
+                    $this->writeBatchCount('Completed!');
+                }
+                return $isLoopRunSuccessful;
+            }
+
+            $taskId = $task->getId();
+            $process->setIsLocked(true);
+            $this->em->persist($process);
+            $this->em->flush();
+            $this->em->clear();
+
+            $isLoopRunSuccessful = $this->generateForAllAnimalsAndLitterBasePeriodLoop(
+                $task->getYear(), $task->getMonth()
+            );
+
+            $this->taskRepository()->deleteTask($taskId);
+
+        } catch (\Exception $exception) {
+            $isLoopRunSuccessful = false;
+        }
+
+
+        $process = $this->processRepository()->getAdminProcess();
+        $process->setIsLocked(false);
+        $this->em->persist($process);
+        $this->em->flush();
+
+        return $isLoopRunSuccessful;
     }
 
 
-    private function generateForAllAnimalsAndLitterBasePeriodLoop(
-        YearMonthData $period, bool $recalculate, bool $setFindGlobalMatch
-    )
+    public function cancel(Person $actionBy)
     {
-        $year = $period->getYear();
-        $month = $period->getMonth();
+        AdminValidator::isAdmin($actionBy,AccessLevelType::SUPER_ADMIN,true);
+
+        $this->taskRepository()->purgeQueue();
+
+        $process = $this->processRepository()->getAdminProcess();
+        $process->setFinishedAt(new \DateTime());
+        $process->setIsCancelled(true);
+
+        $this->em->persist($process);
+        $this->em->flush();
+    }
+
+
+    public function generateForAllAnimalsAndLitters()
+    {
+        // TODO remove after function calls are removed
+    }
+
+    public function regenerateForAllAnimalsAndLitters()
+    {
+        // TODO remove after function calls are removed
+    }
+
+
+    private function generateForAllAnimalsAndLitterBasePeriodLoop(int $year, int $month): bool
+    {
+        $this->setProcessSlot(InbreedingCoefficientProcessSlot::ADMIN);
+
+        $process = $this->processRepository()->getAdminProcess();
+        $this->resetCounts($process);
+        $this->em->clear();
 
         $this->logMessageGroup = "$year-$month (year-month)";
 
-        $groupedAnimalIdsSets = $this->getParentGroupedAnimalIdsByYearAndMonth($year, $month);
-        $this->writeBatchCount();
+        try {
+            $groupedAnimalIdsSets = $this->getParentGroupedAnimalIdsByYearAndMonth($year, $month);
+            $this->writeBatchCount();
 
-        foreach ($groupedAnimalIdsSets as $groupedAnimalIdsSet)
-        {
-            // Restart process here
-            $this->processGroupedAnimalIdsSets([$groupedAnimalIdsSet], $recalculate, $setFindGlobalMatch);
-            // Break process here
+            foreach ($groupedAnimalIdsSets as $groupedAnimalIdsSet)
+            {
+                if ($this->processRepository()->isAdminProcessCancelled()) {
+                    break;
+                }
+                $this->processGroupedAnimalIdsSets([$groupedAnimalIdsSet], $process->isRecalculate());
+            }
+
+        } catch (\Exception $exception) {
+            $process = $this->processRepository()->getAdminProcess();
+            $process->setErrorCode(Response::HTTP_INTERNAL_SERVER_ERROR);
+            $process->setErrorMessage($exception->getMessage());
+            $process->setDebugErrorMessage($exception->getTraceAsString());
+            $process->setProcessDetails($this->getProcessDetails(), true);
+            $this->em->persist($process);
+            $this->em->flush();
+            return false;
         }
+
+        $process = $this->processRepository()->getAdminProcess();
+        $process->setProcessDetails($this->getProcessDetails());
+        $this->em->persist($process);
+        $this->em->flush();
+
+        return true;
     }
 
 
     /**
      * @param  array  $groupedAnimalIdsSets
      * @param  bool  $recalculate
-     * @param  bool  $setFindGlobalMatch
      */
-    private function processGroupedAnimalIdsSets(array $groupedAnimalIdsSets, bool $recalculate, bool $setFindGlobalMatch)
+    private function processGroupedAnimalIdsSets(array $groupedAnimalIdsSets, bool $recalculate)
     {
         $this->refillParentsCalculationTables($groupedAnimalIdsSets);
 
         foreach ($groupedAnimalIdsSets as $groupedAnimalIdSet)
         {
-            $this->processGroupedAnimalIdsSet($groupedAnimalIdSet, $recalculate, $setFindGlobalMatch);
+            $this->processGroupedAnimalIdsSet($groupedAnimalIdSet, $recalculate);
         }
 
         $this->clearParentsCalculationTables();

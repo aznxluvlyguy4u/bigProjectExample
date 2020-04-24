@@ -587,3 +587,7 @@ fat3: fat3
 measurementDate: measurement date
 muscleThickness: muscle thickness
 scanWeight: scan weight
+
+# Process
+process:
+  duplicate: A similar process is already running

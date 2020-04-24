@@ -380,4 +380,11 @@ class BaseRepository extends EntityRepository
         }
         return $result;
     }
+
+
+    protected function sqlDeleteById(string $tableName, int $taskId, string $idColumn = 'id')
+    {
+        $sql = "DELETE FROM $tableName WHERE $idColumn = $taskId";
+        $this->getConnection()->executeQuery($sql);
+    }
 }

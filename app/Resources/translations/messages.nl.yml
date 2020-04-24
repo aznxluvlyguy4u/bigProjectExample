@@ -596,3 +596,7 @@ fat3: vet3
 measurementDate: meetdatum
 muscleThickness: spierdikte
 scanWeight: scangewicht
+
+# Process
+process:
+  duplicate: Een identiek process draait al

@@ -1239,6 +1239,7 @@ services:
         arguments:
           - '@doctrine.orm.entity_manager'
           - '@logger'
+          - '@translator'
           - '%log_extra_details_for_development%'
 
     AppBundle\Service\InbreedingCoefficient\InbreedingCoefficientAllAnimalsUpdaterService:

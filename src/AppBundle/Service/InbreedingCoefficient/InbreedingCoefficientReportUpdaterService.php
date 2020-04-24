@@ -11,31 +11,28 @@ class InbreedingCoefficientReportUpdaterService extends InbreedingCoefficientUpd
 {
     /**
      * @param  array|ParentIdsPair[] $parentIdsPairs
-     * @param  bool $findGlobalMatch
      */
-    public function generateInbreedingCoefficients(array $parentIdsPairs, bool $findGlobalMatch = false)
+    public function generateInbreedingCoefficients(array $parentIdsPairs)
     {
-        $this->generateInbreedingCoefficientsBase($parentIdsPairs, $findGlobalMatch,false);
+        $this->generateInbreedingCoefficientsBase($parentIdsPairs,false);
     }
 
     /**
      * @param  array|ParentIdsPair[] $parentIdsPairs
-     * @param  bool $findGlobalMatch
      */
-    public function regenerateInbreedingCoefficients(array $parentIdsPairs, bool $findGlobalMatch = false)
+    public function regenerateInbreedingCoefficients(array $parentIdsPairs)
     {
-        $this->generateInbreedingCoefficientsBase($parentIdsPairs, $findGlobalMatch,true);
+        $this->generateInbreedingCoefficientsBase($parentIdsPairs,true);
     }
 
 
     /**
      * @param  array|ParentIdsPair[]  $parentIdsPairs
-     * @param  bool  $setFindGlobalMatch
      * @param  bool  $recalculate
      * @param  string  $processSlot
      */
     protected function generateInbreedingCoefficientsBase(
-        array $parentIdsPairs, bool $setFindGlobalMatch, bool $recalculate,
+        array $parentIdsPairs, bool $recalculate,
         string $processSlot = InbreedingCoefficientProcessSlot::REPORT
     )
     {
@@ -54,19 +51,19 @@ class InbreedingCoefficientReportUpdaterService extends InbreedingCoefficientUpd
         $this->totalInbreedingCoefficientPairs = $setCount;
         $this->logMessageGroup = $setCount.' parent groups';
 
-        $this->processGroupedAnimalIdsSets($groupedAnimalIdsSets, $recalculate, $setFindGlobalMatch);
+        $this->processGroupedAnimalIdsSets($groupedAnimalIdsSets, $recalculate);
 
         $this->writeBatchCount('Completed!');
     }
 
 
-    private function processGroupedAnimalIdsSets(array $groupedAnimalIdsSets, bool $recalculate, bool $setFindGlobalMatch)
+    private function processGroupedAnimalIdsSets(array $groupedAnimalIdsSets, bool $recalculate)
     {
         $this->refillParentsCalculationTables($groupedAnimalIdsSets);
 
         foreach ($groupedAnimalIdsSets as $groupedAnimalIdSet)
         {
-            $this->processGroupedAnimalIdsSet($groupedAnimalIdSet, $recalculate, $setFindGlobalMatch);
+            $this->processGroupedAnimalIdsSet($groupedAnimalIdSet, $recalculate);
         }
 
         $this->clearParentsCalculationTables();

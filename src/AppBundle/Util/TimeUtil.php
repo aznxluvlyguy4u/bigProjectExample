@@ -179,6 +179,17 @@ class TimeUtil
         return TimeUtil::secondsToTime($eta);
     }
 
+
+    public static function durationInHours(\DateTime $start, \DateTime $end): float
+    {
+        $seconds = self::durationInSeconds($start, $end);
+        return floatval($seconds
+            / 60 // minutes
+            / 60 // hours
+        );
+    }
+
+
     /**
      * @param  \DateTime  $start
      * @param  \DateTime  $end

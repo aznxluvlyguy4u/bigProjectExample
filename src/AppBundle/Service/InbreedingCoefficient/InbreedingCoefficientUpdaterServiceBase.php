@@ -22,14 +22,21 @@ use AppBundle\Entity\CalcIcParentDetailsRepositoryInterface;
 use AppBundle\Entity\CalcIcParentRepositoryInterface;
 use AppBundle\Entity\Ewe;
 use AppBundle\Entity\InbreedingCoefficient;
+use AppBundle\Entity\InbreedingCoefficientProcess;
+use AppBundle\Entity\InbreedingCoefficientProcessRepository;
 use AppBundle\Entity\InbreedingCoefficientRepository;
 use AppBundle\Entity\Ram;
 use AppBundle\Enumerator\InbreedingCoefficientProcessSlot;
+use AppBundle\Exception\Sqs\InbreedingCoefficientProcessException;
 use AppBundle\model\ParentIdsPair;
+use AppBundle\model\process\ProcessDetails;
+use AppBundle\Setting\InbreedingCoefficientSetting;
 use AppBundle\Util\LoggerUtil;
 use AppBundle\Util\SqlUtil;
+use AppBundle\Util\TimeUtil;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\Translation\TranslatorInterface;
 
 class InbreedingCoefficientUpdaterServiceBase
 {
@@ -46,6 +53,8 @@ class InbreedingCoefficientUpdaterServiceBase
     protected $em;
     /** @var LoggerInterface */
     protected $logger;
+    /** @var TranslatorInterface */
+    protected $translator;
     /** @var boolean */
     protected $logExtraDetailsForDevelopment;
 
@@ -84,11 +93,13 @@ class InbreedingCoefficientUpdaterServiceBase
     public function __construct(
         EntityManagerInterface $em,
         LoggerInterface $logger,
+        TranslatorInterface $translator,
         ?bool $logExtraDetailsForDevelopment = false
     )
     {
         $this->em = $em;
         $this->logger = $logger;
+        $this->translator = $translator;
         $this->logExtraDetailsForDevelopment = $logExtraDetailsForDevelopment;
 
         $this->inbreedingCoefficientRepository = $this->em->getRepository(InbreedingCoefficient::class);
@@ -125,17 +136,35 @@ class InbreedingCoefficientUpdaterServiceBase
     }
 
 
-    protected function resetCounts()
+    protected function processRepository(): InbreedingCoefficientProcessRepository
     {
-        $this->newCount = 0;
-        $this->updateCount = 0;
-        $this->skipped = 0;
+        return $this->em->getRepository(InbreedingCoefficientProcess::class);
+    }
+
+
+    protected function resetCounts(?InbreedingCoefficientProcess $process = null)
+    {
+        $this->newCount = ($process ? $process->getNewCount() : 0);
+        $this->updateCount = ($process ? $process->getUpdatedCount() : 0);
+        $this->skipped = ($process ? $process->getSkippedCount() : 0);
         $this->batchCount = 0;
         $this->logMessageGroup = '';
         $this->logMessageParents = '';
         $this->logMessageParentsAction = '';
-        $this->processedInbreedingCoefficientPairs = 0;
-        $this->totalInbreedingCoefficientPairs = 0;
+        $this->processedInbreedingCoefficientPairs = ($process ? $process->getProcessed() : 0);
+        $this->totalInbreedingCoefficientPairs = ($process ? $process->getTotal() : 0);
+    }
+
+    protected function getProcessDetails(): ProcessDetails
+    {
+        return (new ProcessDetails())
+            ->setTotal($this->totalInbreedingCoefficientPairs)
+            ->setProcessed($this->processedInbreedingCoefficientPairs)
+            ->setNew($this->newCount)
+            ->setSkipped($this->skipped)
+            ->setUpdated($this->updateCount)
+            ->setLogMessage($this->logMessage())
+        ;
     }
 
     private function writeBatchCountInnerLoop(string $suffix = '')
@@ -146,6 +175,17 @@ class InbreedingCoefficientUpdaterServiceBase
     }
 
     protected function writeBatchCount(string $suffix = '')
+    {
+        $message = $this->logMessage($suffix);
+        if ($this->processedInbreedingCoefficientPairs <= 1 || self::LOG_LOOPS_ON_NEW_LINE) {
+            $this->logger->notice($message);
+        } else {
+            LoggerUtil::overwriteNoticeLoggerInterface($this->logger, $message);
+        }
+        $message = null;
+    }
+
+    protected function logMessage(string $suffix = ''): string
     {
         $processedCount = $this->processedInbreedingCoefficientPairs;
 
@@ -160,19 +200,33 @@ class InbreedingCoefficientUpdaterServiceBase
             $progressOverview = "total $processedCount - $memoryUsage";
         }
 
-        $message = "InbreedingCoefficient records $progressOverview: "
+        return "InbreedingCoefficient records $progressOverview: "
             .$this->newCount.'|'.$this->updateCount." [new|updated]"
             .' | '.$this->logMessageGroup
             .' | '.$this->logMessageParents
             .(empty($this->logMessageParentsAction) ? '' : '['.$this->logMessageParentsAction.']')
             .(empty($suffix) ? '' : ' | '.$suffix);
-        if ($processedCount <= 1 || self::LOG_LOOPS_ON_NEW_LINE) {
-            $this->logger->notice($message);
-        } else {
-            LoggerUtil::overwriteNoticeLoggerInterface($this->logger, $message);
-        }
-        $message = null;
     }
+
+
+    protected function validateLockedDuration(InbreedingCoefficientProcess $process)
+    {
+        if (!$process->isLocked()) {
+            return;
+        }
+
+        $lastUpdatedDate = $process->getBumpedAt() ? $process->getBumpedAt() : $process->getStartedAt();
+        $loopDurationHours = abs(TimeUtil::durationInHours($lastUpdatedDate, new \DateTime()));
+        $maxLimit = InbreedingCoefficientSetting::LOOP_MAX_DURATION_IN_HOURS;
+        if ($loopDurationHours > $maxLimit) {
+            $slotName = $process->getSlotName();
+            throw new InbreedingCoefficientProcessException(
+                "Loop duration for InbreedingCoefficientProcess slot $slotName exceeds $maxLimit hours. "
+                ."Check if the process is stuck or not."
+            );
+        }
+    }
+
 
     protected function clearParentsCalculationTables()
     {
@@ -202,7 +256,7 @@ class InbreedingCoefficientUpdaterServiceBase
     }
 
 
-    protected function processGroupedAnimalIdsSet(array $groupedAnimalIdsSet, bool $recalculate, bool $setFindGlobalMatch)
+    protected function processGroupedAnimalIdsSet(array $groupedAnimalIdsSet, bool $recalculate)
     {
         $motherId = $groupedAnimalIdsSet['mother_id'];
         $fatherId = $groupedAnimalIdsSet['father_id'];
@@ -214,7 +268,7 @@ class InbreedingCoefficientUpdaterServiceBase
 
         $this->writeBatchCountInnerLoop();
 
-        $isSkipped = $this->upsertInbreedingCoefficientForPair($fatherId, $motherId, $recalculate, $setFindGlobalMatch);
+        $isSkipped = $this->upsertInbreedingCoefficientForPair($fatherId, $motherId, $recalculate);
 
         if (!$isSkipped) {
             $animalIds = SqlUtil::getArrayFromPostgreSqlArrayString($animalIdsArrayString);

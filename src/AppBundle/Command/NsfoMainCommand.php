@@ -15,6 +15,7 @@ use AppBundle\Component\MixBlup\MixBlupInputFileValidator;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\EditType;
+use AppBundle\Entity\InbreedingCoefficientProcess;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\ProcessLog;
 use AppBundle\Entity\ScrapieGenotypeSource;
@@ -1177,6 +1178,9 @@ class NsfoMainCommand extends ContainerAwareCommand
                 '3: Display feedback worker processes', "\n",
                 '4: Unlock  feedback worker processes', "\n",
                 "\n",
+                '5: Display inbreeding coefficient worker processes', "\n",
+                '6: Unlock  inbreeding coefficient worker processes', "\n",
+                "\n",
                 'other: exit submenu', "\n"
             ], self::DEFAULT_OPTION);
         } else {
@@ -1202,6 +1206,7 @@ class NsfoMainCommand extends ContainerAwareCommand
         foreach (ProcessType::getConstants() as $processType) {
             $this->displayLockedProcesses($processType);
         }
+        $this->displayLockedInbreedingCoefficientSlots();
     }
 
     private function displayLockedProcesses($processType)
@@ -1210,11 +1215,29 @@ class NsfoMainCommand extends ContainerAwareCommand
         $this->getProcessLocker()->getProcessesCount($processType, true);
     }
 
+    private function displayLockedInbreedingCoefficientSlots()
+    {
+        $lockedSlots = array_map(
+            function (InbreedingCoefficientProcess $process) {
+                return $process->getSlotName();
+            },
+            $this->em->getRepository(InbreedingCoefficientProcess::class)->getLockedProcesses()
+        );
+
+        $count = empty($lockedSlots) ? 0 : count($lockedSlots);
+        $list = empty($lockedSlots) ? '' : ': '.implode(',', $lockedSlots);
+
+        $this->getLogger()->notice("$count inbreeding coefficient process slots are locked$list");
+    }
+
     private function unlockAllProcesses()
     {
         foreach (ProcessType::getConstants() as $processType) {
             $this->unlockWorkerProcesses($processType);
         }
+
+        $this->displayAllLockedProcesses();
+        $this->em->getRepository(InbreedingCoefficientProcess::class)->unlockAllProcesses();
     }
 
     private function unlockWorkerProcesses($processType)
