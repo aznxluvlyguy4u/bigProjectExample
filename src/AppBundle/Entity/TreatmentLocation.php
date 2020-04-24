@@ -68,7 +68,7 @@ class TreatmentLocation implements TreatmentInterface
      * @JMS\Type("AppBundle\Entity\Client")
      */
     private $owner;
-    
+
     /**
      * @var Employee
      * @ORM\ManyToOne(targetEntity="Employee")
@@ -342,6 +342,6 @@ class TreatmentLocation implements TreatmentInterface
         $this->isActive = $isActive;
         return $this;
     }
-    
-    
+
+
 }

@@ -4,6 +4,7 @@
 namespace AppBundle\Util;
 
 
+use AppBundle\Constant\Variable;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\DeclareBirthRepository;
 use AppBundle\Enumerator\AnimalObjectType;
@@ -11,6 +12,7 @@ use AppBundle\Enumerator\ExteriorKind;
 use AppBundle\Enumerator\PredicateType;
 use AppBundle\Enumerator\RequestStateType;
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\DBALException;
 use Monolog\Logger;
 
 class LitterUtil
@@ -22,7 +24,7 @@ class LitterUtil
      * @param Connection $conn
      * @param Logger $logger
      * @return bool
-     * @throws \Doctrine\DBAL\DBALException
+     * @throws DBALException
      */
     public static function validateDuplicateLitters(Connection $conn, Logger $logger): bool {
         $sqlDuplicateLitterCheck = "SELECT
@@ -121,7 +123,7 @@ class LitterUtil
     /**
      * @param Connection $conn
      * @return int
-     * @throws \Doctrine\DBAL\DBALException
+     * @throws DBALException
      */
     public static function countToBeMatchedLitters(Connection $conn)
     {
@@ -220,6 +222,7 @@ WHERE child.id = $childId AND mother_litter.id NOTNULL";
      * @param Connection $conn
      * @param int $litterId
      * @return int
+     * @throws DBALException
      */
     public static function updateSuckleCountsByLitterId(Connection $conn, int $litterId)
     {
@@ -229,17 +232,17 @@ WHERE child.id = $childId AND mother_litter.id NOTNULL";
 
 
     /**
-     * Ewes with abortions and pseudopregnancies cannot give milk, while an ewe with only stillborns can.
+     * Ewes with abortions and pseudo-pregnancies cannot give milk, while an ewe with only stillborns can.
      * Because the imported data from VSM has no registered surrogate mothers, the suckleCount will only be calculated
      * for litters registered in this current NSFO system.
      *
      * @param Connection $conn
-     * @param string $litterId
+     * @param string $litterIdFilter
      * @return int
+     * @throws DBALException
      */
     private static function updateSuckleCountsBase(Connection $conn, string $litterIdFilter = '')
     {
-
         $sql = "UPDATE litter SET suckle_count_update_date = NOW(), suckle_count = v.calculated_suckle_count
                 FROM(
                   SELECT l.id, calculated_suckle_count, l.suckle_count FROM litter l
@@ -253,14 +256,14 @@ WHERE child.id = $childId AND mother_litter.id NOTNULL";
                                                SELECT child.id as suckling, l.id as litter_id
                                                FROM litter l
                                                  INNER JOIN animal child ON l.id = child.litter_id
-                                               WHERE child.surrogate_id ISNULL
+                                               WHERE child.surrogate_id ISNULL AND child.lambar = FALSE
                                                      AND l.status = '".RequestStateType::COMPLETED."' AND l.is_abortion = FALSE AND l.is_pseudo_pregnancy = FALSE
                                                      ".$litterIdFilter."
                                                UNION
                                                -- 2. Find the children from others for which the mother is a surrogate
                                                SELECT child.id as suckling, l.id as litter_id FROM litter l
                                                  INNER JOIN animal child ON l.animal_mother_id = child.surrogate_id
-                                               WHERE ABS(DATE(child.date_of_birth) - DATE(l.litter_date)) <= 14
+                                               WHERE ABS(DATE(child.date_of_birth) - DATE(l.litter_date)) <= ".Variable::MAX_AGE_LITTER_CHILD."
                                                      AND l.status = '".RequestStateType::COMPLETED."' AND l.is_abortion = FALSE AND l.is_pseudo_pregnancy = FALSE
                                                      ".$litterIdFilter."
                                              ) AS suckers_calculation_part_1
@@ -292,9 +295,55 @@ WHERE child.id = $childId AND mother_litter.id NOTNULL";
                         AND l.status = '".RequestStateType::COMPLETED."' AND l.is_abortion = FALSE AND l.is_pseudo_pregnancy = FALSE
                         ".$litterIdFilter."
                 ) AS v(litter_id, calculated_suckle_count) WHERE id = litter_id";
-        return SqlUtil::updateWithCount($conn, $sql);
+
+        $count = SqlUtil::updateWithCount($conn, $sql);
+
+        self::setDefaultSurrogateLitter($conn, $litterIdFilter);
+        self::updateSurrogateLitter($conn, $litterIdFilter);
+
+        return $count;
     }
 
+    /**
+     * @param Connection $conn
+     * @param string $litterIdFilter
+     * @throws DBALException
+     */
+    private static function updateSurrogateLitter(Connection $conn, string $litterIdFilter = '')
+    {
+        $sql = "UPDATE animal SET surrogate_litter_id = v.surrogate_litter_id
+            FROM (
+             SELECT
+                 child.id as child_id,
+                 MAX(l.id) as surrogate_litter_id
+             FROM animal child
+                INNER JOIN litter l
+                ON child.surrogate_id = l.animal_mother_id AND
+                ABS(DATE(child.date_of_birth) - DATE(l.litter_date)) <= ".Variable::MAX_AGE_LITTER_CHILD."
+             WHERE l.status = '".RequestStateType::COMPLETED."'
+               ".$litterIdFilter."
+             GROUP BY child.id
+            ) AS v(child_id, surrogate_litter_id)
+            WHERE
+              animal.id = v.child_id AND (
+                animal.surrogate_litter_id ISNULL OR
+                v.surrogate_litter_id <> animal.surrogate_litter_id
+            )";
+
+        $stmt = $conn->prepare($sql);
+        $stmt->execute();
+    }
+
+    /**
+     * @param Connection $conn
+     * @param string $litterIdFilter
+     * @throws DBALException
+     */
+    private static function setDefaultSurrogateLitter(Connection $conn, string $litterIdFilter) {
+        $sql = "UPDATE animal SET surrogate_litter_id = NULL WHERE surrogate_id ISNULL ".$litterIdFilter;
+        $stmt = $conn->prepare($sql);
+        $stmt->execute();
+    }
 
     /**
      * @param Connection $conn
@@ -987,5 +1036,28 @@ FROM (
         }
 
         return $updateCount;
+    }
+
+    /**
+     * @param Connection $conn
+     * @param array $changedSurrogateMothers
+     * @return int
+     * @throws DBALException
+     */
+    public static function updateSuckleCountForLittersOrMotherIds(Connection $conn, array $changedSurrogateMothers)
+    {
+        $idFilterString = "WHERE e.id IN (".implode(',', $changedSurrogateMothers).")";
+
+        $sql = "
+            UPDATE litter SET suckle_count_update_date = NOW(), suckle_count = v.calculated_suckle_count
+            FROM (
+                SELECT l.id, l.suckle_count, COUNT(litter_id) as calculated_suckle_count FROM litter l  
+                INNER JOIN animal a on l.id = a.litter_id
+                INNER JOIN ewe e on a.parent_mother_id = e.id
+                ".$idFilterString."
+            ) AS v(litter_id, calculated_suckle_count)
+        ";
+
+        return SqlUtil::updateWithCount($conn, $sql);
     }
 }

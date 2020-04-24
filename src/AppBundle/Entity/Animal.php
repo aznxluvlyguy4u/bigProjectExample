@@ -1013,6 +1013,17 @@ abstract class Animal
      */
     private $animalRelocations;
 
+    /**
+     * @var Litter|null
+     * @JMS\Type("AppBundle\Entity\Litter")
+     * @ORM\ManyToOne(targetEntity="AppBundle\Entity\Litter", inversedBy="surrogates")
+     * @ORM\JoinColumn(name="surrogate_litter_id", referencedColumnName="id")
+     * @JMS\Groups({
+     *     "ANIMAL_DETAILS",
+     *     "LITTER"
+     * })
+     */
+    private $surrogateLitter;
 
     /**
      * @JMS\VirtualProperty
@@ -3195,7 +3206,7 @@ abstract class Animal
      */
     public function setNickname($nickname)
     {
-    	  $nickname = $nickname === '' ? null : $nickname;
+        $nickname = $nickname === '' ? null : $nickname;
         $this->nickname = $nickname;
     }
 
@@ -3399,7 +3410,7 @@ abstract class Animal
     public function isOnLocation(Location $location): bool
     {
         if (!$this->getLocation() || !$location
-        || (
+            || (
                 (!$this->getLocation()->getId() && !$location->getId()) &&
                 (!$this->getLocation()->getLocationId() && !$location->getLocationId())
             )
@@ -3564,5 +3575,30 @@ abstract class Animal
         $this->annotations->removeElement($annotation);
     }
 
+    /**
+     * @return Litter|null
+     */
+    public function getSurrogateLitter(): ?Litter
+    {
+        return $this->surrogateLitter;
+    }
 
+    /**
+     * @param Litter|null $surrogateLitter
+     * @return Animal
+     */
+    public function setSurrogateLitter(?Litter $surrogateLitter)
+    {
+        $this->surrogateLitter = $surrogateLitter;
+        return $this;
+    }
+
+    function getSuckleCount(): ?int
+    {
+        if ($this->getSurrogateLitter()) {
+            return $this->getSurrogateLitter()->getSuckleCount();
+        }
+
+        return $this->getLitter() ? $this->getLitter()->getSuckleCount() : null;
+    }
 }
