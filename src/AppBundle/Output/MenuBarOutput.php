@@ -69,7 +69,7 @@ class MenuBarOutput extends Output
                   INNER JOIN address a ON l.address_id = a.id
                   LEFT JOIN country cd ON cd.name = a.country
                 WHERE c.is_active AND l.is_active
-                  AND c.owner_id = ".$client->getId();
+                  AND c.owner_id = ".$client->getEmployer()->getOwner()->getId();
         return $em->getConnection()->query($sql)->fetchAll();
     }
 
