@@ -4,26 +4,21 @@
 
     {% set doubleSpace = '&nbsp; &nbsp;' %}
 
-    {% set ramUln = variables.ram.uln %}
-    {% set ramPedigree = variables.ram.pedigree %}
-    {% set isRamMissing = variables.isRamMissing %}
     {% set counter = 0 %}
     {% set rowsPerPage = 31 %}
     {% set ewesCount = variables.ewes|length %}
     {% set imagesDirectory = variables.imagesDirectory ~ '/nsfo-logo.png' %}
-    {% set coefficientDecimalAccuracy = 5 %}
+    {% set coefficientDecimalAccuracy = 1 %}
+
+    {% set hasRam2 = variables.hasRam2 %}
+    {% set hasRam3 = variables.hasRam3 %}
+    {% set hasRam4 = variables.hasRam4 %}
+    {% set hasRam5 = variables.hasRam5 %}
 
     {# HEADER #}
 
-    <div class="nsfo-logo">
-        <img src="{{ imagesDirectory }}"/>
-    </div>
-
-    {#<h3>{{ imagesDirectory }}</h3>#}
-
-    <h2>Inteeltcoëfficiënt van nageslacht na paring</h2>
-
-    <p>Ram A: {{ ramUln }}, stn: {{ ramPedigree }} </p>
+    {% embed "/Report/inbreeding_coefficient_report_parts/header.html.twig" with variables %}
+    {% endembed %}
 
     {# END OF HEADER #}
 
@@ -41,9 +36,26 @@
         {% endif %}
 
         {% if ewe['inbreedingCoefficient'] is defined %}
-            {% set eweInbreedingCoefficient = ewe.inbreedingCoefficient %}
+            {% set eweInbreedingCoefficient1 = ewe.inbreedingCoefficient.1 * 100 %}
+
+            {% if hasRam2 %}
+                {% set eweInbreedingCoefficient2 = ewe.inbreedingCoefficient.2 * 100 %}
+            {% endif %}
+
+            {% if hasRam3 %}
+                {% set eweInbreedingCoefficient3 = ewe.inbreedingCoefficient.3 * 100 %}
+            {% endif %}
+
+            {% if hasRam4 %}
+                {% set eweInbreedingCoefficient4 = ewe.inbreedingCoefficient.4 * 100 %}
+            {% endif %}
+
+            {% if hasRam5 %}
+                {% set eweInbreedingCoefficient5 = ewe.inbreedingCoefficient.5 * 100 %}
+            {% endif %}
+
         {% else %}
-            {% set eweInbreedingCoefficient = '' %}
+            {% set eweInbreedingCoefficient1 = '' %}
         {% endif %}
 
         {% if counter is divisible by (rowsPerPage) %}
@@ -62,7 +74,19 @@
             <tr>
                 <td class="tg-yw4l">Ooi ULN</td>
                 <td class="tg-yw4l">Ooi STN</td>
-                <td class="tg-lqy6">Ram A</td>
+                <td class="tg-lqy6">Ram 1</td>
+                {% if hasRam2 %}
+                    <td class="tg-lqy6">Ram 2</td>
+                {% endif %}
+                {% if hasRam3 %}
+                    <td class="tg-lqy6">Ram 3</td>
+                {% endif %}
+                {% if hasRam4 %}
+                    <td class="tg-lqy6">Ram 4</td>
+                {% endif %}
+                {% if hasRam5 %}
+                    <td class="tg-lqy6">Ram 5</td>
+                {% endif %}
             </tr>
         {% endif %}
 
@@ -71,7 +95,20 @@
             <tr>
                 <td class="tg-yw4l">{{ uln }}</td>
                 <td class="tg-yw4l">{{ ewePedigree }}</td>
-                <td class="tg-lqy6">{{ eweInbreedingCoefficient|number_format(coefficientDecimalAccuracy,'.',',') }}</td>
+                <td class="tg-lqy6-values">{{ eweInbreedingCoefficient1|number_format(coefficientDecimalAccuracy,'.',',') }}%</td>
+                {% if hasRam2 %}
+                    <td class="tg-lqy6-values">{{ eweInbreedingCoefficient2|number_format(coefficientDecimalAccuracy,'.',',') }}%</td>
+                {% endif %}
+                {% if hasRam3 %}
+                    <td class="tg-lqy6-values">{{ eweInbreedingCoefficient3|number_format(coefficientDecimalAccuracy,'.',',') }}%</td>
+                {% endif %}
+                {% if hasRam4 %}
+                    <td class="tg-lqy6-values">{{ eweInbreedingCoefficient4|number_format(coefficientDecimalAccuracy,'.',',') }}%</td>
+                {% endif %}
+                {% if hasRam5 %}
+                    <td class="tg-lqy6-values">{{ eweInbreedingCoefficient5|number_format(coefficientDecimalAccuracy,'.',',') }}%</td>
+                {% endif %}
+
             </tr>
 
         {% set counter = counter + 1 %}
@@ -89,13 +126,8 @@
             {#necessary to enforce a pagebreak using css#}
         <footer></footer>
 
-            <div class="nsfo-logo">
-                <img src="{{ imagesDirectory }}"/>
-            </div>
-
-            <h2>Inteeltcoëfficiënt van nageslacht na paring</h2>
-
-            <p>Ram A: {{ ramUln }}, stn: {{ ramPedigree }} </p>
+        {% embed "/Report/inbreeding_coefficient_report_parts/title_and_rams.html.twig" with variables %}
+        {% endembed %}
 
         {% endif %}
 
@@ -149,9 +181,55 @@
             margin:0px auto;
         }
 
+        .rams-table  {
+            border-collapse:collapse;
+            border-spacing:0;
+            margin:0px auto 10px;
+        }
+        .rams-table td{
+            border-color:black;
+            border-style:solid;
+            border-width:1px;
+            font-family:Arial, sans-serif;
+            font-size:14px;
+            overflow:hidden;
+            padding:2px 10px;
+            word-break:normal;
+        }
+        .rams-table th{
+            border-color:black;
+            border-style:solid;
+            border-width:1px;
+            font-family:Arial, sans-serif;
+            font-size:14px;
+            font-weight:normal;
+            overflow:hidden;
+            padding:2px 10px;
+            word-break:normal;
+        }
+        .rams-table .rams-table-zv4m{
+            border-color:#ffffff;
+            text-align:left;
+            vertical-align:top
+        }
+        .rams-table .rams-table-zv4k{
+            border-color:#ffffff;
+            text-align:center;
+            vertical-align:top;
+        }
+
         .tg td{font-family:SansSerif, sans-serif;font-size:14px;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;}
         .tg th{font-family:SansSerif, sans-serif;font-size:14px;font-weight:normal;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;}
-        .tg .tg-lqy6{text-align:right;vertical-align:top}
+
+        .tg-lqy6{
+            text-align:right;
+            vertical-align:center;
+        }
+        .tg-lqy6-values{
+            text-align:right;
+            vertical-align:center;
+        }
+
         .tg .tg-ddb2{font-family:serif !important;;text-align:center;vertical-align:top}
         .tg .tg-yw4l{vertical-align:top}
         @media screen and (max-width: 767px) {

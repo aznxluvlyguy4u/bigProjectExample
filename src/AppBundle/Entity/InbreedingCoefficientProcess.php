@@ -543,9 +543,15 @@ class InbreedingCoefficientProcess
         $this->setNewCount($processDetails->getNew());
         $this->setUpdatedCount($processDetails->getUpdated());
         $this->setSkippedCount($processDetails->getSkipped());
-        $this->setProgress(
-            intval($processDetails->getProcessed() / $processDetails->getTotal())
-        );
+
+        if (empty($processDetails->getTotal())) {
+            $this->setProgress(100);
+        } else {
+            $this->setProgress(
+                intval($processDetails->getProcessed() / $processDetails->getTotal())
+            );
+        }
+
         $this->setLog($processDetails->getLogMessage());
 
         return $this;

@@ -43,14 +43,22 @@ class InbreedingCoefficientTaskSmall
     private $eweId;
 
     /**
+     * @var boolean
+     * @ORM\Column(type="boolean", nullable=false, options={"default":false})
+     */
+    private $recalculate;
+
+    /**
      * InbreedingCoefficientTaskSmall constructor.
      * @param  int  $ramId
      * @param  int  $eweId
+     * @param  bool  $recalculate
      */
-    public function __construct(int $ramId, int $eweId)
+    public function __construct(int $ramId, int $eweId, bool $recalculate)
     {
         $this->ramId = $ramId;
         $this->eweId = $eweId;
+        $this->recalculate = $recalculate;
     }
 
     /**
@@ -104,6 +112,24 @@ class InbreedingCoefficientTaskSmall
     public function setEweId(int $eweId): InbreedingCoefficientTaskSmall
     {
         $this->eweId = $eweId;
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isRecalculate(): bool
+    {
+        return $this->recalculate;
+    }
+
+    /**
+     * @param  bool  $recalculate
+     * @return InbreedingCoefficientTaskSmall
+     */
+    public function setRecalculate(bool $recalculate): InbreedingCoefficientTaskSmall
+    {
+        $this->recalculate = $recalculate;
         return $this;
     }
 

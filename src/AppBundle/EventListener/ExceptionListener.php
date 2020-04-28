@@ -6,6 +6,7 @@ namespace AppBundle\EventListener;
 
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Constant\Environment;
+use AppBundle\Exception\BadRequestHttpExceptionWithMultipleErrors;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\ExceptionUtil;
 use AppBundle\Util\ResultUtil;
@@ -65,9 +66,18 @@ class ExceptionListener
         $code = self::getHttpResponseCodeFromException($exception);
         $errorMessage = empty($exception->getMessage()) || self::isSensitiveException($exception)
             ? self::getDefaultErrorMessage($code) : $exception->getMessage();
-        $errorData = $this->environment !== Environment::PROD ? self::nestErrorTrace($exception) : null;
+        $errorData = $this->getErrorData($exception);
         $errorResponse = $this->errorResult($errorMessage, $code, $errorData);
         $event->setResponse($errorResponse);
+    }
+
+
+    private function getErrorData($exception): ?array
+    {
+        if ($exception instanceof BadRequestHttpExceptionWithMultipleErrors) {
+            return $exception->getErrors();
+        }
+        return $this->environment !== Environment::PROD ? self::nestErrorTrace($exception) : null;
     }
 
 
@@ -137,12 +147,15 @@ class ExceptionListener
         switch (true) {
             case $exception instanceof AccessDeniedHttpException: return Response::HTTP_FORBIDDEN;
             case $exception instanceof NotFoundHttpException: return Response::HTTP_NOT_FOUND;
-            case $exception instanceof InsufficientAuthenticationException: return Response::HTTP_UNAUTHORIZED;
+            case $exception instanceof InsufficientAuthenticationException ||
+                 $exception instanceof UnauthorizedHttpException:
+                return Response::HTTP_UNAUTHORIZED;
             case $exception instanceof TooManyRequestsHttpException: return Response::HTTP_TOO_MANY_REQUESTS;
-            case $exception instanceof UnauthorizedHttpException: return Response::HTTP_UNAUTHORIZED;
             case $exception instanceof PreconditionFailedHttpException: return Response::HTTP_PRECONDITION_FAILED;
             case $exception instanceof PreconditionRequiredHttpException: return Response::HTTP_PRECONDITION_REQUIRED;
-            case $exception instanceof BadRequestHttpException: return Response::HTTP_BAD_REQUEST;
+            case $exception instanceof BadRequestHttpException ||
+                 $exception instanceof BadRequestHttpExceptionWithMultipleErrors:
+                return Response::HTTP_BAD_REQUEST;
             default: return empty($exception->getCode()) || $exception->getCode() === Response::HTTP_OK
                 ? Response::HTTP_INTERNAL_SERVER_ERROR : $exception->getCode();
         }

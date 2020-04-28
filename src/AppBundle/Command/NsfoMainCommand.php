@@ -26,6 +26,7 @@ use AppBundle\Enumerator\FileType;
 use AppBundle\Enumerator\MixBlupType;
 use AppBundle\Enumerator\PedigreeAbbreviation;
 use AppBundle\Enumerator\ProcessType;
+use AppBundle\model\ParentIdsPair;
 use AppBundle\Service\BreedIndexService;
 use AppBundle\Service\BreedValuePrinter;
 use AppBundle\Service\BreedValueService;
@@ -33,6 +34,8 @@ use AppBundle\Service\CacheService;
 use AppBundle\Service\DataFix\DuplicateMeasurementsFixer;
 use AppBundle\Service\ExcelService;
 use AppBundle\Service\InbreedingCoefficient\InbreedingCoefficientAllAnimalsUpdaterService;
+use AppBundle\Service\InbreedingCoefficient\InbreedingCoefficientParentPairsUpdaterService;
+use AppBundle\Service\InbreedingCoefficient\InbreedingCoefficientReportUpdaterService;
 use AppBundle\Service\InbreedingCoefficient\InbreedingCoefficientUbnUpdaterService;
 use AppBundle\Service\Migration\LambMeatIndexMigrator;
 use AppBundle\Service\Migration\MixBlupAnalysisTypeMigrator;
@@ -109,7 +112,7 @@ class NsfoMainCommand extends ContainerAwareCommand
             ->setName('nsfo')
             ->setDescription(self::TITLE)
             ->addOption('option', 'o', InputOption::VALUE_OPTIONAL,
-                'Run process directly. For example: 6,1')
+                "Run process directly. For example: 6,1\nNamed options:".MainCommandUtil::namedOptionsAsList())
         ;
     }
 
@@ -189,6 +192,8 @@ class NsfoMainCommand extends ContainerAwareCommand
                 self::LINE_THICK, "\n",
                 '15: '.strtolower(CommandTitle::REDIS), "\n",
                 self::LINE_THICK, "\n",
+                MainCommandUtil::INBREEDING_COEFFICIENT_PROCESS_OPTIONS.': '.strtolower(CommandTitle::INBREEDING_COEFFICIENT_PROCESS), "\n",
+                self::LINE_THICK, "\n",
                 'other: EXIT ', "\n"
             ], self::DEFAULT_OPTION);
         } else {
@@ -212,6 +217,7 @@ class NsfoMainCommand extends ContainerAwareCommand
             case 13: $this->calculationsAndAlgorithmsOptions($options); break;
             case MainCommandUtil::PROCESSOR_LOCKER_OPTIONS: $this->processLockerOptions($options); break;
             case 15: $this->redisOptions(); break;
+            case MainCommandUtil::INBREEDING_COEFFICIENT_PROCESS_OPTIONS: $this->inbreedingCoefficientProcessOptions($options); break;
 
             default: return;
         }
@@ -1206,7 +1212,7 @@ class NsfoMainCommand extends ContainerAwareCommand
         foreach (ProcessType::getConstants() as $processType) {
             $this->displayLockedProcesses($processType);
         }
-        $this->displayLockedInbreedingCoefficientSlots();
+        $this->getInbreedingCoefficientAllAnimalsUpdaterService()->displayAll();
     }
 
     private function displayLockedProcesses($processType)
@@ -1215,29 +1221,13 @@ class NsfoMainCommand extends ContainerAwareCommand
         $this->getProcessLocker()->getProcessesCount($processType, true);
     }
 
-    private function displayLockedInbreedingCoefficientSlots()
-    {
-        $lockedSlots = array_map(
-            function (InbreedingCoefficientProcess $process) {
-                return $process->getSlotName();
-            },
-            $this->em->getRepository(InbreedingCoefficientProcess::class)->getLockedProcesses()
-        );
-
-        $count = empty($lockedSlots) ? 0 : count($lockedSlots);
-        $list = empty($lockedSlots) ? '' : ': '.implode(',', $lockedSlots);
-
-        $this->getLogger()->notice("$count inbreeding coefficient process slots are locked$list");
-    }
-
     private function unlockAllProcesses()
     {
         foreach (ProcessType::getConstants() as $processType) {
             $this->unlockWorkerProcesses($processType);
         }
 
-        $this->displayAllLockedProcesses();
-        $this->em->getRepository(InbreedingCoefficientProcess::class)->unlockAllProcesses();
+        $this->getInbreedingCoefficientAllAnimalsUpdaterService()->unlockAll();
     }
 
     private function unlockWorkerProcesses($processType)
@@ -1280,6 +1270,84 @@ class NsfoMainCommand extends ContainerAwareCommand
         $this->writeLn("Clearing redis cache for location ".$locationId.", UBN ".$location->getUbn());
 
         $this->getCacheService()->clearLivestockCacheForLocation($location, null);
+    }
+
+
+    public function inbreedingCoefficientProcessOptions(array $options = [])
+    {
+        $this->initializeMenu(CommandTitle::INBREEDING_COEFFICIENT_PROCESS);
+
+        if (empty($options)) {
+            $option = $this->cmdUtil->generateMultiLineQuestion([
+                'Choose option: ', "\n",
+                '1: Display all inbreeding coefficient processes', "\n",
+                MainCommandUtil::UNLOCK_ALL_PROCESSES . ': Unlock all inbreeding coefficient processes', "\n",
+                "\n",
+                '3: All Animals: Start', "\n",
+                MainCommandUtil::IC_ALL_ANIMALS_RUN.': All Animals: Run', "\n",
+                '5: All Animals: Cancel', "\n",
+                "\n",
+                MainCommandUtil::IC_REPORT_RUN.': Report: Run', "\n",
+                '7: Report: Cancel', "\n",
+                "\n",
+                '8: Separate ParentPairs: Add ParentPair', "\n",
+                MainCommandUtil::IC_PARENT_PAIR_RUN.': Separate ParentPairs: Run', "\n",
+                '10: Separate ParentPairs: Cancel', "\n",
+                "\n",
+                'other: exit submenu', "\n"
+            ], self::DEFAULT_OPTION);
+        } else {
+            $option = array_shift($options);
+            $this->exitAfterRun = true;
+        }
+
+        switch ($option) {
+            case 1: $this->getInbreedingCoefficientAllAnimalsUpdaterService()->displayAll(); break;
+            case MainCommandUtil::UNLOCK_ALL_PROCESSES:
+                $this->getInbreedingCoefficientAllAnimalsUpdaterService()->unlockAll(); break;
+
+            case 3: $this->getInbreedingCoefficientAllAnimalsUpdaterService()
+                ->start($this->cmdUtil->generateConfirmationQuestion(
+                    'Regenerate inbreeding coefficients?', true)
+                ); break;
+            case MainCommandUtil::IC_ALL_ANIMALS_RUN: $this->getInbreedingCoefficientAllAnimalsUpdaterService()->run(); break;
+            case 5: if ($this->cmdUtil->generateConfirmationQuestion('Cancel all animals (re)generation?', true)) {
+                $this->getInbreedingCoefficientAllAnimalsUpdaterService()->cancel();
+            } break;
+
+            case MainCommandUtil::IC_REPORT_RUN: $this->getInbreedingCoefficientReportUpdaterService()->run(); break;
+            case 7: if ($this->cmdUtil->generateConfirmationQuestion('Cancel report (re)generation?', true)) {
+                $this->getInbreedingCoefficientReportUpdaterService()->cancel();
+            } break;
+
+            case 8: $this->addParentPairsInbreedingCoefficients(); break;
+            case MainCommandUtil::IC_PARENT_PAIR_RUN: $this->getInbreedingCoefficientParentPairsUpdaterService()->run(); break;
+            case 10: if ($this->cmdUtil->generateConfirmationQuestion('Cancel parent pairs (re)generation?', true)) {
+                $this->getInbreedingCoefficientParentPairsUpdaterService()->cancel();
+            } break;
+
+            default: $this->writeMenuExit(); return;
+        }
+        if ($this->exitAfterRun) {
+            die;
+        }
+        $this->inbreedingCoefficientProcessOptions();
+    }
+
+
+    private function addParentPairsInbreedingCoefficients()
+    {
+        $regenerate = $this->cmdUtil->generateConfirmationQuestion(
+            'Regenerate inbreeding coefficients?', true, true
+        );
+        $ramId = intval($this->cmdUtil->generateQuestion('Insert ramId', 1,true));
+        $eweId = intval($this->cmdUtil->generateQuestion('Insert eweId', 1,true));
+
+        $this->getLogger()->notice("ramId: $ramId, eweId $eweId ".($regenerate ? '(regenerate)' : ''));
+
+        $this->getInbreedingCoefficientParentPairsUpdaterService()
+            ->addPair(new ParentIdsPair($ramId, $eweId), $regenerate)
+        ;
     }
 
 
@@ -1422,5 +1490,29 @@ class NsfoMainCommand extends ContainerAwareCommand
     public function getCacheService()
     {
         return $this->getContainer()->get('app.cache');
+    }
+
+    /**
+     * @return InbreedingCoefficientAllAnimalsUpdaterService
+     */
+    public function getInbreedingCoefficientAllAnimalsUpdaterService()
+    {
+        return $this->getContainer()->get(InbreedingCoefficientAllAnimalsUpdaterService::class);
+    }
+
+    /**
+     * @return InbreedingCoefficientReportUpdaterService
+     */
+    public function getInbreedingCoefficientReportUpdaterService()
+    {
+        return $this->getContainer()->get(InbreedingCoefficientReportUpdaterService::class);
+    }
+
+    /**
+     * @return InbreedingCoefficientParentPairsUpdaterService
+     */
+    public function getInbreedingCoefficientParentPairsUpdaterService()
+    {
+        return $this->getContainer()->get(InbreedingCoefficientParentPairsUpdaterService::class);
     }
 }

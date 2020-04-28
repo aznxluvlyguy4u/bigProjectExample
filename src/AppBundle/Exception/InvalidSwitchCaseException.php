@@ -7,15 +7,15 @@ namespace AppBundle\Exception;
 class InvalidSwitchCaseException extends \Exception
 {
     /**
-     * @param string|null $customMessage
+     * @param string|null $message
      * @param \Exception|null $previous
      * @param int $code
      */
-    public function __construct(?string $customMessage = '',
+    public function __construct(?string $message = '',
                                 \Exception $previous = null, int $code = 0)
     {
         parent::__construct(
-            $this->getAppendedMessage($customMessage),
+            $this->getAppendedMessage($message),
             $previous,
             $code
         );

@@ -1300,10 +1300,7 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
                 $litter->getAnimalMother()->getId()
             );
 
-            $this->inbreedingCoefficientParentPairsUpdaterService->generateInbreedingCoefficients(
-                [$parentIdsPair],
-                false
-            );
+            $this->inbreedingCoefficientParentPairsUpdaterService->addPair($parentIdsPair);
         }
     }
 

@@ -11,6 +11,11 @@ use Doctrine\Common\Collections\Criteria;
  */
 class InbreedingCoefficientTaskReportRepository extends BaseRepository {
 
+    private function tableName(): string
+    {
+        return InbreedingCoefficientTaskReport::getTableName();
+    }
+
     /**
      * @param  array|int[]  $ramIds
      * @param  array|int[]  $eweIds
@@ -33,7 +38,12 @@ class InbreedingCoefficientTaskReportRepository extends BaseRepository {
 
     function bumpSequence()
     {
-        SqlUtil::bumpPrimaryKeySeq($this->getConnection(), InbreedingCoefficientTaskReport::getTableName());
+        SqlUtil::bumpPrimaryKeySeq($this->getConnection(), $this->tableName());
+    }
+
+    function deleteTask(int $taskId)
+    {
+        $this->sqlDeleteById($this->tableName(), $taskId);
     }
 
 }

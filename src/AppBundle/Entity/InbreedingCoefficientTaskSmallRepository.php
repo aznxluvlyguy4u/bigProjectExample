@@ -11,21 +11,37 @@ use Doctrine\Common\Collections\Criteria;
  */
 class InbreedingCoefficientTaskSmallRepository extends BaseRepository {
 
-    /**
-     * @param  int  $ramId
-     * @param  int  $eweId
-     */
-    function add(int $ramId, int $eweId)
+    private function tableName(): string
     {
-        $task = new InbreedingCoefficientTaskSmall(
-            $ramId, $eweId
-        );
-        $this->getManager()->persist($task);
-        $this->getManager()->flush();
+        return InbreedingCoefficientTaskSmall::getTableName();
+    }
+
+    function exists(int $ramId, int $eweId, bool $checkRecalculateIsTrue = false): bool
+    {
+        $recalculateFilter = $checkRecalculateIsTrue ? 'AND recalculate' : '';
+        $sql = "SELECT recalculate FROM inbreeding_coefficient_task_small t 
+WHERE ram_id = $ramId AND ewe_id = $eweId ".$recalculateFilter;
+        return $this->getConnection()->query($sql)->fetchColumn() ?? false;
     }
 
 
-    function next(): ?InbreedingCoefficientTaskReport
+    /**
+     * @param  int  $ramId
+     * @param  int  $eweId
+     * @param  bool  $recalculate
+     */
+    function add(int $ramId, int $eweId, bool $recalculate = false)
+    {
+        if (!$this->exists($ramId, $eweId, $recalculate)) {
+            $task = new InbreedingCoefficientTaskSmall(
+                $ramId, $eweId, $recalculate
+            );
+            $this->getManager()->persist($task);
+        }
+    }
+
+
+    function next(): ?InbreedingCoefficientTaskSmall
     {
         return $this->findOneBy([],['id' => Criteria::ASC]);
     }
@@ -33,6 +49,11 @@ class InbreedingCoefficientTaskSmallRepository extends BaseRepository {
 
     function bumpSequence()
     {
-        SqlUtil::bumpPrimaryKeySeq($this->getConnection(), InbreedingCoefficientTaskSmall::getTableName());
+        SqlUtil::bumpPrimaryKeySeq($this->getConnection(), $this->tableName());
+    }
+
+    function deleteTask(int $taskId)
+    {
+        $this->sqlDeleteById($this->tableName(), $taskId);
     }
 }

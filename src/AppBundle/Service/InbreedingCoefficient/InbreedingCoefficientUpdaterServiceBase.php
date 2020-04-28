@@ -109,6 +109,48 @@ class InbreedingCoefficientUpdaterServiceBase
     }
 
 
+    public function displayAll()
+    {
+        $lockedSlots = array_map(
+            function (InbreedingCoefficientProcess $process) {
+                return $process->getSlotName();
+            },
+            $this->processRepository()->getLockedProcesses()
+        );
+
+        $count = empty($lockedSlots) ? 0 : count($lockedSlots);
+        $list = empty($lockedSlots) ? '' : ': '.implode(',', $lockedSlots);
+
+        $this->logger->notice("$count inbreeding coefficient process slots are locked$list");
+    }
+
+    public function unlockAll()
+    {
+        $this->displayAll();
+        $this->em->getRepository(InbreedingCoefficientProcess::class)->unlockAllProcesses();
+    }
+
+
+    /**
+     * Purge queue before running this
+     *
+     * @param  InbreedingCoefficientProcess  $process
+     * @return bool
+     */
+    protected function cancelBase(InbreedingCoefficientProcess $process): bool
+    {
+        if ($process->getFinishedAt() == null) {
+            $process->setFinishedAt(new \DateTime());
+            $process->setIsCancelled(true);
+
+            $this->em->persist($process);
+            $this->em->flush();
+            return true;
+        }
+        return false;
+    }
+
+
     protected function setProcessSlot(string $processSlot)
     {
         $this->processSlot = $processSlot;

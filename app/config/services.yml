@@ -653,12 +653,6 @@ services:
           - '@doctrine.orm.entity_manager'
           - '@logger'
 
-    AppBundle\Service\Task\InbreedingCoefficientCalculationTaskService:
-      arguments:
-        - '@doctrine.orm.entity_manager'
-        - '@logger'
-        - '@AppBundle\Service\InbreedingCoefficient\InbreedingCoefficientAllAnimalsUpdaterService'
-
     AppBundle\Service\TaskService:
         arguments:
           - '@enqueue.producer'
@@ -669,9 +663,13 @@ services:
           - '@logger'
           - '@AppBundle\Validation\UlnValidatorInterface'
 
+    AppBundle\Service\InbreedingCoefficientProcessService:
+        arguments:
+          - '@app.user'
+          - '@AppBundle\Service\InbreedingCoefficient\InbreedingCoefficientAllAnimalsUpdaterService'
+
     AppBundle\Processor\TaskProcessor:
         arguments:
-          - '@AppBundle\Service\Task\InbreedingCoefficientCalculationTaskService'
           - '@AppBundle\Service\Task\StarEwesCalculationTaskService'
           - '@doctrine.orm.entity_manager'
           - '@logger'
@@ -701,6 +699,8 @@ services:
           - '@AppBundle\Service\Report\PopRepInputFileService'
           - '@AppBundle\Service\Report\FertilizerAccountingReport'
           - '@AppBundle\Service\Report\AnimalFeaturesPerYearOfBirthReportService'
+          - '@AppBundle\Service\InbreedingCoefficient\InbreedingCoefficientReportUpdaterService'
+          - '%environment%'
 
 
     AppBundle\Processor\ReportProcessor:
@@ -1250,6 +1250,10 @@ services:
 
     AppBundle\Service\InbreedingCoefficient\InbreedingCoefficientReportUpdaterService:
       parent: app.inbreeding_coefficient.updater.base
+      calls:
+        - method: setInbreedingCoefficientReportService
+          arguments:
+            - '@app.report.inbreeding_coefficient'
 
     AppBundle\Service\InbreedingCoefficient\InbreedingCoefficientUbnUpdaterService:
         parent: app.inbreeding_coefficient.updater.base

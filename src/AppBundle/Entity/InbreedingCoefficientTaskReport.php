@@ -31,6 +31,13 @@ class InbreedingCoefficientTaskReport
     private $id;
 
     /**
+     * @var integer
+     * @ORM\Column(type="integer")
+     */
+    private $workerId;
+
+
+    /**
      * @var array|int[]
      * @ORM\Column(type="simple_array", nullable=false)
      */
@@ -44,11 +51,13 @@ class InbreedingCoefficientTaskReport
 
     /**
      * InbreedingCoefficientTaskReport constructor.
+     * @param  int  $workerId
      * @param  array|int[]  $ramIds
      * @param  array|int[]  $eweIds
      */
-    public function __construct(array $ramIds, array $eweIds)
+    public function __construct(int $workerId, array $ramIds, array $eweIds)
     {
+        $this->workerId = $workerId;
         $this->ramIds = $ramIds;
         $this->eweIds = $eweIds;
     }
@@ -72,9 +81,27 @@ class InbreedingCoefficientTaskReport
     }
 
     /**
+     * @return int
+     */
+    public function getWorkerId(): int
+    {
+        return $this->workerId;
+    }
+
+    /**
+     * @param  int  $workerId
+     * @return InbreedingCoefficientTaskReport
+     */
+    public function setWorkerId(int $workerId): InbreedingCoefficientTaskReport
+    {
+        $this->workerId = $workerId;
+        return $this;
+    }
+
+    /**
      * @return array|int[]
      */
-    public function getRamIds()
+    public function getRamIds(): array
     {
         return $this->ramIds;
     }
@@ -92,7 +119,7 @@ class InbreedingCoefficientTaskReport
     /**
      * @return array|int[]
      */
-    public function getEweIds()
+    public function getEweIds(): array
     {
         return $this->eweIds;
     }

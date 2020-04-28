@@ -72,7 +72,7 @@ class AnimalArrayReader
         if ($ulnCountryCode != null && $ulnNumber != null) {
             return $ulnCountryCode.$separator.$ulnNumber;
         }
-        
+
         $pedigreeCountryCode = Utils::getNullCheckedArrayValue(JsonInputConstant::PEDIGREE_COUNTRY_CODE, $animalArray);
         $pedigreeNumber = Utils::getNullCheckedArrayValue(JsonInputConstant::PEDIGREE_NUMBER, $animalArray);
         if ($pedigreeCountryCode != null && $pedigreeNumber != null) {
@@ -107,7 +107,24 @@ class AnimalArrayReader
         return $animal;
     }
 
-    
+
+    public static function addUlnAndPedigreeToArray(array $animalArray, $separator = ''): array
+    {
+        $ulnCountryCode = Utils::getNullCheckedArrayValue(JsonInputConstant::ULN_COUNTRY_CODE, $animalArray);
+        $ulnNumber = Utils::getNullCheckedArrayValue(JsonInputConstant::ULN_NUMBER, $animalArray);
+        if ($ulnCountryCode != null && $ulnNumber != null) {
+            $animalArray[ReportLabel::ULN] = $ulnCountryCode.$separator.$ulnNumber;
+        }
+
+        $pedigreeCountryCode = Utils::getNullCheckedArrayValue(JsonInputConstant::PEDIGREE_COUNTRY_CODE, $animalArray);
+        $pedigreeNumber = Utils::getNullCheckedArrayValue(JsonInputConstant::PEDIGREE_NUMBER, $animalArray);
+        if ($pedigreeCountryCode != null && $pedigreeNumber != null) {
+            $animalArray[ReportLabel::PEDIGREE] = $pedigreeCountryCode.$separator.$pedigreeNumber;
+        }
+        return $animalArray;
+    }
+
+
     /**
      * @param array $animals
      * @return null|Animal|Ram|Ewe|Neuter
@@ -183,7 +200,7 @@ class AnimalArrayReader
     {
         $ulnCountryCode = ArrayUtil::get(JsonInputConstant::ULN_COUNTRY_CODE, $array);
         $ulnNumber = ArrayUtil::get(JsonInputConstant::ULN_NUMBER,$array);
-        
+
         if($ulnCountryCode != null && $ulnNumber != null) {
             return $ulnCountryCode.$ulnNumber;
         }

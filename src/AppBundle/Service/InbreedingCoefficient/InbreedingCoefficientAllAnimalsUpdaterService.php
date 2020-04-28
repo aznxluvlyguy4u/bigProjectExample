@@ -6,26 +6,23 @@ namespace AppBundle\Service\InbreedingCoefficient;
 
 use AppBundle\Entity\InbreedingCoefficientTaskAdmin;
 use AppBundle\Entity\InbreedingCoefficientTaskAdminRepository;
-use AppBundle\Entity\Person;
-use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\InbreedingCoefficientProcessSlot;
+use AppBundle\Exception\InternalServerErrorException;
 use AppBundle\model\metadata\YearMonthData;
-use AppBundle\Util\ResultUtil;
-use AppBundle\Validation\AdminValidator;
+use AppBundle\Setting\InbreedingCoefficientSetting;
+use AppBundle\Util\SleepUtil;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
-class InbreedingCoefficientAllAnimalsUpdaterService extends InbreedingCoefficientUpdaterServiceBase
+class InbreedingCoefficientAllAnimalsUpdaterService extends InbreedingCoefficientUpdaterServiceBase implements InbreedingCoefficientAllAnimalsUpdaterServiceInterface
 {
     private function taskRepository(): InbreedingCoefficientTaskAdminRepository
     {
         return $this->em->getRepository(InbreedingCoefficientTaskAdmin::class);
     }
 
-    public function start(Person $actionBy, bool $recalculate)
+    public function start(bool $recalculate = false)
     {
-        AdminValidator::isAdmin($actionBy,AccessLevelType::SUPER_ADMIN,true);
-
         $process = $this->processRepository()->getAdminProcess();
 
         if (!$process->isFinished()) {
@@ -77,17 +74,15 @@ class InbreedingCoefficientAllAnimalsUpdaterService extends InbreedingCoefficien
         $this->taskRepository()->add($yearsAndMonthsAnimalIdsSets, $startedAt);
 
         $this->em->flush();
-
-        return ResultUtil::successResult('ok');
     }
 
     public function run(): bool
     {
         $process = $this->processRepository()->getAdminProcess();
-        $isLoopRunSuccessful = true;
 
         if ($process->isLocked()) {
             $this->validateLockedDuration($process);
+            SleepUtil::sleep(InbreedingCoefficientSetting::QUEUE_LOCKED_TIMEOUT_SECONDS_ADMIN);
             return true;
         }
 
@@ -111,7 +106,8 @@ class InbreedingCoefficientAllAnimalsUpdaterService extends InbreedingCoefficien
                     $this->em->flush();
                     $this->writeBatchCount('Completed!');
                 }
-                return $isLoopRunSuccessful;
+                SleepUtil::sleep(InbreedingCoefficientSetting::QUEUE_EMPTY_TIMEOUT_SECONDS_ADMIN);
+                return true;
             }
 
             $taskId = $task->getId();
@@ -127,7 +123,15 @@ class InbreedingCoefficientAllAnimalsUpdaterService extends InbreedingCoefficien
             $this->taskRepository()->deleteTask($taskId);
 
         } catch (\Exception $exception) {
-            $isLoopRunSuccessful = false;
+            $process = $this->processRepository()->getAdminProcess();
+            $process->setIsLocked(false);
+            $process->setDebugErrorMessage($exception->getTraceAsString());
+            $process->setErrorMessage($exception->getMessage());
+            $process->setErrorCode($exception->getCode());
+            $this->em->persist($process);
+            $this->em->flush();
+
+            throw new InternalServerErrorException($exception->getMessage(), $exception);
         }
 
 
@@ -139,30 +143,11 @@ class InbreedingCoefficientAllAnimalsUpdaterService extends InbreedingCoefficien
         return $isLoopRunSuccessful;
     }
 
-
-    public function cancel(Person $actionBy)
+    public function cancel(): bool
     {
-        AdminValidator::isAdmin($actionBy,AccessLevelType::SUPER_ADMIN,true);
-
         $this->taskRepository()->purgeQueue();
-
         $process = $this->processRepository()->getAdminProcess();
-        $process->setFinishedAt(new \DateTime());
-        $process->setIsCancelled(true);
-
-        $this->em->persist($process);
-        $this->em->flush();
-    }
-
-
-    public function generateForAllAnimalsAndLitters()
-    {
-        // TODO remove after function calls are removed
-    }
-
-    public function regenerateForAllAnimalsAndLitters()
-    {
-        // TODO remove after function calls are removed
+        return $this->cancelBase($process);
     }
 
 

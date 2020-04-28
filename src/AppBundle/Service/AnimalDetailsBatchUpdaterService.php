@@ -192,7 +192,7 @@ class AnimalDetailsBatchUpdaterService extends ControllerServiceBase
                                 $toBeUpdatedAnimal->getParentMotherId()
                             );
 
-                            $this->inbreedingCoefficientParentPairsUpdaterService->regenerateInbreedingCoefficients([$parentIdsPair]);
+                            $this->inbreedingCoefficientParentPairsUpdaterService->addPair($parentIdsPair,true);
                         }
                     }
                 }
