@@ -44,21 +44,26 @@
 
         {% if ewe['inbreedingCoefficient'] is defined %}
             {% set eweInbreedingCoefficient1 = ewe.inbreedingCoefficient.1 * 100 %}
+            {% set isEweInbreedingCoefficient1zero = ewe.isInbreedingCoefficientZero.1 %}
 
             {% if hasRam2 %}
                 {% set eweInbreedingCoefficient2 = ewe.inbreedingCoefficient.2 * 100 %}
+                {% set isEweInbreedingCoefficient2zero = ewe.isInbreedingCoefficientZero.2 %}
             {% endif %}
 
             {% if hasRam3 %}
                 {% set eweInbreedingCoefficient3 = ewe.inbreedingCoefficient.3 * 100 %}
+                {% set isEweInbreedingCoefficient3zero = ewe.isInbreedingCoefficientZero.3 %}
             {% endif %}
 
             {% if hasRam4 %}
                 {% set eweInbreedingCoefficient4 = ewe.inbreedingCoefficient.4 * 100 %}
+                {% set isEweInbreedingCoefficient4zero = ewe.isInbreedingCoefficientZero.4 %}
             {% endif %}
 
             {% if hasRam5 %}
                 {% set eweInbreedingCoefficient5 = ewe.inbreedingCoefficient.5 * 100 %}
+                {% set isEweInbreedingCoefficient5zero = ewe.isInbreedingCoefficientZero.5 %}
             {% endif %}
 
         {% else %}
@@ -93,18 +98,48 @@
             <tr>
                 <td class="tg-yw4l">{{ uln }}</td>
                 <td class="tg-yw4l">{{ ewePedigree }}</td>
-                <td class="tg-lqy6-values">{{ eweInbreedingCoefficient1|number_format(coefficientDecimalAccuracy,'.',',') }}%</td>
+                {% if isEweInbreedingCoefficient1zero %}
+                    <td class="tg-lqy6-values zero-values">
+                {% else %}
+                    <td class="tg-lqy6-values">
+                {% endif %}
+                    {{ eweInbreedingCoefficient1|number_format(coefficientDecimalAccuracy,'.',',') }}%
+                </td>
                 {% if hasRam2 %}
-                    <td class="tg-lqy6-values">{{ eweInbreedingCoefficient2|number_format(coefficientDecimalAccuracy,'.',',') }}%</td>
+                {% if isEweInbreedingCoefficient2zero %}
+                    <td class="tg-lqy6-values zero-values">
+                {% else %}
+                    <td class="tg-lqy6-values">
+                {% endif %}
+                        {{ eweInbreedingCoefficient2|number_format(coefficientDecimalAccuracy,'.',',') }}%
+                    </td>
                 {% endif %}
                 {% if hasRam3 %}
-                    <td class="tg-lqy6-values">{{ eweInbreedingCoefficient3|number_format(coefficientDecimalAccuracy,'.',',') }}%</td>
+                    {% if isEweInbreedingCoefficient3zero %}
+                        <td class="tg-lqy6-values zero-values">
+                    {% else %}
+                        <td class="tg-lqy6-values">
+                    {% endif %}
+                        {{ eweInbreedingCoefficient3|number_format(coefficientDecimalAccuracy,'.',',') }}%
+                    </td>
                 {% endif %}
                 {% if hasRam4 %}
-                    <td class="tg-lqy6-values">{{ eweInbreedingCoefficient4|number_format(coefficientDecimalAccuracy,'.',',') }}%</td>
+                    {% if isEweInbreedingCoefficient4zero %}
+                        <td class="tg-lqy6-values zero-values">
+                    {% else %}
+                        <td class="tg-lqy6-values">
+                    {% endif %}
+                        {{ eweInbreedingCoefficient4|number_format(coefficientDecimalAccuracy,'.',',') }}%
+                    </td>
                 {% endif %}
                 {% if hasRam5 %}
-                    <td class="tg-lqy6-values">{{ eweInbreedingCoefficient5|number_format(coefficientDecimalAccuracy,'.',',') }}%</td>
+                    {% if isEweInbreedingCoefficient5zero %}
+                        <td class="tg-lqy6-values zero-values">
+                    {% else %}
+                        <td class="tg-lqy6-values">
+                    {% endif %}
+                        {{ eweInbreedingCoefficient5|number_format(coefficientDecimalAccuracy,'.',',') }}%
+                    </td>
                 {% endif %}
 
             </tr>
@@ -229,6 +264,10 @@
         .tg-lqy6-values{
             text-align:right;
             vertical-align:center;
+        }
+
+        .zero-values{
+            color: #7D7D7D;
         }
 
         .tg .tg-ddb2{font-family:serif !important;;text-align:center;vertical-align:top}

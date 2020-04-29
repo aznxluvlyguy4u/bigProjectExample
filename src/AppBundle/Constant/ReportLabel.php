@@ -47,6 +47,7 @@ class ReportLabel
     const INDEX_BREED = 'indexBreed';
 
     //Breed values
+    const IS_INBREEDING_COEFFICIENT_ZERO = 'isInbreedingCoefficientZero';
     const INBREEDING_COEFFICIENT = 'inbreedingCoefficient';
     const IS_RAM_MISSING = 'isRamMissing';
 

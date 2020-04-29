@@ -221,8 +221,14 @@ class InbreedingCoefficientReportData extends ReportBase
             foreach ($this->ramsData as $ramData) {
                 $ordinal = $ramData[ReportLabel::ORDINAL];
                 $ramId = $ramData[JsonInputConstant::ID];
+
+                $inbreedingCoefficient = $this->getInbreedingCoefficient($ramId, $eweId);
+                $isInbreedingCoefficientEmpty = InbreedingCoefficientReportService::isInbreedingCoefficientEmptyForDisplay($inbreedingCoefficient);
+
                 $this->data[ReportLabel::EWES][$ulnString][ReportLabel::INBREEDING_COEFFICIENT][$ordinal] =
-                    $this->getInbreedingCoefficient($ramId, $eweId);
+                    $inbreedingCoefficient;
+                $this->data[ReportLabel::EWES][$ulnString][ReportLabel::IS_INBREEDING_COEFFICIENT_ZERO][$ordinal] =
+                    $isInbreedingCoefficientEmpty;
             }
         }
     }

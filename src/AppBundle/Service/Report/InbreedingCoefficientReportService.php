@@ -22,6 +22,7 @@ use AppBundle\Report\InbreedingCoefficientReportData;
 use AppBundle\Service\InbreedingCoefficient\InbreedingCoefficientReportUpdaterService;
 use AppBundle\Setting\InbreedingCoefficientSetting;
 use AppBundle\Util\NullChecker;
+use AppBundle\Util\NumberUtil;
 use AppBundle\Util\SqlUtil;
 use AppBundle\Util\StringUtil;
 use AppBundle\Util\Validator;
@@ -525,5 +526,13 @@ FROM animal a
     {
         $displayValue = ($value ? $value : 0.0) * 100;
         return round($displayValue, InbreedingCoefficientSetting::DISPLAY_DECIMAL_PRECISION);
+    }
+
+
+    public static function isInbreedingCoefficientEmptyForDisplay(?float $value)
+    {
+        return NumberUtil::isFloatZero(
+            floatval(self::parseInbreedingCoefficientValueForDisplay($value))
+        );
     }
 }
