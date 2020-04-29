@@ -201,6 +201,7 @@ class TimeUtil
     }
 
     public static function secondsToTime($seconds) {
+        $seconds = intval($seconds);
         $endTime = new \DateTime('@0');
         $start = new \DateTime("@$seconds");
         return self::durationText($start, $endTime);
