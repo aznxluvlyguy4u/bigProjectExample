@@ -7,6 +7,7 @@ use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Constant\ReportLabel;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\InbreedingCoefficient;
+use AppBundle\Service\Report\InbreedingCoefficientReportService;
 use AppBundle\Util\AnimalArrayReader;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\ParentIdsPairUtil;
@@ -128,7 +129,9 @@ class InbreedingCoefficientReportData extends ReportBase
 
             foreach (ArrayUtil::get(ReportLabel::EWES, $this->data, []) as $eweUln => $eweData) {
                 $eweStn = ArrayUtil::get(ReportLabel::PEDIGREE, $eweData, $nullReplacement);
-                $inbreedingCoefficient = $this->getInbreedingCoefficient($ramData['id'], $eweData['id']);
+                $inbreedingCoefficient = InbreedingCoefficientReportService::parseInbreedingCoefficientValueForDisplay(
+                    $this->getInbreedingCoefficient($ramData['id'], $eweData['id'])
+                );
 
                 $csvOutput[] = [
                     $ramOrdinalKey => $ordinal,
