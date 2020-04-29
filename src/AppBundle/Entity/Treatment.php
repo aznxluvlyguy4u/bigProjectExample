@@ -3,6 +3,7 @@
 namespace AppBundle\Entity;
 
 
+use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Traits\EntityClassInfo;
 use AppBundle\Util\Translation;
 use DateTime;
@@ -29,7 +30,8 @@ class Treatment implements TreatmentInterface
      * @ORM\GeneratedValue(strategy="IDENTITY")
      *
      * @JMS\Groups({
-     *     "TREATMENT"
+     *     "TREATMENT",
+     *     "TREATMENT_MIN"
      * })
      */
     private $id;
@@ -177,10 +179,23 @@ class Treatment implements TreatmentInterface
      * @ORM\Column(type="string")
      * @JMS\Groups({
      *     "TEMPLATE",
+     *     "TREATMENT",
      *     "TREATMENT_MIN"
      * })
      */
     private $type;
+
+    /**
+     * @var string
+     * @ORM\Column(type="string")
+     * @Assert\NotBlank
+     * @JMS\Type("string")
+     * @JMS\Groups({
+     *     "TREATMENT",
+     *     "TREATMENT_MIN"
+     * })
+     */
+    private $status = RequestStateType::CREATED;
 
     /**
      * @var TreatmentTemplate
@@ -477,6 +492,24 @@ class Treatment implements TreatmentInterface
     public function setType(string $type): self
     {
         $this->type = $type;
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getStatus(): string
+    {
+        return $this->status;
+    }
+
+    /**
+     * @param string $status
+     * @return Treatment
+     */
+    public function setStatus(string $status): self
+    {
+        $this->status = $status;
         return $this;
     }
 

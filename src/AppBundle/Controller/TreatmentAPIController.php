@@ -41,6 +41,32 @@ class TreatmentAPIController extends APIController implements TreatmentAPIContro
     }
 
     /**
+     * Revoke a treatment
+     *
+     * @ApiDoc(
+     *   section = "Treatment",
+     *   requirements={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "requirement"="",
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Create a treatment for a location"
+     * )
+     * @param $treatment_id
+     * @return JsonResponse
+     * @Route("/{treatment_id}/revoke")
+     * @Method("PUT")
+     */
+    function revokeTreatment($treatment_id)
+    {
+        return $this->get('app.treatment')->revokeTreatment($treatment_id);
+    }
+
+    /**
      * Create a treatment for a location
      *
      * @ApiDoc(

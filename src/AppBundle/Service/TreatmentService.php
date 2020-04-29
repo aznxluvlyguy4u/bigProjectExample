@@ -9,6 +9,7 @@ use AppBundle\Entity\MedicationSelection;
 use AppBundle\Entity\Treatment;
 use AppBundle\Entity\TreatmentMedication;
 use AppBundle\Entity\TreatmentTemplate;
+use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\TreatmentTypeOption;
 use AppBundle\Util\ActionLogWriter;
 use AppBundle\Util\ResultUtil;
@@ -220,6 +221,25 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
             $res[] = $this->getBaseSerializer()->getDecodedJson($treatment, $this->getJmsGroupByQueryForTreatment($request));
         }
         return ResultUtil::successResult($res);
+    }
+
+    /**
+     * @param $treatment_id
+     * @return JsonResponse|Treatment
+     * @throws Exception
+     */
+    function revokeTreatment($treatment_id)
+    {
+
+        /** @var Treatment $treatment */
+        $treatment = $this->getManager()->getRepository(Treatment::class)
+            ->find($treatment_id);
+
+        $treatment->setStatus(RequestStateType::REVOKED);
+        $this->getManager()->persist($treatment);
+        $this->getManager()->flush();
+
+        return $this->baseValidateDeserializedTreatment($treatment);
     }
 
     /**
