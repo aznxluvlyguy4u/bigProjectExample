@@ -10,6 +10,7 @@ use AppBundle\Entity\InbreedingCoefficient;
 use AppBundle\Util\AnimalArrayReader;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\ParentIdsPairUtil;
+use AppBundle\Util\TimeUtil;
 use Doctrine\Common\Persistence\ObjectManager;
 use Symfony\Component\Translation\TranslatorInterface;
 
@@ -50,6 +51,8 @@ class InbreedingCoefficientReportData extends ReportBase
 
         $this->data = [];
         $this->csvData = [];
+
+        $this->data['date'] = TimeUtil::getTimeStampToday('d-m-Y');
 
         $this->ramsData = $ramsData;
         $this->ewesData = $ewesData;
