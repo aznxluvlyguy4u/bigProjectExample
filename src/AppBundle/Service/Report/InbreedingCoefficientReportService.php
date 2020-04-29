@@ -334,7 +334,8 @@ class InbreedingCoefficientReportService extends ReportServiceBase
 
             foreach ($results as $data)
             {
-                if ($data['id'] === $ramId) {
+                // The intval() is necessary because stored value in the database is returned as a string
+                if ($data['id'] === intval($ramId)) {
                     $data[ReportLabel::ORDINAL] = $ordinal;
 
                     $orderedResults[] = $data;
@@ -360,7 +361,8 @@ class InbreedingCoefficientReportService extends ReportServiceBase
         {
             foreach ($ewesData as $data)
             {
-                if ($data['id'] === $eweId) {
+                // The intval() is necessary because stored value in the database is returned as a string
+                if ($data['id'] === intval($eweId)) {
                     $orderedResults[] = $data;
                     break;
                 }
