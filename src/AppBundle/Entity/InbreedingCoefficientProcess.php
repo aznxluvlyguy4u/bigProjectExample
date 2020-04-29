@@ -53,7 +53,7 @@ class InbreedingCoefficientProcess
     private $errorMessage;
 
     /**
-     * @var string
+     * @var string|null
      * @ORM\Column(type="text", nullable=true)
      * @JMS\Type("string")
      */
@@ -295,18 +295,18 @@ class InbreedingCoefficientProcess
     }
 
     /**
-     * @return string
+     * @return string|null
      */
-    public function getDebugErrorMessage(): string
+    public function getDebugErrorMessage(): ?string
     {
         return $this->debugErrorMessage;
     }
 
     /**
-     * @param  string  $debugErrorMessage
+     * @param  string|null  $debugErrorMessage
      * @return InbreedingCoefficientProcess
      */
-    public function setDebugErrorMessage(string $debugErrorMessage): InbreedingCoefficientProcess
+    public function setDebugErrorMessage(?string $debugErrorMessage): InbreedingCoefficientProcess
     {
         $this->debugErrorMessage = $debugErrorMessage;
         return $this;
