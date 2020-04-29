@@ -15,8 +15,8 @@ interface TreatmentAPIControllerInterface
     function getLocationTreatments(Request $request);
     function createIndividualTreatments(Request $request);
     function createLocationTreatments(Request $request);
-    function editIndividualTreatments(Request $request, $treatmentId);
-    function editLocationTreatments(Request $request, $treatmentId);
-    function deleteIndividualTreatments(Request $request, $treatmentId);
-    function deleteLocationTreatments(Request $request, $treatmentId);
+    function editIndividualTreatment(Request $request, $treatmentId);
+    function editLocationTreatment(Request $request, $treatmentId);
+    function deleteIndividualTreatment(Request $request, $treatmentId);
+    function deleteLocationTreatment(Request $request, $treatmentId);
 }

@@ -21,25 +21,27 @@ class Location
 {
     use EntityClassInfo;
 
-    /**
-     * @var integer
-     *
-     * @ORM\Id
-     * @ORM\Column(type="integer")
-     * @ORM\GeneratedValue(strategy="IDENTITY")
-     * @Expose
-     * @JMS\Type("integer")
-     * @JMS\Groups({
-     *     "INVOICE",
-     *     "INVOICE_NO_COMPANY",
-     *     "RESPONSE_PERSISTENCE",
-     *     "RVO",
-     *     "TREATMENT_TEMPLATE",
-     *     "TREATMENT_TEMPLATE_MIN"
-     * })
-     *
-     */
-    protected $id;
+  /**
+   * @var integer
+   *
+   * @ORM\Id
+   * @ORM\Column(type="integer")
+   * @ORM\GeneratedValue(strategy="IDENTITY")
+   * @Expose
+   * @JMS\Type("integer")
+   * @JMS\Groups({
+   *     "INVOICE",
+   *     "INVOICE_NO_COMPANY",
+   *     "RESPONSE_PERSISTENCE",
+   *     "RVO",
+   *     "TREATMENT",
+   *     "TREATMEN_MIN",
+   *     "TREATMENT_TEMPLATE",
+   *     "TREATMENT_TEMPLATE_MIN"
+   * })
+   *
+   */
+  protected $id;
 
     /**
      * @var string
