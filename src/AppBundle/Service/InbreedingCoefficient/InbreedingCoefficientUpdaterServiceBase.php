@@ -458,15 +458,61 @@ class InbreedingCoefficientUpdaterServiceBase
      */
     protected function getParentGroupedAnimalIdsByPairs(array $parentIdsPairs, bool $recalculate = false): array
     {
+        if (empty($parentIdsPairs)) {
+            return [];
+        }
+
         $filter = SqlUtil::getParentIdsFilterFromParentIdsPairs($parentIdsPairs).' AND ';
-        return $this->getParentGroupedAnimalAndLitterIds($filter, $recalculate);
+        $sql = $this->getParentGroupedAnimalAndLitterIdsQuery($filter, $recalculate);
+
+        $pairValuesString = implode(',',
+            array_map(function (ParentIdsPair $parentIdsPair) {
+                return "(".$parentIdsPair->getRamId().",".$parentIdsPair->getEweId().")";
+            }, $parentIdsPairs)
+        );
+
+        $filterChildlessParents = $recalculate ? '' : "AND NOT EXISTS(
+                SELECT
+                    *
+                FROM inbreeding_coefficient ic
+                WHERE ic.ram_id = pair.father_id AND ic.ewe_id = pair.mother_id
+            )";
+
+        $sql = "SELECT
+            *
+        FROM (
+             $sql
+        )pairs_with_children_in_database
+        
+        UNION
+
+        -- pairs without children in database
+        SELECT
+            father_id,
+            mother_id,
+            '{}'::int[] as animal_ids,
+            '{}'::int[] as litter_ids
+        FROM (
+             VALUES
+                $pairValuesString
+        ) pair (father_id,mother_id)
+        WHERE
+            NOT EXISTS(
+                    SELECT
+                        *
+                    FROM animal child
+                    WHERE child.parent_father_id = pair.father_id AND child.parent_mother_id = pair.mother_id
+                )
+            $filterChildlessParents";
+
+        return $this->em->getConnection()->query($sql)->fetchAll();
     }
 
 
-    protected function getParentGroupedAnimalAndLitterIds(string $filter, bool $recalculate = false): array
+    protected function getParentGroupedAnimalAndLitterIdsQuery(string $filter, bool $recalculate = false): string
     {
         $recalculateFilter = $recalculate ? '' : 'a.inbreeding_coefficient_match_updated_at ISNULL AND';
-        $sql = "SELECT
+        return "SELECT
                     --v.pair_id,
                     MAX(v.father_id) as father_id,
                     MAX(v.mother_id) as mother_id,
@@ -489,7 +535,12 @@ class InbreedingCoefficientUpdaterServiceBase
                       parent_mother_id NOTNULL AND parent_father_id NOTNULL
                      )v
                 GROUP BY v.pair_id";
+    }
 
+
+    protected function getParentGroupedAnimalAndLitterIds(string $filter, bool $recalculate = false): array
+    {
+        $sql = $this->getParentGroupedAnimalAndLitterIdsQuery($filter, $recalculate);
         return $this->em->getConnection()->query($sql)->fetchAll();
     }
 
