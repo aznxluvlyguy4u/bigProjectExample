@@ -145,58 +145,6 @@ class TreatmentAPIController extends APIController implements TreatmentAPIContro
     }
 
     /**
-     * Create treatments of the individual scope
-     *
-     * @ApiDoc(
-     *   section = "Treatment",
-     *   requirements={
-     *     {
-     *       "name"="AccessToken",
-     *       "dataType"="string",
-     *       "requirement"="",
-     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
-     *     }
-     *   },
-     *   resource = true,
-     *   description = "Create treatments of the individual scope"
-     * )
-     * @param Request $request the request object
-     * @return JsonResponse
-     * @Route("/individual")
-     * @Method("POST")
-     */
-    function createIndividualTreatments(Request $request)
-    {
-        return $this->get('app.treatment')->createIndividualTreatments($request);
-    }
-
-    /**
-     * Create treatments of the location scope
-     *
-     * @ApiDoc(
-     *   section = "Treatment",
-     *   requirements={
-     *     {
-     *       "name"="AccessToken",
-     *       "dataType"="string",
-     *       "requirement"="",
-     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
-     *     }
-     *   },
-     *   resource = true,
-     *   description = "Create treatments of the location scope"
-     * )
-     * @param Request $request the request object
-     * @return JsonResponse
-     * @Route("/location")
-     * @Method("POST")
-     */
-    function createLocationTreatments(Request $request)
-    {
-        return $this->get('app.treatment')->getLocationTreatments($request);
-    }
-
-    /**
      * Edit treatments of the individual scope
      *
      * @ApiDoc(

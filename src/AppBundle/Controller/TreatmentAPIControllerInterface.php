@@ -13,8 +13,8 @@ interface TreatmentAPIControllerInterface
 {
     function getIndividualTreatments(Request $request);
     function getLocationTreatments(Request $request);
-    function createIndividualTreatments(Request $request);
-    function createLocationTreatments(Request $request);
+    function createIndividualTreatment(Request $request);
+    function createLocationTreatment(Request $request);
     function editIndividualTreatment(Request $request, $treatmentId);
     function editLocationTreatment(Request $request, $treatmentId);
     function deleteIndividualTreatment(Request $request, $treatmentId);

@@ -28,7 +28,9 @@ class TreatmentMedication
      * @ORM\GeneratedValue(strategy="IDENTITY")
      * @JMS\Groups({
      *     "TREATMENT_TEMPLATE",
-     *     "TREATMENT_TEMPLATE_MIN"
+     *     "TREATMENT_TEMPLATE_MIN",
+     *     "TREATMENT",
+     *     "TREATMENT_MIN"
      * })
      */
     private $id;
@@ -40,7 +42,9 @@ class TreatmentMedication
      * @ORM\Column(type="string")
      * @JMS\Groups({
      *     "TREATMENT_TEMPLATE",
-     *     "TREATMENT_TEMPLATE_MIN"
+     *     "TREATMENT_TEMPLATE_MIN",
+     *     "TREATMENT",
+     *     "TREATMENT_MIN"
      * })
      */
     private $name;
@@ -51,21 +55,31 @@ class TreatmentMedication
      * @JMS\Type("boolean")
      * @JMS\Groups({
      *     "TREATMENT_TEMPLATE",
-     *     "TREATMENT_TEMPLATE_MIN"
+     *     "TREATMENT_TEMPLATE_MIN",
+     *     "TREATMENT",
+     *     "TREATMENT_MIN"
      * })
      */
     private $isActive = true;
 
     /**
-     * @var MedicationOption[]
-     * @JMS\Type("array")
-     * @ORM\OneToMany(targetEntity="MedicationOption", mappedBy="treatmentMedication")
+     * @var ArrayCollection|MedicationOption[]
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\MedicationOption>")
+     * @ORM\OneToMany(targetEntity="AppBundle\Entity\MedicationOption", mappedBy="treatmentMedication")
      */
-    private $medications;
+    private $medicationOptions;
+
+    /**
+     * @var ArrayCollection|MedicationSelection[]
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\MedicationSelection>")
+     * @ORM\OneToMany(targetEntity="AppBundle\Entity\MedicationSelection", mappedBy="treatmentMedication")
+     */
+    private $medicationSelections;
 
     public function __construct()
     {
-        $this->medications = new ArrayCollection();
+        $this->medicationOptions = new ArrayCollection();
+        $this->medicationSelections = new ArrayCollection();
     }
 
     /**
@@ -91,7 +105,6 @@ class TreatmentMedication
     public function setName(string $name): self
     {
         $this->name = $name;
-
         return $this;
     }
 
@@ -110,26 +123,62 @@ class TreatmentMedication
     public function setIsActive(bool $isActive): self
     {
         $this->isActive = $isActive;
-
         return $this;
     }
 
     /**
      * @return ArrayCollection|MedicationOption[]
      */
-    public function getMedications(): ?ArrayCollection
+    public function getMedicationOptions(): ?ArrayCollection
     {
-        return $this->medications;
+        return $this->medicationOptions;
     }
 
-    public function addMedication(MedicationOption $medicationOption): ?self
+    /**
+     * @param MedicationOption $medicationOption
+     * @return TreatmentMedication
+     */
+    public function addMedicationOption(MedicationOption $medicationOption): self
     {
-        if ($this->medications->contains($medicationOption)) {
-            return null;
-        }
+        $this->medicationOptions->add($medicationOption);
+        return $this;
+    }
 
-        $this->medications->add($medicationOption);
+    /**
+     * @param MedicationOption $medicationOption
+     * @return TreatmentMedication
+     */
+    public function removeMedicationOption(MedicationOption $medicationOption): self
+    {
+        $this->medicationOptions->removeElement($medicationOption);
+        return $this;
+    }
 
+    /**
+     * @return ArrayCollection|MedicationSelection[]
+     */
+    public function getMedicationSelections(): ArrayCollection
+    {
+        return $this->medicationSelections;
+    }
+
+    /**
+     * @param MedicationSelection $medicationSelection
+     * @return TreatmentMedication
+     */
+    public function addMedicationSelection(MedicationSelection $medicationSelection): self
+    {
+        $this->medicationSelections->add($medicationSelection);
+        return $this;
+    }
+
+    /**
+     * @param MedicationSelection $medicationSelection
+     * @return TreatmentMedication
+     */
+    public function removeMedicationSelection(MedicationSelection $medicationSelection): self
+    {
+        $this->medicationSelections->removeElement($medicationSelection);
         return $this;
     }
 }

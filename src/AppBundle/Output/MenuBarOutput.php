@@ -61,6 +61,7 @@ class MenuBarOutput extends Output
         }
 
         $sql = "SELECT
+                  l.id,  
                   l.ubn,
                   cd.code as ".JsonInputConstant::COUNTRY_CODE.",
                   cd.code = '".Country::NL."' as ".JsonInputConstant::USE_RVO_LOGIC."

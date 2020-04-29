@@ -10,12 +10,12 @@ interface TreatmentInterface
 {
     public function getId();
     public function setId($id);
-    public function getLogDate();
-    public function setLogDate($logDate);
-    public function getTreatmentStartDate();
-    public function setTreatmentStartDate($treatmentStartDate);
-    public function getTreatmentEndDate();
-    public function setTreatmentEndDate($treatmentEndDate);
+    public function getCreateDate();
+    public function setCreateDate($logDate);
+    public function getStartDate();
+    public function setStartDate($startDate);
+    public function getEndDate();
+    public function setEndDate($endDate);
     public function getOwner();
     public function setOwner($owner);
     public function getCreationBy();

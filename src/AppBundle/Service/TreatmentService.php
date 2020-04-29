@@ -45,48 +45,6 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
     /**
      * @param Request $request
      * @return JsonResponse
-     */
-    function getIndividualTreatments(Request $request)
-    {
-        return ResultUtil::successResult('ok');
-    }
-
-    /**
-     * @param Request $request
-     * @return JsonResponse
-     */
-    function getLocationTreatments(Request $request)
-    {
-        return ResultUtil::successResult('ok');
-    }
-
-    /**
-     * @param Request $request
-     * @return JsonResponse
-     */
-    function getHistoricTreatments(Request $request)
-    {
-        $client = $this->getAccountOwner($request);
-        $location = $this->getSelectedLocation($request);
-
-        $this->nullCheckClient($client);
-        $this->nullCheckLocation($location);
-
-        $treatments = $this->getManager()->getRepository(Treatment::class)
-            ->getHistoricTreatments($location->getUbn());
-
-        $res = [];
-
-        /** @var Treatment $treatment */
-        foreach ($treatments as $treatment) {
-            $res[] = $this->getBaseSerializer()->getDecodedJson($treatment, $this->getJmsGroupByQueryForTreatment($request));
-        }
-        return ResultUtil::successResult($res);
-    }
-
-    /**
-     * @param Request $request
-     * @return JsonResponse
      * @throws Exception
      */
     function createIndividualTreatment(Request $request)
@@ -242,6 +200,30 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
 
     /**
      * @param Request $request
+     * @return JsonResponse
+     */
+    function getHistoricTreatments(Request $request)
+    {
+        $client = $this->getAccountOwner($request);
+        $location = $this->getSelectedLocation($request);
+
+        $this->nullCheckClient($client);
+        $this->nullCheckLocation($location);
+
+        $treatments = $this->getManager()->getRepository(Treatment::class)
+            ->getHistoricTreatments($location->getUbn());
+
+        $res = [];
+
+        /** @var Treatment $treatment */
+        foreach ($treatments as $treatment) {
+            $res[] = $this->getBaseSerializer()->getDecodedJson($treatment, $this->getJmsGroupByQueryForTreatment($request));
+        }
+        return ResultUtil::successResult($res);
+    }
+
+    /**
+     * @param Request $request
      * @param $treatmentId
      * @return JsonResponse
      */
@@ -281,4 +263,13 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
     }
 
 
+    function getIndividualTreatments(Request $request)
+    {
+        // TODO: Implement getIndividualTreatments() method.
+    }
+
+    function getLocationTreatments(Request $request)
+    {
+        // TODO: Implement getLocationTreatments() method.
+    }
 }
