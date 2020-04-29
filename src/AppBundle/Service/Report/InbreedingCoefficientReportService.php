@@ -326,21 +326,24 @@ class InbreedingCoefficientReportService extends ReportServiceBase
                 WHERE type = 'Ram' AND a.id IN ($idFilter)";
         $results = $em->getConnection()->query($sql)->fetchAll();
 
-        $ordinalByRamId = [];
-        $ordinal = 1;
-        foreach ($ramIds as $ramId) {
-            $ordinalByRamId[$ramId] = $ordinal;
-            $ordinal++;
+        $orderedResults = [];
+
+        foreach ($ramIds as $key => $ramId)
+        {
+            $ordinal = $key + 1;
+
+            foreach ($results as $data)
+            {
+                if ($data['id'] === $ramId) {
+                    $data[ReportLabel::ORDINAL] = $ordinal;
+
+                    $orderedResults[] = $data;
+                    break;
+                }
+            }
         }
 
-        foreach ($results as $key => $result) {
-            $ramId = $result['id'];
-            $ordinal = $ordinalByRamId[$ramId];
-
-            $results[$key][ReportLabel::ORDINAL] = $ordinal;
-        }
-
-        return $results;
+        return $orderedResults;
     }
 
 
@@ -349,7 +352,21 @@ class InbreedingCoefficientReportService extends ReportServiceBase
         $idFilter = SqlUtil::getIdsFilterListString($eweIds);
         $where = "WHERE type = 'Ewe' AND a.id IN ($idFilter)";
 
-        return self::getEwesBySqlBase($em, $where);
+        $ewesData = self::getEwesBySqlBase($em, $where);
+
+        $orderedResults = [];
+
+        foreach ($eweIds as $eweId)
+        {
+            foreach ($ewesData as $data)
+            {
+                if ($data['id'] === $eweId) {
+                    $orderedResults[] = $data;
+                    break;
+                }
+            }
+        }
+        return $orderedResults;
     }
 
 
@@ -429,15 +446,27 @@ FROM animal a
 
         $foundUlns = [];
         $nonEweUlns = [];
-        foreach ($results as $result)
-        {
-            $ulnString = $result[JsonInputConstant::ULN_COUNTRY_CODE] . $result[JsonInputConstant::ULN_NUMBER];
-            $foundUlns[$ulnString] = $ulnString;
 
-            if ($result['type'] === 'Ewe') {
-                $ewesData[$ulnString] = $result;
-            } else {
-                $nonEweUlns[$ulnString] = $ulnString;
+        foreach ($ewesArray as $eweArray) {
+            $ulnCountryCode = $eweArray[JsonInputConstant::ULN_COUNTRY_CODE];
+            $ulnNumber = $eweArray[JsonInputConstant::ULN_NUMBER];
+
+            foreach ($results as $result)
+            {
+                // Necessary to keep the original order of the input
+                if (
+                    $result[JsonInputConstant::ULN_COUNTRY_CODE] === $ulnCountryCode &&
+                    $result[JsonInputConstant::ULN_NUMBER] === $ulnNumber
+                ) {
+                    $ulnString = $result[JsonInputConstant::ULN_COUNTRY_CODE] . $result[JsonInputConstant::ULN_NUMBER];
+                    $foundUlns[$ulnString] = $ulnString;
+
+                    if ($result['type'] === 'Ewe') {
+                        $ewesData[$ulnString] = $result;
+                    } else {
+                        $nonEweUlns[$ulnString] = $ulnString;
+                    }
+                }
             }
         }
 
