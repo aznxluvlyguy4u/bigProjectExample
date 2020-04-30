@@ -376,10 +376,8 @@ class InbreedingCoefficientReportService extends ReportServiceBase
 
     private static function getEwesBySqlBase(EntityManagerInterface $em, string $where): array
     {
-        $sql = "SELECT a.id, uln_country_code, uln_number, pedigree_country_code, pedigree_number, a.type, l.ubn, c.owner_id
+        $sql = "SELECT a.id, uln_country_code, uln_number, pedigree_country_code, pedigree_number, a.type
 FROM animal a
-         LEFT JOIN location l ON l.id = a.location_id
-         LEFT JOIN company c ON c.id = l.company_id
     ".$where;
         return $em->getConnection()->query($sql)->fetchAll();
     }
