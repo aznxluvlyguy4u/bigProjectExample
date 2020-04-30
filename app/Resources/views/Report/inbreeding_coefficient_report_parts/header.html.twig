@@ -1,0 +1,29 @@
+{% set imagesDirectory = variables.imagesDirectory ~ '/nsfo-logo.png' %}
+
+<div class="nsfo-logo">
+    <img src="{{ imagesDirectory }}"/>
+</div>
+
+<h2>Inteeltcoëfficiënt van nageslacht na paring</h2>
+
+<table class="rams-table">
+    <tr>
+        <th class="rams-table-zv4k">Ram</th>
+        <th class="rams-table-zv4m">ULN</th>
+        <th class="rams-table-zv4m">STN</th>
+    </tr>
+    {% for key,value in variables.rams %}
+
+        {% set ram = value %}
+        {% set ramOrdinal = ram.ordinal %}
+        {% set ramUln = ram.uln %}
+        {% set ramPedigree = ram.pedigree %}
+
+        <tr>
+            <td class="rams-table-zv4k">{{ ramOrdinal }}</td>
+            <td class="rams-table-zv4m">{{ ramUln }}</td>
+            <td class="rams-table-zv4m">{{ ramPedigree }}</td>
+        </tr>
+
+    {% endfor %}
+</table>

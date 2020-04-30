@@ -74,7 +74,7 @@ abstract class Worker
     private $location;
 
     /**
-     * @var string
+     * @var string|null
      *
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Groups({
@@ -84,7 +84,7 @@ abstract class Worker
     private $errorCode;
 
     /**
-     * @var string
+     * @var string|null
      *
      * @ORM\Column(type="text", nullable=true)
      * @JMS\Groups({
@@ -94,7 +94,7 @@ abstract class Worker
     private $errorMessage;
 
     /**
-     * @var string
+     * @var string|null
      *
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Groups({
@@ -104,7 +104,7 @@ abstract class Worker
     private $debugErrorCode;
 
     /**
-     * @var string
+     * @var string|null
      *
      * @ORM\Column(type="text", nullable=true)
      * @JMS\Groups({
@@ -124,7 +124,7 @@ abstract class Worker
     private $startedAt;
 
     /**
-     * @var DateTime
+     * @var DateTime|null
      *
      * @ORM\Column(type="datetime", nullable=true)
      * @JMS\Groups({
@@ -229,72 +229,72 @@ abstract class Worker
     }
 
     /**
-     * @return string
+     * @return string|null
      */
-    public function getErrorCode()
+    public function getErrorCode(): ?string
     {
         return $this->errorCode;
     }
 
     /**
-     * @param $value
-     * @return $this
+     * @param  string|null  $errorCode
+     * @return Worker
      */
-    public function setErrorCode($value)
+    public function setErrorCode(?string $errorCode): Worker
     {
-        $this->errorCode = $value;
+        $this->errorCode = $errorCode;
         return $this;
     }
 
     /**
-     * @return string
+     * @return string|null
      */
-    public function getErrorMessage()
+    public function getErrorMessage(): ?string
     {
         return $this->errorMessage;
     }
 
     /**
-     * @param $value
-     * @return $this
+     * @param  string|null  $errorMessage
+     * @return Worker
      */
-    public function setErrorMessage($value)
+    public function setErrorMessage(?string $errorMessage): Worker
     {
-        $this->errorMessage = $value;
+        $this->errorMessage = $errorMessage;
         return $this;
     }
 
     /**
-     * @return string
+     * @return string|null
      */
-    public function getDebugErrorCode(): string
+    public function getDebugErrorCode(): ?string
     {
         return $this->debugErrorCode;
     }
 
     /**
-     * @param string $debugErrorCode
+     * @param  string|null  $debugErrorCode
      * @return Worker
      */
-    public function setDebugErrorCode(string $debugErrorCode): Worker
+    public function setDebugErrorCode(?string $debugErrorCode): Worker
     {
         $this->debugErrorCode = $debugErrorCode;
         return $this;
     }
 
     /**
-     * @return string
+     * @return string|null
      */
-    public function getDebugErrorMessage(): string
+    public function getDebugErrorMessage(): ?string
     {
         return $this->debugErrorMessage;
     }
 
     /**
-     * @param string $debugErrorMessage
+     * @param  string|null  $debugErrorMessage
      * @return Worker
      */
-    public function setDebugErrorMessage(string $debugErrorMessage): Worker
+    public function setDebugErrorMessage(?string $debugErrorMessage): Worker
     {
         $this->debugErrorMessage = $debugErrorMessage;
         return $this;
@@ -319,7 +319,7 @@ abstract class Worker
     }
 
     /**
-     * @return DateTime
+     * @return DateTime|null
      */
     public function getFinishedAt()
     {
@@ -327,10 +327,10 @@ abstract class Worker
     }
 
     /**
-     * @param DateTime $date
+     * @param DateTime|null $date
      * @return $this
      */
-    public function setFinishedAt(DateTime $date)
+    public function setFinishedAt(?DateTime $date)
     {
         $this->finishedAt = $date;
         return $this;
