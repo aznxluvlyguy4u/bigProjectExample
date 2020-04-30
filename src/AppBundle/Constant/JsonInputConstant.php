@@ -22,6 +22,7 @@ class JsonInputConstant
     const TRANSLATION_KEY = 'translation_key';
     const FORMATTED = 'formatted';
     const LABEL = 'label';
+    const DESCRIPTION = 'description';
 
     //Admins
     const ADMINS = 'admins';

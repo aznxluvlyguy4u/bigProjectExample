@@ -29,7 +29,8 @@ class Treatment implements TreatmentInterface
      * @ORM\GeneratedValue(strategy="IDENTITY")
      *
      * @JMS\Groups({
-     *     "TREATMENT"
+     *     "TREATMENT",
+     *     "TREATMENT_MIN"
      * })
      */
     private $id;

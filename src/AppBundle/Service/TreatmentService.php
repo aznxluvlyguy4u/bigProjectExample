@@ -3,6 +3,8 @@
 namespace AppBundle\Service;
 
 use AppBundle\Component\HttpFoundation\JsonResponse;
+use AppBundle\Component\Utils;
+use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Controller\TreatmentAPIControllerInterface;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\MedicationSelection;
@@ -11,6 +13,7 @@ use AppBundle\Entity\TreatmentMedication;
 use AppBundle\Entity\TreatmentTemplate;
 use AppBundle\Enumerator\TreatmentTypeOption;
 use AppBundle\Util\ActionLogWriter;
+use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
 use Doctrine\Common\Collections\ArrayCollection;
 use Exception;
@@ -23,24 +26,6 @@ use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
  */
 class TreatmentService extends TreatmentServiceBase implements TreatmentAPIControllerInterface
 {
-
-    /**
-     * @param Request $request
-     * @return JsonResponse
-     */
-    function createIndividualTreatments(Request $request)
-    {
-        return ResultUtil::successResult('ok');
-    }
-
-    /**
-     * @param Request $request
-     * @return JsonResponse
-     */
-    function createLocationTreatments(Request $request)
-    {
-        return ResultUtil::successResult('ok');
-    }
 
     /**
      * @param Request $request
@@ -226,20 +211,53 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
      * @param Request $request
      * @param $treatmentId
      * @return JsonResponse
+     * @throws Exception
      */
-    function editIndividualTreatment(Request $request, $treatmentId)
+    public function editTreatment(Request $request, $treatmentId)
     {
-        return ResultUtil::successResult('ok');
-    }
+        $em = $this->getManager();
 
-    /**
-     * @param Request $request
-     * @param $treatmentId
-     * @return JsonResponse
-     */
-    function editLocationTreatment(Request $request, $treatmentId)
-    {
-        return ResultUtil::successResult('ok');
+        /** @var Treatment $treatment */
+        $treatment = $em->getRepository(Treatment::class)->find($treatmentId);
+
+        $client = $this->getAccountOwner($request);
+        $loggedInUser = $this->getUser();
+        $location = $this->getSelectedLocation($request);
+
+        $this->nullCheckClient($client);
+        $this->nullCheckLocation($location);
+
+        if ($treatment->getLocation()->getId() !== $location->getId()) {
+            throw new PreconditionFailedHttpException('This treatment does not belong to the location with ubn: '.$location->getUbn());
+        }
+
+        //Validation
+        $treatment = $this->baseValidateDeserializedTreatment($treatment);
+        if ($treatment instanceof JsonResponse) { return $treatment; }
+
+        $content = RequestUtil::getContentAsArrayCollection($request);
+
+        $startDate = Utils::getNullCheckedArrayCollectionDateValue(JsonInputConstant::START_DATE, $content);
+        $endDate = Utils::getNullCheckedArrayCollectionDateValue(JsonInputConstant::END_DATE, $content);
+        $treatmentTemplateDescription = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::DESCRIPTION, $content);
+
+        /** @var TreatmentTemplate $treatmentTemplate */
+        $treatmentTemplate = $em->getRepository(TreatmentTemplate::class)->findOneBy(['description' => $treatmentTemplateDescription]);
+
+        $treatment
+            ->setStartDate($startDate)
+            ->setEndDate($endDate)
+            ->setTreatmentTemplate($treatmentTemplate)
+            ->setDescription($treatmentTemplate->getDescription());
+
+        $em->persist($treatment);
+        $em->flush();
+
+        ActionLogWriter::editTreatment($em, $request, $loggedInUser, $treatment);
+
+        $output = $this->getBaseSerializer()->getDecodedJson($treatment, $this->getJmsGroupByQueryForTreatment($request));
+
+        return ResultUtil::successResult($output);
     }
 
     /**
@@ -261,7 +279,6 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
     {
         return ResultUtil::successResult('ok');
     }
-
 
     function getIndividualTreatments(Request $request)
     {

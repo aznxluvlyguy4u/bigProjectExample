@@ -113,10 +113,10 @@ class TreatmentAPIController extends APIController implements TreatmentAPIContro
      * @Route("/individual")
      * @Method("GET")
      */
-    function getIndividualTreatments(Request $request)
-    {
-        return $this->get('app.treatment')->getIndividualTreatments($request);
-    }
+//    function getIndividualTreatments(Request $request)
+//    {
+//        return $this->get('app.treatment')->getIndividualTreatments($request);
+//    }
 
     /**
      * Get treatments of the location scope
@@ -139,10 +139,10 @@ class TreatmentAPIController extends APIController implements TreatmentAPIContro
      * @Route("/location")
      * @Method("GET")
      */
-    function getLocationTreatments(Request $request)
-    {
-        return $this->get('app.treatment')->getLocationTreatments($request);
-    }
+//    function getLocationTreatments(Request $request)
+//    {
+//        return $this->get('app.treatment')->getLocationTreatments($request);
+//    }
 
     /**
      * Edit treatments of the individual scope
@@ -163,39 +163,12 @@ class TreatmentAPIController extends APIController implements TreatmentAPIContro
      * @param Request $request the request object
      * @param int $treatmentId
      * @return JsonResponse
-     * @Route("/individual/{treatmentId}")
+     * @Route("/{treatmentId}")
      * @Method("PUT")
      */
-    function editIndividualTreatment(Request $request, $treatmentId)
+    function editTreatment(Request $request, $treatmentId)
     {
-        return $this->get('app.treatment')->editIndividualTreatment($request, $treatmentId);
-    }
-
-    /**
-     * Edit treatments of the location scope
-     *
-     * @ApiDoc(
-     *   section = "Treatment",
-     *   requirements={
-     *     {
-     *       "name"="AccessToken",
-     *       "dataType"="string",
-     *       "requirement"="",
-     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
-     *     }
-     *   },
-     *   resource = true,
-     *   description = "Edit treatments of the location scope"
-     * )
-     * @param Request $request the request object
-     * @param int $treatmentId
-     * @return JsonResponse
-     * @Route("/location/{treatmentId}")
-     * @Method("PUT")
-     */
-    function editLocationTreatment(Request $request, $treatmentId)
-    {
-        return $this->get('app.treatment')->editLocationTreatment($request, $treatmentId);
+        return $this->get('app.treatment')->editTreatment($request, $treatmentId);
     }
 
     /**
