@@ -12,6 +12,7 @@ use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\QueryBuilder;
+use Psr\Log\LoggerInterface;
 
 /**
  * Class BaseRepository
@@ -36,7 +37,7 @@ class BaseRepository extends EntityRepository
         return $this->getManager()->getConnection();
     }
 
-    
+
     public function persist($entity)
     {
         $this->getManager()->persist($entity);
@@ -57,6 +58,15 @@ class BaseRepository extends EntityRepository
         $this->getManager()->remove($entity);
 
         return $entity;
+    }
+
+
+    protected function clearTableBase(string $tableName)
+    {
+        // DO NOT USE 'TRUNCATE TABLE table_name' because it does not lock the table, and can cause race condition bugs
+        $sql = 'DELETE FROM '.$tableName;
+        $this->_em->getConnection()->query($sql)->execute();
+        SqlUtil::bumpPrimaryKeySeq($this->getConnection(), $tableName);
     }
 
 
@@ -97,7 +107,7 @@ class BaseRepository extends EntityRepository
 
         return $filteredRequests;
     }
-    
+
     protected function getRequestByRequestId($requests, $requestId)
     {
         foreach($requests as $request) {
@@ -262,12 +272,12 @@ class BaseRepository extends EntityRepository
         if($latestBirthLogdate == null) {
             $latestBirthLogdate = $errorMessageForDateIsNull;
         }
-        
+
         $latestMateLogDate = $repository->getLatestNsfoDeclarationLogDatePerUbn($ubn,RequestTypeNonIR::MATE);
         if($latestMateLogDate == null) {
             $latestMateLogDate = $errorMessageForDateIsNull;
         }
-        
+
         $declarationLogDate = new ArrayCollection();
         $declarationLogDate->set(RequestType::DECLARE_ARRIVAL_ENTITY, $latestArrivalLogdate);
         $declarationLogDate->set(RequestType::DECLARE_DEPART_ENTITY, $latestDepartLogdate);
@@ -278,12 +288,12 @@ class BaseRepository extends EntityRepository
 
         return $declarationLogDate;
     }
-    
-    
+
+
     public function getArrivalsAndImportsAfterLogDateInChronologicalOrder(Location $location, \DateTime $logDate)
     {
         //TODO A LOT MORE OPTIMIZATION IS NEEDED HERE
-        
+
         $ubn = $location->getUbn();
 
         $arrivalType = RequestType::DECLARE_ARRIVAL_ENTITY;
@@ -369,5 +379,12 @@ class BaseRepository extends EntityRepository
             $result[$entity->getId()] = $entity;
         }
         return $result;
+    }
+
+
+    protected function sqlDeleteById(string $tableName, int $taskId, string $idColumn = 'id')
+    {
+        $sql = "DELETE FROM $tableName WHERE $idColumn = $taskId";
+        $this->getConnection()->executeQuery($sql);
     }
 }

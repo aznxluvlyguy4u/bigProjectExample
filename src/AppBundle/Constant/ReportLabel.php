@@ -16,6 +16,7 @@ class ReportLabel
     const REFERENCE_DATE = 'referenceDate';
     const INVALID = 'invalid';
     const MONTHS = 'months';
+    const ORDINAL = 'ordinal';
     const TOTALS = 'totals';
     const VALUE = 'value';
     const VALUES = 'values';
@@ -44,8 +45,9 @@ class ReportLabel
     const INDEX_MOTHER = 'indexMother';
     const INDEX_EXTERIOR = 'indexExterior';
     const INDEX_BREED = 'indexBreed';
-    
+
     //Breed values
+    const IS_INBREEDING_COEFFICIENT_ZERO = 'isInbreedingCoefficientZero';
     const INBREEDING_COEFFICIENT = 'inbreedingCoefficient';
     const IS_RAM_MISSING = 'isRamMissing';
 
@@ -66,6 +68,7 @@ class ReportLabel
     const RAM = 'ram';
     const EWE = 'ewe';
     const EWES = 'ewes';
+    const RAMS = 'rams';
     const GENDER = 'gender';
     const ULN_COUNTRY_CODE = 'ulnCountryCode';
     const ULN_NUMBER = 'ulnNumber';
@@ -134,7 +137,7 @@ class ReportLabel
     const CHILD_KEY = 'c';
     const FATHER_KEY = 'f';
     const MOTHER_KEY = 'm';
-    
+
     const MOTHER_ID = 'mother_id';
     const FATHER_ID = 'father_id';
     const MOTHER = 'mother';
@@ -142,7 +145,7 @@ class ReportLabel
 
     const HETEROSIS = 'heterosis';
     const RECOMBINATION = 'recombination';
-    
+
     //Gender
     const FEMALE_SYMBOL = 'female_symbol';
     const MALE_SYMBOL = 'male_symbol';

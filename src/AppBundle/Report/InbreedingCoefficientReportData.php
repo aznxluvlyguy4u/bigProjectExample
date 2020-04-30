@@ -7,8 +7,11 @@ use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Constant\ReportLabel;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\InbreedingCoefficient;
+use AppBundle\Service\Report\InbreedingCoefficientReportService;
 use AppBundle\Util\AnimalArrayReader;
 use AppBundle\Util\ArrayUtil;
+use AppBundle\Util\ParentIdsPairUtil;
+use AppBundle\Util\TimeUtil;
 use Doctrine\Common\Persistence\ObjectManager;
 use Symfony\Component\Translation\TranslatorInterface;
 
@@ -23,7 +26,7 @@ class InbreedingCoefficientReportData extends ReportBase
     /** @var array */
     private $csvData;
     /** @var array */
-    private $ramData;
+    private $ramsData;
     /** @var array */
     private $ewesData;
     /** @var TranslatorInterface */
@@ -35,12 +38,12 @@ class InbreedingCoefficientReportData extends ReportBase
      * InbreedingCoefficientReportData constructor.
      * @param ObjectManager $em
      * @param $translator
-     * @param array $ramData
+     * @param array $ramsData
      * @param array $ewesData
      * @param array|InbreedingCoefficient[] $inbreedingCoefficients
      * @param Client $client
      */
-    public function __construct(ObjectManager $em, $translator, $ramData, $ewesData,
+    public function __construct(ObjectManager $em, $translator, $ramsData, $ewesData,
                                 $inbreedingCoefficients,
                                 Client $client = null)
     {
@@ -50,16 +53,25 @@ class InbreedingCoefficientReportData extends ReportBase
         $this->data = [];
         $this->csvData = [];
 
-        $this->ramData = $ramData;
+        $this->data['date'] = TimeUtil::getTimeStampToday('d-m-Y');
+
+        $this->ramsData = $ramsData;
         $this->ewesData = $ewesData;
 
-        //Initialize default values
-        $this->data[ReportLabel::EWES] = array();
-        $this->generateRamIdValues($this->ramData);
+        $this->data['hasRam2'] = 2 <= count($ramsData);
+        $this->data['hasRam3'] = 3 <= count($ramsData);
+        $this->data['hasRam4'] = 4 <= count($ramsData);
+        $this->data['hasRam5'] = 5 <= count($ramsData);
 
+        //Initialize default values
+        $this->data[ReportLabel::EWES] = [];
+        $this->generateRamsIdValues($this->ramsData);
 
         $parentIds = [];
-        $parentIds[$this->ramData['id']] = $this->ramData['id'];
+        foreach ($this->ramsData as $ramData) {
+            $ramId = $ramData['id'];
+            $parentIds[$ramId] = $ramId;
+        }
         foreach ($this->ewesData as $eweData) {
             $eweId = $eweData['id'];
             $parentIds[$eweId] = $eweId;
@@ -70,10 +82,10 @@ class InbreedingCoefficientReportData extends ReportBase
             $this->inbreedingCoefficientValuesByPairId[$inbreedingCoefficient->getPairId()] = $inbreedingCoefficient->getValue();
         }
 
-        if($this->ramData == null) {
+        if($this->ramsData == null) {
             $this->data[ReportLabel::IS_RAM_MISSING] = true;
             foreach ($this->ewesData as $eweArray) { $this->generateDataWithMissingRam($eweArray); }
-            
+
         } else {
             $this->data[ReportLabel::IS_RAM_MISSING] = false;
             foreach ($this->ewesData as $eweArray) { $this->generateDataForEwe($eweArray); }
@@ -97,15 +109,9 @@ class InbreedingCoefficientReportData extends ReportBase
         if (count($this->csvData) !== 0) { return $this->csvData; }
 
         $nullReplacement = null;
+        $csvOutput = [];
 
-        $ramData = ArrayUtil::get(ReportLabel::RAM, $this->data);
-        $ramUln = $nullReplacement;
-        $ramStn = $nullReplacement;
-        if ($ramData) {
-            $ramUln = ArrayUtil::get(ReportLabel::ULN, $ramData, $ramUln);
-            $ramStn = ArrayUtil::get(ReportLabel::PEDIGREE, $ramData, $ramStn);
-        }
-
+        // CSV HEADER
         $ramKey = mb_strtolower($this->translator->trans(strtoupper(ReportLabel::RAM)));
         $eweKey = mb_strtolower($this->translator->trans(strtoupper(ReportLabel::EWE)));
         $ulnKey = mb_strtolower($this->translator->trans(strtoupper(ReportLabel::ULN)));
@@ -114,21 +120,53 @@ class InbreedingCoefficientReportData extends ReportBase
             strtr($this->translator->trans(strtoupper(ReportLabel::INBREEDING_COEFFICIENT)),
                 ['Ë' => 'E', ' ' => '_'])
         );
+        $ramOrdinalKey = $ramKey.'#';
 
-        $csvOutput = [];
-        foreach (ArrayUtil::get(ReportLabel::EWES, $this->data, []) as $eweUln => $eweData) {
-            $eweStn = ArrayUtil::get(ReportLabel::PEDIGREE, $eweData, $nullReplacement);
-            $inbreedingCoefficient = ArrayUtil::get(ReportLabel::INBREEDING_COEFFICIENT, $eweData, $nullReplacement);
+        foreach (ArrayUtil::get(ReportLabel::RAMS, $this->data) as $ordinal => $ramData) {
 
-            $csvOutput[] = [
-                $ramKey.'_'.$ulnKey => $ramUln,
-                $ramKey.'_'.$stnKey => $ramStn,
-                $eweKey.'_'.$ulnKey => $eweUln,
-                $eweKey.'_'.$stnKey => $eweStn,
-                $inbreedingCoefficientKey => $inbreedingCoefficient,
-            ];
+            $ramUln = ArrayUtil::get(ReportLabel::ULN, $ramData, $nullReplacement);
+            $ramStn = ArrayUtil::get(ReportLabel::PEDIGREE, $ramData, $nullReplacement);
+
+            foreach (ArrayUtil::get(ReportLabel::EWES, $this->data, []) as $eweUln => $eweData) {
+                $eweStn = ArrayUtil::get(ReportLabel::PEDIGREE, $eweData, $nullReplacement);
+                $inbreedingCoefficient = InbreedingCoefficientReportService::parseInbreedingCoefficientValueForDisplay(
+                    $this->getInbreedingCoefficient($ramData['id'], $eweData['id'])
+                );
+
+                $csvOutput[] = [
+                    $ramOrdinalKey => $ordinal,
+                    $ramKey.'_'.$ulnKey => $ramUln,
+                    $ramKey.'_'.$stnKey => $ramStn,
+                    $eweKey.'_'.$ulnKey => $eweUln,
+                    $eweKey.'_'.$stnKey => $eweStn,
+                    $inbreedingCoefficientKey => $inbreedingCoefficient,
+                ];
+            }
         }
+
         return $csvOutput;
+    }
+
+
+    private function getInbreedingCoefficient(int $ramId, int $eweId): ?float
+    {
+        $nullReplacement = 0.0;
+        return ArrayUtil::get(
+            InbreedingCoefficient::generatePairId($ramId, $eweId),
+            $this->inbreedingCoefficientValuesByPairId,
+            $nullReplacement
+        );
+    }
+
+
+    /**
+     * @param array $ramsArray
+     */
+    private function generateRamsIdValues($ramsArray)
+    {
+        foreach ($ramsArray as $ramArray) {
+            $this->generateRamIdValues($ramArray);
+        }
     }
 
 
@@ -137,17 +175,18 @@ class InbreedingCoefficientReportData extends ReportBase
      */
     private function generateRamIdValues($ramArray)
     {
-        $this->data[ReportLabel::RAM] = AnimalArrayReader::getUlnAndPedigreeInArray($ramArray);
+        $ordinal = $ramArray[ReportLabel::ORDINAL];
+        $this->data[ReportLabel::RAMS][$ordinal] = AnimalArrayReader::addUlnAndPedigreeToArray($ramArray);
 
-        if(!array_key_exists(ReportLabel::PEDIGREE, $this->data[ReportLabel::RAM])) {
-            $this->data[ReportLabel::RAM][ReportLabel::PEDIGREE] = $this->getPedigreeString($ramArray);
+        if(!array_key_exists(ReportLabel::PEDIGREE, $this->data[ReportLabel::RAMS][$ordinal])) {
+            $this->data[ReportLabel::RAMS][$ordinal][ReportLabel::PEDIGREE] = $this->getPedigreeString($ramArray);
         }
 
-        if(!array_key_exists(ReportLabel::ULN, $this->data[ReportLabel::RAM])) {
-            $this->data[ReportLabel::RAM][ReportLabel::ULN] = AnimalArrayReader::getUlnFromArray($ramArray, self::ULN_NULL_FILLER);
+        if(!array_key_exists(ReportLabel::ULN, $this->data[ReportLabel::RAMS][$ordinal])) {
+            $this->data[ReportLabel::RAMS][$ordinal][ReportLabel::ULN] = AnimalArrayReader::getUlnFromArray($ramArray, self::ULN_NULL_FILLER);
         }
     }
-    
+
 
     /**
      * @param $eweArray
@@ -156,7 +195,7 @@ class InbreedingCoefficientReportData extends ReportBase
     {
         $ulnString = AnimalArrayReader::getIdString($eweArray);
 
-        $this->data[ReportLabel::EWES][$ulnString] = array();
+        $this->data[ReportLabel::EWES][$ulnString] = [];
         $this->data[ReportLabel::EWES][$ulnString][ReportLabel::INBREEDING_COEFFICIENT] = 0;
         $this->data[ReportLabel::EWES][$ulnString][ReportLabel::PEDIGREE] = $this->getPedigreeString($eweArray);
     }
@@ -167,10 +206,9 @@ class InbreedingCoefficientReportData extends ReportBase
      */
     private function generateDataForEwe($eweArray)
     {
-        $ramId = $this->ramData[JsonInputConstant::ID];
         $ulnString = AnimalArrayReader::getIdString($eweArray);
 
-        $this->data[ReportLabel::EWES][$ulnString] = array();
+        $this->data[ReportLabel::EWES][$ulnString] = $eweArray;
 
         if($eweArray == null) {
             $this->data[ReportLabel::EWES][$ulnString][ReportLabel::INBREEDING_COEFFICIENT] = 0;
@@ -179,8 +217,19 @@ class InbreedingCoefficientReportData extends ReportBase
             $this->data[ReportLabel::EWES][$ulnString][ReportLabel::PEDIGREE] = $this->getPedigreeString($eweArray);
 
             $eweId = $eweArray[JsonInputConstant::ID];
-            $pairId = InbreedingCoefficient::generatePairId($ramId, $eweId);
-            $this->data[ReportLabel::EWES][$ulnString][ReportLabel::INBREEDING_COEFFICIENT] = ArrayUtil::get($pairId, $this->inbreedingCoefficientValuesByPairId, 0.0);
+
+            foreach ($this->ramsData as $ramData) {
+                $ordinal = $ramData[ReportLabel::ORDINAL];
+                $ramId = $ramData[JsonInputConstant::ID];
+
+                $inbreedingCoefficient = $this->getInbreedingCoefficient($ramId, $eweId);
+                $isInbreedingCoefficientEmpty = InbreedingCoefficientReportService::isInbreedingCoefficientEmptyForDisplay($inbreedingCoefficient);
+
+                $this->data[ReportLabel::EWES][$ulnString][ReportLabel::INBREEDING_COEFFICIENT][$ordinal] =
+                    $inbreedingCoefficient;
+                $this->data[ReportLabel::EWES][$ulnString][ReportLabel::IS_INBREEDING_COEFFICIENT_ZERO][$ordinal] =
+                    $isInbreedingCoefficientEmpty;
+            }
         }
     }
 
@@ -200,6 +249,6 @@ class InbreedingCoefficientReportData extends ReportBase
         }
         return self::PEDIGREE_NULL_FILLER;
     }
-    
-    
+
+
 }
