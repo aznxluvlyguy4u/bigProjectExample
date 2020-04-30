@@ -548,7 +548,7 @@ class InbreedingCoefficientProcess
             $this->setProgress(100);
         } else {
             $this->setProgress(
-                intval($processDetails->getProcessed() / $processDetails->getTotal())
+                intval(($processDetails->getProcessed() / $processDetails->getTotal()) * 100)
             );
         }
 
