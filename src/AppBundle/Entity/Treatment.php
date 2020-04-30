@@ -198,8 +198,32 @@ class Treatment implements TreatmentInterface
     private $status = RequestStateType::CREATED;
 
     /**
+     * @var Person
+     *
+     * @ORM\ManyToOne(targetEntity="AppBundle\Entity\Person")
+     * @ORM\JoinColumn(name="revoked_by_id", referencedColumnName="id", nullable=true)
+     * @JMS\Type("AppBundle\Entity\Person")
+     * @JMS\Groups({
+     *     "TREATMENT"
+     * })
+     */
+    private $revokedBy;
+
+    /**
+     * @var DateTime
+     * @ORM\Column(type="datetime", nullable=true)
+     * @Assert\Date
+     * @JMS\Type("DateTime")
+     * @JMS\Groups({
+     *     "TREATMENT",
+     *     "TREATMENT_MIN"
+     * })
+     */
+    private $revokeDate;
+
+    /**
      * @var TreatmentTemplate
-     * @ORM\ManyToOne(targetEntity="AppBundle\Entity\TreatmentTemplate", inversedBy="")
+     * @ORM\ManyToOne(targetEntity="AppBundle\Entity\TreatmentTemplate", inversedBy="treatments")
      * @JMS\Type("AppBundle\Entity\TreatmentTemplate")
      *
      * @JMS\Groups({
@@ -442,24 +466,6 @@ class Treatment implements TreatmentInterface
     }
 
     /**
-     * @return float
-     */
-    public function getDosage()
-    {
-        return $this->dosage;
-    }
-
-    /**
-     * @param float $dosage
-     * @return Treatment
-     */
-    public function setDosage($dosage)
-    {
-        $this->dosage = $dosage;
-        return $this;
-    }
-
-    /**
      * @return bool
      */
     public function isActive()
@@ -510,6 +516,41 @@ class Treatment implements TreatmentInterface
     public function setStatus(string $status): self
     {
         $this->status = $status;
+        return $this;
+    }
+
+    /**
+     * @return Person
+     */
+    public function getRevokedBy(): Person
+    {
+        return $this->revokedBy;
+    }
+
+    /**
+     * @param Person $revokedBy
+     */
+    public function setRevokedBy(Person $revokedBy): self
+    {
+        $this->revokedBy = $revokedBy;
+        return $this;
+    }
+
+    /**
+     * @return DateTime
+     */
+    public function getRevokeDate(): DateTime
+    {
+        return $this->revokeDate;
+    }
+
+    /**
+     * @param DateTime $revokeDate
+     * @return Treatment
+     */
+    public function setRevokeDate(DateTime $revokeDate): self
+    {
+        $this->revokeDate = $revokeDate;
         return $this;
     }
 

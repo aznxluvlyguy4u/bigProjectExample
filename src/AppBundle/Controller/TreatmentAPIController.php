@@ -57,13 +57,14 @@ class TreatmentAPIController extends APIController implements TreatmentAPIContro
      *   description = "Create a treatment for a location"
      * )
      * @param $treatment_id
+     * @param Request $request
      * @return JsonResponse
      * @Route("/{treatment_id}/revoke")
      * @Method("PUT")
      */
-    function revokeTreatment($treatment_id)
+    function revokeTreatment($treatment_id, Request $request)
     {
-        return $this->get('app.treatment')->revokeTreatment($treatment_id);
+        return $this->get('app.treatment')->revokeTreatment($treatment_id, $request);
     }
 
     /**
