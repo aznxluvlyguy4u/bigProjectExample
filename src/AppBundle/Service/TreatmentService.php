@@ -188,6 +188,10 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
             throw new PreconditionFailedHttpException("Description is missing");
         }
 
+        if ($treatment->getStartDate() > $treatment->getEndDate()) {
+            throw new PreconditionFailedHttpException("The start date is higher then end date.");
+        }
+
         $type = TreatmentTypeService::getValidateType($treatment->getType());
         if ($type instanceof JsonResponse) { return $type; }
 
