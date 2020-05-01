@@ -39,6 +39,7 @@ use Interop\Queue\PsrMessage;
 use Interop\Queue\PsrProcessor;
 use Monolog\Logger;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
 {
@@ -260,10 +261,7 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
                     }
                 case ReportType::INBREEDING_COEFFICIENT:
                     {
-                        $content = json_decode($data['content'], true);
-                        $content = new ArrayCollection($content);
-                        $data = $this->coefficientReportService->getReport($worker->getActionBy(), $content, $fileType, $locale);
-                        break;
+                        throw new BadRequestHttpException('Inbreeding Coefficient reports should be processed in their own custom worker');
                     }
                 case ReportType::FERTILIZER_ACCOUNTING:
                     {
@@ -373,7 +371,7 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
             if($worker) {
                 $worker->setDebugErrorCode($e->getCode());
                 $worker->setDebugErrorMessage($e->getMessage());
-                if ($this->publiclyDisplayErrorMessage($e->getCode())) {
+                if (self::publiclyDisplayErrorMessage($e->getCode())) {
                     $worker->setErrorCode($e->getCode());
                     $worker->setErrorMessage($e->getMessage());
                 } else {
@@ -416,7 +414,7 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
      * @param int|null $errorCode
      * @return bool
      */
-    private function publiclyDisplayErrorMessage($errorCode): bool
+    public static function publiclyDisplayErrorMessage($errorCode): bool
     {
         return is_int($errorCode) && (
                 $errorCode === Response::HTTP_NOT_FOUND

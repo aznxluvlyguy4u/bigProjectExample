@@ -18,11 +18,13 @@ use AppBundle\Enumerator\ReasonOfDepartType;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RequestTypeIRDutchInformal;
 use AppBundle\Enumerator\RequestTypeIRDutchOfficial;
+use AppBundle\model\ParentIdsPair;
 use AppBundle\Service\Report\ReportServiceWithBreedValuesBase;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
-use Monolog\Logger;
+use Psr\Log\LoggerInterface;
+use Psr\Log\LogLevel;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
 use Symfony\Component\HttpKernel\Exception\PreconditionRequiredHttpException;
@@ -43,19 +45,22 @@ class SqlUtil
     /**
      * @param Connection $conn
      * @param $tableName
-     * @param Logger|null $logger
+     * @param LoggerInterface|null $logger
+     * @param string $logLevel
      * @throws \Doctrine\DBAL\DBALException
      */
-    public static function bumpPrimaryKeySeq(Connection $conn, $tableName, ?Logger $logger = null)
+    public static function bumpPrimaryKeySeq(Connection $conn, $tableName, ?LoggerInterface $logger = null,
+        string $logLevel = LogLevel::DEBUG)
     {
         $tableName = strtolower($tableName);
         $sequenceName = $tableName.'_id_seq';
-        $sql = "SELECT setval('".$sequenceName."', (SELECT MAX(id) FROM ".$tableName.")+1)";
+        $sql = "SELECT setval('".$sequenceName."', (SELECT COALESCE(MAX(id),0) FROM ".$tableName.")+1)";
         $conn->exec($sql);
-
-        if ($logger) {
-            $logger->notice("Update sequence '".$sequenceName."' using max value of '".$tableName."' table");
-        }
+        LoggerUtil::log(
+            "Update sequence '".$sequenceName."' using max value of '".$tableName."' table",
+            $logger,
+            $logLevel
+        );
     }
 
 
@@ -1007,5 +1012,54 @@ class SqlUtil
     public static function reasonOfLossOrDepartTranslationValues(array $reasonOfLossTranslationArray)
     {
         return SqlUtil::createSqlValuesString($reasonOfLossTranslationArray, false, false);
+    }
+
+
+    public static function getArrayFromPostgreSqlArrayString(?string $psqlArrayString): array
+    {
+        if (empty($psqlArrayString)) {
+            return [];
+        }
+
+        return json_decode(strtr($psqlArrayString,[
+            '{' => '[',
+            '}' => ']',
+        ]), false) ?? [];
+    }
+
+
+    /**
+     * @param  array|ParentIdsPair[]  $parentIdsPairs
+     * @param string $animalAlias
+     * @return string
+     */
+    public static function getParentIdsFilterFromParentIdsPairs(array $parentIdsPairs, string $animalAlias = 'a'): string
+    {
+        $mappedPairs = array_map(function ($parentIdsPair) use ($animalAlias) {
+            /** @var ParentIdsPair $parentIdsPair */
+            $momId = $parentIdsPair->getEweId();
+            $dadId = $parentIdsPair->getRamId();
+            return "($animalAlias.parent_mother_id = $momId AND $animalAlias.parent_father_id = $dadId)";
+        }, $parentIdsPairs);
+
+        return empty($parentIdsPairs) ? '' : '('.implode(' OR ', $mappedPairs).')';
+    }
+
+
+    /**
+     * @param  array|ParentIdsPair[]  $parentIdsPairs
+     * @param string $animalAlias
+     * @return string
+     */
+    public static function getParentsAsAnimalIdsFilterFromParentIdsPairs(array $parentIdsPairs, string $animalAlias = 'a'): string
+    {
+        $mappedPairs = array_map(function ($parentIdsPair) {
+            /** @var ParentIdsPair $parentIdsPair */
+            $momId = $parentIdsPair->getEweId();
+            $dadId = $parentIdsPair->getRamId();
+            return "$dadId,$momId";
+        }, $parentIdsPairs);
+
+        return empty($parentIdsPairs) ? '' : "$animalAlias.id IN (" .implode(',', $mappedPairs).')';
     }
 }
