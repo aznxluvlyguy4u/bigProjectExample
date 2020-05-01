@@ -1270,4 +1270,21 @@ class ActionLogWriter
         return $log;
     }
 
+    /**
+     * @param ObjectManager $em
+     * @param Request $request
+     * @param $loggedInUser
+     * @param Treatment $treatment
+     * @return ActionLog
+     */
+    public static function editTreatment(ObjectManager $em, $request, $loggedInUser, $treatment)
+    {
+        $description = 'Type: '.$treatment->getDutchType().'('.$treatment->getType().')'
+            .', '.ArrayUtil::implode(RequestUtil::getContentAsArrayCollection($request)->toArray());
+
+        $log = new ActionLog($treatment->getLocationOwner(), $loggedInUser, UserActionType::TREATMENT_EDIT, true, $description);
+        DoctrineUtil::persistAndFlush($em, $log);
+
+        return $log;
+    }
 }
