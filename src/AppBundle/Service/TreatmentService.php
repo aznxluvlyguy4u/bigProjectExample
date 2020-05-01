@@ -12,6 +12,7 @@ use AppBundle\Entity\TreatmentTemplate;
 use AppBundle\Enumerator\TreatmentTypeOption;
 use AppBundle\Util\ActionLogWriter;
 use AppBundle\Util\ResultUtil;
+use AppBundle\Util\TimeUtil;
 use Doctrine\Common\Collections\ArrayCollection;
 use Exception;
 use Symfony\Component\HttpFoundation\Request;
@@ -192,7 +193,7 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
             throw new PreconditionFailedHttpException("Description is missing");
         }
 
-        if ($treatment->getStartDate() > $treatment->getEndDate()) {
+        if (TimeUtil::isDate1BeforeDate2($treatment->getEndDate(), $treatment->getStartDate())) {
             throw new PreconditionFailedHttpException("The start date is higher then end date.");
         }
 
