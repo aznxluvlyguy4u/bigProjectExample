@@ -84,6 +84,12 @@ class TreatmentTemplate
     private $medications;
 
     /**
+     * @var ArrayCollection
+     * @ORM\OneToMany(targetEntity="AppBundle\Entity\Treatment", mappedBy="treatmentTemplate", cascade={"persist"})
+     */
+    private $treatments;
+
+    /**
      * @var boolean
      * @ORM\Column(type="boolean", options={"default":true})
      * @JMS\Type("boolean")
@@ -262,7 +268,7 @@ class TreatmentTemplate
 
     /**
      * @param MedicationOption $medicationOption
-     * @return $this
+     * @return TreatmentTemplate
      */
     public function addMedication(MedicationOption $medicationOption)
     {
@@ -272,11 +278,49 @@ class TreatmentTemplate
 
     /**
      * @param MedicationOption $medicationOption
-     * @return $this
+     * @return TreatmentTemplate
      */
     public function removeMedication(MedicationOption $medicationOption)
     {
         $this->medications->removeElement($medicationOption);
+        return $this;
+    }
+
+    /**
+     * @return ArrayCollection
+     */
+    public function getTreatments()
+    {
+        return $this->medications;
+    }
+
+    /**
+     * @param ArrayCollection $treatments
+     * @return TreatmentTemplate
+     */
+    public function setTreatments($treatments)
+    {
+        $this->treatments = $treatments;
+        return $this;
+    }
+
+    /**
+     * @param Treatment $treatment
+     * @return TreatmentTemplate
+     */
+    public function addTreatment(Treatment $treatment)
+    {
+        $this->treatments->add($treatment);
+        return $this;
+    }
+
+    /**
+     * @param Treatment $treatment
+     * @return TreatmentTemplate
+     */
+    public function removeTreatment(Treatment $treatment)
+    {
+        $this->treatments->removeElement($treatment);
         return $this;
     }
 

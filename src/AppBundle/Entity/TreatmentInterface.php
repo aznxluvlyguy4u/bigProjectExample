@@ -26,8 +26,6 @@ interface TreatmentInterface
     public function setDeletedBy($deletedBy);
     public function getDescription();
     public function setDescription($description);
-    public function getDosage();
-    public function setDosage($dosage);
     public function isActive();
     public function setIsActive($isActive);
 }

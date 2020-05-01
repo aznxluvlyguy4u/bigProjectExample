@@ -27,4 +27,5 @@ class RequestStateType
     const REVOKED = "REVOKED";
     const REVOKING = "REVOKING";
     const IMPORTED = "IMPORTED";
+    const CREATED = "CREATED";
 }

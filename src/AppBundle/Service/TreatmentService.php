@@ -9,14 +9,17 @@ use AppBundle\Entity\MedicationSelection;
 use AppBundle\Entity\Treatment;
 use AppBundle\Entity\TreatmentMedication;
 use AppBundle\Entity\TreatmentTemplate;
+use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\TreatmentTypeOption;
 use AppBundle\Util\ActionLogWriter;
 use AppBundle\Util\ResultUtil;
+use DateTime;
 use AppBundle\Util\TimeUtil;
 use Doctrine\Common\Collections\ArrayCollection;
 use Exception;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
+use Symfony\Component\Validator\Constraints\Date;
 
 /**
  * Class TreatmentService
@@ -89,7 +92,8 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
 
         $treatment
             ->setType($type)
-            ->setLocation($location);
+            ->setLocation($location)
+            ->setCreateDate(new DateTime());
 
         //Validation
         $treatment = $this->baseValidateDeserializedTreatment($treatment);
@@ -229,6 +233,31 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
             $res[] = $this->getBaseSerializer()->getDecodedJson($treatment, $this->getJmsGroupByQueryForTreatment($request));
         }
         return ResultUtil::successResult($res);
+    }
+
+    /**
+     * @param $treatment_id
+     * @param Request $request
+     * @return JsonResponse|Treatment
+     * @throws Exception
+     */
+    function revokeTreatment($treatment_id, Request $request)
+    {
+        /** @var Treatment $treatment */
+        $treatment = $this->getManager()->getRepository(Treatment::class)
+            ->find($treatment_id);
+
+        $treatment
+            ->setStatus(RequestStateType::REVOKED)
+            ->setRevokeDate(new DateTime())
+            ->setRevokedBy($this->getUser());
+
+        $this->getManager()->persist($treatment);
+        $this->getManager()->flush();
+
+        $output = $this->getBaseSerializer()->getDecodedJson($treatment, $this->getJmsGroupByQueryForTreatment($request));
+
+        return ResultUtil::successResult($output);
     }
 
     /**
