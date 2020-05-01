@@ -380,7 +380,6 @@ RESERVED: Reserved
 'STUD EWE: ANIMAL WAS FOUND FOR GIVEN ULN, BUT WAS NOT AN EWE ENTITY': THE FOUND ANIMAL FOR THE ULN OF THE GIVEN EWE WAS NOT FEMALE
 'STUD EWE: FOUND EWE DOES NOT BELONG TO CLIENT': THE EWE DOES NOT BELONG TO THE LOGGED IN USER
 MAX GENERATIONS LIMIT OF 8 EXCEEDED: THE MAX LIMIT OF 8 GENERATIONS WAS EXCEEDED
-THE AMOUNT OF SELECTED EWES EXCEEDED 50: MORE THAN 50 EWES WERE SELECTED
 THE MESSAGE NUMBER IS MISSING AND THEREFORE THE DECLARE CANNOT BE REVOKED: THE MESSAGE NUMBER IS MISSING AND THEREFORE THE DECLARE CANNOT BE REVOKED
 THERE WAS ONE FAILED UPDATE|THERE WERE %count% UPDATE: THERE WAS ONE FAILED UPDATE|THERE WERE %count% UPDATE
 UBN NEW OWNER CANNOT BE SAME AS LOGGED IN UBN: UBN NEW OWNER CANNOT BE SAME AS LOGGED IN UBN
@@ -506,6 +505,12 @@ SURROGATE MOTHER IS SAME AS CHILD: Surrogate mother is identical to the child
 SURROGATE MOTHER IS YOUNGER THAN CHILD: Surrogate mother is younger than the child
 SURROGATE MOTHER MUST BE AT LEAST 180 DAYS OLDER THAN CHILD: Surrogate mother must be at least 180 days (6 months) older than the child
 
+# Error messages in keyword format
+selection:
+  exceeded:
+    rams: The selected amount of rams exceeded the max limit of %max%
+    ewes: The selected amount of ewes exceeded the max limit of %max%
+
 IN COMBINATION WITH: in combination with
 
 INVALID BIRTH PROCESS: Invalid birth process
@@ -587,3 +592,7 @@ fat3: fat3
 measurementDate: measurement date
 muscleThickness: muscle thickness
 scanWeight: scan weight
+
+# Process
+process:
+  duplicate: A similar process is already running

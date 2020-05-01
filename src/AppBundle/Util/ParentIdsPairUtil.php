@@ -4,6 +4,7 @@
 namespace AppBundle\Util;
 
 
+use AppBundle\Entity\InbreedingCoefficient;
 use AppBundle\model\ParentIdsPair;
 
 class ParentIdsPairUtil
@@ -34,12 +35,30 @@ class ParentIdsPairUtil
     private static function uniqueParentIdsPairs(array $parentIdsPairs): array {
         $uniqueResults = [];
         foreach ($parentIdsPairs as $parentIdsPair) {
-            $key = $parentIdsPair->getRamId().'-'.$parentIdsPair->getEweId();
+            $key = InbreedingCoefficient::generatePairId($parentIdsPair->getRamId(),$parentIdsPair->getEweId());
             if (key_exists($key, $parentIdsPair)) {
                 continue;
             }
             $uniqueResults[$key] = $parentIdsPair;
         }
         return $uniqueResults;
+    }
+
+    public static function getParentIdsPairsFromIdArrays(array $ramIds, array $eweIds): array {
+        $parentIdsPairs = [];
+
+        foreach ($ramIds as $ramId) {
+
+            foreach ($eweIds as $eweId) {
+
+                $key = $ramId . '-' . $eweId;
+                if (key_exists($key, $parentIdsPairs)) {
+                    continue;
+                }
+                $parentIdsPairs[] = new ParentIdsPair($ramId, $eweId);
+            }
+        }
+
+        return $parentIdsPairs;
     }
 }

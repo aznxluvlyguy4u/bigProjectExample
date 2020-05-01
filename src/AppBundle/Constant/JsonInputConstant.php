@@ -42,6 +42,7 @@ class JsonInputConstant
     const EWE = 'ewe';
     const NEUTER = 'neuter';
     const EWES = 'ewes';
+    const RAMS = 'rams';
     const CHILDREN = 'children';
     const COUNTRY_OF_BIRTH = 'country_of_birth';
 

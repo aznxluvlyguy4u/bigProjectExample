@@ -7,6 +7,7 @@ use AppBundle\Component\Option\BirthListReportOptions;
 use AppBundle\Component\Option\ClientNotesOverviewReportOptions;
 use AppBundle\Component\Option\CompanyRegisterReportOptions;
 use AppBundle\Component\Option\MembersAndUsersOverviewReportOptions;
+use AppBundle\Constant\Environment;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Constant\TranslationKey;
 use AppBundle\Entity\Company;
@@ -21,8 +22,10 @@ use AppBundle\Enumerator\QueryParameter;
 use AppBundle\Enumerator\ReportType;
 use AppBundle\Enumerator\WorkerAction;
 use AppBundle\Enumerator\WorkerType;
+use AppBundle\Exception\InternalServerErrorException;
 use AppBundle\Exception\InvalidBreedCodeHttpException;
 use AppBundle\Exception\InvalidPedigreeRegisterAbbreviationHttpException;
+use AppBundle\Service\InbreedingCoefficient\InbreedingCoefficientReportUpdaterService;
 use AppBundle\Service\Report\AnimalFeaturesPerYearOfBirthReportService;
 use AppBundle\Service\Report\BirthListReportService;
 use AppBundle\Service\Report\EweCardReportService;
@@ -55,8 +58,10 @@ use Enqueue\Util\JSON;
 use Symfony\Bridge\Monolog\Logger;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
+use Symfony\Component\HttpKernel\Exception\PreconditionRequiredHttpException;
 use Symfony\Component\Translation\TranslatorInterface;
 
 class ReportService
@@ -130,6 +135,12 @@ class ReportService
     /** @var AnimalFeaturesPerYearOfBirthReportService */
     private $animalFeaturesPerYearOfBirthReportService;
 
+    /** @var InbreedingCoefficientReportUpdaterService */
+    private $inbreedingCoefficientReportUpdaterService;
+
+    /** @var string */
+    private $environment;
+
     /**
      * ReportService constructor.
      * @param ProducerInterface $producer
@@ -151,6 +162,7 @@ class ReportService
      * @param PopRepInputFileService $popRepInputFileService
      * @param FertilizerAccountingReport $fertilizerAccountingReport
      * @param AnimalFeaturesPerYearOfBirthReportService $animalFeaturesPerYearOfBirthReportService
+     * @param InbreedingCoefficientReportUpdaterService $inbreedingCoefficientReportUpdaterService
      */
     public function __construct(
         ProducerInterface $producer,
@@ -171,7 +183,9 @@ class ReportService
         WeightsPerYearOfBirthReportService $weightsPerYearOfBirthReportService,
         PopRepInputFileService $popRepInputFileService,
         FertilizerAccountingReport $fertilizerAccountingReport,
-        AnimalFeaturesPerYearOfBirthReportService $animalFeaturesPerYearOfBirthReportService
+        AnimalFeaturesPerYearOfBirthReportService $animalFeaturesPerYearOfBirthReportService,
+        InbreedingCoefficientReportUpdaterService $inbreedingCoefficientReportUpdaterService,
+        string $environment
     )
     {
         $this->em = $em;
@@ -193,6 +207,8 @@ class ReportService
         $this->popRepInputFileService = $popRepInputFileService;
         $this->fertilizerAccountingReport = $fertilizerAccountingReport;
         $this->animalFeaturesPerYearOfBirthReportService = $animalFeaturesPerYearOfBirthReportService;
+        $this->inbreedingCoefficientReportUpdaterService = $inbreedingCoefficientReportUpdaterService;
+        $this->environment = $environment;
     }
 
     /**
@@ -629,21 +645,57 @@ class ReportService
 
         $processAsWorkerTask = RequestUtil::getBooleanQuery($request,QueryParameter::PROCESS_AS_WORKER_TASK,true);
 
+        /*
+         * NOTE! The inbreeding coefficient uses a custom worker!
+         * So the process is different from the other reports.
+         * This is because calculating the inbreeding coefficient is very resource demanding.
+         *
+         * 1: Validate rams and ewes input
+         * 2: Extract ramIds and eweIds
+         */
+
+        $input = InbreedingCoefficientReportService::retrieveValidatedInput($this->em, $this->translator, $content);
+
         if ($processAsWorkerTask) {
-            return $this->processReportAsWorkerTask(
-                [
-                    'content' => $contentAsJson,
-                ],
+
+            // 3: Create worker record, and retrieve id
+            $workerId = $this->createWorkerTaskWithoutStandardReportWorkerMessage(
                 $request,ReportType::INBREEDING_COEFFICIENT, $inputForHash
             );
+
+            // 4: Create inbreeding_coefficient_task_report, include: worker_id, ram_ids, ewe_ids
+            $this->inbreedingCoefficientReportUpdaterService->add($workerId, $input->getRamIds(), $input->getEweIds());
+
+            return ResultUtil::successResult('OK');
+
+            /*
+             * 5: -- pick up task by running inbreedingCoefficientProcess worker --
+             * 6: Use InbreedingCoefficientReportUpdaterService to:
+             *    1: generate inbreeding coefficients for all parent pairs
+             *    2: generate inbreeding coefficient report
+             *    3: close worker record with correct information
+             */
         }
 
+        if ($this->environment === Environment::PROD || $this->environment === Environment::STAGE) {
+            throw new AccessDeniedHttpException();
+        }
+
+        /*
+         * Directly generate the inbreeding coefficients and report without a worker.
+         * Only run this during local development, when no other inbreeding coefficient is being generated.
+         */
         $actionBy = $this->userService->getUser();
         $fileType = $request->query->get(QueryParameter::FILE_TYPE_QUERY, self::getDefaultFileType());
         $language = $request->query->get(QueryParameter::LANGUAGE, $this->translator->getLocale());
 
-        return $this->inbreedingCoefficientReportService->getReport(
-            $actionBy, $content, $fileType, $language
+        return $this->inbreedingCoefficientReportUpdaterService->generateReport(
+            $input->getRamIds(),
+            $input->getEweIds(),
+            null,
+            $actionBy,
+            $fileType,
+            $language
         );
     }
 
@@ -980,6 +1032,23 @@ class ReportService
         }
 
         return $this->membersAndUsersOverviewReport->getReport($options);
+    }
+
+
+    private function createWorkerTaskWithoutStandardReportWorkerMessage(Request $request, int $reportType, string $inputForHash): int
+    {
+        if ($this->isSimilarNonExpiredReportAlreadyInProgress($request, $reportType, $inputForHash)) {
+            throw new PreconditionRequiredHttpException(
+                $this->translator->trans('A SIMILAR REPORT IS ALREADY BEING GENERATED')
+            );
+        }
+
+        $workerId = $this->createWorker($request, $reportType, $inputForHash);
+        if (!$workerId) {
+            throw new InternalServerErrorException('Could not create worker.');
+        }
+
+        return $workerId;
     }
 
 

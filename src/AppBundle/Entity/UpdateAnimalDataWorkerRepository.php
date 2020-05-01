@@ -1,7 +1,9 @@
 <?php
 
 namespace AppBundle\Entity;
+use AppBundle\Enumerator\UpdateType;
 use AppBundle\Service\TaskService;
+use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\DateUtil;
 use Doctrine\Common\Collections\Criteria;
 
@@ -44,7 +46,35 @@ class UpdateAnimalDataWorkerRepository extends BaseRepository {
             ->setMaxResults($limit)
         ;
 
-        return $qb->getQuery()->getResult();
+        $results = $qb->getQuery()->getResult();
+
+        // Add inbreeding coefficient
+
+        /** @var InbreedingCoefficientProcess $process */
+        $process = $this->getManager()->getRepository(InbreedingCoefficientProcess::class)->getAdminProcess();
+        if ($process) {
+            $results[] = (new UpdateAnimalDataWorker())
+                ->setUpdateType(
+                    $process->isRecalculate() ?
+                        UpdateType::INBREEDING_COEFFICIENT_RECALCULATION : UpdateType::INBREEDING_COEFFICIENT_CALCULATION
+                )
+                ->setStartedAt($process->getStartedAt())
+                ->setFinishedAt($process->getFinishedAt())
+                ->setHash("Klaar over (inschatting): " . $process->estimatedTimeOfArrival()
+                    . ' - voortgang('.$process->getProgress().'%) - '.$process->getProcessed().'/'.$process->getTotal())
+                ->setErrorCode($process->getErrorCode())
+                ->setErrorMessage($process->getErrorMessage())
+                ->setDebugErrorMessage($process->getDebugErrorMessage())
+                ;
+        }
+
+        usort($results, function (UpdateAnimalDataWorker $a, UpdateAnimalDataWorker $b) {
+            $pos_a = $a->getStartedAt()->getTimestamp();
+            $pos_b = $b->getStartedAt()->getTimestamp();
+            return $pos_a - $pos_b;
+        });
+
+        return $results;
     }
 
 

@@ -285,6 +285,20 @@ class ReportServiceBase
     }
 
 
+    public static function translateAllCapsTranslationErrorMessages(TranslatorInterface $translator, ?string $message)
+    {
+        if ($message == null) { return ''; }
+
+        return ucfirst(
+            mb_strtolower(
+                $translator->trans(
+                    strtoupper($message)
+                )
+            )
+        );
+    }
+
+
     /**
      * @param $locale
      */
