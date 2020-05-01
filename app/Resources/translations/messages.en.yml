@@ -506,6 +506,9 @@ SURROGATE MOTHER IS YOUNGER THAN CHILD: Surrogate mother is younger than the chi
 SURROGATE MOTHER MUST BE AT LEAST 180 DAYS OLDER THAN CHILD: Surrogate mother must be at least 180 days (6 months) older than the child
 
 # Error messages in keyword format
+date:
+  range:
+    inverted: The start date cannot be after the end date
 selection:
   exceeded:
     rams: The selected amount of rams exceeded the max limit of %max%

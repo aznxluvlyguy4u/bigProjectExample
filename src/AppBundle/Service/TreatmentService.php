@@ -194,7 +194,7 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
         }
 
         if (TimeUtil::isDate1BeforeDate2($treatment->getEndDate(), $treatment->getStartDate())) {
-            throw new PreconditionFailedHttpException("The start date is higher then end date.");
+            throw new PreconditionFailedHttpException($this->translator->trans('date.range.inverted'));
         }
 
         $type = TreatmentTypeService::getValidateType($treatment->getType());
