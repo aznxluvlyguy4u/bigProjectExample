@@ -244,6 +244,10 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
         /** @var TreatmentTemplate $treatmentTemplate */
         $treatmentTemplate = $em->getRepository(TreatmentTemplate::class)->findOneBy(['description' => $treatmentTemplateDescription]);
 
+        if ($treatmentTemplate === null) {
+            throw new PreconditionFailedHttpException("No TreatmentTemplate was found with the description: ".$treatmentTemplateDescription);
+        }
+
         $treatment
             ->setStartDate($startDate)
             ->setEndDate($endDate)
