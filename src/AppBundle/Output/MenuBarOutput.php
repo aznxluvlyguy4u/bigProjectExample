@@ -3,6 +3,7 @@
 namespace AppBundle\Output;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Client;
+use AppBundle\Entity\Company;
 use AppBundle\Entity\Employee;
 use AppBundle\Entity\VwaEmployee;
 use AppBundle\Enumerator\Country;
@@ -54,13 +55,26 @@ class MenuBarOutput extends Output
     }
 
 
-    public static function createLocationsArray(EntityManagerInterface $em, Client $client)
+    public static function createLocationsArray(EntityManagerInterface $em, Client $client): array
     {
         if (!$client || !is_int($client->getId())) {
             return [];
         }
 
+        $companies = $client->getCompanies();
+        if ($companies->isEmpty()) {
+            return [];
+        }
+
+        $companyIds = array_map(
+            function (Company $company) {
+                return $company->getId();
+            },
+            $companies->toArray()
+        );
+
         $sql = "SELECT
+                  l.id,  
                   l.ubn,
                   cd.code as ".JsonInputConstant::COUNTRY_CODE.",
                   cd.code = '".Country::NL."' as ".JsonInputConstant::USE_RVO_LOGIC."
@@ -69,7 +83,7 @@ class MenuBarOutput extends Output
                   INNER JOIN address a ON l.address_id = a.id
                   LEFT JOIN country cd ON cd.name = a.country
                 WHERE c.is_active AND l.is_active
-                  AND c.owner_id = ".$client->getId();
+                  AND c.id IN (".implode(',',$companyIds).")" ;
         return $em->getConnection()->query($sql)->fetchAll();
     }
 

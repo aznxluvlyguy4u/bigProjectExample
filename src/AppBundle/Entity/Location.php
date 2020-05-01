@@ -35,7 +35,9 @@ class Location
    *     "RESPONSE_PERSISTENCE",
    *     "RVO",
    *     "TREATMENT",
-   *     "TREATMEN_MIN"
+   *     "TREATMEN_MIN",
+   *     "TREATMENT_TEMPLATE",
+   *     "TREATMENT_TEMPLATE_MIN"
    * })
    *
    */

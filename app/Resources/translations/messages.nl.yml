@@ -513,10 +513,13 @@ SURROGATE MOTHER IS SAME AS CHILD: Pleegmoeder is het identiek aan het kind
 SURROGATE MOTHER IS YOUNGER THAN CHILD: Pleegmoeder is jonger dan het kind
 SURROGATE MOTHER MUST BE AT LEAST 180 DAYS OLDER THAN CHILD: Pleegmoeder moet minstens 180 dagen (6 maanden) ouder zijn dan het kind
 
+date:
+  range:
+    inverted: De startdatum mag niet na de einddatum zijn
 selection:
   exceeded:
-    rams: The selected amount of rams exceeded the max limit of %max%
-    ewes: The selected amount of ewes exceeded the max limit of %max%
+    rams: Het geselecteerde aantal rammen is meer dan de limiet van %max%
+    ewes: Het geselecteerde aantal ooien is meer dan de limiet van %max%
 
 IN COMBINATION WITH: in combinatie met
 

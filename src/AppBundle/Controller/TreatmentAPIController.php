@@ -15,6 +15,32 @@ use Symfony\Component\HttpFoundation\Request;
 class TreatmentAPIController extends APIController implements TreatmentAPIControllerInterface
 {
     /**
+     * Get historic treatments for an ubn
+     *
+     * @ApiDoc(
+     *   section = "Treatment",
+     *   requirements={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "requirement"="",
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Create a treatment for a location",
+     * )
+     * @param Request $request
+     * @return JsonResponse
+     * @Route("/historic")
+     * @Method("GET")
+     */
+    function getHistoricTreatments(Request $request)
+    {
+        return $this->get('app.treatment')->getHistoricTreatments($request);
+    }
+
+    /**
      * Create a treatment for a location
      *
      * @ApiDoc(
@@ -35,7 +61,7 @@ class TreatmentAPIController extends APIController implements TreatmentAPIContro
      * @Route("/location")
      * @Method("POST")
      */
-    function getCreateLocationTreatment(Request $request)
+    function createLocationTreatment(Request $request)
     {
         return $this->get('app.treatment')->createLocationTreatment($request);
     }
@@ -61,7 +87,7 @@ class TreatmentAPIController extends APIController implements TreatmentAPIContro
      * @Route("/individual")
      * @Method("POST")
      */
-    function getCreateIndividualTreatment(Request $request)
+    function createIndividualTreatment(Request $request)
     {
         return $this->get('app.treatment')->createIndividualTreatment($request);
     }
@@ -116,58 +142,6 @@ class TreatmentAPIController extends APIController implements TreatmentAPIContro
     function getLocationTreatments(Request $request)
     {
         return $this->get('app.treatment')->getLocationTreatments($request);
-    }
-
-    /**
-     * Create treatments of the individual scope
-     *
-     * @ApiDoc(
-     *   section = "Treatment",
-     *   requirements={
-     *     {
-     *       "name"="AccessToken",
-     *       "dataType"="string",
-     *       "requirement"="",
-     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
-     *     }
-     *   },
-     *   resource = true,
-     *   description = "Create treatments of the individual scope"
-     * )
-     * @param Request $request the request object
-     * @return JsonResponse
-     * @Route("/individual")
-     * @Method("POST")
-     */
-    function createIndividualTreatment(Request $request)
-    {
-        return $this->get('app.treatment')->createIndividualTreatment($request);
-    }
-
-    /**
-     * Create treatments of the location scope
-     *
-     * @ApiDoc(
-     *   section = "Treatment",
-     *   requirements={
-     *     {
-     *       "name"="AccessToken",
-     *       "dataType"="string",
-     *       "requirement"="",
-     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
-     *     }
-     *   },
-     *   resource = true,
-     *   description = "Create treatments of the location scope"
-     * )
-     * @param Request $request the request object
-     * @return JsonResponse
-     * @Route("/location")
-     * @Method("POST")
-     */
-    function createLocationTreatment(Request $request)
-    {
-        return $this->get('app.treatment')->getLocationTreatment($request);
     }
 
     /**

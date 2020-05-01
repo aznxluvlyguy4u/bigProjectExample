@@ -12,6 +12,7 @@ use AppBundle\Entity\TreatmentTemplate;
 use AppBundle\Enumerator\TreatmentTypeOption;
 use AppBundle\Util\ActionLogWriter;
 use AppBundle\Util\ResultUtil;
+use AppBundle\Util\TimeUtil;
 use Doctrine\Common\Collections\ArrayCollection;
 use Exception;
 use Symfony\Component\HttpFoundation\Request;
@@ -28,7 +29,7 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
      * @param Request $request
      * @return JsonResponse
      */
-    function getIndividualTreatments(Request $request)
+    function createIndividualTreatments(Request $request)
     {
         return ResultUtil::successResult('ok');
     }
@@ -37,7 +38,7 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
      * @param Request $request
      * @return JsonResponse
      */
-    function getLocationTreatments(Request $request)
+    function createLocationTreatments(Request $request)
     {
         return ResultUtil::successResult('ok');
     }
@@ -124,8 +125,10 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
         // No duplicates are being created, so what is being meant with "duplicates"?
         //TODO check for duplicates
 
+        $treatmentMedicationSelections = $treatment->getMedicationSelections();
+
         /** @var MedicationSelection $medicationSelection */
-        foreach ($treatment->getMedicationSelections() as $medicationSelection)
+        foreach ($treatmentMedicationSelections as $medicationSelection)
         {
             if ($medicationSelection->getWaitingDays() === null) {
                 throw new PreconditionFailedHttpException("No waiting days have been filled in.");
@@ -144,11 +147,13 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
         /** @var TreatmentTemplate $treatmentTemplate */
         $treatmentTemplate = $this->treatmentTemplateRepository->find($treatmentTemplateId);
 
+        $treatment->__construct();
+
         $treatment
             ->setCreationBy($this->getUser())
             ->setAnimals($existingAnimals)
-            ->setTreatmentTemplate($treatmentTemplate)
-            ->setIsActive(true);
+            ->setMedicationSelections($treatmentMedicationSelections)
+            ->setTreatmentTemplate($treatmentTemplate);
 
         $em->persist($treatment);
         $em->flush();
@@ -188,6 +193,10 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
             throw new PreconditionFailedHttpException("Description is missing");
         }
 
+        if (TimeUtil::isDate1BeforeDate2($treatment->getEndDate(), $treatment->getStartDate())) {
+            throw new PreconditionFailedHttpException($this->translator->trans('date.range.inverted'));
+        }
+
         $type = TreatmentTypeService::getValidateType($treatment->getType());
         if ($type instanceof JsonResponse) { return $type; }
 
@@ -196,6 +205,30 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
             ->setType($type);
 
         return $treatment;
+    }
+
+    /**
+     * @param Request $request
+     * @return JsonResponse
+     */
+    function getHistoricTreatments(Request $request)
+    {
+        $client = $this->getAccountOwner($request);
+        $location = $this->getSelectedLocation($request);
+
+        $this->nullCheckClient($client);
+        $this->nullCheckLocation($location);
+
+        $treatments = $this->getManager()->getRepository(Treatment::class)
+            ->getHistoricTreatments($location->getUbn());
+
+        $res = [];
+
+        /** @var Treatment $treatment */
+        foreach ($treatments as $treatment) {
+            $res[] = $this->getBaseSerializer()->getDecodedJson($treatment, $this->getJmsGroupByQueryForTreatment($request));
+        }
+        return ResultUtil::successResult($res);
     }
 
     /**
@@ -239,4 +272,13 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
     }
 
 
+    function getIndividualTreatments(Request $request)
+    {
+        // TODO: Implement getIndividualTreatments() method.
+    }
+
+    function getLocationTreatments(Request $request)
+    {
+        // TODO: Implement getLocationTreatments() method.
+    }
 }
