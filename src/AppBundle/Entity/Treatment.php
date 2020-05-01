@@ -38,7 +38,7 @@ class Treatment implements TreatmentInterface
 
     /**
      * @var Location
-     * @ORM\ManyToOne(targetEntity="Location", inversedBy="treatmentTemplates")
+     * @ORM\ManyToOne(targetEntity="Location", inversedBy="treatments")
      * @JMS\Type("AppBundle\Entity\Location")
      * @JMS\Groups({
      *     "TREATMENT"

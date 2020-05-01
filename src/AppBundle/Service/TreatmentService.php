@@ -14,6 +14,7 @@ use AppBundle\Enumerator\TreatmentTypeOption;
 use AppBundle\Util\ActionLogWriter;
 use AppBundle\Util\ResultUtil;
 use DateTime;
+use AppBundle\Util\TimeUtil;
 use Doctrine\Common\Collections\ArrayCollection;
 use Exception;
 use Symfony\Component\HttpFoundation\Request;
@@ -128,8 +129,10 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
         // No duplicates are being created, so what is being meant with "duplicates"?
         //TODO check for duplicates
 
+        $treatmentMedicationSelections = $treatment->getMedicationSelections();
+
         /** @var MedicationSelection $medicationSelection */
-        foreach ($treatment->getMedicationSelections() as $medicationSelection)
+        foreach ($treatmentMedicationSelections as $medicationSelection)
         {
             if ($medicationSelection->getWaitingDays() === null) {
                 throw new PreconditionFailedHttpException("No waiting days have been filled in.");
@@ -148,11 +151,13 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
         /** @var TreatmentTemplate $treatmentTemplate */
         $treatmentTemplate = $this->treatmentTemplateRepository->find($treatmentTemplateId);
 
+        $treatment->__construct();
+
         $treatment
             ->setCreationBy($this->getUser())
             ->setAnimals($existingAnimals)
-            ->setTreatmentTemplate($treatmentTemplate)
-            ->setIsActive(true);
+            ->setMedicationSelections($treatmentMedicationSelections)
+            ->setTreatmentTemplate($treatmentTemplate);
 
         $em->persist($treatment);
         $em->flush();
@@ -190,6 +195,10 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
         $description = $treatment->getDescription();
         if ($description === null) {
             throw new PreconditionFailedHttpException("Description is missing");
+        }
+
+        if (TimeUtil::isDate1BeforeDate2($treatment->getEndDate(), $treatment->getStartDate())) {
+            throw new PreconditionFailedHttpException($this->translator->trans('date.range.inverted'));
         }
 
         $type = TreatmentTypeService::getValidateType($treatment->getType());
