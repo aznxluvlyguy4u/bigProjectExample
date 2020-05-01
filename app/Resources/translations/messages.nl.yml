@@ -518,8 +518,8 @@ date:
     inverted: De startdatum mag niet na de einddatum zijn
 selection:
   exceeded:
-    rams: The selected amount of rams exceeded the max limit of %max%
-    ewes: The selected amount of ewes exceeded the max limit of %max%
+    rams: Het geselecteerde aantal rammen is meer dan de limiet van %max%
+    ewes: Het geselecteerde aantal ooien is meer dan de limiet van %max%
 
 IN COMBINATION WITH: in combinatie met
 
