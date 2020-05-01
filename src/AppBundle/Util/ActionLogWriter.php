@@ -20,12 +20,14 @@ use AppBundle\Entity\Location;
 use AppBundle\Entity\Message;
 use AppBundle\Entity\Person;
 use AppBundle\Entity\RevokeDeclaration;
+use AppBundle\Entity\Treatment;
 use AppBundle\Entity\VwaEmployee;
 use AppBundle\Enumerator\UserActionType;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 class ActionLogWriter
@@ -1248,6 +1250,24 @@ class ActionLogWriter
         $userActionType = UserActionType::DELETE_TAG;
         $log = new ActionLog($client, $loggedInUser, $userActionType, true, $uln);
         DoctrineUtil::persistAndFlush($em, $log);
+    }
+
+    /**
+     * @param ObjectManager $em
+     * @param Request $request
+     * @param $loggedInUser
+     * @param Treatment $treatment
+     * @return ActionLog
+     */
+    public static function createTreatment(ObjectManager $em, $request, $loggedInUser, $treatment)
+    {
+        $description = 'Type: '.$treatment->getDutchType().'('.$treatment->getType().')'
+            .', '.ArrayUtil::implode(RequestUtil::getContentAsArrayCollection($request)->toArray());
+
+        $log = new ActionLog($treatment->getLocationOwner(), $loggedInUser, UserActionType::TREATMENT_CREATE, true, $description);
+        DoctrineUtil::persistAndFlush($em, $log);
+
+        return $log;
     }
 
 }

@@ -39,6 +39,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  *     "RESPONSE_PERSISTENCE",
  *     "RVO",
  *     "TREATMENT_TEMPLATE",
+ *     "TREATMENT",
  *     "UBN",
  *     "USER_MEASUREMENT",
  *     "VWA",
@@ -78,6 +79,7 @@ abstract class Person implements UserInterface
    *     "RESPONSE_PERSISTENCE",
    *     "RVO",
    *     "TREATMENT_TEMPLATE",
+   *     "TREATMENT",
    *     "USER_MEASUREMENT",
    *     "VWA",
    *     "DOSSIER"
@@ -105,6 +107,7 @@ abstract class Person implements UserInterface
    *     "MINIMAL",
    *     "RVO",
    *     "TREATMENT_TEMPLATE",
+   *     "TREATMENT",
    *     "USER_MEASUREMENT",
    *     "VWA",
    *     "DOSSIER"
@@ -132,6 +135,7 @@ abstract class Person implements UserInterface
    *     "MINIMAL",
    *     "RVO",
    *     "TREATMENT_TEMPLATE",
+   *     "TREATMENT",
    *     "USER_MEASUREMENT",
    *     "VWA",
    *     "DOSSIER"

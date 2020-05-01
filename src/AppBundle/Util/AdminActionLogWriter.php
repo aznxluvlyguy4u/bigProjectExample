@@ -17,6 +17,7 @@ use AppBundle\Entity\Location;
 use AppBundle\Entity\LocationHealthInspection;
 use AppBundle\Entity\Person;
 use AppBundle\Entity\RetrieveAnimals;
+use AppBundle\Entity\Treatment;
 use AppBundle\Entity\TreatmentTemplate;
 use AppBundle\Entity\TreatmentType;
 use AppBundle\Enumerator\GenderType;
@@ -119,7 +120,6 @@ class AdminActionLogWriter
 
         return $log;
     }
-
 
     /**
      * @param ObjectManager $em

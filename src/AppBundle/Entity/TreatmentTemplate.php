@@ -30,7 +30,9 @@ class TreatmentTemplate
      * @ORM\GeneratedValue(strategy="IDENTITY")
      * @JMS\Groups({
      *     "TREATMENT_TEMPLATE",
-     *     "TREATMENT_TEMPLATE_MIN"
+     *     "TREATMENT_TEMPLATE_MIN",
+     *     "TREATMENT",
+     *     "TREATMEN_MIN"
      * })
      */
     private $id;
@@ -41,7 +43,9 @@ class TreatmentTemplate
      * @JMS\Type("AppBundle\Entity\Location")
      * @JMS\Groups({
      *     "TREATMENT_TEMPLATE",
-     *     "TREATMENT_TEMPLATE_MIN"
+     *     "TREATMENT_TEMPLATE_MIN",
+     *     "TREATMENT",
+     *     "TREATMEN_MIN"
      * })
      */
     private $location;
@@ -85,7 +89,9 @@ class TreatmentTemplate
      * @JMS\Type("boolean")
      * @JMS\Groups({
      *     "TREATMENT_TEMPLATE",
-     *     "TREATMENT_TEMPLATE_MIN"
+     *     "TREATMENT_TEMPLATE_MIN",
+     *     "TREATMENT",
+     *     "TREATMEN_MIN"
      * })
      */
     private $isActive;
