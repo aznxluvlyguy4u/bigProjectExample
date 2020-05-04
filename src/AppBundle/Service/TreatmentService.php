@@ -208,16 +208,13 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
         $this->nullCheckClient($client);
         $this->nullCheckLocation($location);
 
+        $page = $request->query->getInt('page', 1);
+        $searchQuery = $request->get('query', '');
+
         $treatments = $this->getManager()->getRepository(Treatment::class)
-            ->getHistoricTreatments($location->getUbn());
+            ->getHistoricTreatments($location->getUbn(), $page, 10, $searchQuery);
 
-        $res = [];
-
-        /** @var Treatment $treatment */
-        foreach ($treatments as $treatment) {
-            $res[] = $this->getBaseSerializer()->getDecodedJson($treatment, $this->getJmsGroupByQueryForTreatment($request));
-        }
-        return ResultUtil::successResult($res);
+        return ResultUtil::successResult($treatments);
     }
 
     /**
