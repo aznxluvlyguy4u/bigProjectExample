@@ -15,6 +15,44 @@ use Symfony\Component\HttpFoundation\Request;
 class TreatmentTemplateAPIController extends APIController implements TreatmentTemplateAPIControllerInterface
 {
     /**
+     * Get all treatment templates the UBN has access to.
+     *
+     * @ApiDoc(
+     *   section = "Treatment Template",
+     *   headers={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "required"=true,
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   parameters={
+     *      {
+     *        "name"="minimal_output",
+     *        "dataType"="string",
+     *        "required"=false,
+     *        "description"="set to false to return more data, it is true by default",
+     *        "format"="?active_only=false"
+     *      }
+     *   },
+     *   resource = true,
+     *   description = "Get all treatment templates the UBN has access to",
+     *   statusCodes={200="Returned when successful"},
+     *   input="json",
+     *   output="json"
+     * )
+     * @param Request $request the request object
+     * @return JsonResponse
+     * @Route("/template")
+     * @Method("GET")
+     */
+    function getTemplates(Request $request)
+    {
+        return $this->get('app.treatment.template')->getTemplates($request);
+    }
+
+    /**
      * Get default individual treatment templates
      *
      * ### Request body ###

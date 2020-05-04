@@ -17,6 +17,7 @@ use AppBundle\Util\Validator;
 use AppBundle\Validation\AdminValidator;
 use Exception;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
 
 /**
@@ -25,6 +26,20 @@ use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
  */
 class TreatmentTemplateService extends TreatmentServiceBase implements TreatmentTemplateAPIControllerInterface
 {
+
+    function getTemplates(Request $request)
+    {
+        $location = $this->getSelectedLocation($request);
+        if (!$location) {
+            throw new BadRequestHttpException('Location is missing');
+        }
+
+        $activeOnly = RequestUtil::getBooleanQuery($request, QueryParameter::ACTIVE_ONLY, true);
+        $templates = $this->treatmentTemplateRepository->findAllBelongingToLocation($location, $activeOnly);
+        $output = $this->getBaseSerializer()->getDecodedJson($templates, $this->getJmsGroupByQuery($request));
+
+        return ResultUtil::successResult($output);
+    }
 
     /**
      * @param Request $request
