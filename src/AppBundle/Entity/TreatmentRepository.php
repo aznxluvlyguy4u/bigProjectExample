@@ -32,7 +32,7 @@ class TreatmentRepository extends BaseRepository {
         ";
 
         $sql = '
-            SELECT * FROM treatment t
+            SELECT t.* FROM treatment t
             INNER JOIN location l ON t.location_id = l.id 
             WHERE l.ubn = :ubn
             AND t.description LIKE :query
