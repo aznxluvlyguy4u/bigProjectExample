@@ -269,10 +269,6 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
             throw new PreconditionFailedHttpException('This treatment does not belong to the location with ubn: '.$location->getUbn());
         }
 
-        //Validation
-        $treatment = $this->baseValidateDeserializedTreatment($treatment);
-        if ($treatment instanceof JsonResponse) { return $treatment; }
-
         $content = RequestUtil::getContentAsArrayCollection($request);
 
         $startDate = Utils::getNullCheckedArrayCollectionDateValue(JsonInputConstant::START_DATE, $content);
@@ -291,6 +287,10 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
             ->setEndDate($endDate)
             ->setTreatmentTemplate($treatmentTemplate)
             ->setDescription($treatmentTemplate->getDescription());
+
+        //Validation
+        $treatment = $this->baseValidateDeserializedTreatment($treatment);
+        if ($treatment instanceof JsonResponse) { return $treatment; }
 
         $em->persist($treatment);
         $em->flush();
