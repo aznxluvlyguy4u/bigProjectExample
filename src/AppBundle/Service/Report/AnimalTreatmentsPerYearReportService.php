@@ -12,31 +12,31 @@ use Doctrine\DBAL\DBALException;
 use Exception;
 use Symfony\Component\HttpFoundation\Response;
 
-class AnimalTreatmentsPerYearOfBirthReportService extends ReportServiceBase
+class AnimalTreatmentsPerYearReportService extends ReportServiceBase
 {
-    const TITLE = 'animal_treatments_per_year_of_birth_report';
+    const TITLE = 'animal_treatments_per_year_report';
     const FOLDER_NAME = self::TITLE;
     const FILENAME = self::TITLE;
 
     /**
      * @param $isAdmin
-     * @param $yearOfBirth
+     * @param $year
      * @param Location $location
      * @return JsonResponse
      */
-    function getReport($yearOfBirth, ?Location $location = null, $isAdmin = false)
+    function getReport($year, ?Location $location = null, $isAdmin = false)
     {
         try {
-            if (!ctype_digit($yearOfBirth) && !is_int($yearOfBirth)) {
+            if (!ctype_digit($year) && !is_int($year)) {
                 return ResultUtil::errorResult("Year is not an integer", Response::HTTP_BAD_REQUEST);
             }
 
-            $yearOfBirthAsInt = intval($yearOfBirth);
+            $yearAsInt = intval($year);
 
-            $this->filename = $this->getAnimalTreatmentsPerYearOfBirthFileName($yearOfBirth, $isAdmin);
+            $this->filename = $this->getAnimalTreatmentsPerYearFileName($location, $year, $isAdmin);
             $this->extension = FileType::CSV;
 
-            $csvData = $this->getCSVData($yearOfBirthAsInt, $location);
+            $csvData = $this->getCSVData($yearAsInt, $location);
 
             $response = $this->generateFile($this->filename,
                 $csvData,self::TITLE,FileType::CSV,!$this->outputReportsToCacheFolderForLocalTesting
@@ -52,28 +52,32 @@ class AnimalTreatmentsPerYearOfBirthReportService extends ReportServiceBase
     }
 
     /**
+     * @param Location|null $location
      * @param $year
      * @param bool $admin
      * @return string
-     * @throws Exception
      */
-    private function getAnimalTreatmentsPerYearOfBirthFileName($year, $admin = false): string {
-        $fileName = self::FILENAME.'_USER';
+    private function getAnimalTreatmentsPerYearFileName(?Location $location, $year, $admin = false): string {
+        $fileName = ReportUtil::translateFileName($this->translator, self::FILENAME);
+
         if ($admin) {
-            $fileName = self::FILENAME.'_ADMIN';
+            $fileName .= '_admin';
+        } else {
+            $locationUBN = $location ? '_'.$location->getUbn() : '';
+            $fileName .= $locationUBN;
         }
 
-        return ReportUtil::translateFileName($this->translator, $fileName).'_'.$year;
+        return $fileName.'_'.$year;
     }
 
     /**
-     * @param $yearOfBirth
+     * @param $year
      * @param Location|null $location
      * @return array
      * @throws DBALException
      * @throws Exception
      */
-    private function getCSVData($yearOfBirth, ?Location $location)
+    private function getCSVData($year, ?Location $location)
     {
         $locationId = $location ? $location->getId() : null;
         $locationUBN = $location ? $location->getUbn() : null;
@@ -81,7 +85,7 @@ class AnimalTreatmentsPerYearOfBirthReportService extends ReportServiceBase
 
         $mainFilter =
             "WHERE
-            date_part('year', t.start_date) = $yearOfBirth -- Year filter (for user and admin)
+            date_part('year', t.start_date) = $year -- Year filter (for user and admin)
             $locationFilter
         ";
 

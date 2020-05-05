@@ -486,7 +486,7 @@ class ReportAPIController extends APIController {
 
 
     /**
-     * Generate animal treatments per year of birth report.
+     * Generate animal treatments per year report.
      *
      * @ApiDoc(
      *   section = "Reports",
@@ -515,16 +515,16 @@ class ReportAPIController extends APIController {
      *     }
      *   },
      *   resource = true,
-     *   description = "Generate animal features per year of birth report"
+     *   description = "Generate animal treatments per year report"
      * )
      * @param Request $request the request object
      * @return JsonResponse
-     * @Route("/animal-treatments-per-year-of-birth")
+     * @Route("/animal-treatments-per-year")
      * @Method("GET")
      */
-    public function getAnimalTreatmentsPerYearOfBirthReport(Request $request)
+    public function getAnimalTreatmentsPerYearReport(Request $request)
     {
-        return $this->get(ReportService::class)->createAnimalTreatmentsPerYearOfBirthReport($request);
+        return $this->get(ReportService::class)->createAnimalTreatmentsPerYearReport($request);
     }
 
     /**

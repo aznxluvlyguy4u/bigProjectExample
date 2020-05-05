@@ -27,7 +27,7 @@ use AppBundle\Exception\InvalidBreedCodeHttpException;
 use AppBundle\Exception\InvalidPedigreeRegisterAbbreviationHttpException;
 use AppBundle\Service\InbreedingCoefficient\InbreedingCoefficientReportUpdaterService;
 use AppBundle\Service\Report\AnimalFeaturesPerYearOfBirthReportService;
-use AppBundle\Service\Report\AnimalTreatmentsPerYearOfBirthReportService;
+use AppBundle\Service\Report\AnimalTreatmentsPerYearReportService;
 use AppBundle\Service\Report\BirthListReportService;
 use AppBundle\Service\Report\EweCardReportService;
 use AppBundle\Service\Report\ClientNotesOverviewReportService;
@@ -136,8 +136,8 @@ class ReportService
     /** @var AnimalFeaturesPerYearOfBirthReportService */
     private $animalFeaturesPerYearOfBirthReportService;
 
-    /** @var AnimalTreatmentsPerYearOfBirthReportService */
-    private $animalTreatmentsPerYearOfBirthReportService;
+    /** @var AnimalTreatmentsPerYearReportService */
+    private $animalTreatmentsPerYearReportService;
 
     /** @var InbreedingCoefficientReportUpdaterService */
     private $inbreedingCoefficientReportUpdaterService;
@@ -166,7 +166,7 @@ class ReportService
      * @param PopRepInputFileService $popRepInputFileService
      * @param FertilizerAccountingReport $fertilizerAccountingReport
      * @param AnimalFeaturesPerYearOfBirthReportService $animalFeaturesPerYearOfBirthReportService
-     * @param AnimalTreatmentsPerYearOfBirthReportService $animalTreatmentsPerYearOfBirthReportService
+     * @param AnimalTreatmentsPerYearReportService $animalTreatmentsPerYearReportService
      * @param InbreedingCoefficientReportUpdaterService $inbreedingCoefficientReportUpdaterService
      * @param string $environment
      */
@@ -190,7 +190,7 @@ class ReportService
         PopRepInputFileService $popRepInputFileService,
         FertilizerAccountingReport $fertilizerAccountingReport,
         AnimalFeaturesPerYearOfBirthReportService $animalFeaturesPerYearOfBirthReportService,
-        AnimalTreatmentsPerYearOfBirthReportService $animalTreatmentsPerYearOfBirthReportService,
+        AnimalTreatmentsPerYearReportService $animalTreatmentsPerYearReportService,
         InbreedingCoefficientReportUpdaterService $inbreedingCoefficientReportUpdaterService,
         string $environment
     )
@@ -214,7 +214,7 @@ class ReportService
         $this->popRepInputFileService = $popRepInputFileService;
         $this->fertilizerAccountingReport = $fertilizerAccountingReport;
         $this->animalFeaturesPerYearOfBirthReportService = $animalFeaturesPerYearOfBirthReportService;
-        $this->animalTreatmentsPerYearOfBirthReportService = $animalTreatmentsPerYearOfBirthReportService;
+        $this->animalTreatmentsPerYearReportService = $animalTreatmentsPerYearReportService;
         $this->inbreedingCoefficientReportUpdaterService = $inbreedingCoefficientReportUpdaterService;
         $this->environment = $environment;
     }
@@ -569,7 +569,7 @@ class ReportService
      * @return JsonResponse
      * @throws \Exception
      */
-    public function createAnimalTreatmentsPerYearOfBirthReport(Request $request)
+    public function createAnimalTreatmentsPerYearReport(Request $request)
     {
         /** @var Location $location */
         $location = null;
@@ -583,28 +583,28 @@ class ReportService
             $isAdmin = false;
         }
 
-        $yearOfBirth = RequestUtil::getIntegerQuery($request,QueryParameter::YEAR_OF_BIRTH, null);
+        $year = RequestUtil::getIntegerQuery($request,QueryParameter::YEAR, null);
 
-        if (!$yearOfBirth) {
-            return ResultUtil::errorResult('Invalid year of birth', Response::HTTP_PRECONDITION_REQUIRED);
+        if (!$year) {
+            return ResultUtil::errorResult('Invalid year', Response::HTTP_PRECONDITION_REQUIRED);
         }
 
         $ubn = is_null($location) ? "" : $location->getUbn();
-        $inputForHash = $yearOfBirth . $ubn;
+        $inputForHash = $year . $ubn;
 
         $processAsWorkerTask = RequestUtil::getBooleanQuery($request,QueryParameter::PROCESS_AS_WORKER_TASK,true);
 
         if ($processAsWorkerTask) {
             return $this->processReportAsWorkerTask(
                 [
-                    'year_of_birth' => $yearOfBirth,
+                    'year' => $year,
                     'is_admin' => $isAdmin
                 ],
                 $request,ReportType::TREATMENTS, $inputForHash
             );
         }
 
-        return $this->animalTreatmentsPerYearOfBirthReportService->getReport($yearOfBirth, $location, $isAdmin);
+        return $this->animalTreatmentsPerYearReportService->getReport($year, $location, $isAdmin);
     }
 
     /**
