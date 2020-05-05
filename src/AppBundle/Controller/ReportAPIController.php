@@ -486,6 +486,48 @@ class ReportAPIController extends APIController {
 
 
     /**
+     * Generate animal treatments per year of birth report.
+     *
+     * @ApiDoc(
+     *   section = "Reports",
+     *   headers={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "required"=true,
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   parameters={
+     *     {
+     *        "name"="language",
+     *        "dataType"="string",
+     *        "required"=false,
+     *        "description"="Choose language option for column headers: en (english) or nl (dutch). nl is default",
+     *        "format"="?language=en"
+     *     },
+     *     {
+     *        "name"="concat_value_and_accuracy",
+     *        "dataType"="boolean",
+     *        "required"=false,
+     *        "description"="Choose if the value and accuracy breedValue numbers should be combined into one column. false is default",
+     *        "format"="?concat_value_and_accuracy=true"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Generate animal features per year of birth report"
+     * )
+     * @param Request $request the request object
+     * @return JsonResponse
+     * @Route("/animal-treatments-per-year-of-birth")
+     * @Method("GET")
+     */
+    public function getAnimalTreatmentsPerYearOfBirthReport(Request $request)
+    {
+        return $this->get(ReportService::class)->createAnimalTreatmentsPerYearOfBirthReport($request);
+    }
+
+    /**
      * Generate animal health status report.
      *
      * @ApiDoc(
