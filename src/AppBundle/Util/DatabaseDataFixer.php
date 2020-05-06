@@ -199,7 +199,7 @@ class DatabaseDataFixer
         $isEmpty = boolval($conn->query($sql)->fetch()['is_empty']);
         if($isEmpty) {
             $sql = "INSERT INTO ".strtolower($newTableName)." (id, object_type) VALUES ('".$id."', '".ucfirst(strtolower($newTableName))."')";
-            $conn->exec($sql);   
+            $conn->exec($sql);
         }
     }
 
@@ -354,7 +354,7 @@ class DatabaseDataFixer
         $iteration = 0;
 
         $output->writeln('Fixing breedCodes');
-        
+
         do {
             $iterationUpdateCount = self::fillMissingBreedCodesHavingBothParentBreedCodes($conn);
             $totalUpdateCount += $iterationUpdateCount;
@@ -814,7 +814,35 @@ class DatabaseDataFixer
                      r.country = r_pending.country
               WHERE r_not_pending.is_pending = FALSE AND r_pending.is_pending
             )
-"
+",
+            "Delete identical animal residences for which a new version already exists in the new location record" =>
+                "DELETE FROM animal_residence WHERE id IN (
+                    SELECT
+                --     r1.location_id,
+                --     r2.location_id,
+                --     l1.ubn,
+                --     l2.ubn,
+                --     l1.is_active,
+                --     l2.is_active,
+                --     r1.id,
+                --     r2.id,
+                CASE WHEN l2.is_active THEN
+                         r1.id
+                     ELSE
+                         r2.id
+                    END as residence_id_to_deactivate
+                    FROM animal_residence r1
+                             INNER JOIN animal_residence r2 ON
+                                r1.animal_id = r2.animal_id AND
+                                DATE(r1.start_date) = DATE(r2.start_date) AND
+                                r1.end_date ISNULL AND r2.end_date ISNULL AND
+                                r1.is_pending = FALSE AND r2.is_pending = FALSE AND
+                                r1.location_id <> r2.location_id AND
+                                r1.location_id < r2.location_id
+                             INNER JOIN location l1 ON l1.id = r1.location_id
+                             INNER JOIN location l2 ON l2.id = r2.location_id
+                    WHERE l1.ubn = l2.ubn AND l1.is_active <> l2.is_active
+                    )"
         ];
 
         $totalDeleteCount = 0;
