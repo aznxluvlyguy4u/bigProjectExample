@@ -503,10 +503,11 @@ class FertilizerAccountingReport extends ReportServiceBase
         return $result;
     }
 
-    private function isResidenceSelectResultByMonth(int $month): String {
+    private function isResidenceSelectResultByMonth(int $month, string $residenceAlias = 'r'): String {
+        $r = $residenceAlias;
         $referenceDateOfMonth = $this->referenceDateStringsByMonth[$month];
-        return "(start_date NOTNULL AND end_date NOTNULL) AND DATE(start_date) <= '$referenceDateOfMonth' AND DATE(end_date) >= '$referenceDateOfMonth' OR --closed residence
-        (start_date NOTNULL AND end_date ISNULL) AND DATE(start_date) <= '$referenceDateOfMonth' --open residence
+        return "($r.start_date NOTNULL AND $r.end_date NOTNULL) AND DATE($r.start_date) <= '$referenceDateOfMonth' AND DATE($r.end_date) >= '$referenceDateOfMonth' OR --closed residence
+        ($r.start_date NOTNULL AND $r.end_date ISNULL) AND DATE($r.start_date) <= '$referenceDateOfMonth' --open residence
         AND (a.date_of_death ISNULL OR a.date_of_death >= '$referenceDateOfMonth')
         AND (a.date_of_birth NOTNULL AND a.date_of_birth <= '$referenceDateOfMonth')
          as ".$this->residenceKey($month).SqlUtil::SELECT_ROW_SEPARATOR;
