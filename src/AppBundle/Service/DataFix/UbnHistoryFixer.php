@@ -4,13 +4,57 @@
 namespace AppBundle\Service\DataFix;
 
 
+use AppBundle\Entity\Employee;
+use AppBundle\Entity\Location;
 use AppBundle\Enumerator\EditTypeEnum;
+use AppBundle\Util\CommandUtil;
 use AppBundle\Util\DoctrineUtil;
 use AppBundle\Util\SqlUtil;
 
 class UbnHistoryFixer extends DuplicateFixerBase
 {
-    public function fixAnimalResidenceRecords() {
+
+    public function fixAllAnimalResidenceRecordsByCurrentAnimalLocation(): int
+    {
+        $this->removeDuplicateAnimalResidences();
+        $updateCount = $this->closeInvalidOpenResidencesByTodayDateForRemovedAnimals();
+        return $this->closeInvalidOpenResidencesByTodayDateForRelocatedAnimals() + $updateCount;
+    }
+
+
+    public function fixAnimalResidenceRecordsByCurrentAnimalLocationWithQuestion(CommandUtil $cmdUtil): int
+    {
+        do {
+            $locationId = $cmdUtil->questionForIntChoice(262,'location primary key');
+            /** @var Location $location */
+            $location = $this->em->getRepository(Location::class)->find($locationId);
+
+        } while (empty($location));
+
+        $this->logger->notice('UBN: '.$location->getUbn());
+
+        $updateCount = $this->fixAnimalResidenceRecordsByCurrentAnimalLocationOfLocationId($locationId);
+        $this->logger->notice('Update count '.$updateCount);
+        return $updateCount;
+    }
+
+
+    /**
+     * @param  int  $locationId
+     * @return int
+     */
+    public function fixAnimalResidenceRecordsByCurrentAnimalLocationOfLocationId(int $locationId): int
+    {
+        $this->removeDuplicateAnimalResidences();
+        $updateCount = $this->closeInvalidOpenResidencesByTodayDateForRemovedAnimals($locationId);
+        return $this->closeInvalidOpenResidencesByTodayDateForRelocatedAnimals($locationId) + $updateCount;
+    }
+
+
+    /**
+     * Only run this query if all relocations (arrivals, departs, imports, exports) are processed!
+     */
+    public function forceFixAnimalResidenceRecords() {
         $this->removeDuplicateAnimalResidences();
         // Always remove ALL duplicates first before closing the residences!
         $this->closeOpenResidencesWithMatchedYoungerResidence();
@@ -19,7 +63,8 @@ class UbnHistoryFixer extends DuplicateFixerBase
     }
 
     /**
-     * @return int
+     * A race condition between a retrieve animal sync and an declare arrival or declare import
+     * could result in duplicate animal residence records
      */
     private function removeDuplicateAnimalResidences()
     {
@@ -50,8 +95,6 @@ class UbnHistoryFixer extends DuplicateFixerBase
         $this->logger->info($countPrefix.' duplicate animal_residences deleted in total');
 
         if($totalDeleteCount > 0) { DoctrineUtil::updateTableSequence($this->conn, ['animal_residence']); }
-
-        return $totalDeleteCount;
     }
 
 
@@ -349,5 +392,135 @@ WHERE DATE(r.start_date) <= DATE(a.date_of_death)";
             $query,
             'Residences closed by matched date of death'
         );
+    }
+
+
+    /**
+     * Removed: current animal location_id isNull
+     *
+     * @param  int|null  $locationId
+     * @return int
+     */
+    private function closeInvalidOpenResidencesByTodayDateForRemovedAnimals(?int $locationId = null): int
+    {
+        $locationIdFilter = $locationId ? "AND r.location_id = $locationId " : '';
+        $sql = "SELECT
+                    r.id
+                FROM animal_residence r
+                         INNER JOIN animal a on r.animal_id = a.id
+                         INNER JOIN location lr on r.location_id = lr.id
+                WHERE r.is_pending = FALSE AND r.end_date ISNULL
+                  $locationIdFilter
+                  AND (a.location_id ISNULL OR a.is_alive = FALSE)";
+
+        return $this->closeInvalidOpenResidencesByTodayDateBase(
+            $sql,
+            EditTypeEnum::CLOSE_END_DATE_BY_CRON_FIX_REMOVED_ANIMAL,
+            'for removed animal'
+        );
+    }
+
+    /**
+     * Relocated: current animal location_id isNotNull
+     *
+     * @param  int|null  $locationId
+     * @return int
+     */
+    private function closeInvalidOpenResidencesByTodayDateForRelocatedAnimals(?int $locationId = null): int
+    {
+        $locationIdFilter = $locationId ? "AND r.location_id = $locationId " : '';
+        $sql = "SELECT
+                    r.id
+                FROM animal_residence r
+                         INNER JOIN animal a on r.animal_id = a.id
+                         INNER JOIN location l on a.location_id = l.id
+                         INNER JOIN location lr on r.location_id = lr.id
+                WHERE r.is_pending = FALSE AND r.end_date ISNULL
+                  $locationIdFilter
+                  AND a.location_id NOTNULL AND a.location_id <> r.location_id";
+
+        return $this->closeInvalidOpenResidencesByTodayDateBase(
+            $sql,
+            EditTypeEnum::CLOSE_END_DATE_BY_CRON_FIX_RELOCATED_ANIMAL,
+            'for relocated animal'
+        );
+    }
+
+
+    /**
+     * @param  string  $sqlSelectQueryBase
+     * @param  int  $endDateEditTypeEnum
+     * @param  string  $logMessageSuffix
+     * @return int
+     */
+    private function closeInvalidOpenResidencesByTodayDateBase(
+        string $sqlSelectQueryBase,
+        int $endDateEditTypeEnum,
+        string $logMessageSuffix = ''
+    ): int
+    {
+        $sqlSelectQuery = $sqlSelectQueryBase."
+                    AND NOT EXISTS(
+                    -- ARRIVAL FIRST, NO DEPART YET
+                
+                    -- NO newer animal residence should exist on a new location
+                    -- that is still pending and still needs the matching declare depart being processed
+                        SELECT
+                            *
+                        FROM declare_arrival arrival
+                                 INNER JOIN declare_base db on arrival.id = db.id
+                                 INNER JOIN animal_residence ar on arrival.animal_id = ar.animal_id
+                            AND DATE(ar.start_date) = DATE(arrival.arrival_date)
+                        WHERE db.request_state IN ('OPEN','FINISHED','FINISHED_WITH_WARNING')
+                          AND ar.is_pending
+                          AND EXISTS(
+                            -- The active location of the previous owner should exist in the NSFO database
+                            -- because then a matching declare depart could still be processed
+                                SELECT
+                                    *
+                                FROM declare_depart depart
+                                         INNER JOIN declare_base db on depart.id = db.id
+                                    AND DATE(ar.start_date) = DATE(depart.depart_date)
+                                    AND arrival.animal_id = depart.animal_id
+                                    AND db.request_state IN ('OPEN')
+                            )
+                          AND arrival.animal_id = r.animal_id AND arrival.location_id <> r.location_id
+                          AND arrival.arrival_date > r.start_date
+                    )
+                  AND NOT EXISTS(
+                    -- DEPART FIRST NO ARRIVAL YET still being processed
+                
+                        SELECT
+                            *
+                        FROM declare_depart depart
+                                 INNER JOIN declare_base db on depart.id = db.id
+                            AND r.animal_id = depart.animal_id
+                            AND r.location_id = depart.location_id
+                            AND db.request_state IN ('OPEN')
+                            AND DATE(r.start_date) <= DATE(depart.depart_date)
+                    )";
+
+        /** @var Employee $automatedProcess */
+        $automatedProcess = $this->em->getRepository(Employee::class)->getAutomatedProcess();
+        $automatedProcessId = $automatedProcess->getId();
+
+        $updateQuery = "UPDATE animal_residence 
+                        SET end_date = NOW(),
+                            end_date_edited_by = $automatedProcessId,
+                            end_date_edit_type = $endDateEditTypeEnum
+                        WHERE EXISTS (
+                                $sqlSelectQuery
+                                AND r.id = animal_residence.id
+                            )";
+
+        $updateCount = SqlUtil::updateWithCount($this->conn, $updateQuery);
+
+        if (empty($updateCount)) {
+            $this->logger->info('No ubn history records are updated ' . $logMessageSuffix);
+        } else {
+            $this->logger->notice($updateCount . ' ubn history records are updated ' . $logMessageSuffix);
+        }
+
+        return $updateCount;
     }
 }

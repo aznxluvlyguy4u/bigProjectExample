@@ -116,7 +116,7 @@ class FertilizerAccountingReport extends ReportServiceBase
             $this->setFileAndFolderNames();
 
             /** Do this before running the report query */
-            $this->ubnHistoryFixer->fixAnimalResidenceRecords();
+            $this->ubnHistoryFixer->fixAnimalResidenceRecordsByCurrentAnimalLocationOfLocationId($location->getId());
 
             $sql = $this->query();
             $data = $this->em->getConnection()->query($sql)->fetch();

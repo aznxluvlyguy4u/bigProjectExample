@@ -57,7 +57,7 @@ class CompanyRegisterReportService extends ReportServiceBase
         $this->location = $location;
 
         /** Do this before running the report query */
-        $this->ubnHistoryFixer->fixAnimalResidenceRecords();
+        $this->ubnHistoryFixer->fixAnimalResidenceRecordsByCurrentAnimalLocationOfLocationId($location->getId());
 
         if ($options->getFileType() === FileType::CSV) {
             return $this->generateCsvFileBySqlQuery(
