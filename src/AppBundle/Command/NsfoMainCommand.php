@@ -32,6 +32,7 @@ use AppBundle\Service\BreedValuePrinter;
 use AppBundle\Service\BreedValueService;
 use AppBundle\Service\CacheService;
 use AppBundle\Service\DataFix\DuplicateMeasurementsFixer;
+use AppBundle\Service\DataFix\UbnHistoryFixer;
 use AppBundle\Service\ExcelService;
 use AppBundle\Service\InbreedingCoefficient\InbreedingCoefficientAllAnimalsUpdaterService;
 use AppBundle\Service\InbreedingCoefficient\InbreedingCoefficientParentPairsUpdaterService;
@@ -664,7 +665,7 @@ class NsfoMainCommand extends ContainerAwareCommand
             case 30: DatabaseDataFixer::removeAnimalsFromLocationAndAnimalResidence($this->conn, $this->cmdUtil); break;
             case 31: DatabaseDataFixer::killResurrectedDeadAnimalsAlreadyHavingFinishedLastDeclareLoss($this->conn, $this->cmdUtil); break;
             case 32: DatabaseDataFixer::killAliveAnimalsWithADateOfDeath($this->conn, $this->cmdUtil); break;
-            case 33: DatabaseDataFixer::fixAnimalResidenceRecords($this->conn, $this->getLogger()); break;
+            case 33: $this->getContainer()->get(UbnHistoryFixer::class)->fixAnimalResidenceRecords(); break;
 
             case 50: DatabaseDataFixer::fillBlankMessageNumbersForErrorMessagesWithErrorCodeIDR00015($this->conn, $this->cmdUtil); break;
 

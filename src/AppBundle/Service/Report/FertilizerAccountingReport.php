@@ -11,6 +11,7 @@ use AppBundle\Entity\Location;
 use AppBundle\Enumerator\FertilizerCategory;
 use AppBundle\Enumerator\FileType;
 use AppBundle\Enumerator\GenderType;
+use AppBundle\Service\DataFix\UbnHistoryFixer;
 use AppBundle\Util\DateUtil;
 use AppBundle\Util\DsvWriterUtil;
 use AppBundle\Util\FilesystemUtil;
@@ -71,6 +72,9 @@ class FertilizerAccountingReport extends ReportServiceBase
 
     const TWIG_FILE = 'Report/fertilizer_accounting_report.html.twig';
 
+    /** @var UbnHistoryFixer */
+    private $ubnHistoryFixer;
+
     /** @var Location $location */
     private $location;
 
@@ -81,6 +85,18 @@ class FertilizerAccountingReport extends ReportServiceBase
 
     /** @var array */
     private $referenceDateStringsByMonth = [];
+
+
+    /**
+     * @required
+     *
+     * @param  UbnHistoryFixer  $ubnHistoryFixer
+     */
+    public function setUbnHistoryFixer(UbnHistoryFixer $ubnHistoryFixer)
+    {
+        $this->ubnHistoryFixer = $ubnHistoryFixer;
+    }
+
 
     public function validateReferenceDate(\DateTime $referenceDate) {
         ReportUtil::validateDateIsNotOlderThanOldestAutomatedSync($referenceDate, TranslationKey::REFERENCE_DATE, $this->translator);
@@ -100,7 +116,7 @@ class FertilizerAccountingReport extends ReportServiceBase
             $this->setFileAndFolderNames();
 
             /** Do this before running the report query */
-            $this->fixAnimalResidenceRecords();
+            $this->ubnHistoryFixer->fixAnimalResidenceRecords();
 
             $sql = $this->query();
             $data = $this->em->getConnection()->query($sql)->fetch();

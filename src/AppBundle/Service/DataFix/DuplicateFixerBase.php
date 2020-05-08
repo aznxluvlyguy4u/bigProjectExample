@@ -45,6 +45,7 @@ class DuplicateFixerBase
     /**
      * DuplicateAnimalsFixer constructor.
      * @param ObjectManager $em
+     * @param Logger $logger
      */
     public function __construct(ObjectManager $em, Logger $logger)
     {
