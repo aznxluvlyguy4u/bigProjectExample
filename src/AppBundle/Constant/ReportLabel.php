@@ -81,6 +81,7 @@ class ReportLabel
     const PEDIGREE = 'pedigree';
     const LAST_MATE = 'lastMate';
     const NAME = 'name';
+    const COLLAR = 'collar';
     const COUNTRY_OF_BIRTH = 'countryOfBirth';
     const DATE_OF_BIRTH = 'dateOfBirth';
     const LITTER_SIZE = 'litterSize'; //litter animal was born in

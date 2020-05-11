@@ -6,26 +6,29 @@
 
 <h2>Inteeltcoëfficiënt van nageslacht na paring</h2>
 
+{% set hasRamsCollar = variables.hasRamsCollar %}
+
 <table class="rams-table">
     <tr>
         <th class="rams-table-zv4k">Ram</th>
         <th class="rams-table-zv4m">ULN</th>
         <th class="rams-table-zv4m">STN</th>
-        <th class="rams-table-zv4m">Halsnummer</th>
+    {% if hasRamsCollar %}
+        <th class="rams-table-zv4m"></th>
+    {% endif %}
     </tr>
+
     {% for key,value in variables.rams %}
 
         {% set ram = value %}
-        {% set ramOrdinal = ram.ordinal %}
-        {% set ramUln = ram.uln %}
-        {% set ramPedigree = ram.pedigree %}
-        {% set ramCollar = ram.collar %}
 
         <tr>
-            <td class="rams-table-zv4k">{{ ramOrdinal }}</td>
-            <td class="rams-table-zv4m">{{ ramUln }}</td>
-            <td class="rams-table-zv4m">{{ ramPedigree }}</td>
-            <td class="rams-table-zv4m">{{ ramCollar }}</td>
+            <td class="rams-table-zv4k">{{ ram.ordinal }}</td>
+            <td class="rams-table-zv4m">{{ ram.uln }}</td>
+            <td class="rams-table-zv4m">{{ ram.pedigree }}</td>
+            {% if hasRamsCollar %}
+                <td class="rams-table-zv4m">{{ ram.collar }}</td>
+            {% endif %}
         </tr>
 
     {% endfor %}

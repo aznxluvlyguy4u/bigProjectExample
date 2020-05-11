@@ -70,9 +70,13 @@ class InbreedingCoefficientReportData extends ReportBase
         $this->generateRamsIdValues($this->ramsData);
 
         $parentIds = [];
+        $this->data['hasRamsCollar'] = false;
         foreach ($this->ramsData as $ramData) {
             $ramId = $ramData['id'];
             $parentIds[$ramId] = $ramId;
+            if (!empty(ArrayUtil::get(ReportLabel::COLLAR, $ramData))) {
+                $this->data['hasRamsCollar'] = true;
+            }
         }
         foreach ($this->ewesData as $eweData) {
             $eweId = $eweData['id'];
