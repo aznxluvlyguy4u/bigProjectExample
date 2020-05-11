@@ -619,7 +619,7 @@ class ReportAPIController extends APIController {
      * @param Request $request the request object
      * @return JsonResponse
      * @Route("/fertilizer-accounting")
-     * @Method("GET")
+     * @Method("POST")
      */
     public function getFertilizerAccountingReport(Request $request)
     {
