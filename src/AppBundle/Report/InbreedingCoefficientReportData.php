@@ -138,7 +138,9 @@ class InbreedingCoefficientReportData extends ReportBase
             foreach ($eweData[ReportLabel::INBREEDING_COEFFICIENT] as $ordinal => $inbreedingCoefficient) {
                 $csvRow[$ramKey.$ordinal.'_'.$ulnKey] = $ramsData[$ordinal][ReportLabel::ULN];
                 $csvRow[$ramKey.$ordinal.'_'.$stnKey] = ArrayUtil::get(ReportLabel::PEDIGREE, $ramsData[$ordinal], $nullReplacement);
-                $csvRow[$inbreedingCoefficientKey.$ordinal] = $inbreedingCoefficient;
+                $csvRow[$inbreedingCoefficientKey.$ordinal] = InbreedingCoefficientReportService::parseInbreedingCoefficientValueForDisplay(
+                    $inbreedingCoefficient
+                );
             }
 
             $csvOutput[] = $csvRow;
