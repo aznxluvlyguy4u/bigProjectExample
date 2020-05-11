@@ -122,28 +122,22 @@ class InbreedingCoefficientReportData extends ReportBase
             strtr($this->translator->trans(strtoupper(ReportLabel::INBREEDING_COEFFICIENT)),
                 ['Ë' => 'E', ' ' => '_'])
         );
-        $ramOrdinalKey = $ramKey.'#';
 
-        foreach (ArrayUtil::get(ReportLabel::RAMS, $this->data) as $ordinal => $ramData) {
+        $ramsData = ArrayUtil::get(ReportLabel::RAMS, $this->data);
 
-            $ramUln = ArrayUtil::get(ReportLabel::ULN, $ramData, $nullReplacement);
-            $ramStn = ArrayUtil::get(ReportLabel::PEDIGREE, $ramData, $nullReplacement);
+        foreach (ArrayUtil::get(ReportLabel::EWES, $this->data, []) as $eweUln => $eweData) {
+            $csvRow = [
+                $eweKey.'_'.$ulnKey => $eweUln,
+                $eweKey.'_'.$stnKey => ArrayUtil::get(ReportLabel::PEDIGREE, $eweData, $nullReplacement),
+            ];
 
-            foreach (ArrayUtil::get(ReportLabel::EWES, $this->data, []) as $eweUln => $eweData) {
-                $eweStn = ArrayUtil::get(ReportLabel::PEDIGREE, $eweData, $nullReplacement);
-                $inbreedingCoefficient = InbreedingCoefficientReportService::parseInbreedingCoefficientValueForDisplay(
-                    $this->getInbreedingCoefficient($ramData['id'], $eweData['id'])
-                );
-
-                $csvOutput[] = [
-                    $ramOrdinalKey => $ordinal,
-                    $ramKey.'_'.$ulnKey => $ramUln,
-                    $ramKey.'_'.$stnKey => $ramStn,
-                    $eweKey.'_'.$ulnKey => $eweUln,
-                    $eweKey.'_'.$stnKey => $eweStn,
-                    $inbreedingCoefficientKey => $inbreedingCoefficient,
-                ];
+            foreach ($eweData[ReportLabel::INBREEDING_COEFFICIENT] as $ordinal => $inbreedingCoefficient) {
+                $csvRow[$ramKey.$ordinal.'_'.$ulnKey] = $ramsData[$ordinal][ReportLabel::ULN];
+                $csvRow[$ramKey.$ordinal.'_'.$stnKey] = ArrayUtil::get(ReportLabel::PEDIGREE, $ramsData[$ordinal], $nullReplacement);
+                $csvRow[$inbreedingCoefficientKey.$ordinal] = $inbreedingCoefficient;
             }
+
+            $csvOutput[] = $csvRow;
         }
 
         return $csvOutput;
