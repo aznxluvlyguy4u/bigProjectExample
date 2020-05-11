@@ -11,6 +11,7 @@
         <th class="rams-table-zv4k">Ram</th>
         <th class="rams-table-zv4m">ULN</th>
         <th class="rams-table-zv4m">STN</th>
+        <th class="rams-table-zv4m">Halsnummer</th>
     </tr>
     {% for key,value in variables.rams %}
 
@@ -18,11 +19,13 @@
         {% set ramOrdinal = ram.ordinal %}
         {% set ramUln = ram.uln %}
         {% set ramPedigree = ram.pedigree %}
+        {% set ramCollar = ram.collar %}
 
         <tr>
             <td class="rams-table-zv4k">{{ ramOrdinal }}</td>
             <td class="rams-table-zv4m">{{ ramUln }}</td>
             <td class="rams-table-zv4m">{{ ramPedigree }}</td>
+            <td class="rams-table-zv4m">{{ ramCollar }}</td>
         </tr>
 
     {% endfor %}

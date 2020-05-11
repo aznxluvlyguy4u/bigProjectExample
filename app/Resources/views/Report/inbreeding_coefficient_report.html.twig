@@ -43,6 +43,12 @@
             {% set ewePedigree = '' %}
         {% endif %}
 
+        {% if ewe['collar'] is defined %}
+            {% set eweCollar = ewe.collar %}
+        {% else %}
+            {% set eweCollar = '' %}
+        {% endif %}
+
         {% if ewe['inbreedingCoefficient'] is defined %}
             {% set eweInbreedingCoefficient1 = ewe.inbreedingCoefficient.1 * 100 %}
             {% set eweInbreedingCoefficient1color = ewe.color.1 %}
@@ -78,6 +84,7 @@
             <tr>
                 <td class="tg-yw4l">Ooi ULN</td>
                 <td class="tg-yw4l">Ooi STN</td>
+                <td class="tg-yw4l">Halsnummer</td>
                 <td class="tg-lqy6">Ram 1</td>
                 {% if hasRam2 %}
                     <td class="tg-lqy6">Ram 2</td>
@@ -99,7 +106,8 @@
             <tr>
                 <td class="tg-yw4l">{{ uln }}</td>
                 <td class="tg-yw4l">{{ ewePedigree }}</td>
-                
+                <td class="tg-yw4l">{{ eweCollar }}</td>
+
                 {% if eweInbreedingCoefficient1color == 'GREEN' %}
                     {% if colorCells %}
                         <td class="tg-lqy6-values green-cell">

@@ -324,6 +324,7 @@ class InbreedingCoefficientReportService extends ReportServiceBase
                     a.uln_number,
                     a.pedigree_country_code,
                     a.pedigree_number,
+                    nullif(initcap(trim(concat(a.collar_color,' ',a.collar_number))),'') as collar,
                     a.type
                 FROM animal a
                 WHERE type = 'Ram' AND a.id IN ($idFilter)";
@@ -377,9 +378,16 @@ class InbreedingCoefficientReportService extends ReportServiceBase
 
     private static function getEwesBySqlBase(EntityManagerInterface $em, string $where): array
     {
-        $sql = "SELECT a.id, uln_country_code, uln_number, pedigree_country_code, pedigree_number, a.type
-FROM animal a
-    ".$where;
+        $sql = "SELECT 
+                   a.id,
+                   uln_country_code,
+                   uln_number,
+                   pedigree_country_code,
+                   pedigree_number,
+                   nullif(initcap(trim(concat(a.collar_color,' ',a.collar_number))),'') as collar,
+                   a.type
+                FROM animal a
+                    ".$where;
         return $em->getConnection()->query($sql)->fetchAll();
     }
 
