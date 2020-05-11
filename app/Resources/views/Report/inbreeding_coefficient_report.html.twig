@@ -106,7 +106,10 @@
 
             <tr>
                 <td class="ewe-table-col-default">{{ uln }}</td>
-                <td class="ewe-table-col-default">{{ ewePedigree }}</td>
+{#                <td class="ewe-table-col-default">{{ uln }}</td>#}
+                <td class="ewe-table-col-default">
+                    <div class="stn-text">{{ ewePedigree }}</div>
+                </td>
                 <td class="ewe-table-col-default">{{ eweCollar }}</td>
 
                 {% if eweInbreedingCoefficient1color == 'GREEN' %}
@@ -411,6 +414,11 @@
             vertical-align:top;
             color: black;
             overflow: hidden;
+            height: 4mm;
+        }
+
+        .stn-text{
+            max-height: 4mm;
         }
 
         .ic-values-col{
