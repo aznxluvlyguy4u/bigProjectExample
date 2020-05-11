@@ -46,4 +46,8 @@ class InbreedingCoefficientTaskReportRepository extends BaseRepository {
         $this->sqlDeleteById($this->tableName(), $taskId);
     }
 
+    function purgeQueue()
+    {
+        $this->clearTableBase($this->tableName());
+    }
 }
