@@ -7,6 +7,7 @@
     {% set counter = 0 %}
     {% set rowsPerPage = 31 %}
     {% set date = variables.date %}
+    {% set colorCells = variables.colorCells %}
     {% set ewesCount = variables.ewes|length %}
     {% set imagesDirectory = variables.imagesDirectory ~ '/nsfo-logo.png' %}
     {% set coefficientDecimalAccuracy = 1 %}
@@ -44,26 +45,26 @@
 
         {% if ewe['inbreedingCoefficient'] is defined %}
             {% set eweInbreedingCoefficient1 = ewe.inbreedingCoefficient.1 * 100 %}
-            {% set isEweInbreedingCoefficient1zero = ewe.isInbreedingCoefficientZero.1 %}
+            {% set eweInbreedingCoefficient1color = ewe.color.1 %}
 
             {% if hasRam2 %}
                 {% set eweInbreedingCoefficient2 = ewe.inbreedingCoefficient.2 * 100 %}
-                {% set isEweInbreedingCoefficient2zero = ewe.isInbreedingCoefficientZero.2 %}
+                {% set eweInbreedingCoefficient2color = ewe.color.2 %}
             {% endif %}
 
             {% if hasRam3 %}
                 {% set eweInbreedingCoefficient3 = ewe.inbreedingCoefficient.3 * 100 %}
-                {% set isEweInbreedingCoefficient3zero = ewe.isInbreedingCoefficientZero.3 %}
+                {% set eweInbreedingCoefficient3color = ewe.color.3 %}
             {% endif %}
 
             {% if hasRam4 %}
                 {% set eweInbreedingCoefficient4 = ewe.inbreedingCoefficient.4 * 100 %}
-                {% set isEweInbreedingCoefficient4zero = ewe.isInbreedingCoefficientZero.4 %}
+                {% set eweInbreedingCoefficient4color = ewe.color.4 %}
             {% endif %}
 
             {% if hasRam5 %}
                 {% set eweInbreedingCoefficient5 = ewe.inbreedingCoefficient.5 * 100 %}
-                {% set isEweInbreedingCoefficient5zero = ewe.isInbreedingCoefficientZero.5 %}
+                {% set eweInbreedingCoefficient5color = ewe.color.5 %}
             {% endif %}
 
         {% else %}
@@ -98,47 +99,168 @@
             <tr>
                 <td class="tg-yw4l">{{ uln }}</td>
                 <td class="tg-yw4l">{{ ewePedigree }}</td>
-                {% if isEweInbreedingCoefficient1zero %}
-                    <td class="tg-lqy6-values zero-values">
+                
+                {% if eweInbreedingCoefficient1color == 'GREEN' %}
+                    {% if colorCells %}
+                        <td class="tg-lqy6-values green-cell">
+                    {% else %}
+                        <td class="tg-lqy6-values">
+                    {% endif %}
+                    <div class="green-values">
+                {% elseif eweInbreedingCoefficient1color == 'ORANGE' %}
+                    {% if colorCells %}
+                        <td class="tg-lqy6-values orange-cell">
+                    {% else %}
+                        <td class="tg-lqy6-values">
+                    {% endif %}
+                    <div class="orange-values">
+                {% elseif eweInbreedingCoefficient1color == 'RED' %}
+                    {% if colorCells %}
+                        <td class="tg-lqy6-values red-cell">
+                    {% else %}
+                        <td class="tg-lqy6-values">
+                    {% endif %}
+                    <div class="red-values">
+                {% elseif eweInbreedingCoefficient1color == 'GREY' %}
+                <td class="tg-lqy6-values">
+                    <div class="grey-values">
                 {% else %}
-                    <td class="tg-lqy6-values">
+                <td class="tg-lqy6-values">
+                    <div>
                 {% endif %}
                     {{ eweInbreedingCoefficient1|number_format(coefficientDecimalAccuracy,'.',',') }}%
+                    </div>
                 </td>
                 {% if hasRam2 %}
-                {% if isEweInbreedingCoefficient2zero %}
-                    <td class="tg-lqy6-values zero-values">
-                {% else %}
-                    <td class="tg-lqy6-values">
-                {% endif %}
+                    {% if eweInbreedingCoefficient2color == 'GREEN' %}
+                        {% if colorCells %}
+                            <td class="tg-lqy6-values green-cell">
+                        {% else %}
+                            <td class="tg-lqy6-values">
+                        {% endif %}
+                        <div class="green-values">
+                    {% elseif eweInbreedingCoefficient2color == 'ORANGE' %}
+                        {% if colorCells %}
+                            <td class="tg-lqy6-values orange-cell">
+                        {% else %}
+                            <td class="tg-lqy6-values">
+                        {% endif %}
+                        <div class="orange-values">
+                    {% elseif eweInbreedingCoefficient2color == 'RED' %}
+                        {% if colorCells %}
+                            <td class="tg-lqy6-values red-cell">
+                        {% else %}
+                            <td class="tg-lqy6-values">
+                        {% endif %}
+                        <div class="red-values">
+                    {% elseif eweInbreedingCoefficient2color == 'GREY' %}
+                        <td class="tg-lqy6-values">
+                        <div class="grey-values">
+                    {% else %}
+                        <td class="tg-lqy6-values">
+                        <div>
+                    {% endif %}
                         {{ eweInbreedingCoefficient2|number_format(coefficientDecimalAccuracy,'.',',') }}%
+                        </div>
                     </td>
                 {% endif %}
                 {% if hasRam3 %}
-                    {% if isEweInbreedingCoefficient3zero %}
-                        <td class="tg-lqy6-values zero-values">
+                    {% if eweInbreedingCoefficient3color == 'GREEN' %}
+                        {% if colorCells %}
+                            <td class="tg-lqy6-values green-cell">
+                        {% else %}
+                            <td class="tg-lqy6-values">
+                        {% endif %}
+                        <div class="green-values">
+                    {% elseif eweInbreedingCoefficient3color == 'ORANGE' %}
+                        {% if colorCells %}
+                            <td class="tg-lqy6-values orange-cell">
+                        {% else %}
+                            <td class="tg-lqy6-values">
+                        {% endif %}
+                        <div class="orange-values">
+                    {% elseif eweInbreedingCoefficient3color == 'RED' %}
+                        {% if colorCells %}
+                            <td class="tg-lqy6-values red-cell">
+                        {% else %}
+                            <td class="tg-lqy6-values">
+                        {% endif %}
+                        <div class="red-values">
+                    {% elseif eweInbreedingCoefficient3color == 'GREY' %}
+                        <td class="tg-lqy6-values">
+                        <div class="grey-values">
                     {% else %}
                         <td class="tg-lqy6-values">
+                        <div>
                     {% endif %}
                         {{ eweInbreedingCoefficient3|number_format(coefficientDecimalAccuracy,'.',',') }}%
+                        </div>
                     </td>
                 {% endif %}
                 {% if hasRam4 %}
-                    {% if isEweInbreedingCoefficient4zero %}
-                        <td class="tg-lqy6-values zero-values">
+                    {% if eweInbreedingCoefficient4color == 'GREEN' %}
+                        {% if colorCells %}
+                            <td class="tg-lqy6-values green-cell">
+                        {% else %}
+                            <td class="tg-lqy6-values">
+                        {% endif %}
+                        <div class="green-values">
+                    {% elseif eweInbreedingCoefficient4color == 'ORANGE' %}
+                        {% if colorCells %}
+                            <td class="tg-lqy6-values orange-cell">
+                        {% else %}
+                            <td class="tg-lqy6-values">
+                        {% endif %}
+                        <div class="orange-values">
+                    {% elseif eweInbreedingCoefficient4color == 'RED' %}
+                        {% if colorCells %}
+                            <td class="tg-lqy6-values red-cell">
+                        {% else %}
+                            <td class="tg-lqy6-values">
+                        {% endif %}
+                        <div class="red-values">
+                    {% elseif eweInbreedingCoefficient4color == 'GREY' %}
+                        <td class="tg-lqy6-values">
+                        <div class="grey-values">
                     {% else %}
                         <td class="tg-lqy6-values">
+                        <div>
                     {% endif %}
                         {{ eweInbreedingCoefficient4|number_format(coefficientDecimalAccuracy,'.',',') }}%
+                        </div>
                     </td>
                 {% endif %}
                 {% if hasRam5 %}
-                    {% if isEweInbreedingCoefficient5zero %}
-                        <td class="tg-lqy6-values zero-values">
+                    {% if eweInbreedingCoefficient5color == 'GREEN' %}
+                        {% if colorCells %}
+                            <td class="tg-lqy6-values green-cell">
+                        {% else %}
+                            <td class="tg-lqy6-values">
+                        {% endif %}
+                        <div class="green-values">
+                    {% elseif eweInbreedingCoefficient5color == 'ORANGE' %}
+                        {% if colorCells %}
+                            <td class="tg-lqy6-values orange-cell">
+                        {% else %}
+                            <td class="tg-lqy6-values">
+                        {% endif %}
+                        <div class="orange-values">
+                    {% elseif eweInbreedingCoefficient5color == 'RED' %}
+                        {% if colorCells %}
+                            <td class="tg-lqy6-values red-cell">
+                        {% else %}
+                            <td class="tg-lqy6-values">
+                        {% endif %}
+                        <div class="red-values">
+                    {% elseif eweInbreedingCoefficient5color == 'GREY' %}
+                        <td class="tg-lqy6-values">
+                        <div class="grey-values">
                     {% else %}
                         <td class="tg-lqy6-values">
+                        <div>
                     {% endif %}
                         {{ eweInbreedingCoefficient5|number_format(coefficientDecimalAccuracy,'.',',') }}%
+                        </div>
                     </td>
                 {% endif %}
 
@@ -178,8 +300,17 @@
 {% block stylesheets %}
 
     <style type="text/css">
-        h2 { text-align: center; font-family:SansSerif, sans-serif;font-size:22px }
-        p { text-align: center; font-family:SansSerif, sans-serif;font-size:14px; margin-bottom: 18px}
+        h2 {
+            text-align: center;
+            font-family:SansSerif, sans-serif;
+            font-size:22px
+        }
+        p {
+            text-align: center;
+            font-family:SansSerif, sans-serif;
+            font-size:14px;
+            margin-bottom: 18px
+        }
 
         .nsfo-logo {
             margin-top: 1.0cm;
@@ -254,8 +385,25 @@
             vertical-align:top;
         }
 
-        .tg td{font-family:SansSerif, sans-serif;font-size:14px;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;}
-        .tg th{font-family:SansSerif, sans-serif;font-size:14px;font-weight:normal;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;}
+        .tg td{
+            font-family:SansSerif, sans-serif;
+            font-size:14px;
+            padding:10px 5px;
+            border-style:solid;
+            border-width:1px;
+            overflow:hidden;
+            word-break:normal;
+        }
+        .tg th{
+            font-family:SansSerif, sans-serif;
+            font-size:14px;
+            font-weight:normal;
+            padding:10px 5px;
+            border-style:solid;
+            border-width:1px;
+            overflow:hidden;
+            word-break:normal;
+        }
 
         .tg-lqy6{
             text-align:right;
@@ -266,13 +414,42 @@
             vertical-align:center;
         }
 
-        .zero-values{
+        .grey-values{
             color: #7D7D7D;
         }
 
-        .tg .tg-ddb2{font-family:serif !important;;text-align:center;vertical-align:top}
-        .tg .tg-yw4l{
+        .green-cell{
+            background-color: #d4fad4;
+        }
+
+        .green-values{
+            color: #005816;
+        }
+
+        .orange-cell{
+            background-color: #fde1d0;
+        }
+
+        .orange-values{
+            color: #a14b00;
+        }
+
+        .red-cell{
+            background-color: #ff9a9a;
+        }
+
+        .red-values{
+            color: #780000;
+        }
+
+        .tg .tg-ddb2{
+            font-family:serif !important;;
+            text-align:center;
             vertical-align:top
+        }
+        .tg .tg-yw4l{
+            vertical-align:top;
+            color: black;
         }
         @media screen and (max-width: 767px) {
             .tg {width: auto !important;}

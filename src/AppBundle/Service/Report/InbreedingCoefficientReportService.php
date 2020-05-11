@@ -15,6 +15,7 @@ use AppBundle\Entity\Person;
 use AppBundle\Entity\Ram;
 use AppBundle\Enumerator\FileType;
 use AppBundle\Enumerator\Locale;
+use AppBundle\Enumerator\ReportValueColor;
 use AppBundle\Exception\BadRequestHttpExceptionWithMultipleErrors;
 use AppBundle\model\report\InbreedingCoefficientInput;
 use AppBundle\model\ParentIdsPair;
@@ -527,10 +528,29 @@ FROM animal a
     }
 
 
-    public static function isInbreedingCoefficientEmptyForDisplay(?float $value)
+    public static function inbreedingCoefficientColor(?float $value): string
     {
-        return NumberUtil::isFloatZero(
-            floatval(self::parseInbreedingCoefficientValueForDisplay($value))
-        );
+        $orangePerMilleMinLimit = 10;
+        $redPerMilleMinLimit = 50;
+
+        if ($value === null) {
+            return ReportValueColor::GREY;
+        }
+
+        $perMilleValue = intval(round($value * 1000));
+
+        switch (true) {
+            case $perMilleValue < $orangePerMilleMinLimit;
+                $color = ReportValueColor::GREEN;
+                break;
+            case $perMilleValue < $redPerMilleMinLimit;
+                $color = ReportValueColor::ORANGE;
+                break;
+            default;
+                $color = ReportValueColor::RED;
+                break;
+        }
+
+        return $color;
     }
 }

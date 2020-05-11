@@ -53,6 +53,8 @@ class InbreedingCoefficientReportData extends ReportBase
         $this->data = [];
         $this->csvData = [];
 
+        $this->data[ReportLabel::COLOR_CELLS] = true;
+
         $this->data['date'] = TimeUtil::getTimeStampToday('d-m-Y');
 
         $this->ramsData = $ramsData;
@@ -223,12 +225,12 @@ class InbreedingCoefficientReportData extends ReportBase
                 $ramId = $ramData[JsonInputConstant::ID];
 
                 $inbreedingCoefficient = $this->getInbreedingCoefficient($ramId, $eweId);
-                $isInbreedingCoefficientEmpty = InbreedingCoefficientReportService::isInbreedingCoefficientEmptyForDisplay($inbreedingCoefficient);
+                $color = InbreedingCoefficientReportService::inbreedingCoefficientColor($inbreedingCoefficient);
 
                 $this->data[ReportLabel::EWES][$ulnString][ReportLabel::INBREEDING_COEFFICIENT][$ordinal] =
                     $inbreedingCoefficient;
-                $this->data[ReportLabel::EWES][$ulnString][ReportLabel::IS_INBREEDING_COEFFICIENT_ZERO][$ordinal] =
-                    $isInbreedingCoefficientEmpty;
+                $this->data[ReportLabel::EWES][$ulnString][ReportLabel::COLOR][$ordinal] =
+                    $color;
             }
         }
     }

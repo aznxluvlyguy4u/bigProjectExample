@@ -7,6 +7,8 @@ class ReportLabel
 {
     //General
     const COLUMN_HEADERS = 'columnHeaders';
+    const COLOR = 'color';
+    const COLOR_CELLS = 'colorCells';
     const ENTITY = 'entity';
     const IS_PROD_ENV = 'isProdEnv';
     const IS_EMPTY = 'isEmpty';
