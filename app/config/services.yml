@@ -525,7 +525,7 @@ services:
     AppBundle\Service\Report\FertilizerAccountingReport:
         parent: app.report.base
         calls:
-          - method: setBreedValuesOutput
+          - method: setUbnHistoryFixer
             arguments:
               - '@AppBundle\Service\DataFix\UbnHistoryFixer'
 
@@ -538,7 +538,7 @@ services:
     AppBundle\Service\Report\CompanyRegisterReportService:
         parent: app.report.base
         calls:
-          - method: setBreedValuesOutput
+          - method: setUbnHistoryFixer
             arguments:
               - '@AppBundle\Service\DataFix\UbnHistoryFixer'
 
