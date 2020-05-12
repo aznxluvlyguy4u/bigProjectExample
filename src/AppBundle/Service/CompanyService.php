@@ -14,6 +14,7 @@ use AppBundle\Entity\CompanyNote;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\LocationAddress;
 use AppBundle\Entity\PedigreeRegisterRegistration;
+use AppBundle\Entity\Tag;
 use AppBundle\Enumerator\AccessLevelType;
 use AppBundle\Enumerator\JmsGroup;
 use AppBundle\Filter\ActiveCompanyFilter;
@@ -34,6 +35,7 @@ use AppBundle\Validation\CompanyValidator;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Query;
 use Doctrine\ORM\QueryBuilder;
+use Exception;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
@@ -313,6 +315,7 @@ class CompanyService extends AuthServiceBase
      * @param Request $request
      * @param $companyId
      * @return JsonResponse
+     * @throws Exception
      */
     public function updateCompany(Request $request, $companyId)
     {
@@ -326,17 +329,15 @@ class CompanyService extends AuthServiceBase
         // TODO VALIDATE CONTENT
 
         // Get Company
+        /** @var Company $company */
         $company = $this->getManager()->getRepository(Company::class)->findOneByCompanyId($companyId);
-
-        /**
-         * @var Company $company
-         * @var Client $owner
-         */
 
         // Update Owner
         $contentOwner = $content->get('owner');
 
         $emailAddressOwner = $contentOwner['email_address'];
+
+        /** @var Client $owner */
         $owner = $this->getManager()->getRepository(Client::class)->findOneBy(array('emailAddress' => $emailAddressOwner, 'isActive' => true));
 
         if(isset($contentOwner['person_id'])) {
@@ -360,6 +361,7 @@ class CompanyService extends AuthServiceBase
             }
 
             $owner = $company->getOwner();
+            $tags = $owner->getTags();
             $owner->setIsActive(false);
             $this->getManager()->persist($owner);
             $this->getManager()->flush();
@@ -371,6 +373,18 @@ class CompanyService extends AuthServiceBase
             $owner->setObjectType('Client');
             $owner->setIsActive(true);
             $company->setOwner($owner);
+
+            // Change the owner of the tags
+            /** @var Tag $tag */
+            foreach ($tags as $tag) {
+                $tag->getId();
+                $owner->addTag($tag);
+                $tag->setOwner($owner);
+                $this->getManager()->persist($tag);
+            }
+
+            $this->getManager()->persist($owner);
+            $this->getManager()->flush();
         }
 
         // Update Address
