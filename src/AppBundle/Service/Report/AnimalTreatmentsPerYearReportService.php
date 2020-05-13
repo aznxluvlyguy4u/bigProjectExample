@@ -120,13 +120,10 @@ class AnimalTreatmentsPerYearReportService extends ReportServiceBase
 
         $treatments = [];
 
-        // get all treatment descriptions
+        // get all unique treatment descriptions
         foreach ($data as $item) {
-            $treatments[] = $item['treatment_description'];
+            $treatments[$item['treatment_description']] = $item['treatment_description'];
         }
-
-        // remove duplicates
-        $treatments = array_values(array_unique($treatments));
 
         // loop to set the result data and the default value for the treatment count
         foreach ($treatments as $treatment) {
