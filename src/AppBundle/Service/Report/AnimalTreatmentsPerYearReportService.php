@@ -8,9 +8,11 @@ use AppBundle\Entity\Location;
 use AppBundle\Enumerator\FileType;
 use AppBundle\Util\ReportUtil;
 use AppBundle\Util\ResultUtil;
+use DateTime;
 use Doctrine\DBAL\DBALException;
 use Exception;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Validator\Constraints\Date;
 
 class AnimalTreatmentsPerYearReportService extends ReportServiceBase
 {
@@ -92,7 +94,8 @@ class AnimalTreatmentsPerYearReportService extends ReportServiceBase
         $sql = "
             SELECT 
                 t.description AS treatment_description,
-                t.start_date AS latest_start_date,
+                MAX(t.start_date) AS latest_start_date,
+                t.start_date,
                 COUNT(t.id) AS treatment_count,
                 a.id,
                 a.gender,
@@ -144,37 +147,33 @@ class AnimalTreatmentsPerYearReportService extends ReportServiceBase
         // loop to set the result data and the default value for the treatment count
         foreach ($treatments as $treatment) {
             foreach ($data as $item) {
+                $latest_start_date = '-';
+                $start_date = '-';
+
+                if (!empty($item['latest_start_date'])) {
+                    $latest_start_date = new DateTime($item['latest_start_date']);
+                    $latest_start_date = $latest_start_date->format('d-m-Y');
+                }
+
+                if (!empty($item['start_date'])) {
+                    $start_date = new DateTime($item['start_date']);
+                    $start_date = $start_date->format('d-m-Y');
+                }
+
                 $animalId = $item['id'];
                 $result[$animalId]['id'] = $animalId;
                 $result[$animalId][ReportServiceBase::staticTranslateColumnHeader($this->translator, 'uln')] = $item['uln'];
                 $result[$animalId][ReportServiceBase::staticTranslateColumnHeader($this->translator, 'stn')] = $item['animal_stn'];
                 $result[$animalId][ReportServiceBase::staticTranslateColumnHeader($this->translator, 'date_of_birth')] = $item['date_of_birth'];
-                $result[$animalId][ReportServiceBase::staticTranslateColumnHeader($this->translator, 'n_ling')] =
-                    ($item['n_ling']) ? $item['n_ling'] : '-';
+                $result[$animalId][ReportServiceBase::staticTranslateColumnHeader($this->translator, 'n_ling')] = ($item['n_ling']) ? $item['n_ling'] : '-';
                 $result[$animalId][ReportServiceBase::staticTranslateColumnHeader($this->translator, 'gender')] = $item['gender'];
                 $result[$animalId][ReportServiceBase::staticTranslateColumnHeader($this->translator, 'breed_code')] = $item['breed_code'];
                 $result[$animalId][ReportServiceBase::staticTranslateColumnHeader($this->translator, 'pedigree_register')] = $item['pedigree_register'];
-                $result[$animalId][ReportServiceBase::staticTranslateColumnHeader($this->translator, 'stn_father')] = $item['stn_father'];
-                $result[$animalId][ReportServiceBase::staticTranslateColumnHeader($this->translator, 'stn_mother')] = $item['stn_mother'];
-
-                $filteredData = array_filter($data,
-                    function (array $item) use ($animalId, $treatment) {
-                        return $item['id'] === $animalId && $item['treatment_description'] === $treatment;
-                    }
-                );
-
-                $animalTreatmentItem = array_shift($filteredData);
-
-                $latestTreatmentDate = $animalTreatmentItem['latest_start_date'] ?? null;
-
-                $result[$animalId][ReportServiceBase::staticTranslateColumnHeader($this->translator, 'latest_treatment_date')] = $latestTreatmentDate;
-                $result[$animalId][$treatment.' (Aantal)'] = 0;
+                $result[$animalId][$this->translate('STN_FATHER', false)] = $item['stn_father'];
+                $result[$animalId][$this->translate('STN_MOTHER', false)] = $item['stn_mother'];
+                $result[$animalId][$treatment.' '.ReportServiceBase::staticTranslateColumnHeader($this->translator, 'treatment_date')] =
+                    ($item['treatment_count'] > 1) ? $latest_start_date.' ('.$this->translate('MOST_RECENT', false).')' : $start_date;
             }
-        }
-
-        // loop to set the treatment count for the found treatments
-        foreach ($data as $item) {
-            $result[$item['id']][$item['treatment_description'].' (Aantal)'] = $item['treatment_count'];
         }
 
         return $result;
