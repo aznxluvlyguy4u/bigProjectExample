@@ -11,6 +11,7 @@ use AppBundle\Entity\Location;
 use AppBundle\Entity\Person;
 use AppBundle\Enumerator\FileType;
 use AppBundle\Enumerator\RequestStateType;
+use AppBundle\Service\DataFix\UbnHistoryFixer;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\ReportUtil;
 use AppBundle\Util\SqlUtil;
@@ -25,6 +26,21 @@ class CompanyRegisterReportService extends ReportServiceBase
     const FILE_NAME_REPORT_TYPE = 'COMPANY_REGISTER';
 
     const DATE_RESULT_NULL_REPLACEMENT = "-";
+
+    /** @var UbnHistoryFixer */
+    private $ubnHistoryFixer;
+
+
+    /**
+     * @required
+     *
+     * @param  UbnHistoryFixer  $ubnHistoryFixer
+     */
+    public function setUbnHistoryFixer(UbnHistoryFixer $ubnHistoryFixer)
+    {
+        $this->ubnHistoryFixer = $ubnHistoryFixer;
+    }
+
 
     /**
      * @param Person $person
@@ -41,7 +57,7 @@ class CompanyRegisterReportService extends ReportServiceBase
         $this->location = $location;
 
         /** Do this before running the report query */
-        $this->fixAnimalResidenceRecords();
+        $this->ubnHistoryFixer->fixAnimalResidenceRecordsByCurrentAnimalLocationOfLocationId($location->getId());
 
         if ($options->getFileType() === FileType::CSV) {
             return $this->generateCsvFileBySqlQuery(

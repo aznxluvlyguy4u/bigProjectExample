@@ -53,6 +53,8 @@ class InbreedingCoefficientReportData extends ReportBase
         $this->data = [];
         $this->csvData = [];
 
+        $this->data[ReportLabel::COLOR_CELLS] = true;
+
         $this->data['date'] = TimeUtil::getTimeStampToday('d-m-Y');
 
         $this->ramsData = $ramsData;
@@ -68,9 +70,13 @@ class InbreedingCoefficientReportData extends ReportBase
         $this->generateRamsIdValues($this->ramsData);
 
         $parentIds = [];
+        $this->data['hasRamsCollar'] = false;
         foreach ($this->ramsData as $ramData) {
             $ramId = $ramData['id'];
             $parentIds[$ramId] = $ramId;
+            if (!empty(ArrayUtil::get(ReportLabel::COLLAR, $ramData))) {
+                $this->data['hasRamsCollar'] = true;
+            }
         }
         foreach ($this->ewesData as $eweData) {
             $eweId = $eweData['id'];
@@ -120,28 +126,24 @@ class InbreedingCoefficientReportData extends ReportBase
             strtr($this->translator->trans(strtoupper(ReportLabel::INBREEDING_COEFFICIENT)),
                 ['Ë' => 'E', ' ' => '_'])
         );
-        $ramOrdinalKey = $ramKey.'#';
 
-        foreach (ArrayUtil::get(ReportLabel::RAMS, $this->data) as $ordinal => $ramData) {
+        $ramsData = ArrayUtil::get(ReportLabel::RAMS, $this->data);
 
-            $ramUln = ArrayUtil::get(ReportLabel::ULN, $ramData, $nullReplacement);
-            $ramStn = ArrayUtil::get(ReportLabel::PEDIGREE, $ramData, $nullReplacement);
+        foreach (ArrayUtil::get(ReportLabel::EWES, $this->data, []) as $eweUln => $eweData) {
+            $csvRow = [
+                $eweKey.'_'.$ulnKey => $eweUln,
+                $eweKey.'_'.$stnKey => ArrayUtil::get(ReportLabel::PEDIGREE, $eweData, $nullReplacement),
+            ];
 
-            foreach (ArrayUtil::get(ReportLabel::EWES, $this->data, []) as $eweUln => $eweData) {
-                $eweStn = ArrayUtil::get(ReportLabel::PEDIGREE, $eweData, $nullReplacement);
-                $inbreedingCoefficient = InbreedingCoefficientReportService::parseInbreedingCoefficientValueForDisplay(
-                    $this->getInbreedingCoefficient($ramData['id'], $eweData['id'])
+            foreach ($eweData[ReportLabel::INBREEDING_COEFFICIENT] as $ordinal => $inbreedingCoefficient) {
+                $csvRow[$ramKey.$ordinal.'_'.$ulnKey] = $ramsData[$ordinal][ReportLabel::ULN];
+                $csvRow[$ramKey.$ordinal.'_'.$stnKey] = ArrayUtil::get(ReportLabel::PEDIGREE, $ramsData[$ordinal], $nullReplacement);
+                $csvRow[$inbreedingCoefficientKey.$ordinal] = InbreedingCoefficientReportService::parseInbreedingCoefficientValueForDisplay(
+                    $inbreedingCoefficient
                 );
-
-                $csvOutput[] = [
-                    $ramOrdinalKey => $ordinal,
-                    $ramKey.'_'.$ulnKey => $ramUln,
-                    $ramKey.'_'.$stnKey => $ramStn,
-                    $eweKey.'_'.$ulnKey => $eweUln,
-                    $eweKey.'_'.$stnKey => $eweStn,
-                    $inbreedingCoefficientKey => $inbreedingCoefficient,
-                ];
             }
+
+            $csvOutput[] = $csvRow;
         }
 
         return $csvOutput;
@@ -223,12 +225,12 @@ class InbreedingCoefficientReportData extends ReportBase
                 $ramId = $ramData[JsonInputConstant::ID];
 
                 $inbreedingCoefficient = $this->getInbreedingCoefficient($ramId, $eweId);
-                $isInbreedingCoefficientEmpty = InbreedingCoefficientReportService::isInbreedingCoefficientEmptyForDisplay($inbreedingCoefficient);
+                $color = InbreedingCoefficientReportService::inbreedingCoefficientColor($inbreedingCoefficient);
 
                 $this->data[ReportLabel::EWES][$ulnString][ReportLabel::INBREEDING_COEFFICIENT][$ordinal] =
                     $inbreedingCoefficient;
-                $this->data[ReportLabel::EWES][$ulnString][ReportLabel::IS_INBREEDING_COEFFICIENT_ZERO][$ordinal] =
-                    $isInbreedingCoefficientEmpty;
+                $this->data[ReportLabel::EWES][$ulnString][ReportLabel::COLOR][$ordinal] =
+                    $color;
             }
         }
     }

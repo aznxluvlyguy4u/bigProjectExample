@@ -7,6 +7,8 @@ class ReportLabel
 {
     //General
     const COLUMN_HEADERS = 'columnHeaders';
+    const COLOR = 'color';
+    const COLOR_CELLS = 'colorCells';
     const ENTITY = 'entity';
     const IS_PROD_ENV = 'isProdEnv';
     const IS_EMPTY = 'isEmpty';
@@ -79,6 +81,7 @@ class ReportLabel
     const PEDIGREE = 'pedigree';
     const LAST_MATE = 'lastMate';
     const NAME = 'name';
+    const COLLAR = 'collar';
     const COUNTRY_OF_BIRTH = 'countryOfBirth';
     const DATE_OF_BIRTH = 'dateOfBirth';
     const LITTER_SIZE = 'litterSize'; //litter animal was born in

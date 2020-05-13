@@ -13,7 +13,6 @@ use AppBundle\Service\CsvFromSqlResultsWriterService as CsvWriter;
 use AppBundle\Service\ExcelService;
 use AppBundle\Service\UserService;
 use AppBundle\Util\ArrayUtil;
-use AppBundle\Util\DatabaseDataFixer;
 use AppBundle\Util\FilesystemUtil;
 use AppBundle\Util\ResultUtil;
 use AppBundle\Util\SqlUtil;
@@ -152,10 +151,6 @@ class ReportServiceBase
         return $this->translator->trans($value, $parameters);
     }
 
-
-    protected function fixAnimalResidenceRecords() {
-        DatabaseDataFixer::fixAnimalResidenceRecords($this->conn, $this->logger);
-    }
 
     /**
      * @param string $value
