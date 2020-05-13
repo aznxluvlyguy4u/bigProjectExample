@@ -128,49 +128,37 @@ class AnimalTreatmentsPerYearReportService extends ReportServiceBase
         // remove duplicates
         $treatments = array_values(array_unique($treatments));
 
-        // loop to set result data and empty value for treatment count
-        foreach ($data as $item) {
+        // loop to set the result data and the default value for the treatment count
+        foreach ($treatments as $treatment) {
+            foreach ($data as $item) {
+                $animalId = $item['id'];
+                $result[$animalId]['id'] = $animalId;
+                $result[$animalId][ReportServiceBase::staticTranslateColumnHeader($this->translator, 'uln')] = $item['uln'];
+                $result[$animalId][ReportServiceBase::staticTranslateColumnHeader($this->translator, 'date_of_birth')] = $item['date_of_birth'];
+                $result[$animalId][ReportServiceBase::staticTranslateColumnHeader($this->translator, 'n_ling')] =
+                    ($item['n_ling']) ? $item['n_ling'] : '-';
+                $result[$animalId][ReportServiceBase::staticTranslateColumnHeader($this->translator, 'gender')] = $item['gender'];
+                $result[$animalId][ReportServiceBase::staticTranslateColumnHeader($this->translator, 'breed_code')] = $item['breed_code'];
+                $result[$animalId][ReportServiceBase::staticTranslateColumnHeader($this->translator, 'pedigree_register')] = $item['pedigree_register'];
 
-            $animalId = $item['id'];
-
-            // Elk dier hoef alleen 1x te worden gecheckt
-            if (key_exists($animalId, $result)) {
-                continue;
-            }
-
-            $result[$animalId]['id'] = $animalId;
-            $result[$animalId][ReportServiceBase::staticTranslateColumnHeader($this->translator, 'uln')] = $item['uln'];
-            $result[$animalId][ReportServiceBase::staticTranslateColumnHeader($this->translator, 'date_of_birth')] = $item['date_of_birth'];
-            $result[$animalId][ReportServiceBase::staticTranslateColumnHeader($this->translator, 'n_ling')] =
-                ($item['n_ling']) ? $item['n_ling'] : '-';
-            $result[$animalId][ReportServiceBase::staticTranslateColumnHeader($this->translator, 'gender')] = $item['gender'];
-            $result[$animalId][ReportServiceBase::staticTranslateColumnHeader($this->translator, 'breed_code')] = $item['breed_code'];
-            $result[$animalId][ReportServiceBase::staticTranslateColumnHeader($this->translator, 'pedigree_register')] = $item['pedigree_register'];
-            foreach ($treatments as $treatment) {
-                // Per dier moet welk een check worden gedaan voor alle behandelingen
-
-
-                // Voeg hier altijd alle treatments toe, met de laatste behandeldatum van het dier.
-                // Je moet die waarde dus opzoeken uit de $data.
-                // Als ze leeg zijn, dan moet de waarde null zijn, denk ik. Of een lege string als dat niet werkt.
-                // Je kunt het bijvoorbeeld zo doen.
-
-                // Voeg hier altijd alle treatments toe, met de laatste behandeldatum van het dier.
-                // Je moet die waarde dus opzoeken uit de $data.
                 $filteredData = array_filter($data,
                     function (array $item) use ($animalId, $treatment) {
                         return $item['id'] === $animalId && $item['treatment_description'] === $treatment;
-                    });
-                // https://www.php.net/manual/en/function.array-shift
-                // Haal de eerste item eruit.
+                    }
+                );
+
                 $animalTreatmentItem = array_shift($filteredData);
 
-                // Gebruik daarna de null coalescing operator om de waarde eruit te halen
-                // https://www.tutorialspoint.com/php7/php7_coalescing_operator.htm
                 $latestTreatmentDate = $animalTreatmentItem['latest_start_date'] ?? null;
 
                 $result[$animalId][ReportServiceBase::staticTranslateColumnHeader($this->translator, 'latest_treatment_date')] = $latestTreatmentDate;
+                $result[$animalId][$treatment.' (Aantal)'] = 0;
             }
+        }
+
+        // loop to set the treatment count for the found treatments
+        foreach ($data as $item) {
+            $result[$item['id']][$item['treatment_description'].' (Aantal)'] = $item['treatment_count'];
         }
 
         return $result;
