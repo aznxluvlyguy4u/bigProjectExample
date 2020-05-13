@@ -139,6 +139,8 @@ class AnimalTreatmentsPerYearReportService extends ReportServiceBase
             $treatments[$item['treatment_description']] = $item['treatment_description'];
         }
 
+        ksort($treatments);
+
         // loop to set the result data and the default value for the treatment count
         foreach ($treatments as $treatment) {
             foreach ($data as $item) {
