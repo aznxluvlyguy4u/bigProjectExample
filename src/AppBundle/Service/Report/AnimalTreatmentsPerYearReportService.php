@@ -96,17 +96,18 @@ class AnimalTreatmentsPerYearReportService extends ReportServiceBase
                 t.start_date AS latest_start_date,
                 COUNT(t.id) AS treatment_count,
                 a.gender,
-                a.n_ling,
+                va.n_ling,
                 CONCAT(a.uln_country_code, a.uln_number) AS uln,
                 a.date_of_birth,
                 a.breed_code,
                 p.abbreviation AS pedigree_register
             FROM animal a
+            INNER JOIN view_animal_livestock_overview_details va ON a.id = va.animal_id
             INNER JOIN treatment_animal ta ON a.id = ta.animal_id
             INNER JOIN treatment t ON ta.treatment_id = t.id
             INNER JOIN pedigree_register p ON a.pedigree_register_id = p.id
             ".$mainFilter."
-            GROUP BY t.description, t.start_date, a.id, p.abbreviation
+            GROUP BY t.description, t.start_date, a.id, p.abbreviation, va.n_ling
         ";
 
         $conn = $this->em->getConnection();
