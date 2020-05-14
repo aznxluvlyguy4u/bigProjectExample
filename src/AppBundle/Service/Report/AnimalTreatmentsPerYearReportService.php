@@ -95,7 +95,6 @@ class AnimalTreatmentsPerYearReportService extends ReportServiceBase
             SELECT 
                 t.description AS treatment_description,
                 MAX(t.start_date) AS latest_start_date,
-                t.start_date,
                 COUNT(t.id) AS treatment_count,
                 a.id,
                 a.gender,
@@ -139,40 +138,61 @@ class AnimalTreatmentsPerYearReportService extends ReportServiceBase
 
         // get all unique treatment descriptions
         foreach ($data as $item) {
-            $treatments[$item['treatment_description']] = $item['treatment_description'];
+            $treatments[$item['id']][] = [
+                'description' => $item['treatment_description'],
+                'latest_start_date'  => $item['latest_start_date']
+            ];
+//            ksort($treatments[$item['id']]);
         }
 
-        ksort($treatments);
-
         // loop to set the result data and the default value for the treatment count
-        foreach ($treatments as $treatment) {
+//        foreach ($treatments as $treatment) {
+
             foreach ($data as $item) {
-                $latest_start_date = '-';
-                $start_date = '-';
-
-                if (!empty($item['latest_start_date'])) {
-                    $latest_start_date = new DateTime($item['latest_start_date']);
-                    $latest_start_date = $latest_start_date->format('d-m-Y');
-                }
-
-                if (!empty($item['start_date'])) {
-                    $start_date = new DateTime($item['start_date']);
-                    $start_date = $start_date->format('d-m-Y');
-                }
-
                 $animalId = $item['id'];
+                $latest_start_date = '-';
+                $date_of_birth = '-';
+
+//                if (key_exists($animalId, $treatments)) {
+//                    var_dump($treatments[$animalId][$item['treatment_description']]);
+//                }
+
+//                if (!empty($treatment[$item['treatment_description']]['latest_start_date'])) {
+//                    $latest_start_date = date_create($treatment[$item['treatment_description']]['latest_start_date'])->format('d-m-Y');
+//                }
+
+                if (!empty($item['date_of_birth'])) {
+                    $date_of_birth = new DateTime($item['date_of_birth']);
+                    $date_of_birth = $date_of_birth->format('d-m-Y');
+                }
+
                 $result[$animalId]['id'] = $animalId;
                 $result[$animalId][ReportServiceBase::staticTranslateColumnHeader($this->translator, 'uln')] = $item['uln'];
                 $result[$animalId][ReportServiceBase::staticTranslateColumnHeader($this->translator, 'stn')] = $item['animal_stn'];
-                $result[$animalId][ReportServiceBase::staticTranslateColumnHeader($this->translator, 'date_of_birth')] = $item['date_of_birth'];
+                $result[$animalId][ReportServiceBase::staticTranslateColumnHeader($this->translator, 'date_of_birth')] = $date_of_birth;
                 $result[$animalId][ReportServiceBase::staticTranslateColumnHeader($this->translator, 'n_ling')] = ($item['n_ling']) ? $item['n_ling'] : '-';
-                $result[$animalId][ReportServiceBase::staticTranslateColumnHeader($this->translator, 'gender')] = $item['gender'];
+                $result[$animalId][ReportServiceBase::staticTranslateColumnHeader($this->translator, 'gender')] =
+                    $this->translate($item['gender'], false, true);
                 $result[$animalId][ReportServiceBase::staticTranslateColumnHeader($this->translator, 'breed_code')] = $item['breed_code'];
                 $result[$animalId][ReportServiceBase::staticTranslateColumnHeader($this->translator, 'pedigree_register')] = $item['pedigree_register'];
                 $result[$animalId][$this->translate('STN_FATHER', false)] = $item['stn_father'];
                 $result[$animalId][$this->translate('STN_MOTHER', false)] = $item['stn_mother'];
-                $result[$animalId][$treatment.' '.ReportServiceBase::staticTranslateColumnHeader($this->translator, 'treatment_date')] =
-                    ($item['treatment_count'] > 1) ? $latest_start_date.' ('.$this->translate('MOST_RECENT', false).')' : $start_date;
+
+                foreach ($treatments as $treatment) {
+                    foreach ($treatment as $subTreatment) {
+                        $result[$animalId][$subTreatment['description']. ' ('.$this->translate('MOST_RECENT_TREATMENT_DATE', false).')'] = '';
+                    }
+                }
+            }
+
+        foreach ($treatments as $key => $treatment) {
+            foreach ($treatment as $item) {
+                $latest_start_date = '';
+                if (!empty($item['latest_start_date'])) {
+                    $latest_start_date = date_create($item['latest_start_date'])->format('d-m-Y');
+                }
+
+                $result[$key][$item['description']. ' ('.$this->translate('MOST_RECENT_TREATMENT_DATE', false).')'] = $latest_start_date;
             }
         }
 
