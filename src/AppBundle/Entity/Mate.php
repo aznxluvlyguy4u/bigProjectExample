@@ -560,6 +560,13 @@ class Mate extends DeclareNsfoBase
         return $this;
     }
 
+    /**
+     * @return Mate
+     */
+    public function removeLitter() {
+        $this->litter = null;
+        return $this;
+    }
 
     /**
      * @param Mate $declareWeight

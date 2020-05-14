@@ -7,6 +7,7 @@ use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\Ewe;
+use AppBundle\Entity\Litter;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Mate;
 use AppBundle\Entity\Person;
@@ -14,6 +15,7 @@ use AppBundle\Entity\Ram;
 use AppBundle\Enumerator\RequestStateType;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
+use Exception;
 
 /**
  * Class MateBuilder
@@ -135,7 +137,6 @@ class MateBuilder extends NsfoBaseBuilder
         $mate->setApprovalDate(new \DateTime('now'));
         return $mate;
     }
-    
 
 
     /**
@@ -146,6 +147,7 @@ class MateBuilder extends NsfoBaseBuilder
      * @param Person $loggedInUser
      * @param Location $location
      * @return Mate
+     * @throws Exception
      */
     public static function edit(ObjectManager $manager, Mate $mate, ArrayCollection $content, Client $client, Person $loggedInUser, Location $location)
     {
@@ -157,6 +159,15 @@ class MateBuilder extends NsfoBaseBuilder
         //Edit current values
         $mate = self::postBase($client, $loggedInUser, $location, $mate);
         $mate = self::setMateValues($manager, $content, $location, $mate);
+
+        if (
+            $historicalMate->getStartDate() !== $mate->getStartDate() ||
+            $historicalMate->getEndDate() !== $mate->getEndDate()
+        ) {
+            $mate->getLitter()->removeMate();
+            $mate->removeLitter();
+        }
+
         $mate->setLogDate(new \DateTime('now'));
 
         //Set historical Mate
