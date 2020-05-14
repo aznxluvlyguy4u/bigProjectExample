@@ -27,6 +27,7 @@ use AppBundle\Exception\InvalidBreedCodeHttpException;
 use AppBundle\Exception\InvalidPedigreeRegisterAbbreviationHttpException;
 use AppBundle\Service\InbreedingCoefficient\InbreedingCoefficientReportUpdaterService;
 use AppBundle\Service\Report\AnimalFeaturesPerYearOfBirthReportService;
+use AppBundle\Service\Report\AnimalTreatmentsPerYearReportService;
 use AppBundle\Service\Report\BirthListReportService;
 use AppBundle\Service\Report\EweCardReportService;
 use AppBundle\Service\Report\ClientNotesOverviewReportService;
@@ -135,6 +136,9 @@ class ReportService
     /** @var AnimalFeaturesPerYearOfBirthReportService */
     private $animalFeaturesPerYearOfBirthReportService;
 
+    /** @var AnimalTreatmentsPerYearReportService */
+    private $animalTreatmentsPerYearReportService;
+
     /** @var InbreedingCoefficientReportUpdaterService */
     private $inbreedingCoefficientReportUpdaterService;
 
@@ -162,7 +166,9 @@ class ReportService
      * @param PopRepInputFileService $popRepInputFileService
      * @param FertilizerAccountingReport $fertilizerAccountingReport
      * @param AnimalFeaturesPerYearOfBirthReportService $animalFeaturesPerYearOfBirthReportService
+     * @param AnimalTreatmentsPerYearReportService $animalTreatmentsPerYearReportService
      * @param InbreedingCoefficientReportUpdaterService $inbreedingCoefficientReportUpdaterService
+     * @param string $environment
      */
     public function __construct(
         ProducerInterface $producer,
@@ -184,6 +190,7 @@ class ReportService
         PopRepInputFileService $popRepInputFileService,
         FertilizerAccountingReport $fertilizerAccountingReport,
         AnimalFeaturesPerYearOfBirthReportService $animalFeaturesPerYearOfBirthReportService,
+        AnimalTreatmentsPerYearReportService $animalTreatmentsPerYearReportService,
         InbreedingCoefficientReportUpdaterService $inbreedingCoefficientReportUpdaterService,
         string $environment
     )
@@ -207,6 +214,7 @@ class ReportService
         $this->popRepInputFileService = $popRepInputFileService;
         $this->fertilizerAccountingReport = $fertilizerAccountingReport;
         $this->animalFeaturesPerYearOfBirthReportService = $animalFeaturesPerYearOfBirthReportService;
+        $this->animalTreatmentsPerYearReportService = $animalTreatmentsPerYearReportService;
         $this->inbreedingCoefficientReportUpdaterService = $inbreedingCoefficientReportUpdaterService;
         $this->environment = $environment;
     }
@@ -554,6 +562,49 @@ class ReportService
         }
 
         return $this->animalFeaturesPerYearOfBirthReportService->getReport($concatValueAndAccuracy, $yearOfBirth, $location);
+    }
+
+    /**
+     * @param Request $request
+     * @return JsonResponse
+     * @throws \Exception
+     */
+    public function createAnimalTreatmentsPerYearReport(Request $request)
+    {
+        /** @var Location $location */
+        $location = null;
+
+        $isAdmin = true;
+
+        // not admin
+        if ($this->userService->isRequestFromUserFrontend($request)) {
+            $location = $this->userService->getSelectedLocation($request);
+            NullChecker::checkLocation($location);
+            $isAdmin = false;
+        }
+
+        $year = RequestUtil::getIntegerQuery($request,QueryParameter::YEAR, null);
+
+        if (!$year) {
+            return ResultUtil::errorResult('Invalid year', Response::HTTP_PRECONDITION_REQUIRED);
+        }
+
+        $ubn = is_null($location) ? "" : $location->getUbn();
+        $inputForHash = $year . $ubn;
+
+        $processAsWorkerTask = RequestUtil::getBooleanQuery($request,QueryParameter::PROCESS_AS_WORKER_TASK,true);
+
+        if ($processAsWorkerTask) {
+            return $this->processReportAsWorkerTask(
+                [
+                    'year' => $year,
+                    'is_admin' => $isAdmin
+                ],
+                $request,ReportType::TREATMENTS, $inputForHash
+            );
+        }
+
+        return $this->animalTreatmentsPerYearReportService->getReport($year, $location, $isAdmin);
     }
 
     /**
@@ -1067,6 +1118,7 @@ class ReportService
             }
 
             $messageBodyAsArray['worker_id'] = $workerId;
+
             $this->producer->sendCommand(WorkerAction::GENERATE_REPORT, $messageBodyAsArray);
         }
         catch(\Exception $e) {

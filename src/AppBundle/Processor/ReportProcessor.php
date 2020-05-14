@@ -13,6 +13,7 @@ use AppBundle\Service\BaseSerializer;
 use AppBundle\Service\Report\AnimalFeaturesPerYearOfBirthReportService;
 use AppBundle\Service\Report\AnimalHealthStatusesReportService;
 use AppBundle\Service\Report\AnimalsOverviewReportService;
+use AppBundle\Service\Report\AnimalTreatmentsPerYearReportService;
 use AppBundle\Service\Report\AnnualActiveLivestockRamMatesReportService;
 use AppBundle\Service\Report\AnnualActiveLivestockReportService;
 use AppBundle\Service\Report\AnnualTe100UbnProductionReportService;
@@ -129,6 +130,9 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
     /** @var AnimalFeaturesPerYearOfBirthReportService */
     private $animalFeaturesPerYearOfBirthService;
 
+    /**  @var AnimalTreatmentsPerYearReportService */
+    private $animalTreatmentsPerYearService;
+
     /** @var BaseSerializer */
     private $serializer;
 
@@ -140,6 +144,7 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
     /**
      * ReportProcessor constructor.
      * @param AnimalFeaturesPerYearOfBirthReportService $animalFeaturesPerYearOfBirthService
+     * @param AnimalTreatmentsPerYearReportService $animalTreatmentsPerYearService
      * @param EweCardReportService $eweCardReportService
      * @param PopRepInputFileService $popRepInputFileService
      * @param WeightsPerYearOfBirthReportService $weightsPerYearOfBirthReportService
@@ -164,6 +169,7 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
      */
     public function __construct(
         AnimalFeaturesPerYearOfBirthReportService $animalFeaturesPerYearOfBirthService,
+        AnimalTreatmentsPerYearReportService $animalTreatmentsPerYearService,
         EweCardReportService $eweCardReportService,
         PopRepInputFileService $popRepInputFileService,
         WeightsPerYearOfBirthReportService $weightsPerYearOfBirthReportService,
@@ -209,14 +215,15 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
         $this->eweCardReportService = $eweCardReportService;
         $this->popRepInputFileService = $popRepInputFileService;
         $this->animalFeaturesPerYearOfBirthService = $animalFeaturesPerYearOfBirthService;
+        $this->animalTreatmentsPerYearService = $animalTreatmentsPerYearService;
     }
 
     public function process(PsrMessage $message, PsrContext $context)
     {
         $worker = null;
+
         try {
             $data = JSON::decode($message->getBody());
-
             $workerId = $data['worker_id'];
 
             /**
@@ -355,6 +362,11 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
                         $data = $this->animalFeaturesPerYearOfBirthService->getReport($concatValueAndAccuracy, $yearOfBirth, $worker->getLocation());
                         break;
                     }
+                case ReportType::TREATMENTS:
+                {
+                    $data = $this->animalTreatmentsPerYearService->getReport($data['year'], $worker->getLocation(), $data['is_admin']);
+                    break;
+                }
             }
             $arrayData = JSON::decode($data->getContent());
 
