@@ -166,7 +166,6 @@ class AnimalTreatmentsPerYearReportService extends ReportServiceBase
                     $date_of_birth = $date_of_birth->format('d-m-Y');
                 }
 
-                $result[$animalId]['id'] = $animalId;
                 $result[$animalId][ReportServiceBase::staticTranslateColumnHeader($this->translator, 'uln')] = $item['uln'];
                 $result[$animalId][ReportServiceBase::staticTranslateColumnHeader($this->translator, 'stn')] = $item['animal_stn'];
                 $result[$animalId][ReportServiceBase::staticTranslateColumnHeader($this->translator, 'date_of_birth')] = $date_of_birth;
