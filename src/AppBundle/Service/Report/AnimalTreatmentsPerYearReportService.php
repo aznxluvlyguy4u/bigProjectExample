@@ -142,47 +142,35 @@ class AnimalTreatmentsPerYearReportService extends ReportServiceBase
                 'description' => $item['treatment_description'],
                 'latest_start_date'  => $item['latest_start_date']
             ];
-//            ksort($treatments[$item['id']]);
         }
 
-        // loop to set the result data and the default value for the treatment count
-//        foreach ($treatments as $treatment) {
+        // loop to set the result data
+        foreach ($data as $item) {
+            $animalId = $item['id'];
+            $date_of_birth = '-';
 
-            foreach ($data as $item) {
-                $animalId = $item['id'];
-                $latest_start_date = '-';
-                $date_of_birth = '-';
+            if (!empty($item['date_of_birth'])) {
+                $date_of_birth = new DateTime($item['date_of_birth']);
+                $date_of_birth = $date_of_birth->format('d-m-Y');
+            }
 
-//                if (key_exists($animalId, $treatments)) {
-//                    var_dump($treatments[$animalId][$item['treatment_description']]);
-//                }
+            $result[$animalId][ReportServiceBase::staticTranslateColumnHeader($this->translator, 'uln')] = $item['uln'];
+            $result[$animalId][ReportServiceBase::staticTranslateColumnHeader($this->translator, 'stn')] = $item['animal_stn'];
+            $result[$animalId][ReportServiceBase::staticTranslateColumnHeader($this->translator, 'date_of_birth')] = $date_of_birth;
+            $result[$animalId][ReportServiceBase::staticTranslateColumnHeader($this->translator, 'n_ling')] = ($item['n_ling']) ? $item['n_ling'] : '-';
+            $result[$animalId][ReportServiceBase::staticTranslateColumnHeader($this->translator, 'gender')] =
+                $this->translate($item['gender'], false, true);
+            $result[$animalId][ReportServiceBase::staticTranslateColumnHeader($this->translator, 'breed_code')] = $item['breed_code'];
+            $result[$animalId][ReportServiceBase::staticTranslateColumnHeader($this->translator, 'pedigree_register')] = $item['pedigree_register'];
+            $result[$animalId][$this->translate('STN_FATHER', false)] = $item['stn_father'];
+            $result[$animalId][$this->translate('STN_MOTHER', false)] = $item['stn_mother'];
 
-//                if (!empty($treatment[$item['treatment_description']]['latest_start_date'])) {
-//                    $latest_start_date = date_create($treatment[$item['treatment_description']]['latest_start_date'])->format('d-m-Y');
-//                }
-
-                if (!empty($item['date_of_birth'])) {
-                    $date_of_birth = new DateTime($item['date_of_birth']);
-                    $date_of_birth = $date_of_birth->format('d-m-Y');
-                }
-
-                $result[$animalId][ReportServiceBase::staticTranslateColumnHeader($this->translator, 'uln')] = $item['uln'];
-                $result[$animalId][ReportServiceBase::staticTranslateColumnHeader($this->translator, 'stn')] = $item['animal_stn'];
-                $result[$animalId][ReportServiceBase::staticTranslateColumnHeader($this->translator, 'date_of_birth')] = $date_of_birth;
-                $result[$animalId][ReportServiceBase::staticTranslateColumnHeader($this->translator, 'n_ling')] = ($item['n_ling']) ? $item['n_ling'] : '-';
-                $result[$animalId][ReportServiceBase::staticTranslateColumnHeader($this->translator, 'gender')] =
-                    $this->translate($item['gender'], false, true);
-                $result[$animalId][ReportServiceBase::staticTranslateColumnHeader($this->translator, 'breed_code')] = $item['breed_code'];
-                $result[$animalId][ReportServiceBase::staticTranslateColumnHeader($this->translator, 'pedigree_register')] = $item['pedigree_register'];
-                $result[$animalId][$this->translate('STN_FATHER', false)] = $item['stn_father'];
-                $result[$animalId][$this->translate('STN_MOTHER', false)] = $item['stn_mother'];
-
-                foreach ($treatments as $treatment) {
-                    foreach ($treatment as $subTreatment) {
-                        $result[$animalId][$subTreatment['description']. ' ('.$this->translate('MOST_RECENT_TREATMENT_DATE', false).')'] = '';
-                    }
+            foreach ($treatments as $treatment) {
+                foreach ($treatment as $subTreatment) {
+                    $result[$animalId][$subTreatment['description']. ' ('.$this->translate('MOST_RECENT_TREATMENT_DATE', false).')'] = '';
                 }
             }
+        }
 
         foreach ($treatments as $key => $treatment) {
             foreach ($treatment as $item) {
