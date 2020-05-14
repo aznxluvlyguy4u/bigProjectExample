@@ -56,4 +56,9 @@ WHERE ram_id = $ramId AND ewe_id = $eweId ".$recalculateFilter;
     {
         $this->sqlDeleteById($this->tableName(), $taskId);
     }
+
+    function purgeQueue()
+    {
+        $this->clearTableBase($this->tableName());
+    }
 }

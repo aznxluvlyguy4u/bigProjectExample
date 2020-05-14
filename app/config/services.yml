@@ -219,6 +219,9 @@ services:
         parent: app.datafix.base.duplicate
         class: AppBundle\Service\DataFix\UbnFixer
 
+    AppBundle\Service\DataFix\UbnHistoryFixer:
+      parent: app.datafix.base.duplicate
+
     app.datafix.base:
         abstract: true
         arguments:
@@ -521,6 +524,10 @@ services:
 
     AppBundle\Service\Report\FertilizerAccountingReport:
         parent: app.report.base
+        calls:
+          - method: setUbnHistoryFixer
+            arguments:
+              - '@AppBundle\Service\DataFix\UbnHistoryFixer'
 
     AppBundle\Service\Report\BirthListReportService:
       parent: app.report.base
@@ -529,7 +536,11 @@ services:
       parent: app.report.base
 
     AppBundle\Service\Report\CompanyRegisterReportService:
-      parent: app.report.base
+        parent: app.report.base
+        calls:
+          - method: setUbnHistoryFixer
+            arguments:
+              - '@AppBundle\Service\DataFix\UbnHistoryFixer'
 
     AppBundle\Service\Report\WeightsPerYearOfBirthReportService:
       parent: app.report.base

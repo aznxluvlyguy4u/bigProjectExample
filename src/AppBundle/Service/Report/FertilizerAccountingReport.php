@@ -11,6 +11,7 @@ use AppBundle\Entity\Location;
 use AppBundle\Enumerator\FertilizerCategory;
 use AppBundle\Enumerator\FileType;
 use AppBundle\Enumerator\GenderType;
+use AppBundle\Service\DataFix\UbnHistoryFixer;
 use AppBundle\Util\DateUtil;
 use AppBundle\Util\DsvWriterUtil;
 use AppBundle\Util\FilesystemUtil;
@@ -71,6 +72,9 @@ class FertilizerAccountingReport extends ReportServiceBase
 
     const TWIG_FILE = 'Report/fertilizer_accounting_report.html.twig';
 
+    /** @var UbnHistoryFixer */
+    private $ubnHistoryFixer;
+
     /** @var Location $location */
     private $location;
 
@@ -81,6 +85,18 @@ class FertilizerAccountingReport extends ReportServiceBase
 
     /** @var array */
     private $referenceDateStringsByMonth = [];
+
+
+    /**
+     * @required
+     *
+     * @param  UbnHistoryFixer  $ubnHistoryFixer
+     */
+    public function setUbnHistoryFixer(UbnHistoryFixer $ubnHistoryFixer)
+    {
+        $this->ubnHistoryFixer = $ubnHistoryFixer;
+    }
+
 
     public function validateReferenceDate(\DateTime $referenceDate) {
         ReportUtil::validateDateIsNotOlderThanOldestAutomatedSync($referenceDate, TranslationKey::REFERENCE_DATE, $this->translator);
@@ -100,7 +116,7 @@ class FertilizerAccountingReport extends ReportServiceBase
             $this->setFileAndFolderNames();
 
             /** Do this before running the report query */
-            $this->fixAnimalResidenceRecords();
+            $this->ubnHistoryFixer->fixAnimalResidenceRecordsByCurrentAnimalLocationOfLocationId($location->getId());
 
             $sql = $this->query();
             $data = $this->em->getConnection()->query($sql)->fetch();
@@ -503,10 +519,13 @@ class FertilizerAccountingReport extends ReportServiceBase
         return $result;
     }
 
-    private function isResidenceSelectResultByMonth(int $month): String {
+    private function isResidenceSelectResultByMonth(int $month, string $residenceAlias = 'r'): String {
+        $r = $residenceAlias;
         $referenceDateOfMonth = $this->referenceDateStringsByMonth[$month];
-        return "(start_date NOTNULL AND end_date NOTNULL) AND DATE(start_date) <= '$referenceDateOfMonth' AND DATE(end_date) >= '$referenceDateOfMonth' OR --closed residence
-        (start_date NOTNULL AND end_date ISNULL) AND DATE(start_date) <= '$referenceDateOfMonth' --open residence
+        return "(
+            ($r.start_date NOTNULL AND $r.end_date NOTNULL) AND DATE($r.start_date) <= '$referenceDateOfMonth' AND DATE($r.end_date) >= '$referenceDateOfMonth' OR --closed residence
+            ($r.start_date NOTNULL AND $r.end_date ISNULL) AND DATE($r.start_date) <= '$referenceDateOfMonth' --open residence
+        ) AND $r.is_pending = FALSE
         AND (a.date_of_death ISNULL OR a.date_of_death >= '$referenceDateOfMonth')
         AND (a.date_of_birth NOTNULL AND a.date_of_birth <= '$referenceDateOfMonth')
          as ".$this->residenceKey($month).SqlUtil::SELECT_ROW_SEPARATOR;
