@@ -608,23 +608,22 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
                     }
                 }
 
-
                 if($child->getLatestBreedGrades()) {
                     $this->getManager()->remove($child->getLatestBreedGrades());
                 }
 
-
                 $breedValueRepository = $this->getManager()->getRepository(BreedValue::class);
-                $breedValues = $breedValueRepository->findBy(['animal'=>$child]);
+                $breedValues = $breedValueRepository->findBy(['animal' => $child]);
+
                 foreach ($breedValues as $breedValue) {
                     $this->getManager()->remove($breedValue);
                 }
-
 
                 //Flush the removes separately
                 $this->getManager()->flush();
 
                 //Restore tag if it does not exist
+                /** @var Tag $tagToRestore */
                 $tagToRestore = $this->getManager()->getRepository(Tag::class)->findByUlnNumberAndCountryCode($child->getUlnCountryCode(), $child->getUlnNumber());
 
                 if ($tagToRestore) {
@@ -684,6 +683,7 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
             /** @var Animal $child */
             foreach ($childrenToRemove as $child)
             {
+                $child->__construct();
                 //Remove child animal
                 $this->getManager()->remove($child);
             }
