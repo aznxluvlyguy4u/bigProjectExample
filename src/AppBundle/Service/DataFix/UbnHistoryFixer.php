@@ -47,7 +47,8 @@ class UbnHistoryFixer extends DuplicateFixerBase
     {
         $this->removeDuplicateAnimalResidences();
         $updateCount = $this->closeInvalidOpenResidencesByTodayDateForRemovedAnimals($locationId);
-        return $this->closeInvalidOpenResidencesByTodayDateForRelocatedAnimals($locationId) + $updateCount;
+        $updateCount += $this->closeInvalidOpenResidencesByTodayDateForRelocatedAnimals($locationId);
+        return $this->removeInvalidSandwichedPendingResidences($locationId) + $updateCount;
     }
 
 
@@ -522,5 +523,29 @@ WHERE DATE(r.start_date) <= DATE(a.date_of_death)";
         }
 
         return $updateCount;
+    }
+
+
+    private function removeInvalidSandwichedPendingResidences(?int $locationId = null): int
+    {
+        $locationIdFilter = $locationId ? "AND r.location_id = $locationId " : '';
+
+        $sql = "DELETE FROM animal_residence WHERE EXISTS (
+            SELECT
+                r_pending.id
+            FROM animal_residence r_pending
+                INNER JOIN animal_residence r ON
+                    r.animal_id = r_pending.animal_id AND
+                    r.location_id = r_pending.location_id AND
+                    r_pending.end_date ISNULL
+            WHERE r_pending.is_pending = TRUE
+                AND r.is_pending = FALSE
+                AND DATE(r.start_date) <= DATE(r_pending.start_date)
+                AND DATE(r_pending.start_date) < DATE(r.end_date)
+                $locationIdFilter
+                AND animal_residence.id = r_pending.id
+        )";
+
+        return SqlUtil::updateWithCount($this->conn, $sql);
     }
 }
