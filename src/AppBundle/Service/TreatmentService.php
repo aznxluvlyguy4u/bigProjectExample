@@ -7,6 +7,7 @@ use AppBundle\Component\Utils;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Controller\TreatmentAPIControllerInterface;
 use AppBundle\Entity\Animal;
+use AppBundle\Entity\MedicationOption;
 use AppBundle\Entity\MedicationSelection;
 use AppBundle\Entity\Treatment;
 use AppBundle\Entity\TreatmentMedication;
@@ -16,6 +17,7 @@ use AppBundle\Enumerator\TreatmentTypeOption;
 use AppBundle\Util\ActionLogWriter;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
+use DateInterval;
 use DateTime;
 use AppBundle\Util\TimeUtil;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -114,34 +116,45 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
         // No duplicates are being created, so what is being meant with "duplicates"?
         //TODO check for duplicates
 
-        $treatmentMedicationSelections = $treatment->getMedicationSelections();
+        $treatmentMedicationOptions = $treatment->getTreatmentTemplate()->getMedications();
 
-        /** @var MedicationSelection $medicationSelection */
-        foreach ($treatmentMedicationSelections as $medicationSelection)
-        {
-            if ($medicationSelection->getWaitingDays() === null) {
-                throw new PreconditionFailedHttpException("No waiting days have been filled in.");
-            }
-
-            $medicationSelectionName = $medicationSelection->getTreatmentMedication()->getName();
-
-            /** @var TreatmentMedication $treatmentMedication */
-            $treatmentMedication = $this->treatmentMedicationRepository->findOneBy(['name' => $medicationSelectionName]);
-
-            $medicationSelection->setTreatmentMedication($treatmentMedication);
-        }
-
-        $treatmentTemplateId = $treatment->getTreatmentTemplate()->getId();
+        /** @var Treatment $lastTreatment */
+        $lastTreatment = $this->getManager()->getRepository(Treatment::class)
+            ->getLastTreatmentOfLocation($location);
 
         /** @var TreatmentTemplate $treatmentTemplate */
-        $treatmentTemplate = $this->treatmentTemplateRepository->find($treatmentTemplateId);
+        $treatmentTemplate = $em->getRepository(TreatmentTemplate::class)->find($treatment->getTreatmentTemplate()->getId());
+
+//        dump($treatmentTemplate->getMedications());die;
+
+        /** @var MedicationOption $medicationOption */
+        foreach ($treatmentTemplate->getMedications() as $medicationOption)
+        {
+            $treatmentDuration = $medicationOption->getTreatmentDuration();
+            if ($treatmentDuration !== 'eenmalig') {
+                $roundedTreatmentDuration = round($treatmentDuration, 0, PHP_ROUND_HALF_UP);
+                $medicationSelection = new MedicationSelection();
+                $medicationSelection
+                    ->setMedicationOption($medicationOption)
+                    ->setTreatment($treatment)
+                    ->setWaitingTimeEnd($lastTreatment->getCreateDate()->add(new DateInterval('P'.$roundedTreatmentDuration.'D')));
+
+                $em->persist($medicationSelection);
+
+//                /** @var TreatmentMedication $treatmentMedication */
+//                $treatmentMedication = $em->getRepository(TreatmentMedication::class)
+//                    ->find($medicationOption->getTreatmentMedication()->getId());
+//
+//                $medicationOption->setTreatmentMedication($treatmentMedication);
+//                $em->persist($medicationOption);
+            }
+        }
 
         $treatment->__construct();
 
         $treatment
             ->setCreationBy($this->getUser())
             ->setAnimals($existingAnimals)
-            ->setMedicationSelections($treatmentMedicationSelections)
             ->setTreatmentTemplate($treatmentTemplate);
 
         $em->persist($treatment);

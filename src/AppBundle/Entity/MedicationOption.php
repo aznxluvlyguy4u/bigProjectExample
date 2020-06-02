@@ -3,6 +3,7 @@
 namespace AppBundle\Entity;
 
 use AppBundle\Traits\EntityClassInfo;
+use DateTime;
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as JMS;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -44,7 +45,8 @@ class MedicationOption
      *
      * @JMS\Groups({
      *     "TREATMENT_TEMPLATE",
-     *     "TREATMENT_TEMPLATE_MIN"
+     *     "TREATMENT_TEMPLATE_MIN",
+     *     "TREATMENT"
      * })
      */
     private $treatmentMedication;
@@ -56,10 +58,10 @@ class MedicationOption
      * @JMS\Type("float")
      * @JMS\Groups({
      *     "TREATMENT_TEMPLATE",
-     *     "TREATMENT_TEMPLATE_MIN"
+     *     "TREATMENT_TEMPLATE_MIN",
+     *     "TREATMENT"
      * })
      * @Assert\NotBlank
-     * @Assert\Regex("/aantal|mg|ml|g|l/m")
      */
     private $dosage;
 
@@ -70,23 +72,12 @@ class MedicationOption
      * @JMS\Type("string")
      * @JMS\Groups({
      *     "TREATMENT_TEMPLATE",
-     *     "TREATMENT_TEMPLATE_MIN"
+     *     "TREATMENT_TEMPLATE_MIN",
+     *     "TREATMENT"
      * })
      * @Assert\NotBlank
      */
     private $dosageUnit;
-
-    /**
-     * @var integer
-     *
-     * @ORM\Column(type="integer", nullable=true)
-     * @JMS\Type("integer")
-     * @JMS\Groups({
-     *     "TREATMENT_TEMPLATE",
-     *     "TREATMENT_TEMPLATE_MIN"
-     * })
-     */
-    private $waitingDays;
 
     /**
      * @var string|null
@@ -95,10 +86,24 @@ class MedicationOption
      * @JMS\Type("string")
      * @JMS\Groups({
      *     "TREATMENT_TEMPLATE",
-     *     "TREATMENT_TEMPLATE_MIN"
+     *     "TREATMENT_TEMPLATE_MIN",
+     *     "TREATMENT"
      * })
      */
     private $regNl;
+
+    /**
+     * @var string|null
+     *
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Type("string")
+     * @JMS\Groups({
+     *     "TREATMENT_TEMPLATE",
+     *     "TREATMENT_TEMPLATE_MIN",
+     *     "TREATMENT"
+     * })
+     */
+    private $treatmentDuration;
 
     //don't remove this because when you try to retrieve the entity there will be an error.
     private $description;
@@ -209,25 +214,6 @@ class MedicationOption
     }
 
     /**
-     * @return int|null
-     */
-    public function getWaitingDays(): ?int
-    {
-        return $this->waitingDays;
-    }
-
-    /**
-     * @param int $waitingDays
-     * @return MedicationOption
-     */
-    public function setWaitingDays(int $waitingDays): self
-    {
-        $this->waitingDays = $waitingDays;
-
-        return $this;
-    }
-
-    /**
      * @return string|null
      */
     public function getRegNl(): ?string
@@ -244,6 +230,22 @@ class MedicationOption
         $this->regNl = $regNl;
 
         return $this;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getTreatmentDuration(): ?string
+    {
+        return $this->treatmentDuration;
+    }
+
+    /**
+     * @param string|null $treatmentDuration
+     */
+    public function setTreatmentDuration(?string $treatmentDuration): void
+    {
+        $this->treatmentDuration = $treatmentDuration;
     }
 
     /**

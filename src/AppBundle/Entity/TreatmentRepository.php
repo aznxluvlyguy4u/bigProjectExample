@@ -4,6 +4,8 @@ namespace AppBundle\Entity;
 
 use AppBundle\Util\Translation;
 use Doctrine\DBAL\DBALException;
+use Doctrine\ORM\NonUniqueResultException;
+use Doctrine\ORM\Query;
 
 /**
  * Class TreatmentRepository
@@ -62,5 +64,20 @@ class TreatmentRepository extends BaseRepository {
             'items'      => $results,
             'totalItems' => $countStatement->fetch()['total']
         ];
+    }
+
+    /**
+     * @param Location $location
+     * @return mixed
+     */
+    public function getLastTreatmentOfLocation(Location $location)
+    {
+        return $this->createQueryBuilder('treatment')
+            ->innerJoin('treatment.location', 'location')
+            ->where('location = :location')
+            ->setParameter('location', $location)
+            ->orderBy('treatment.createDate', 'DESC')
+            ->getQuery()
+            ->getResult()[0];
     }
 }

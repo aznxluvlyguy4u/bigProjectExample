@@ -15,6 +15,7 @@ use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
 use AppBundle\Util\Validator;
 use AppBundle\Validation\AdminValidator;
+use DateTime;
 use Exception;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
@@ -139,8 +140,6 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
         $admin = $this->getEmployee();
         if($admin === null) { return AdminValidator::getStandardErrorResponse(); }
 
-        $data = json_decode($request->getContent(), true);
-
         /** @var TreatmentTemplate $template */
         $template = $this->getBaseSerializer()->deserializeToObject($request->getContent(), TreatmentTemplate::class);
 
@@ -158,10 +157,6 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
         /** @var MedicationOption $medication */
         foreach ($template->getMedications() as $medication)
         {
-            if ($medication->getWaitingDays() === null) {
-                throw new PreconditionFailedHttpException("'No waiting days have been filled in.'");
-            }
-
             /** @var TreatmentMedication $treatmentMedication */
             $treatmentMedication = $this->treatmentMedicationRepository->findOneBy(['name' => $medication->getTreatmentMedication()->getName()]);
 
@@ -350,6 +345,7 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
         $newMedicationWaitingDaysByDescription = [];
         $newMedicationRegNLByDescription = [];
         $newMedicationDosageUnitByDescription = [];
+        $newMedicationTreatmentDurationByDescription = [];
         $treatmentMedicationOld = [];
 
         /** @var MedicationOption $medication */
@@ -367,6 +363,7 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
             $newMedicationWaitingDaysByDescription[$medication->getTreatmentMedication()->getName()] = $medication->getWaitingDays();
             $newMedicationRegNLByDescription[$medication->getTreatmentMedication()->getName()] = $medication->getRegNl();
             $newMedicationDosageUnitByDescription[$medication->getTreatmentMedication()->getName()] = $medication->getDosageUnit();
+            $newMedicationTreatmentDurationByDescription[$medication->getTreatmentMedication()->getName()] = $medication->getTreatmentDuration();
 
             $treatmentMedication = $medication->getTreatmentMedication();
 
@@ -406,12 +403,15 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
                 key_exists($treatmentMedication->getName(), $newMedicationDosagesByDescription) &&
                 key_exists($treatmentMedication->getName(), $newMedicationWaitingDaysByDescription) &&
                 key_exists($treatmentMedication->getName(), $newMedicationRegNLByDescription) &&
-                key_exists($treatmentMedication->getName(), $newMedicationDosageUnitByDescription)
+                key_exists($treatmentMedication->getName(), $newMedicationDosageUnitByDescription) &&
+                key_exists($treatmentMedication->getName(), $newMedicationTreatmentDurationByDescription)
             ) {
                 $newMedicationDosage = $newMedicationDosagesByDescription[$treatmentMedication->getName()];
                 $newWaitingDays = $newMedicationWaitingDaysByDescription[$treatmentMedication->getName()];
                 $newRegNL = $newMedicationRegNLByDescription[$treatmentMedication->getName()];
                 $newDosageUnit = $newMedicationDosageUnitByDescription[$treatmentMedication->getName()];
+                $newTreatmentDuration = $newMedicationTreatmentDurationByDescription[$treatmentMedication->getName()];
+
                 if ($medication->getDosage() !== $newMedicationDosage) {
                     //Update dosage
                     $this->appendDescription($treatmentMedication->getName(). ' dosage => '.$newMedicationDosage);
@@ -437,6 +437,13 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
                     //Update dosage unit
                     $this->appendDescription($treatmentMedication->getName(). ' dosage unit => '.$newDosageUnit);
                     $medication->setDosageUnit($newDosageUnit);
+                    $isAnyValueUpdated = true;
+                }
+
+                if ($medication->getTreatmentDuration() != $newTreatmentDuration) {
+                    // Update treatment duration
+                    $this->appendDescription($treatmentMedication->getName(). 'treatment duration => '.$newTreatmentDuration);
+                    $medication->setTreatmentDuration($newTreatmentDuration);
                     $isAnyValueUpdated = true;
                 }
             } else {
@@ -466,7 +473,7 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
         if ($isAnyValueUpdated) {
             $templateInDatabase
                 ->setEditedBy($this->getUser())
-                ->setLogDate(new \DateTime())
+                ->setLogDate(new DateTime())
             ;
             $this->getManager()->persist($templateInDatabase);
             $this->getManager()->flush();
