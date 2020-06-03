@@ -23,7 +23,7 @@ class NsfoResidencesFixCommand extends ContainerAwareCommand
     {
         /** @var UbnHistoryFixer $ubnHistoryFixer */
         $ubnHistoryFixer = $this->getContainer()->get(UbnHistoryFixer::class);
-        $ubnHistoryFixer->fixAllAnimalResidenceRecordsByCurrentAnimalLocation();
+        $ubnHistoryFixer->fixAllHistoricAnimalResidenceRecordsByCurrentAnimalLocation();
     }
 
 }
