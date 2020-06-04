@@ -34,8 +34,16 @@ class TreatmentRepository extends BaseRepository {
         ";
 
         $sql = '
-            SELECT t.* FROM treatment t
-            INNER JOIN location l ON t.location_id = l.id 
+            SELECT 
+                t.id as treatment_id,
+                t.create_date,
+                t.description,
+                t.start_date,
+                t.end_date,
+                t.type,
+                t.status
+            FROM treatment t
+            INNER JOIN location l ON t.location_id = l.id
             WHERE l.ubn = :ubn
             AND t.description LIKE :query
             ORDER BY t.create_date DESC
@@ -56,6 +64,36 @@ class TreatmentRepository extends BaseRepository {
         $results = [];
 
         foreach ($statement->fetchAll() as $item) {
+            $medicationSql = '
+                SELECT
+                    tm.name,
+                    ms.waiting_time_end,
+                    mo.dosage,
+                    mo.dosage_unit,
+                    mo.reg_nl,
+                    mo.treatment_duration
+               FROM medication_selection ms 
+               LEFT JOIN medication_option mo ON ms.medication_option_id = mo.id
+               LEFT JOIN treatment_medication tm ON mo.treatment_medication_id = tm.id
+               WHERE ms.treatment_id = :id
+            ';
+            $medicineStatement = $this->getManager()->getConnection()->prepare($medicationSql);
+            $medicineStatement->bindParam('id', $item['treatment_id']);
+            $medicineStatement->execute();
+
+            $animalSql = '
+                SELECT a.* FROM treatment_animal ta
+                LEFT JOIN animal a ON ta.animal_id = a.id
+                WHERE ta.treatment_id = :treatment_id
+            ';
+
+            $animalStatement = $this->getManager()->getConnection()->prepare($animalSql);
+            $animalStatement->bindParam('treatment_id', $item['treatment_id']);
+            $animalStatement->execute();
+
+            $item['medications'] = $medicineStatement->fetchAll();
+            $item['animals'] = $animalStatement->fetchAll();
+
             $item['dutchType'] = Translation::getDutchTreatmentType($item['type']);
             $results[] = $item;
         }

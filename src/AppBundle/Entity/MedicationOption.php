@@ -82,7 +82,7 @@ class MedicationOption
     /**
      * @var string|null
      *
-     * @ORM\Column(type="string", nullable=true)
+     * @ORM\Column(type="string", nullable=false)
      * @JMS\Type("string")
      * @JMS\Groups({
      *     "TREATMENT_TEMPLATE",
@@ -95,7 +95,7 @@ class MedicationOption
     /**
      * @var string|null
      *
-     * @ORM\Column(type="string", nullable=true)
+     * @ORM\Column(type="string", nullable=false)
      * @JMS\Type("string")
      * @JMS\Groups({
      *     "TREATMENT_TEMPLATE",
@@ -104,6 +104,17 @@ class MedicationOption
      * })
      */
     private $treatmentDuration;
+
+    /**
+     * @ORM\Column(type="integer", nullable=false)
+     * @JMS\Type("integer")
+     * @JMS\Groups({
+     *     "TREATMENT_TEMPLATE",
+     *     "TREATMENT_TEMPLATE_MIN",
+     *     "TREATMENT"
+     * })
+     */
+    private $waitingDays;
 
     //don't remove this because when you try to retrieve the entity there will be an error.
     private $description;
@@ -246,6 +257,25 @@ class MedicationOption
     public function setTreatmentDuration(?string $treatmentDuration): void
     {
         $this->treatmentDuration = $treatmentDuration;
+    }
+
+    /**
+     * @return integer
+     */
+    public function getWaitingDays()
+    {
+        return $this->waitingDays;
+    }
+
+    /**
+     * @param integer $waitingDays
+     * @return MedicationOption
+     */
+    public function setWaitingDays($waitingDays): self
+    {
+        $this->waitingDays = $waitingDays;
+
+        return $this;
     }
 
     /**

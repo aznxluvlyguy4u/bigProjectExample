@@ -161,10 +161,8 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
             $treatmentMedication = $this->treatmentMedicationRepository->findOneBy(['name' => $medication->getTreatmentMedication()->getName()]);
 
             $medication->setTreatmentMedication($treatmentMedication);
-            $treatmentMedication->addMedicationOption($medication);
 
             $this->getManager()->persist($medication);
-            $this->getManager()->persist($treatmentMedication);
 
             $medication->setTreatmentTemplate($template);
         }

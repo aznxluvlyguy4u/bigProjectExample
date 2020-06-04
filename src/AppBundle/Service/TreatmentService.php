@@ -21,6 +21,8 @@ use DateInterval;
 use DateTime;
 use AppBundle\Util\TimeUtil;
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\DBAL\DBALException;
+use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Exception;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
@@ -116,38 +118,39 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
         // No duplicates are being created, so what is being meant with "duplicates"?
         //TODO check for duplicates
 
-        $treatmentMedicationOptions = $treatment->getTreatmentTemplate()->getMedications();
-
-        /** @var Treatment $lastTreatment */
-        $lastTreatment = $this->getManager()->getRepository(Treatment::class)
-            ->getLastTreatmentOfLocation($location);
-
         /** @var TreatmentTemplate $treatmentTemplate */
         $treatmentTemplate = $em->getRepository(TreatmentTemplate::class)->find($treatment->getTreatmentTemplate()->getId());
-
-//        dump($treatmentTemplate->getMedications());die;
 
         /** @var MedicationOption $medicationOption */
         foreach ($treatmentTemplate->getMedications() as $medicationOption)
         {
             $treatmentDuration = $medicationOption->getTreatmentDuration();
+            $medicationSelection = new MedicationSelection();
+
+            $medicationSelection
+                ->setTreatment($treatment)
+                ->setMedicationOption($medicationOption)
+            ;
+
             if ($treatmentDuration !== 'eenmalig') {
                 $roundedTreatmentDuration = round($treatmentDuration, 0, PHP_ROUND_HALF_UP);
-                $medicationSelection = new MedicationSelection();
+
+                // Subtract 1 to account for the start day of the treatment.
+                $correctedTreatmentDuration = $roundedTreatmentDuration-1;
+
+                $daysToAdd = $correctedTreatmentDuration + $medicationOption->getWaitingDays();
+
+                $treatmentStartDate = clone $treatment->getStartDate();
+
                 $medicationSelection
-                    ->setMedicationOption($medicationOption)
-                    ->setTreatment($treatment)
-                    ->setWaitingTimeEnd($lastTreatment->getCreateDate()->add(new DateInterval('P'.$roundedTreatmentDuration.'D')));
-
-                $em->persist($medicationSelection);
-
-//                /** @var TreatmentMedication $treatmentMedication */
-//                $treatmentMedication = $em->getRepository(TreatmentMedication::class)
-//                    ->find($medicationOption->getTreatmentMedication()->getId());
-//
-//                $medicationOption->setTreatmentMedication($treatmentMedication);
-//                $em->persist($medicationOption);
+                    ->setWaitingTimeEnd($treatmentStartDate->add(new DateInterval('P'.$daysToAdd.'D')));
+            } else {
+                $treatmentStartDate = clone $treatment->getStartDate();
+                $medicationSelection
+                    ->setWaitingTimeEnd($treatmentStartDate->add(new DateInterval('P'.$medicationOption->getWaitingDays().'D')));
             }
+
+            $em->persist($medicationSelection);
         }
 
         $treatment->__construct();
@@ -158,7 +161,14 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
             ->setTreatmentTemplate($treatmentTemplate);
 
         $em->persist($treatment);
-        $em->flush();
+        try {
+            $em->flush();
+        } catch (Exception $e) {
+            if ($e instanceof UniqueConstraintViolationException) {
+               return ResultUtil::errorResult('A treatment already exists!', 500);
+            }
+        }
+
 
         ActionLogWriter::createTreatment($em, $request, $loggedInUser, $treatment);
 
