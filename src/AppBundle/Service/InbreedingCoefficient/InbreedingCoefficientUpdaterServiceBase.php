@@ -262,6 +262,9 @@ class InbreedingCoefficientUpdaterServiceBase
         $maxLimit = InbreedingCoefficientSetting::LOOP_MAX_DURATION_IN_HOURS;
         if ($loopDurationHours > $maxLimit) {
             $slotName = $process->getSlotName();
+
+            // TODO Send notification to slack
+
             throw new InbreedingCoefficientProcessException(
                 "Loop duration for InbreedingCoefficientProcess slot $slotName exceeds $maxLimit hours. "
                 ."Check if the process is stuck or not."
