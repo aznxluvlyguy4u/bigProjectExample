@@ -551,6 +551,10 @@ services:
     AppBundle\Service\Report\PopRepInputFileService:
       parent: app.report.base
 
+    report.animals.treatments:
+      parent: app.report.base
+      class: AppBundle\Service\Report\AnimalTreatmentsPerYearReportService
+
     AppBundle\Service\Report\ClientNotesOverviewReportService:
       parent: app.report.base
 
@@ -710,6 +714,7 @@ services:
           - '@AppBundle\Service\Report\PopRepInputFileService'
           - '@AppBundle\Service\Report\FertilizerAccountingReport'
           - '@AppBundle\Service\Report\AnimalFeaturesPerYearOfBirthReportService'
+          - '@report.animals.treatments'
           - '@AppBundle\Service\InbreedingCoefficient\InbreedingCoefficientReportUpdaterService'
           - '%environment%'
 
@@ -717,6 +722,7 @@ services:
     AppBundle\Processor\ReportProcessor:
         arguments:
           - '@AppBundle\Service\Report\AnimalFeaturesPerYearOfBirthReportService'
+          - '@report.animals.treatments'
           - '@AppBundle\Service\Report\EweCardReportService'
           - '@AppBundle\Service\Report\PopRepInputFileService'
           - '@AppBundle\Service\Report\WeightsPerYearOfBirthReportService'
