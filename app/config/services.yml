@@ -1054,6 +1054,9 @@ services:
           - method: setRevokeProcessor
             arguments:
               - '@AppBundle\Worker\DirectProcessor\RevokeProcessorInterface'
+          - method: setMateService
+            arguments:
+              - '@AppBundle\Service\MateService'
 
     AppBundle\Service\QueueDashboardService:
         parent: app.abstract_base.controller
