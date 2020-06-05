@@ -1363,6 +1363,17 @@ class NsfoMainCommand extends ContainerAwareCommand
     }
 
 
+    private function askForInt($question = 'insert integer', $defaultValue = null): int
+    {
+        do {
+            $input = $this->cmdUtil->questionForIntChoice($defaultValue,$question);
+        } while (!ctype_digit($input) && !is_int($input));
+
+        $this->cmdUtil->writeln('Input: '.$input);
+        return intval($input);
+    }
+
+
     private function writeLn($line)
     {
         $this->cmdUtil->writelnWithTimestamp($line);

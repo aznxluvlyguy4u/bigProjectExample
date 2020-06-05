@@ -150,6 +150,20 @@ services:
             arguments:
               - '@AppBundle\Service\InbreedingCoefficient\InbreedingCoefficientParentPairsUpdaterService'
 
+    AppBundle\Service\Task\TaskServiceBase:
+        abstract: true
+        arguments:
+          - '@doctrine.orm.entity_manager'
+          - '@logger'
+          - '@translator'
+
+    AppBundle\Service\Task\ResidenceFixTaskService:
+        parent: AppBundle\Service\Task\TaskServiceBase
+        calls:
+          - method: setUbnHistoryFixer
+            arguments:
+              - '@AppBundle\Service\DataFix\UbnHistoryFixer'
+
     app.animallocation.history:
         class: AppBundle\Service\AnimalLocationHistoryService
         arguments: ['@doctrine.orm.entity_manager']

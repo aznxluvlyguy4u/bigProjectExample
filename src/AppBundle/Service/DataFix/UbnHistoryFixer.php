@@ -587,7 +587,11 @@ WHERE DATE(r.start_date) <= DATE(a.date_of_death)";
     }
 
 
-    public function updateAllCurrentAnimalResidenceRecordsByCurrentLivestock(): int
+    /**
+     * @return bool Found locations to fix
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public function updateAllCurrentAnimalResidenceRecordsByCurrentLivestock(): bool
     {
         $sql = "SELECT id FROM location WHERE is_active ORDER BY id";
         $results = $this->conn->query($sql)->fetchAll();
@@ -605,6 +609,8 @@ WHERE DATE(r.start_date) <= DATE(a.date_of_death)";
         }
 
         $this->logger->notice("Total animal_residences fixed for $totalUpdateCount animals");
+
+        return !empty($locationIds);
     }
     
 
@@ -614,9 +620,15 @@ WHERE DATE(r.start_date) <= DATE(a.date_of_death)";
      */
     public function updateCurrentAnimalResidenceRecordsByCurrentLivestock(int $locationId): int
     {
-        $this->fixHistoricAnimalResidenceRecordsByCurrentAnimalLocationOfLocationId($locationId);
-
         $sqlInnerSelectQuery = self::sqlQueryUbnHistoryDiscrepancies($locationId);
+
+        $animalsToFixCount = $this->conn->query($sqlInnerSelectQuery)->rowCount();
+        if ($animalsToFixCount === 0) {
+            $this->em->getRepository(Location::class)->bumpLastResidenceFixDate($locationId);
+            return $animalsToFixCount;
+        }
+
+        $this->fixHistoricAnimalResidenceRecordsByCurrentAnimalLocationOfLocationId($locationId);
 
         $sqlSetPendingIsFalse = "UPDATE animal_residence SET is_pending = FALSE
 FROM (".
@@ -681,6 +693,8 @@ FROM (".
             $this->em->flush();
         }
 
+        $this->em->getRepository(Location::class)->bumpLastResidenceFixDate($locationId);
+
         return $updateCount;
     }
 
@@ -727,5 +741,57 @@ FROM (".
                 WHERE (--has_correct_residence
                           r.animal_id NOTNULL AND a.id NOTNULL AND r.is_pending = FALSE
                       ) = FALSE";
+    }
+
+
+    /**
+     * @return array|int[] locationIds
+     */
+    public function getLocationIdsWithUbnHistoryDiscrepancies(): array
+    {
+        $sql = "SELECT
+                id as location_id
+            FROM location WHERE is_active AND last_residence_fix_date ISNULL
+            
+            UNION DISTINCT
+            
+            SELECT
+                COALESCE(r.location_id, a.location_id) as location_id
+                FROM (
+                    SELECT
+                        r.*
+                    FROM animal_residence r
+                        INNER JOIN (
+                           SELECT
+                                r.animal_id,
+                                r.location_id,
+                                COALESCE(
+                                        MAX(CASE WHEN r.is_pending = FALSE THEN r.id END),
+                                        MAX(r.id)
+                                    ) as max_id_prioritizing_pending_is_false
+                            FROM animal_residence r
+                            WHERE
+                                DATE(r.start_date) <= DATE(now()) AND r.end_date ISNULL
+                            GROUP BY r.animal_id, r.location_id
+                        )animal_grouped_r ON animal_grouped_r.max_id_prioritizing_pending_is_false = r.id
+                )r
+                FULL OUTER JOIN (
+                    SELECT
+                        *
+                    FROM animal a
+                    WHERE a.is_alive AND a.location_id NOTNULL
+                      AND (a.transfer_state ISNULL OR a.transfer_state <> '".AnimalTransferStatus::TRANSFERRING."')
+                )a ON a.id = r.animal_id AND a.location_id = r.location_id
+                WHERE (--has_correct_residence
+                          r.animal_id NOTNULL AND a.id NOTNULL AND r.is_pending = FALSE
+                      ) = FALSE
+GROUP BY COALESCE(r.location_id, a.location_id) HAVING COUNT(*) > 1
+ORDER BY location_id";
+        $results = $this->conn->query($sql)->fetchAll();
+        return array_map(function (array $result) {
+                return intval($result['location_id']);
+            },
+            $results
+        );
     }
 }
