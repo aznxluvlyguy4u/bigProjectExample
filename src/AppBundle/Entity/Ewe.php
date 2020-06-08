@@ -42,13 +42,13 @@ class Ewe extends Animal implements ParentInterface
      * @Assert\NotBlank
      * @ORM\Column(type="string")
      * @JMS\Type("string")
-     * 
+     *
      */
      protected $objectType;
 
       /**
        * @var ArrayCollection
-       * 
+       *
        * @ORM\OneToMany(targetEntity="Litter", mappedBy="animalMother")
        * @JMS\Type("ArrayCollection<AppBundle\Entity\Litter>")
        * @ORM\OrderBy({"litterDate" = "ASC"})
@@ -107,7 +107,7 @@ class Ewe extends Animal implements ParentInterface
          $this->setAnimalType(AnimalType::sheep);
          $this->setGender(GenderType::FEMALE);
          $this->setAnimalCategory(Constant::DEFAULT_ANIMAL_CATEGORY);
-       
+
          $this->litters = new ArrayCollection();
          $this->children = new ArrayCollection();
          $this->matings = new ArrayCollection();
@@ -172,9 +172,9 @@ class Ewe extends Animal implements ParentInterface
         return $this->children;
     }
 
-    
+
     /**
-     * @return ArrayCollection
+     * @return ArrayCollection|Mate[]
      */
     public function getMatings()
     {
