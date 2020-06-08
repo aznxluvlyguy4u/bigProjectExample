@@ -751,7 +751,7 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
             $this->getManager()->persist($litter);
             $this->getManager()->flush();
 
-            $revokeMessages = [];
+            $revokeCount = 0;
             $declareBirthCount = 0;
             $declareBirthResponseCount = 0;
             //Create revoke request for every declareBirth request
@@ -780,7 +780,7 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
                             $this->persist($revokeDeclarationObject);
                             $this->persistRevokingRequestState($this->entityGetter, $revokeDeclarationObject->getMessageNumber());
                             $this->sendMessageObjectToQueue($revokeDeclarationObject);
-                            $revokeMessages[] = $revokeDeclarationObject;
+                            $revokeCount++;
                         }
                     }
                 }
@@ -806,7 +806,7 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
 
             $customResponse = new JsonResponse(array(Constant::RESULT_NAMESPACE => [
                 'code' => $statusCode,
-                'revokes' => $revokeMessages,
+                'revokes' => $revokeCount,
                 'message' => $message,
             ]), $statusCode);
         }
