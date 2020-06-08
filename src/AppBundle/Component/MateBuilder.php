@@ -53,7 +53,7 @@ class MateBuilder extends NsfoBaseBuilder
         $mate->setRequestState(RequestStateType::OPEN);
 
         /* Set non-Animal values */
-        
+
         $startDate = Utils::getNullCheckedArrayCollectionDateValue(JsonInputConstant::START_DATE, $content);
         $endDate = Utils::getNullCheckedArrayCollectionDateValue(JsonInputConstant::END_DATE, $content);
         $ki = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::KI, $content);
@@ -97,7 +97,7 @@ class MateBuilder extends NsfoBaseBuilder
         if($ram instanceof Ram) {
             $mate->setStudRam($ram);
         }
-        
+
         return $mate;
     }
 
@@ -163,7 +163,6 @@ class MateBuilder extends NsfoBaseBuilder
             $historicalMate->getStartDate() !== $mate->getStartDate() ||
             $historicalMate->getEndDate() !== $mate->getEndDate()
         ) {
-            $mate->getLitter()->removeMate();
             $mate->removeLitter();
         }
 
@@ -175,8 +174,5 @@ class MateBuilder extends NsfoBaseBuilder
 
         return $mate;
     }
-    
-    
-    
 
 }

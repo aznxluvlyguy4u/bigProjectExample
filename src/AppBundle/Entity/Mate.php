@@ -77,8 +77,8 @@ class Mate extends DeclareNsfoBase
      * })
      */
     private $ramUlnNumber;
-    
-    
+
+
     /**
      * @var Ewe
      * @ORM\ManyToOne(targetEntity="Ewe", inversedBy = "matings", cascade={"persist"})
@@ -124,7 +124,7 @@ class Mate extends DeclareNsfoBase
      * The number designating then place in an ordered sequence of mates for a specific ewe
      * starting at 1 and grouped by parity.
      * So restart the sequence when parity number is incremented.
-     * 
+     *
      * @var integer
      * @ORM\Column(type="integer", nullable=true, options={"default":null})
      * @JMS\Type("integer")
@@ -169,7 +169,7 @@ class Mate extends DeclareNsfoBase
      * @ORM\JoinColumn(name="current_version_id", referencedColumnName="id")
      */
     private $currentVersion;
-    
+
     /**
      * @var Location
      * @Assert\NotBlank
@@ -197,7 +197,7 @@ class Mate extends DeclareNsfoBase
         return $this->litter !== null;
     }
 
-    
+
     public function __construct() {
       parent::__construct();
       $this->previousVersions = new ArrayCollection();
@@ -341,7 +341,7 @@ class Mate extends DeclareNsfoBase
     {
         $this->ramUlnNumber = $ramUlnNumber;
     }
-    
+
     /**
      * @return Ewe
      */
@@ -421,7 +421,7 @@ class Mate extends DeclareNsfoBase
     {
         $this->mateOrdinalAfterParity = $mateOrdinalAfterParity;
     }
-    
+
     /**
      * @return boolean
      */
@@ -564,6 +564,10 @@ class Mate extends DeclareNsfoBase
      * @return Mate
      */
     public function removeLitter() {
+        if ($this->litter) {
+            $this->litter->removeMate();
+        }
+
         $this->litter = null;
         return $this;
     }
@@ -576,7 +580,7 @@ class Mate extends DeclareNsfoBase
         //Note 'currentVersion' and 'previousVersions' are not duplicated. They set the history relationship.
         //The OneToMany reference is used to group them.
         parent::duplicateBaseValues($declareWeight);
-        
+
         //Mate specific values
         $this->setStartDate($declareWeight->getStartDate());
         $this->setEndDate($declareWeight->getEndDate());

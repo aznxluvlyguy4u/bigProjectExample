@@ -140,7 +140,6 @@ class MateService extends ControllerServiceBase
 
     public function removeLitterOfMate(Mate $mate)
     {
-        $mate->getLitter()->removeMate();
         $mate->removeLitter();
     }
 }
