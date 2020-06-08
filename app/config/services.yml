@@ -1010,9 +1010,8 @@ services:
         parent: app.abstract_base.controller
         class: AppBundle\Service\LocationHealthService
 
-    app.mate:
+    AppBundle\Service\MateService:
         parent: app.abstract_base.controller
-        class: AppBundle\Service\MateService
 
     app.measurement:
         parent: app.abstract_base.controller
