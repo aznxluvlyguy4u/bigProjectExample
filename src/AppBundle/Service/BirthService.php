@@ -1027,7 +1027,7 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
             foreach ($children as $child) {
                 if($child->getDateOfBirth()) {
                     //Add as a true candidate surrogate to list
-                    if ($this->isSurrogateMotherDateValid($dateOfBirth, $offsetDateFromNow, $child->getDateOfBirth())) {
+                    if ($this->isSurrogateMotherDateValid($dateOfBirth, $offsetDateFromNow, $child->getDateOfBirth(), $animal)) {
                         $suggestedCandidatesResult[] = $this->getAnimalResult($animal, $location);
                         $addToOtherCandidates = false;
                         break;

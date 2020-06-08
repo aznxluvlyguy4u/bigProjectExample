@@ -2,9 +2,12 @@
 
 namespace AppBundle\Command;
 
-use AppBundle\Service\DataFix\UbnHistoryFixer;
+use AppBundle\Enumerator\ProcessCommandOptions;
+use AppBundle\Exception\Cli\InvalidInputCliException;
+use AppBundle\Service\Task\ResidenceFixTaskService;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
 class NsfoResidencesFixCommand extends ContainerAwareCommand
@@ -16,14 +19,23 @@ class NsfoResidencesFixCommand extends ContainerAwareCommand
         $this
             ->setName('nsfo:residences:fix')
             ->setDescription(self::TITLE)
+            ->addOption('option', 'o', InputOption::VALUE_REQUIRED,
+                "Options:".ProcessCommandOptions::optionsAsList())
         ;
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        /** @var UbnHistoryFixer $ubnHistoryFixer */
-        $ubnHistoryFixer = $this->getContainer()->get(UbnHistoryFixer::class);
-        $ubnHistoryFixer->fixAllAnimalResidenceRecordsByCurrentAnimalLocation();
-    }
+        $option = ProcessCommandOptions::getSelectedOptions($input);
 
+        /** @var ResidenceFixTaskService $taskService */
+        $taskService = $this->getContainer()->get(ResidenceFixTaskService::class);
+
+        switch ($option) {
+            case ProcessCommandOptions::START: $taskService->start(); break;
+            case ProcessCommandOptions::CANCEL: $taskService->cancel(); break;
+            case ProcessCommandOptions::RUN: $taskService->run(); break;
+            default: throw new InvalidInputCliException(ProcessCommandOptions::invalidInputText($option));
+        }
+    }
 }
