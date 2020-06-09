@@ -108,6 +108,7 @@ class DeclareLossProcessor extends DeclareProcessorBase implements DeclareLossPr
         $this->response->setSuccessValues();
 
         $this->animal->setIsAlive(false);
+        $this->animal->setLocation(null);
         $this->animal->setTransferState(null);
         $this->animal->setDateOfDeath($this->loss->getDateOfDeath());
 
