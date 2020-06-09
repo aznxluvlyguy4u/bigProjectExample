@@ -15,6 +15,7 @@ use AppBundle\Util\ActionLogWriter;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
 use AppBundle\Validation\MateValidator;
+use Exception;
 use Symfony\Component\HttpFoundation\Request;
 
 class MateService extends ControllerServiceBase
@@ -60,6 +61,7 @@ class MateService extends ControllerServiceBase
      * @param Request $request
      * @param $messageId
      * @return JsonResponse
+     * @throws Exception
      */
     public function editMate(Request $request, $messageId)
     {
@@ -134,5 +136,10 @@ class MateService extends ControllerServiceBase
 
         $matings = $this->getManager()->getRepository(Mate::class)->getMatingsStudRamOutput($location);
         return new JsonResponse([JsonInputConstant::RESULT => $matings],200);
+    }
+
+    public function removeLitterOfMate(Mate $mate)
+    {
+        $mate->removeLitter();
     }
 }

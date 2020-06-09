@@ -150,6 +150,20 @@ services:
             arguments:
               - '@AppBundle\Service\InbreedingCoefficient\InbreedingCoefficientParentPairsUpdaterService'
 
+    AppBundle\Service\Task\TaskServiceBase:
+        abstract: true
+        arguments:
+          - '@doctrine.orm.entity_manager'
+          - '@logger'
+          - '@translator'
+
+    AppBundle\Service\Task\ResidenceFixTaskService:
+        parent: AppBundle\Service\Task\TaskServiceBase
+        calls:
+          - method: setUbnHistoryFixer
+            arguments:
+              - '@AppBundle\Service\DataFix\UbnHistoryFixer'
+
     app.animallocation.history:
         class: AppBundle\Service\AnimalLocationHistoryService
         arguments: ['@doctrine.orm.entity_manager']
@@ -1010,9 +1024,8 @@ services:
         parent: app.abstract_base.controller
         class: AppBundle\Service\LocationHealthService
 
-    app.mate:
+    AppBundle\Service\MateService:
         parent: app.abstract_base.controller
-        class: AppBundle\Service\MateService
 
     app.measurement:
         parent: app.abstract_base.controller
@@ -1060,6 +1073,9 @@ services:
           - method: setRevokeProcessor
             arguments:
               - '@AppBundle\Worker\DirectProcessor\RevokeProcessorInterface'
+          - method: setMateService
+            arguments:
+              - '@AppBundle\Service\MateService'
 
     AppBundle\Service\QueueDashboardService:
         parent: app.abstract_base.controller

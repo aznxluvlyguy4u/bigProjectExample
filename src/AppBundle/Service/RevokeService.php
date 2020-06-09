@@ -48,6 +48,9 @@ class RevokeService extends DeclareControllerServiceBase implements RevokeAPICon
     /** @var RevokeProcessorInterface */
     private $revokeProcessor;
 
+    /** @var MateService */
+    private $mateService;
+
     /**
      * @required
      *
@@ -68,6 +71,15 @@ class RevokeService extends DeclareControllerServiceBase implements RevokeAPICon
         $this->revokeProcessor = $revokeProcessor;
     }
 
+    /**
+     * @required
+     *
+     * @param MateService $mateService
+     */
+    public function setMateService(MateService $mateService): void
+    {
+        $this->mateService = $mateService;
+    }
 
     /**
      * @param Request $request
@@ -224,6 +236,7 @@ class RevokeService extends DeclareControllerServiceBase implements RevokeAPICon
         }
 
         if($nsfoDeclaration instanceof Mate) {
+            $this->mateService->removeLitterOfMate($nsfoDeclaration);
             $this->getManager()->getRepository(Animal::class)->purgeCandidateMothersCache($nsfoDeclaration->getLocation(), $this->getCacheService());
             AnimalRepository::purgeEwesLivestockWithLastMateCache($nsfoDeclaration->getLocation(), $this->getCacheService());
         }

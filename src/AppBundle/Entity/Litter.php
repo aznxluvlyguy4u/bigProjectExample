@@ -441,6 +441,15 @@ class Litter extends DeclareNsfoBase
     }
 
     /**
+     * @return Litter
+     */
+    public function removeMate()
+    {
+        $this->mate = null;
+        return $this;
+    }
+
+    /**
      * Set logDate
      *
      * @param \DateTime $logDate

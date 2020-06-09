@@ -10,6 +10,7 @@ use AppBundle\Entity\Animal;
 use AppBundle\Enumerator\AnimalTransferStatus;
 use AppBundle\Enumerator\BreedTypeDutch;
 use AppBundle\Enumerator\ColumnType;
+use AppBundle\Enumerator\Country;
 use AppBundle\Enumerator\DutchGender;
 use AppBundle\Enumerator\ExteriorKind;
 use AppBundle\Enumerator\GenderType;
@@ -933,6 +934,20 @@ class SqlUtil
         $glue = $lastPart . $connector . $firstPart;
 
         return $firstPart . implode($glue, $columnLabelsWithTableAlias) . $lastPart;
+    }
+
+
+    private static function countriesWithAnimalSyncs(): array
+    {
+        return [
+            Country::NL,
+        ];
+    }
+
+
+    public static function countriesWithAnimalSyncsJoinedList(): string
+    {
+        return "'" . implode("','", self::countriesWithAnimalSyncs()) . "'";
     }
 
 

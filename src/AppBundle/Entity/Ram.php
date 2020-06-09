@@ -35,7 +35,7 @@ class Ram extends Animal implements ParentInterface
      * @Assert\NotBlank
      * @ORM\Column(type="string")
      * @JMS\Type("string")
-     * 
+     *
      */
      private $objectType;
 
@@ -141,7 +141,7 @@ class Ram extends Animal implements ParentInterface
 
 
     /**
-     * @return ArrayCollection
+     * @return ArrayCollection|Mate[]
      */
     public function getMatings()
     {
