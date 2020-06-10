@@ -3,6 +3,7 @@
 namespace AppBundle\Entity;
 
 use AppBundle\Traits\EntityClassInfo;
+use DateTime;
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as JMS;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -24,6 +25,7 @@ class MedicationSelection
      * @ORM\Column(type="integer")
      * @ORM\GeneratedValue(strategy="IDENTITY")
      * @JMS\Groups({
+     *     "TREATMENT",
      *     "TREATMENT_MIN"
      * })
      */
@@ -38,79 +40,28 @@ class MedicationSelection
     private $treatment;
 
     /**
-     * @var TreatmentMedication
-     * @ORM\ManyToOne(targetEntity="AppBundle\Entity\TreatmentMedication", inversedBy="medicationSelections")
-     * @JMS\Type("AppBundle\Entity\TreatmentMedication")
-     *
-     * @JMS\Groups({
-     *     "TREATMENT",
-     *     "TREATMENT_MIN"
-     * })
+     * @var MedicationOption
+     * @ORM\ManyToOne(targetEntity="AppBundle\Entity\MedicationOption")
+     * @ORM\JoinColumn(name="medication_option_id", referencedColumnName="id", onDelete="CASCADE")
+     * @JMS\Type("AppBundle\Entity\MedicationOption")
      */
-    private $treatmentMedication;
+    private $medicationOption;
 
     /**
-     * @var float
+     * @var DateTime
      *
-     * @ORM\Column(type="float", options={"default":0})
-     * @JMS\Type("float")
-     * @JMS\Groups({
-     *     "TREATMENT",
-     *     "TREATMENT_MIN"
-     * })
-     * @Assert\NotBlank
-     */
-    private $dosage;
-
-    /**
-     * @var string
-     *
-     * @ORM\Column(type="string", nullable=false)
-     * @JMS\Type("string")
-     * @JMS\Groups({
-     *     "TREATMENT",
-     *     "TREATMENT_MIN"
-     * })
-     * @Assert\NotBlank
-     * @Assert\Regex("/aantal|mg|ml|g|l/m")
-     */
-    private $dosageUnit;
-
-    /**
-     * @var integer
-     *
-     * @ORM\Column(type="integer", nullable=true)
-     * @JMS\Type("integer")
+     * @ORM\Column(type="datetime", nullable=true)
+     * @JMS\Type("datetime")
      * @JMS\Groups({
      *     "TREATMENT",
      *     "TREATMENT_MIN"
      * })
      */
-    private $waitingDays;
-
-    /**
-     * @var string
-     *
-     * @ORM\Column(type="string", nullable=true)
-     * @JMS\Type("string")
-     * @JMS\Groups({
-     *     "TREATMENT",
-     *     "TREATMENT_MIN"
-     * })
-     */
-    private $regNl;
+    private $waitingTimeEnd;
 
     //don't remove this because when you try to retrieve the entity there will be an error.
     //TODO: fix "Can not find property 'description' of MedicationSelection" error when retrieving the entity
     private $description;
-
-    /**
-     * MedicationSelection constructor.
-     */
-    public function __construct()
-    {
-        $this->dosage = 0.0;
-    }
 
     /**
      * @return int
@@ -149,95 +100,39 @@ class MedicationSelection
     }
 
     /**
-     * @return TreatmentMedication
+     * @return MedicationOption
      */
-    public function getTreatmentMedication()
+    public function getMedicationOption(): MedicationOption
     {
-        return $this->treatmentMedication;
+        return $this->medicationOption;
     }
 
     /**
-     * @param TreatmentMedication $treatmentMedication
+     * @param MedicationOption $medicationOption
      * @return MedicationSelection
      */
-    public function setTreatmentMedication($treatmentMedication)
+    public function setMedicationOption(MedicationOption $medicationOption): self
     {
-        $this->treatmentMedication = $treatmentMedication;
-        return $this;
-    }
-
-    /**
-     * @return float
-     */
-    public function getDosage()
-    {
-        return $this->dosage;
-    }
-
-    /**
-     * @param float $dosage
-     * @return MedicationSelection
-     */
-    public function setDosage($dosage)
-    {
-        $this->dosage = $dosage;
+        $this->medicationOption = $medicationOption;
 
         return $this;
     }
 
     /**
-     * @return string
+     * @return DateTime
      */
-    public function getDosageUnit(): string
+    public function getWaitingTimeEnd(): DateTime
     {
-        return $this->dosageUnit;
+        return $this->waitingTimeEnd;
     }
 
     /**
-     * @param string $dosageUnit
+     * @param DateTime $waitingTimeEnd
      * @return MedicationSelection
      */
-    public function setDosageUnit(string $dosageUnit): self
+    public function setWaitingTimeEnd(DateTime $waitingTimeEnd): self
     {
-        $this->dosageUnit = $dosageUnit;
-
-        return $this;
-    }
-
-    /**
-     * @return int|null
-     */
-    public function getWaitingDays(): ?int
-    {
-        return $this->waitingDays;
-    }
-
-    /**
-     * @param int $waitingDays
-     * @return MedicationSelection
-     */
-    public function setWaitingDays(int $waitingDays): self
-    {
-        $this->waitingDays = $waitingDays;
-
-        return $this;
-    }
-
-    /**
-     * @return string|null
-     */
-    public function getRegNl(): ?string
-    {
-        return $this->regNl;
-    }
-
-    /**
-     * @param string|null $regNl
-     * @return MedicationSelection
-     */
-    public function setRegNl(?string $regNl): self
-    {
-        $this->regNl = $regNl;
+        $this->waitingTimeEnd = $waitingTimeEnd;
 
         return $this;
     }
