@@ -30,8 +30,6 @@ class CombiFormTransportDocumentService extends ReportServiceBase
         /** @var Location $location */
         $location = $this->getSelectedLocation($request);
 
-//        NullChecker::checkLocation($location);
-
         $PDFData = $this->getPDFData($content->toArray(), $location);
         $PDFData[ReportLabel::IMAGES_DIRECTORY] = $this->getImagesDirectory();
         $PDFData['transport_date'] = $content['transport_date'];
@@ -53,7 +51,8 @@ class CombiFormTransportDocumentService extends ReportServiceBase
      */
     private function getPDFData(array $requestContent, ?Location $location)
     {
-        $result = [];
+        $result = ['location' => $location];
+
         foreach ($requestContent['animals'] as $animalItem) {
             /** @var Animal $animal */
             $animal = $this->em->getRepository(Animal::class)

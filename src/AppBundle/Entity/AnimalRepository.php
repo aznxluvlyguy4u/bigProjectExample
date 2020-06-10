@@ -2314,4 +2314,21 @@ WHERE animal_id IN (
 
         return $result->getBirths()->last();
     }
+
+    /**
+     * @param $exportDate
+     * @param $location_id
+     * @return mixed
+     */
+    public function getExportAnimalsByExportDate($exportDate, $location_id)
+    {
+        return $this->createQueryBuilder('animal')
+            ->innerJoin('animal.location', 'location')
+            ->where('location.id = :location_id')
+            ->andWhere('export.exportDate = :export_date')
+            ->setParameter('export_date', $exportDate)
+            ->setParameter('location_id', $location_id)
+            ->getQuery()
+            ->getResult();
+    }
 }

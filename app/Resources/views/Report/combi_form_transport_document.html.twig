@@ -3,6 +3,9 @@
 {% block body %}
 
     {% set imagesDirectory = variables.imagesDirectory ~ '/nsfo-logo.png' %}
+    {% set location = variables.location %}
+    {% set address = location.address %}
+    {% set owner = location.owner %}
 
     <div id="page">
         <div class="container-fluid">
@@ -27,19 +30,23 @@
                         </tr>
                         <tr>
                             <td>UBN:</td>
-                            <td>.....................................</td>
+                            <td>{{ location.ubn }}</td>
                         </tr>
                         <tr>
                             <td>Naam:</td>
-                            <td>.....................................</td>
+                            <td>{{ owner.firstName }} {{ owner.lastName }}</td>
                         </tr>
                         <tr>
                             <td>Adres:</td>
-                            <td>.....................................</td>
+                            <td>
+                                {{ address.streetName }} {{ address.addressNumber }} {{ address.addressNumberSuffix }}
+{#                                <br>#}
+{#                                {{ address.postalCode }}#}
+                            </td>
                         </tr>
                         <tr>
                             <td>Woonplaats:</td>
-                            <td>.....................................</td>
+                            <td>{{ address.city | capitalize }}</td>
                         </tr>
                     </table>
                 </div>
@@ -148,7 +155,7 @@
                     <p>Categorie: schaap/geit</p>
                 </div>
                 <div class="col-md-4">
-                    <p>Aantal te leveren dieren: [variables.aantal]</p>
+                    <p>Aantal te leveren dieren: {{ variables.animals | length }}</p>
                 </div>
             </div>
             <div class="row">
@@ -174,7 +181,7 @@
                             <tr>
                                 <td>{{ animal.ulnCountryCode }}{{ animal.ulnNumber }}</td>
                                 <td>{{ animal.dateOfBirth | date('d-m-Y') }}</td>
-                                <td>{{ animal.gender }}</td>
+                                <td>{{ animal.genderForAnimalDetails }}</td>
                                 <td></td>
                                 <td class="separatorCol"></td>
                                 <td></td>
