@@ -381,7 +381,6 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
                 }
             } else {
                 $medication->setTreatmentMedication($existingTreatmentMedication);
-                $existingTreatmentMedication->addMedicationOption($medication);
                 $this->getManager()->persist($existingTreatmentMedication);
                 $this->getManager()->persist($medication);
             }

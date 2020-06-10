@@ -3,9 +3,6 @@
 namespace AppBundle\Entity;
 
 use AppBundle\Traits\EntityClassInfo;
-use AppBundle\Util\Translation;
-use DateTime;
-use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as JMS;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -59,26 +56,6 @@ class TreatmentMedication
      */
     private $isActive = true;
 
-//    /**
-//     * @var ArrayCollection|MedicationOption[]
-//     * @JMS\Type("ArrayCollection<AppBundle\Entity\MedicationOption>")
-//     * @ORM\OneToMany(targetEntity="AppBundle\Entity\MedicationOption", mappedBy="treatmentMedication")
-//     */
-//    private $medicationOptions;
-//
-//    /**
-//     * @var ArrayCollection|MedicationSelection[]
-//     * @JMS\Type("ArrayCollection<AppBundle\Entity\MedicationSelection>")
-//     * @ORM\OneToMany(targetEntity="AppBundle\Entity\MedicationSelection", mappedBy="treatmentMedication")
-//     */
-//    private $medicationSelections;
-
-//    public function __construct()
-//    {
-//        $this->medicationOptions = new ArrayCollection();
-//        $this->medicationSelections = new ArrayCollection();
-//    }
-
     /**
      * @return int
      */
@@ -123,59 +100,4 @@ class TreatmentMedication
         return $this;
     }
 
-//    /**
-//     * @return ArrayCollection|MedicationOption[]
-//     */
-//    public function getMedicationOptions(): ?ArrayCollection
-//    {
-//        return $this->medicationOptions;
-//    }
-//
-//    /**
-//     * @param MedicationOption $medicationOption
-//     * @return TreatmentMedication
-//     */
-//    public function addMedicationOption(MedicationOption $medicationOption): self
-//    {
-//        $this->medicationOptions->add($medicationOption);
-//        return $this;
-//    }
-//
-//    /**
-//     * @param MedicationOption $medicationOption
-//     * @return TreatmentMedication
-//     */
-//    public function removeMedicationOption(MedicationOption $medicationOption): self
-//    {
-//        $this->medicationOptions->removeElement($medicationOption);
-//        return $this;
-//    }
-//
-//    /**
-//     * @return ArrayCollection|MedicationSelection[]
-//     */
-//    public function getMedicationSelections(): ArrayCollection
-//    {
-//        return $this->medicationSelections;
-//    }
-//
-//    /**
-//     * @param MedicationSelection $medicationSelection
-//     * @return TreatmentMedication
-//     */
-//    public function addMedicationSelection(MedicationSelection $medicationSelection): self
-//    {
-//        $this->medicationSelections->add($medicationSelection);
-//        return $this;
-//    }
-//
-//    /**
-//     * @param MedicationSelection $medicationSelection
-//     * @return TreatmentMedication
-//     */
-//    public function removeMedicationSelection(MedicationSelection $medicationSelection): self
-//    {
-//        $this->medicationSelections->removeElement($medicationSelection);
-//        return $this;
-//    }
 }
