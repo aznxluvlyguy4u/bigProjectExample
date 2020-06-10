@@ -80,7 +80,7 @@ class MedicationOption
     private $dosageUnit;
 
     /**
-     * @var string|null
+     * @var string
      *
      * @ORM\Column(type="string", nullable=false)
      * @JMS\Type("string")
@@ -225,18 +225,18 @@ class MedicationOption
     }
 
     /**
-     * @return string|null
+     * @return string
      */
-    public function getRegNl(): ?string
+    public function getRegNl(): string
     {
         return $this->regNl;
     }
 
     /**
-     * @param string|null $regNl
+     * @param string $regNl
      * @return MedicationOption
      */
-    public function setRegNl(?string $regNl): self
+    public function setRegNl(string $regNl): self
     {
         $this->regNl = $regNl;
 
