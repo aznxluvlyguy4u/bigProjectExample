@@ -19,6 +19,7 @@ use AppBundle\Service\CacheService;
 use AppBundle\Util\AnimalArrayReader;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\CommandUtil;
+use AppBundle\Util\RequestUtil;
 use AppBundle\Util\SqlUtil;
 use AppBundle\Util\StringUtil;
 use AppBundle\Util\TimeUtil;
@@ -34,7 +35,9 @@ use Doctrine\ORM\Query\Expr;
 use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\ORM\Query\Parameter;
 use Doctrine\ORM\QueryBuilder;
+use Exception;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
@@ -1151,7 +1154,7 @@ WHERE animal_id IN (
      * @param bool $onlyReturnQuery
      * @return array|\Doctrine\ORM\Query
      * @throws \Doctrine\ORM\Query\QueryException
-     * @throws \Exception
+     * @throws Exception
      */
     public function findAnimalsByUlnPartsOrStnPartsOrUbns(array $ulnPartsArray = [], array $stnPartsArray = [],
                                                           array $ubns = [], $onlyReturnQuery = false)
@@ -2025,18 +2028,18 @@ WHERE animal_id IN (
      * @param array|string $ulns
      * @return array
      * @throws \Doctrine\DBAL\DBALException
-     * @throws \Exception
+     * @throws Exception
      */
     public function ulnCounts($ulns)
     {
         if (is_string($ulns)) {
             $ulns = [$ulns];
         } elseif (!is_array($ulns)) {
-            throw new \Exception('Input should be a uln string or array of uln strings');
+            throw new Exception('Input should be a uln string or array of uln strings');
         }
 
         if (count($ulns) === 0) {
-            throw new \Exception('uln string is missing');
+            throw new Exception('uln string is missing');
         }
 
         $ulnsString = "'" . implode("','", $ulns) . "'";
@@ -2163,7 +2166,7 @@ WHERE animal_id IN (
     /**
      * @param array $animalsArray
      * @return array
-     * @throws \Exception
+     * @throws Exception
      */
     public function getAnimalIdsFromAnimalsArray($animalsArray = [])
     {
@@ -2210,7 +2213,7 @@ WHERE animal_id IN (
      * @param array $animalsArray
      * @param int $locationId
      * @return array
-     * @throws \Exception
+     * @throws Exception
      */
     public function getCurrentAndHistoricAnimalIdsFromAnimalsArray($animalsArray = [], $locationId)
     {
@@ -2219,7 +2222,7 @@ WHERE animal_id IN (
         }
 
         if (!is_int($locationId) && !ctype_digit($locationId)) {
-            throw new \Exception('Location id is missing', Response::HTTP_PRECONDITION_REQUIRED);
+            throw new Exception('Location id is missing', Response::HTTP_PRECONDITION_REQUIRED);
         }
 
         Validator::validateUlnKeysInArray($animalsArray, true);
@@ -2316,19 +2319,34 @@ WHERE animal_id IN (
     }
 
     /**
-     * @param $exportDate
+     * @param Request $request
      * @param $location_id
      * @return mixed
+     * @throws Exception
      */
-    public function getExportAnimalsByExportDate($exportDate, $location_id)
+    public function getExportAnimalsByExportDate(Request $request, $location_id)
     {
-        return $this->createQueryBuilder('animal')
-            ->innerJoin('animal.location', 'location')
-            ->where('location.id = :location_id')
-            ->andWhere('export.exportDate = :export_date')
-            ->setParameter('export_date', $exportDate)
-            ->setParameter('location_id', $location_id)
-            ->getQuery()
-            ->getResult();
+        $exportDate = RequestUtil::getDateQuery($request, 'export_date')->format('Y-m-d');
+
+        $sql = "SELECT 
+            animal.id AS id,
+            animal.uln_country_code,
+            animal.uln_number,
+            animal.pedigree_country_code,
+            animal.pedigree_number,
+            animal.date_of_birth,
+            animal.gender,
+            animal.collar_color,
+            animal.collar_number
+        FROM animal
+        LEFT JOIN ewe e2_ ON animal.id = e2_.id
+        LEFT JOIN neuter n3_ ON animal.id = n3_.id
+        INNER JOIN location l4_ ON animal.location_id = l4_.id
+        INNER JOIN (declare_export d5_ LEFT JOIN declare_base d6_ ON d5_.id = d6_.id) ON l4_.id = d5_.location_id
+        INNER JOIN (declare_depart d7_ LEFT JOIN declare_base d8_ ON d7_.id = d8_.id) ON l4_.id = d7_.location_id
+        WHERE l4_.id = $location_id AND (d5_.export_date = '$exportDate 12:00:00' OR d7_.depart_date = '$exportDate 12:00:00') 
+        GROUP BY animal.id";
+
+        return $this->getManager()->getConnection()->query($sql)->fetchAll();
     }
 }

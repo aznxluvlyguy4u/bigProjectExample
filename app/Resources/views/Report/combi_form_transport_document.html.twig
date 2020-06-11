@@ -1,11 +1,38 @@
 {% extends 'bootstrap_base.html.twig' %}
 
 {% block body %}
-
+    {% set blankValue = '.....................................' %}
     {% set imagesDirectory = variables.imagesDirectory ~ '/nsfo-logo.png' %}
-    {% set location = variables.location %}
-    {% set address = location.address %}
-    {% set owner = location.owner %}
+
+    {% if variables.location is not same as(null) %}
+        {% set location = variables.location %}
+        {% set address = location.address %}
+        {% set owner = location.owner %}
+        {% set ubn = location.ubn %}
+        {% set fullName = owner.firstName ~ ' ' ~ owner.lastName %}
+        {% set fullAddress = address.streetName ~ ' ' ~ address.addressNumber ~ ' ' ~ address.addressNumberSuffix %}
+        {% set city = address.city %}
+    {% else %}
+        {% set ubn = blankValue %}
+        {% set fullName = blankValue %}
+        {% set address = blankValue %}
+        {% set city = blankValue %}
+    {% endif %}
+
+    {% if variables.export_location is not same as(null) %}
+        {% set export_location = variables.export_location %}
+        {% set export_address = export_location.address %}
+        {% set export_owner = export_location.owner %}
+        {% set export_ubn = export_location.ubn %}
+        {% set export_fullName = export_owner.firstName ~ ' ' ~ export_owner.lastName %}
+        {% set export_fullAddress = export_address.streetName ~ ' ' ~ export_address.addressNumber ~ ' ' ~ export_address.addressNumberSuffix %}
+        {% set export_city = address.city %}
+    {% else %}
+        {% set export_ubn = blankValue %}
+        {% set export_fullName = blankValue %}
+        {% set export_address = blankValue %}
+        {% set export_city = blankValue %}
+    {% endif %}
 
     <div id="page">
         <div class="container-fluid">
@@ -30,23 +57,21 @@
                         </tr>
                         <tr>
                             <td>UBN:</td>
-                            <td>{{ location.ubn }}</td>
+                            <td>{{ ubn }}</td>
                         </tr>
                         <tr>
                             <td>Naam:</td>
-                            <td>{{ owner.firstName }} {{ owner.lastName }}</td>
+                            <td>{{ fullName }}</td>
                         </tr>
                         <tr>
                             <td>Adres:</td>
                             <td>
-                                {{ address.streetName }} {{ address.addressNumber }} {{ address.addressNumberSuffix }}
-{#                                <br>#}
-{#                                {{ address.postalCode }}#}
+                                {{ fullAddress }}
                             </td>
                         </tr>
                         <tr>
                             <td>Woonplaats:</td>
-                            <td>{{ address.city | capitalize }}</td>
+                            <td>{{ city | capitalize }}</td>
                         </tr>
                     </table>
                 </div>
@@ -57,19 +82,21 @@
                         </tr>
                         <tr>
                             <td>UBN:</td>
-                            <td>.....................................</td>
+                            <td>{{ export_ubn }}</td>
                         </tr>
                         <tr>
                             <td>Naam:</td>
-                            <td>.....................................</td>
+                            <td>{{ export_fullName }}</td>
                         </tr>
                         <tr>
                             <td>Adres:</td>
-                            <td>.....................................</td>
+                            <td>
+                                {{ export_fullAddress }}
+                            </td>
                         </tr>
                         <tr>
                             <td>Woonplaats:</td>
-                            <td>.....................................</td>
+                            <td>{{ export_city | capitalize }}</td>
                         </tr>
                     </table>
                 </div>

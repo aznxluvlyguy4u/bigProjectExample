@@ -51,7 +51,14 @@ class CombiFormTransportDocumentService extends ReportServiceBase
      */
     private function getPDFData(array $requestContent, ?Location $location)
     {
-        $result = ['location' => $location];
+        /** @var Location $exportLocation */
+        $exportLocation = $this->em->getRepository(Location::class)
+            ->findOneBy(['ubn' => $requestContent['export_ubn']]);
+
+        $result = [
+            'location'        => $location,
+            'export_location' => $exportLocation
+        ];
 
         foreach ($requestContent['animals'] as $animalItem) {
             /** @var Animal $animal */

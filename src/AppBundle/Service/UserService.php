@@ -93,7 +93,7 @@ class UserService
      */
     public function getAccountOwner(Request $request = null, $tokenCode = null)
     {
-        $loggedInUser = $this->getUser($tokenCode);
+        $loggedInUser = $this->getUser($request->headers->get('AccessToken'));
 
         /* Clients */
         if($loggedInUser instanceof Client) {
@@ -101,7 +101,6 @@ class UserService
 
             /* Admins with a GhostToken */
         } else if ($loggedInUser instanceof Employee) {
-
             if ($request === null) {
                 throw new Exception('Request cannot be empty for getAccountOwner if (loggedIn)User is not a Client');
             }
@@ -167,7 +166,8 @@ class UserService
      */
     public function getSelectedLocation(Request $request)
     {
-        $client = $this->getAccountOwner($request, $request->headers->get('ghosttoken'));
+        $client = $this->getAccountOwner($request);
+
         $headerValidation = null;
 
         if($client) {

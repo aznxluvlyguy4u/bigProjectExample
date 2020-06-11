@@ -657,7 +657,7 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
 
         } else if ($isLiveStockExport) {
             $livestock = $this->getManager()->getRepository(Animal::class)
-                ->getExportAnimalsByExportDate($location);
+                ->getExportAnimalsByExportDate($request, $location->getId());
             $jmsGroups = [JmsGroup::LIVESTOCK, JmsGroup::IS_NOT_HISTORIC_ANIMAL];
         }
         else {
@@ -677,6 +677,15 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         return ResultUtil::successResult($serializedLivestockAnimals);
     }
 
+    /**
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function getLocationsWithExportsOrDeparts(Request $request)
+    {
+        return ResultUtil::successResult($this->getManager()->getRepository(Location::class)
+        ->getLocationWithExportsOrDeparts($request));
+    }
 
     /**
      * @param Animal[] $animals
