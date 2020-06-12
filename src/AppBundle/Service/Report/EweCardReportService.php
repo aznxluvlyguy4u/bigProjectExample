@@ -188,8 +188,8 @@ class EweCardReportService extends ReportServiceBase
         $genderTranslationValues = SqlUtil::genderTranslationValues();
         $isoCountryAlphaTwoToNumericMapping = SqlUtil::isoCountryAlphaTwoToNumericMapping();
 
-        $mainSectionValue = strtolower(SectionUtil::MAIN_SECTION);
-        $complementarySectionValue = strtolower(SectionUtil::COMPLEMENTARY_SECTION);
+        $mainSectionValue = SectionUtil::MAIN_SECTION;
+        $complementarySectionValue = SectionUtil::COMPLEMENTARY_SECTION;
 
         $mainSectionBreedTypesArrayString = "(".SqlUtil::getFilterListString(SectionUtil::mainSectionBreedTypes(), true).")";
         $complementarySectionBreedTypesArrayString = "(".SqlUtil::getFilterListString(SectionUtil::secondarySectionBreedTypes(), true).")";
