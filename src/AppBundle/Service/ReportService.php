@@ -478,12 +478,13 @@ class ReportService
 
     /**
      * @param Request $request
+     * @param ArrayCollection|null $content
      * @return JsonResponse
      * @throws \Exception
      */
-    public function createEweCardReport(Request $request)
+    public function createEweCardReport(Request $request, $content = null)
     {
-        $content = RequestUtil::getContentAsArrayCollection($request);
+        $content = $content ?? RequestUtil::getContentAsArrayCollection($request);
         $animalsArray = $content->get(JsonInputConstant::ANIMALS);
 
         if (!is_array($animalsArray)) {
@@ -1259,10 +1260,12 @@ class ReportService
         $body = empty($base64encodedBody) ? null :base64_decode($base64encodedBody);
         $isEmptyBody = empty($body) || $body === '{}';
 
-        $content = new ArrayCollection(($isEmptyBody ? json_decode($body, true) : null));
+        $content = new ArrayCollection(($isEmptyBody ? null : json_decode($body, true)));
         $request->query->set(QueryParameter::PROCESS_AS_WORKER_TASK, 'false');
 
         switch ($reportType) {
+            case ReportType::EWE_CARD:
+                return $this->createEweCardReport($request, $content);
             case ReportType::PEDIGREE_CERTIFICATE:
                 return $this->createPedigreeCertificatesWithoutWorker($request, $content);
             case ReportType::BIRTH_LIST:
