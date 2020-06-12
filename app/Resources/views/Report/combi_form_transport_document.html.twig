@@ -103,7 +103,7 @@
             </div>
             <div class="row">
                 <div class="col-md-5" id="blockCanBeExported">
-                    <input type="checkbox" id="canBeExported" />
+                    <input type="checkbox" id="canBeExported" {% if variables.can_be_exported %}checked{% endif %}  />
                     <label for="canBeExported" id="labelCanBeExported">
                         Kruis aan als de dieren geëxporteerd mogen worden,
                         omdat ze voldoen aan deze voorwaarden:

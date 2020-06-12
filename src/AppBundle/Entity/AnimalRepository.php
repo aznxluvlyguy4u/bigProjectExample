@@ -2342,9 +2342,17 @@ WHERE animal_id IN (
         LEFT JOIN ewe e2_ ON animal.id = e2_.id
         LEFT JOIN neuter n3_ ON animal.id = n3_.id
         INNER JOIN location l4_ ON animal.location_id = l4_.id
-        INNER JOIN (declare_export d5_ LEFT JOIN declare_base d6_ ON d5_.id = d6_.id) ON l4_.id = d5_.location_id
-        INNER JOIN (declare_depart d7_ LEFT JOIN declare_base d8_ ON d7_.id = d8_.id) ON l4_.id = d7_.location_id
-        WHERE l4_.id = $location_id AND (d5_.export_date = '$exportDate 12:00:00' OR d7_.depart_date = '$exportDate 12:00:00') 
+        INNER JOIN declare_export d5_ ON l4_.id = d5_.location_id
+        INNER JOIN declare_depart d7_ ON l4_.id = d7_.location_id
+        WHERE l4_.id = $location_id AND 
+        (
+            d5_.export_date = '$exportDate 12:00:00' OR
+            d7_.depart_date = '$exportDate 12:00:00'
+        ) AND 
+        (
+            d5_.animal_id = animal.id OR 
+            d7_.animal_id = animal.id
+        )
         GROUP BY animal.id";
 
         return $this->getManager()->getConnection()->query($sql)->fetchAll();

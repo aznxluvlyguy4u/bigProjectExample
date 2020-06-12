@@ -55,10 +55,10 @@ class CombiFormTransportDocumentService extends ReportServiceBase
         $exportLocation = $this->em->getRepository(Location::class)
             ->findOneBy(['ubn' => $requestContent['export_ubn']]);
 
-        $result = [
-            'location'        => $location,
-            'export_location' => $exportLocation
-        ];
+//        $result = [
+//            'location'        => $location,
+//            'export_location' => $exportLocation
+//        ];
 
         foreach ($requestContent['animals'] as $animalItem) {
             /** @var Animal $animal */
@@ -67,6 +67,8 @@ class CombiFormTransportDocumentService extends ReportServiceBase
                     'ulnNumber' => $animalItem['uln_number'],
                     'ulnCountryCode' => $animalItem['uln_country_code']
                 ]);
+
+            dump($animal->getArrivals()->isEmpty());
 
             $result['can_be_exported'] = false;
 
@@ -80,6 +82,10 @@ class CombiFormTransportDocumentService extends ReportServiceBase
 
             $result['animals'][] = $animal;
         }
+        die;
+
+        $result['location'] = $location;
+        $result['export_location'] = $exportLocation;
 
 
         return $result;
