@@ -22,7 +22,7 @@
         {% set logoPath = images_dir~'/nsfo-logo@2x.png' %}
     {% endif %}
 
-    {% for animal in variables %}
+    {% for animal in variables.animals %}
 
         <div class="container p-2">
 
@@ -62,6 +62,7 @@
             {# HEADER INFO #}
             {% set vars = {
                 'animal' : animal,
+                'userData' : variables.userData,
                 'pageNumber' : pageNumber
             } %}
             {% embed "/Report/ewe_cards_parts/header_info.html.twig" with vars %}

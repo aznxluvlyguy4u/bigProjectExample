@@ -69,7 +69,9 @@ class EweCardReportService extends ReportServiceBase
      */
     private function getPdfReport(Person $actionBy, Location $location)
     {
-        $data = $this->getAnimalData($location);
+        $data = [];
+        $data['animals'] = $this->getAnimalData($location);
+        $data['userData'] = $this->getUserData($location);
 
         $additionalData = [
             'bootstrap_css' => FilesystemUtil::getAssetsDirectory($this->rootDir). '/bootstrap-3.3.7-dist/css/bootstrap.min.css',
@@ -132,6 +134,20 @@ class EweCardReportService extends ReportServiceBase
         }
 
         return $data;
+    }
+
+    private function getUserData(Location $location): array {
+
+        $owner = $location->getCompany()->getOwner();
+        $locationAddress = $location->getAddress();
+
+        return [
+            'fullName' => $owner->getFullName(),
+            'ubn' => $location->getUbn(),
+            'locationAddress' => $locationAddress->getFullStreetNameAndNumber(),
+            'locationPostalCode' => $locationAddress->getPostalCode(),
+            'locationCity' => $locationAddress->getCity()
+        ];
     }
 
     private function filterAnimalAndProductionDataForAnimalId(int $animalId, array $data): array {
