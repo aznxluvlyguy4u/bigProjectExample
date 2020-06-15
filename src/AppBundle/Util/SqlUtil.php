@@ -1030,16 +1030,25 @@ class SqlUtil
     }
 
 
-    public static function getArrayFromPostgreSqlArrayString(?string $psqlArrayString): array
+    public static function getArrayFromPostgreSqlArrayString(?string $psqlArrayString, bool $onlyContainsIntegers = true): array
     {
         if (empty($psqlArrayString)) {
             return [];
         }
 
-        return json_decode(strtr($psqlArrayString,[
+
+        $translations = $onlyContainsIntegers ? [
             '{' => '[',
             '}' => ']',
-        ]), false) ?? [];
+        ] : [
+            '{' => '["',
+            '}' => '"]',
+            ',' => '","'
+        ];
+
+        $jsonArrayString = strtr($psqlArrayString, $translations);
+
+        return json_decode($jsonArrayString, false) ?? [];
     }
 
 
