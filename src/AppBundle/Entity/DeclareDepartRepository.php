@@ -137,7 +137,8 @@ class DeclareDepartRepository extends BaseRepository {
                 WHERE db.request_state IN ($activeRequestStateTypes)
                       AND d.location_id = $locationId
                 GROUP BY DATE(d.depart_date)
-                )g";
+                )g
+                ORDER BY g.depart_date DESC";
 
         $results = $this->getConnection()->query($sql)->fetchAll();
 
