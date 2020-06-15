@@ -394,8 +394,8 @@ class EweCardReportService extends ReportServiceBase
             --gewicht
             ac.birth_weight as birth_weight,
             
-            -- weaning/'spenen'-data is not available
-            '' as weaning_weight,
+            -- weaning weight/'speengewicht' = weight at 8 weeks
+            COALESCE(CAST(ac.weight_at8weeks AS text),'') as weaning_weight,
 
             COALESCE(delivery_weight.weight,'') as delivery_weight,
             COALESCE(growth.average_growth_rate, '') as average_growth,
