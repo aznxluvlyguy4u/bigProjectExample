@@ -78,7 +78,8 @@ class TreatmentTemplate
      * @JMS\Type("ArrayCollection<AppBundle\Entity\MedicationOption>")
      * @JMS\Groups({
      *     "TREATMENT_TEMPLATE",
-     *     "TREATMENT_TEMPLATE_MIN"
+     *     "TREATMENT_TEMPLATE_MIN",
+     *     "TREATMENT"
      * })
      */
     private $medications;

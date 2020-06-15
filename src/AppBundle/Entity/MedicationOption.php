@@ -3,6 +3,7 @@
 namespace AppBundle\Entity;
 
 use AppBundle\Traits\EntityClassInfo;
+use DateTime;
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as JMS;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -44,7 +45,8 @@ class MedicationOption
      *
      * @JMS\Groups({
      *     "TREATMENT_TEMPLATE",
-     *     "TREATMENT_TEMPLATE_MIN"
+     *     "TREATMENT_TEMPLATE_MIN",
+     *     "TREATMENT"
      * })
      */
     private $treatmentMedication;
@@ -56,10 +58,10 @@ class MedicationOption
      * @JMS\Type("float")
      * @JMS\Groups({
      *     "TREATMENT_TEMPLATE",
-     *     "TREATMENT_TEMPLATE_MIN"
+     *     "TREATMENT_TEMPLATE_MIN",
+     *     "TREATMENT"
      * })
      * @Assert\NotBlank
-     * @Assert\Regex("/aantal|mg|ml|g|l/m")
      */
     private $dosage;
 
@@ -70,35 +72,49 @@ class MedicationOption
      * @JMS\Type("string")
      * @JMS\Groups({
      *     "TREATMENT_TEMPLATE",
-     *     "TREATMENT_TEMPLATE_MIN"
+     *     "TREATMENT_TEMPLATE_MIN",
+     *     "TREATMENT"
      * })
      * @Assert\NotBlank
      */
     private $dosageUnit;
 
     /**
-     * @var integer
+     * @var string
      *
-     * @ORM\Column(type="integer", nullable=true)
-     * @JMS\Type("integer")
+     * @ORM\Column(type="string", nullable=false)
+     * @JMS\Type("string")
      * @JMS\Groups({
      *     "TREATMENT_TEMPLATE",
-     *     "TREATMENT_TEMPLATE_MIN"
+     *     "TREATMENT_TEMPLATE_MIN",
+     *     "TREATMENT"
      * })
      */
-    private $waitingDays;
+    private $regNl;
 
     /**
      * @var string|null
      *
-     * @ORM\Column(type="string", nullable=true)
+     * @ORM\Column(type="string", nullable=false)
      * @JMS\Type("string")
      * @JMS\Groups({
      *     "TREATMENT_TEMPLATE",
-     *     "TREATMENT_TEMPLATE_MIN"
+     *     "TREATMENT_TEMPLATE_MIN",
+     *     "TREATMENT"
      * })
      */
-    private $regNl;
+    private $treatmentDuration;
+
+    /**
+     * @ORM\Column(type="integer", nullable=false)
+     * @JMS\Type("integer")
+     * @JMS\Groups({
+     *     "TREATMENT_TEMPLATE",
+     *     "TREATMENT_TEMPLATE_MIN",
+     *     "TREATMENT"
+     * })
+     */
+    private $waitingDays;
 
     //don't remove this because when you try to retrieve the entity there will be an error.
     private $description;
@@ -209,20 +225,20 @@ class MedicationOption
     }
 
     /**
-     * @return int|null
+     * @return string
      */
-    public function getWaitingDays(): ?int
+    public function getRegNl(): string
     {
-        return $this->waitingDays;
+        return $this->regNl;
     }
 
     /**
-     * @param int $waitingDays
+     * @param string $regNl
      * @return MedicationOption
      */
-    public function setWaitingDays(int $waitingDays): self
+    public function setRegNl(string $regNl): self
     {
-        $this->waitingDays = $waitingDays;
+        $this->regNl = $regNl;
 
         return $this;
     }
@@ -230,18 +246,34 @@ class MedicationOption
     /**
      * @return string|null
      */
-    public function getRegNl(): ?string
+    public function getTreatmentDuration(): ?string
     {
-        return $this->regNl;
+        return $this->treatmentDuration;
     }
 
     /**
-     * @param string|null $regNl
+     * @param string|null $treatmentDuration
+     */
+    public function setTreatmentDuration(?string $treatmentDuration): void
+    {
+        $this->treatmentDuration = $treatmentDuration;
+    }
+
+    /**
+     * @return integer
+     */
+    public function getWaitingDays()
+    {
+        return $this->waitingDays;
+    }
+
+    /**
+     * @param integer $waitingDays
      * @return MedicationOption
      */
-    public function setRegNl(?string $regNl): self
+    public function setWaitingDays($waitingDays): self
     {
-        $this->regNl = $regNl;
+        $this->waitingDays = $waitingDays;
 
         return $this;
     }

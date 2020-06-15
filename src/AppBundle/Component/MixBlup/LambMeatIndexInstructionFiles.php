@@ -94,7 +94,7 @@ class LambMeatIndexInstructionFiles extends MixBlupInstructionFileBase implement
         $jaarBedr = self::jaarBedrijf($isRelani);
 
         $gewGebSolaniTraits = $isRelani ? '' : ' '.self::getBreedCodesModel().' Sekse Nling';
-        $gew08SolaniTraits = $isRelani ? '' : ' '.self::getBreedCodesModel().' Sekse Nling LeeftScan';
+        $gew08SolaniTraits = $isRelani ? '' : ' '.self::getBreedCodesModel().' Sekse Nling Leeft08';
         $gew20SolaniTraits = $isRelani ? '' : ' '.self::getBreedCodesModel().' Sekse Nling LeeftScan';
         $vetd01SolaniTraits = $isRelani ? '' : ' '.self::getBreedCodesModel().' Sekse Nling GewScan';
         $vetd02SolaniTraits = $isRelani ? '' : ' '.self::getBreedCodesModel().' Sekse Nling GewScan';

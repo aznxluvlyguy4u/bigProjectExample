@@ -529,6 +529,7 @@ class Treatment implements TreatmentInterface
 
     /**
      * @param Person $revokedBy
+     * @return Treatment
      */
     public function setRevokedBy(Person $revokedBy): self
     {
