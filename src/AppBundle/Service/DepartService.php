@@ -467,6 +467,16 @@ class DepartService extends DeclareControllerServiceBase
     }
 
 
+    public function getDepartDatesAndUbnNewOwners(Request $request)
+    {
+        $location = $this->getSelectedLocation($request);
+        $this->nullCheckLocation($location);
+
+        return $this->getManager()->getRepository(DeclareDepart::class)
+            ->getDepartDateAndUbnNewOwners($location->getId());
+    }
+
+
     private function validateNonRvoSpecificDepartConditions(DeclareDepart $depart)
     {
         $animal = $depart->getAnimal();

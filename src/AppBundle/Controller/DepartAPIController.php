@@ -198,4 +198,34 @@ class DepartAPIController extends APIController implements DepartAPIControllerIn
   {
       return $this->get(DepartService::class)->getDepartHistory($request);
   }
+
+
+    /**
+     *
+     * All departDates and their related ubnNewOwners
+     * for declareDeparts with requestStates: FINISHED, FINISHED_WITH_WARNING, IMPORTED
+     *
+     * @ApiDoc(
+     *   section = "Departs",
+     *   requirements={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "requirement"="",
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "All departDates and their related ubnNewOwners for declareDeparts with requestStates: FINISHED, FINISHED_WITH_WARNING, IMPORTED"
+     * )
+     *
+     * @param Request $request the request object
+     * @return JsonResponse
+     * @Route("-history/depart-dates-and-ubn-new-owners")
+     * @Method("GET")
+     */
+    public function getDepartDatesAndUbnNewOwners(Request $request)
+    {
+        return $this->get(DepartService::class)->getDepartDatesAndUbnNewOwners($request);
+    }
 }

@@ -6,6 +6,7 @@ use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\RequestUtil;
+use AppBundle\Util\SqlUtil;
 use Doctrine\Common\Collections\ArrayCollection;
 
 /**
@@ -113,6 +114,39 @@ class DeclareDepartRepository extends BaseRepository {
         }
 
         return new ArrayCollection();
+    }
+
+
+    public function getDepartDateAndUbnNewOwners(int $locationId): array
+    {
+        $activeRequestStateTypes = SqlUtil::activeRequestStateTypesJoinedList();
+        $ubnsLabel = 'destination_ubns';
+
+        $sql = "SELECT
+                    depart_date,
+                    DATE_PART('YEAR',depart_date) as year,
+                    DATE_PART('MONTH',depart_date) as month,
+                    DATE_PART('DAY',depart_date) as day,
+                    $ubnsLabel
+                FROM (
+                     SELECT
+                    DATE(d.depart_date) as depart_date,
+                    array_agg(DISTINCT d.ubn_new_owner) as $ubnsLabel
+                FROM declare_depart d
+                    INNER JOIN declare_base db on d.id = db.id
+                WHERE db.request_state IN ($activeRequestStateTypes)
+                      AND d.location_id = $locationId
+                GROUP BY DATE(d.depart_date)
+                )g
+                ORDER BY g.depart_date DESC";
+
+        $results = $this->getConnection()->query($sql)->fetchAll();
+
+        return array_map(function (array $result) use ($ubnsLabel) {
+            // Warning! UBNs are not integers but strings! They might contain zero prefixes!
+            $result[$ubnsLabel] = SqlUtil::getArrayFromPostgreSqlArrayString($result[$ubnsLabel], false);
+            return $result;
+        }, $results);
     }
 
 }
