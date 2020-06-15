@@ -5,6 +5,7 @@ namespace AppBundle\Service\Report;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 
 use AppBundle\Constant\Constant;
+use AppBundle\Constant\ReportLabel;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Person;
 use AppBundle\Enumerator\AnimalObjectType;
@@ -126,9 +127,11 @@ class EweCardReportService extends ReportServiceBase
         $data = [];
 
         foreach ($this->animalIds as $animalId) {
+            $offspringDataPerEwe = $this->filterDataForAnimalId($animalId, $offspringData);
             $data[$animalId] = [
                 'animalAndProduction' => $this->filterAnimalAndProductionDataForAnimalId($animalId, $animalAndProductionValues),
-                'offspring' => $this->filterDataForAnimalId($animalId, $offspringData),
+                'offspring' => $offspringDataPerEwe,
+                'offspringAggregateData' => $this->aggregateOffspringData($offspringDataPerEwe),
                 'treatments' => $this->filterDataForAnimalId($animalId, $treatments),
             ];
         }
@@ -171,6 +174,96 @@ class EweCardReportService extends ReportServiceBase
             }
         );
     }
+
+
+    private function aggregateOffspringData(array $offspringDataPerEwe): array {
+        $birthWeightTotal = 0;
+        $weaningWeightTotal = 0;
+        $deliveryWeightTotal = 0;
+        $averageGrowthTotal = 0;
+        $saldoTotal = 0;
+        $pricePerKgTotal = 0;
+
+        $birthWeightCount = 0;
+        $weaningWeightCount = 0;
+        $deliveryWeightCount = 0;
+        $averageGrowthCount = 0;
+        $saldoCount = 0;
+        $pricePerKgCount = 0;
+
+        foreach ($offspringDataPerEwe as $child) {
+            $birthWeight = $child['birth_weight'];
+            $weaningWeight = $child['weaning_weight'];
+            $deliveryWeight = $child['delivery_weight'];
+            $averageGrowth = $child['average_growth'];
+            $saldo = $child['saldo'];
+            $pricePerKg = $child['price_per_kg'];
+
+            if (!empty($birthWeight)) {
+                $birthWeightTotal += floatval($birthWeight);
+                $birthWeightCount++;
+            }
+
+            if (!empty($weaningWeight)) {
+                $weaningWeightTotal += floatval($weaningWeight);
+                $weaningWeightCount++;
+            }
+
+            if (!empty($deliveryWeight)) {
+                $deliveryWeightTotal += floatval($deliveryWeight);
+                $deliveryWeightCount++;
+            }
+
+            if (!empty($averageGrowth)) {
+                $averageGrowthTotal += floatval($averageGrowth);
+                $averageGrowthCount++;
+            }
+
+            if (!empty($saldo)) {
+                $saldoTotal += floatval($saldo);
+                $saldoCount++;
+            }
+
+            if (!empty($pricePerKg)) {
+                $pricePerKgTotal += floatval($pricePerKg);
+                $pricePerKgCount++;
+            }
+        }
+
+        return [
+            ReportLabel::BIRTH_WEIGHT => [
+                ReportLabel::TOTAL => $birthWeightTotal,
+                ReportLabel::AVERAGE => $birthWeightTotal / (empty($birthWeightCount) ? 1 : $birthWeightCount),
+                ReportLabel::IS_EMPTY => $birthWeightCount === 0,
+            ],
+            ReportLabel::WEANING_WEIGHT => [
+                ReportLabel::TOTAL => $weaningWeightTotal,
+                ReportLabel::AVERAGE => $weaningWeightTotal / (empty($weaningWeightCount) ? 1 : $weaningWeightCount),
+                ReportLabel::IS_EMPTY => $weaningWeightCount === 0,
+            ],
+            ReportLabel::DELIVERY_WEIGHT => [
+                ReportLabel::TOTAL => $deliveryWeightTotal,
+                ReportLabel::AVERAGE => $deliveryWeightTotal / (empty($deliveryWeightCount) ? 1 : $deliveryWeightCount),
+                ReportLabel::IS_EMPTY => $deliveryWeightCount === 0,
+            ],
+            ReportLabel::AVERAGE_GROWTH => [
+                ReportLabel::TOTAL => $averageGrowthTotal,
+                ReportLabel::AVERAGE => $averageGrowthTotal / (empty($averageGrowthCount) ? 1 : $averageGrowthCount),
+                ReportLabel::IS_EMPTY => $averageGrowthCount === 0,
+            ],
+            ReportLabel::SALDO => [
+                ReportLabel::TOTAL => $saldoTotal,
+                ReportLabel::AVERAGE => $saldoTotal / (empty($saldoCount) ? 1 : $saldoCount),
+                ReportLabel::IS_EMPTY => $saldoCount === 0,
+            ],
+            ReportLabel::PRICE_PER_KG => [
+                ReportLabel::TOTAL => $pricePerKgTotal,
+                ReportLabel::AVERAGE => $pricePerKgTotal / (empty($pricePerKgCount) ? 1 : $pricePerKgCount),
+                ReportLabel::IS_EMPTY => $pricePerKgCount === 0,
+            ],
+        ];
+    }
+
 
     private function getAnimalIdsArrayString(array $animalIds): string {
         return "(".SqlUtil::getFilterListString($animalIds, false).")";
