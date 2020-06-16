@@ -1041,6 +1041,12 @@ class SqlUtil
             '{' => '[',
             '}' => ']',
         ] : [
+            /*
+             * Removing quotes is necessary, otherwise the json decode might fail.
+             * Quotes are automatically added in the sql response if a string contains a space
+             */
+            '"' => '',
+
             '{' => '["',
             '}' => '"]',
             ',' => '","'
