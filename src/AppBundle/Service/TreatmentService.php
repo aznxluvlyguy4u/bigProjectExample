@@ -141,9 +141,12 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
                 $daysToAdd = $correctedTreatmentDuration + $medicationOption->getWaitingDays();
 
                 $treatmentStartDate = clone $treatment->getStartDate();
+                if ($daysToAdd > 0) {
+                    $treatmentStartDate->add(new DateInterval('P'.$daysToAdd.'D'));
+                }
 
                 $medicationSelection
-                    ->setWaitingTimeEnd($treatmentStartDate->add(new DateInterval('P'.$daysToAdd.'D')));
+                    ->setWaitingTimeEnd($treatmentStartDate);
             } else {
                 $treatmentStartDate = clone $treatment->getStartDate();
                 $medicationSelection

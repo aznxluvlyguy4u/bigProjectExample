@@ -195,7 +195,7 @@ class Treatment implements TreatmentInterface
      *     "TREATMENT_MIN"
      * })
      */
-    private $status = RequestStateType::CREATED;
+    private $status = RequestStateType::COMPLETED;
 
     /**
      * @var Person
