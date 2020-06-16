@@ -28,21 +28,6 @@
 
             {# calc averages #}
             {% set offspringCount = animal.offspring|length %}
-            {% set totalBirthWeight = 0 %}
-            {% set totalWeaningWeight = 0 %}
-            {% set totalDeliveryWeight = 0 %}
-            {% set totalAverageGrowth = 0 %}
-            {% set totalSaldo = 0 %}
-            {% set totalPricePerKg = 0 %}
-
-            {% for offspring in animal.offspring %}
-                {% set totalBirthWeight = totalBirthWeight + offspring.birth_weight|number_format(2) %}
-                {% set totalWeaningWeight = totalWeaningWeight + offspring.weaning_weight|number_format(2) %}
-                {% set totalDeliveryWeight = totalDeliveryWeight + offspring.delivery_weight|number_format(2) %}
-                {% set totalAverageGrowth = totalAverageGrowth + offspring.average_growth|number_format(2) %}
-                {% set totalSaldo = totalSaldo + offspring.saldo|number_format(2) %}
-                {% set totalPricePerKg = totalPricePerKg + offspring.price_per_kg|number_format(2) %}
-            {% endfor %}
 
             {# calc pages needed for offspring #}
             {% set maxRowsPage1 = 28 %}

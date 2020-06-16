@@ -141,15 +141,25 @@
 
                                 {# AVERAGES #}
                                 {% if loop.last %}
+
                                     <tr class="pt-3 text-nowrap">
                                         <td colspan="5"></td>
                                         <td colspan="2" class="text-center  border-top-1">Gem.</td>
-                                        <td class="border-top-1">{{ (totalBirthWeight / offspringCount) | number_format(1) }}</td>
-                                        <td class="border-top-1">{{ (totalWeaningWeight / offspringCount) | number_format(1) }}</td>
-                                        <td class="border-top-1">{{ (totalDeliveryWeight / offspringCount) | number_format(1) }}</td>
-                                        <td colspan="2" class="border-top-1">{{ (totalAverageGrowth / offspringCount) | number_format(0) }}</td>
-                                        <td class="border-top-1">{{ (totalSaldo / offspringCount) | number_format(2) }}</td>
-                                        <td class="border-top-1">{{ (totalPricePerKg / offspringCount) | number_format(2) }}</td>
+                                        <td class="border-top-1">{{ (animal.offspringAggregateData.birthWeight.average) | number_format(1) }}</td>
+                                        <td class="border-top-1">
+                                            {% if not animal.offspringAggregateData.weaningWeight.isEmpty %}
+                                            {{ (animal.offspringAggregateData.weaningWeight.average) | number_format(1) }}</td>
+                                        {% endif %}
+                                        <td class="border-top-1">
+                                            {% if not animal.offspringAggregateData.deliveryWeight.isEmpty %}
+                                            {{ (animal.offspringAggregateData.deliveryWeight.average) | number_format(1) }}</td>
+                                        {% endif %}
+                                        <td colspan="2" class="border-top-1">
+                                            {% if not animal.offspringAggregateData.averageGrowth.isEmpty %}
+                                            {{ (animal.offspringAggregateData.averageGrowth.average) | number_format(0) }}</td>
+                                        {% endif %}
+                                        <td class="border-top-1">{{ (animal.offspringAggregateData.saldo.average) | number_format(2) }}</td>
+                                        <td class="border-top-1">{{ (animal.offspringAggregateData.pricePerKg.average) | number_format(2) }}</td>
                                     </tr>
 
                                     {# FOOTER #}
@@ -157,8 +167,9 @@
                                         <td colspan="5">L = Lambar, P = Pleegmoeder</td>
                                         <td colspan="2" class="text-center">Tot.</td>
                                         <td colspan="5"></td>
-                                        <td colspan="2">{{ totalSaldo | number_format(2) }}</td>
+                                        <td colspan="2">{{ animal.offspringAggregateData.saldo.total | number_format(2) }}</td>
                                     </tr>
+
                                 {% endif %}
 
                             </tbody>
