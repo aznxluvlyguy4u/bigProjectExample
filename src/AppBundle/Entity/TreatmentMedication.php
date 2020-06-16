@@ -3,6 +3,7 @@
 namespace AppBundle\Entity;
 
 use AppBundle\Traits\EntityClassInfo;
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as JMS;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -45,6 +46,71 @@ class TreatmentMedication
     private $name;
 
     /**
+     * @var float
+     *
+     * @ORM\Column(type="float", options={"default":0})
+     * @JMS\Type("float")
+     * @JMS\Groups({
+     *     "TREATMENT_TEMPLATE",
+     *     "TREATMENT_TEMPLATE_MIN",
+     *     "TREATMENT"
+     * })
+     * @Assert\NotBlank
+     */
+    private $dosage;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(type="string", nullable=false)
+     * @JMS\Type("string")
+     * @JMS\Groups({
+     *     "TREATMENT_TEMPLATE",
+     *     "TREATMENT_TEMPLATE_MIN",
+     *     "TREATMENT"
+     * })
+     * @Assert\NotBlank
+     */
+    private $dosageUnit;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(type="string", nullable=false)
+     * @JMS\Type("string")
+     * @JMS\Groups({
+     *     "TREATMENT_TEMPLATE",
+     *     "TREATMENT_TEMPLATE_MIN",
+     *     "TREATMENT"
+     * })
+     */
+    private $regNl;
+
+    /**
+     * @var string|null
+     *
+     * @ORM\Column(type="string", nullable=false)
+     * @JMS\Type("string")
+     * @JMS\Groups({
+     *     "TREATMENT_TEMPLATE",
+     *     "TREATMENT_TEMPLATE_MIN",
+     *     "TREATMENT"
+     * })
+     */
+    private $treatmentDuration;
+
+    /**
+     * @ORM\Column(type="integer", nullable=false)
+     * @JMS\Type("integer")
+     * @JMS\Groups({
+     *     "TREATMENT_TEMPLATE",
+     *     "TREATMENT_TEMPLATE_MIN",
+     *     "TREATMENT"
+     * })
+     */
+    private $waitingDays;
+
+    /**
      * @var boolean
      * @ORM\Column(type="boolean", options={"default":true})
      * @JMS\Type("boolean")
@@ -55,6 +121,18 @@ class TreatmentMedication
      * })
      */
     private $isActive = true;
+
+    /**
+     * @var ArrayCollection
+     * @ORM\ManyToMany(targetEntity="AppBundle\Entity\TreatmentTemplate", mappedBy="treatmentMedications", cascade={"persist", "remove"})
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\MedicationOption>")
+     * @JMS\Groups({
+     *     "TREATMENT_TEMPLATE",
+     *     "TREATMENT_TEMPLATE_MIN",
+     *     "TREATMENT"
+     * })
+     */
+    private $treatmentTemplates;
 
     /**
      * @return int
