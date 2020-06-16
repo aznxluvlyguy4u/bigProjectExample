@@ -9,55 +9,6 @@
             </div>
         </div>
 
-{#        <div class="row">#}
-{#            <div class="col-xs-12">#}
-{#                <div class="row">#}
-{#                    <div class="col-xs-12">#}
-
-{#                        #}{# JUST TO GENERATE FIRST THEAD WITH PHONY TBODY #}
-{#                        <table class="w-100 border-0 px-0 py-0 mb-1">#}
-{#                            <thead>#}
-
-{#                                <tr>#}
-{#                                    <td>Datum</td>#}
-{#                                    <td>Behandeling</td>#}
-{#                                    <td>Middel</td>#}
-{#                                </tr>#}
-{#                            </thead>#}
-
-{#                            <tbody>#}
-{#                                {% for treatment in animal.treatments|slice(offset, limit) %}#}
-
-{#                                    {% set isFirstRow = true %}#}
-
-{#                                    {% for medication in treatment.medications %}#}
-
-{#                                        <tr class="height-0 text-nowrap">#}
-{#                                            {% if isFirstRow  %}#}
-{#                                                <td>{{ treatment.date }}</td>#}
-{#                                                <td>{{ treatment.description }}</td>#}
-{#                                            {%  else %}#}
-{#                                                <td></td>#}
-{#                                                <td></td>#}
-{#                                            {% endif %}#}
-{#                                            <td>{{ medication }}</td>#}
-{#                                        </tr>#}
-
-{#                                        {% set isFirstRow = false %}#}
-
-{#                                    {% endfor %}#}
-
-
-{#                                {% endfor %}#}
-{#                            </tbody>#}
-{#                        </table>#}
-{#                    </div>#}
-{#                </div>#}
-{#            </div>#}
-{#        </div>#}
-{#    </div>#}
-
-
     <div class="col-xs-12 p-2 border-top-0">
         <div class="row">
             <div class="col-xs-12">
@@ -70,32 +21,42 @@
                             <tr>
                                 <td>Datum</td>
                                 <td>Behandeling</td>
+                                <td></td>
                                 <td>Middel</td>
                             </tr>
                             </thead>
 
+                            {% set usedMedicationRows = 0 %}
+
                             <tbody>
-                            {% for treatment in animal.treatments|slice(offset, limit) %}
+                            {% for treatment in animal.treatments|slice(offset, 1000) %}
 
-                                {% set isFirstRow = true %}
+                                {% set medicationLength = treatment.medications|length %}
 
-                                {% for medication in treatment.medications %}
+                                {% if usedMedicationRows + medicationLength <= limit %}
+                                    {% set usedMedicationRows = usedMedicationRows + medicationLength %}
 
-                                    <tr class="text-nowrap">
-                                        {% if isFirstRow  %}
-                                            <td style="width: 200px;">{{ treatment.date }}</td>
-                                            <td>{{ treatment.description }}</td>
-                                        {% else %}
-                                            <td></td>
-                                            <td></td>
-                                        {% endif %}
-                                        <td>{{ medication }}</td>
-                                    </tr>
+                                    {% set isFirstRow = true %}
 
-                                    {% set isFirstRow = false %}
+                                    {% for medication in treatment.medications %}
 
-                                {% endfor %}
+                                        <tr class="text-nowrap">
+                                            {% if isFirstRow  %}
+                                                <td style="width: 200px;">{{ treatment.date }}</td>
+                                                <td style="min-width: fit-content;width: 1%">{{ treatment.description }}</td>
+                                            {% else %}
+                                                <td></td>
+                                                <td></td>
+                                            {% endif %}
+                                            <td style="min-width: 20px"></td>
+                                            <td>{{ medication.name }}</td>
+                                        </tr>
 
+                                        {% set isFirstRow = false %}
+
+                                    {% endfor %}
+
+                                {% endif %}
 
                             {% endfor %}
                             </tbody>
@@ -104,6 +65,8 @@
                 </div>
             </div>
         </div>
+    </div>
+
     </div>
 
 </div>

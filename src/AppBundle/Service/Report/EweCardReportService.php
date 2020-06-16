@@ -30,6 +30,11 @@ class EweCardReportService extends ReportServiceBase
     const FILE_NAME_REPORT_TYPE = 'EWE_CARD';
     const DATE_RESULT_NULL_REPLACEMENT = "-";
 
+    const DUPLICATE_TREATMENTS_FOR_TESTING_COUNT = 30;
+    const DUPLICATE_OFFSPRING_FOR_TESTING_COUNT = 20;
+    const ONLY_INCLUDE_FIRST_MEDICATION_PER_TREATMENT_FOR_TESTING = false;
+
+
     const EWE_ID = 'ewe_id';
 
     /** @var array|int[] */
@@ -135,10 +140,20 @@ class EweCardReportService extends ReportServiceBase
                 'offspring' => $offspringDataPerEwe,
                 'offspringAggregateData' => $this->aggregateOffspringData($offspringDataPerEwe),
                 'treatments' => $this->filterDataForAnimalId($animalId, $treatments),
+                'medicationsCount' => $this->getMedicationCount($treatments),
             ];
         }
 
         return $data;
+    }
+
+
+    private function getMedicationCount(array $treatments): int
+    {
+        $medicationCountPerTreatment = array_map(function (array $treatment) {
+            return count($treatment['medications']);
+        }, $treatments);
+        return array_sum($medicationCountPerTreatment);
     }
 
     private function getUserData(Location $location): array {
@@ -512,7 +527,20 @@ class EweCardReportService extends ReportServiceBase
         ORDER BY vd.date_of_birth ASC
 ";
 
-        return $this->conn->query($sql)->fetchAll();
+        $primaryOutput = $this->conn->query($sql)->fetchAll();
+
+        if (self::DUPLICATE_OFFSPRING_FOR_TESTING_COUNT <= 1) {
+            return $primaryOutput;
+        }
+
+        $offspring = [];
+        for ($i = 1; $i <= self::DUPLICATE_OFFSPRING_FOR_TESTING_COUNT; $i++) {
+            foreach ($primaryOutput as $item) {
+                $item['uln_country_code'] = $item['uln_country_code'].$i;
+                $offspring[] = $item;
+            }
+        }
+        return $offspring;
     }
 
 
@@ -785,15 +813,46 @@ INNER JOIN (
 
         $results = $this->conn->query($sql)->fetchAll();
 
-        return array_map(function (array $result) use ($medicationsLabel) {
+        $primaryOutput = array_map(function (array $result) use ($medicationsLabel) {
             $startDate = (new \DateTime($result['start_date']))->format(DateUtil::DATE_USER_DISPLAY_FORMAT);
             $endDate = (new \DateTime($result['end_date']))->format(DateUtil::DATE_USER_DISPLAY_FORMAT);
+            $medicationsListAsString = $result[$medicationsLabel];
 
             $displayDate = $startDate === $endDate ? $startDate : $startDate . ' - ' .$endDate;
 
             $result[ReportLabel::DATE] = $displayDate;
-            $result[$medicationsLabel] = SqlUtil::getArrayFromPostgreSqlArrayString($result[$medicationsLabel], false);
+            $result[$medicationsLabel] = [];
+
+            foreach (
+                SqlUtil::getArrayFromPostgreSqlArrayString($medicationsListAsString, false) as
+                $key => $medicationLabel
+            ) {
+                $result[$medicationsLabel][$key] = [
+                    ReportLabel::NAME => $medicationLabel,
+                ];
+
+                if (self::ONLY_INCLUDE_FIRST_MEDICATION_PER_TREATMENT_FOR_TESTING) {
+                    break;
+                }
+            }
+
             return $result;
         }, $results);
+
+        if (self::DUPLICATE_TREATMENTS_FOR_TESTING_COUNT <= 1) {
+            return $primaryOutput;
+        }
+
+        $treatments = [];
+        for ($i = 1; $i <= self::DUPLICATE_TREATMENTS_FOR_TESTING_COUNT; $i++) {
+            foreach ($primaryOutput as $item) {
+
+                foreach ($item[$medicationsLabel] as $key => $medication) {
+                    $item[$medicationsLabel][$key][ReportLabel::NAME] = $item[$medicationsLabel][$key][ReportLabel::NAME].$i;
+                }
+                $treatments[] = $item;
+            }
+        }
+        return $treatments;
     }
 }
