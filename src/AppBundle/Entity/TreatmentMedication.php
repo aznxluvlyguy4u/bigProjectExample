@@ -87,10 +87,10 @@ class TreatmentMedication
     private $regNl;
 
     /**
-     * @var string|null
+     * @var float|null
      *
-     * @ORM\Column(type="string", nullable=false)
-     * @JMS\Type("string")
+     * @ORM\Column(type="float", nullable=false)
+     * @JMS\Type("float")
      * @JMS\Groups({
      *     "TREATMENT_TEMPLATE",
      *     "TREATMENT_TEMPLATE_MIN",
