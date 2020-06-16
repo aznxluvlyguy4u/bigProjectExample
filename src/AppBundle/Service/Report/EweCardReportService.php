@@ -11,7 +11,9 @@ use AppBundle\Entity\Person;
 use AppBundle\Enumerator\AnimalObjectType;
 use AppBundle\Enumerator\FileType;
 use AppBundle\Enumerator\OffspringMaturityType;
+use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Util\AnimalArrayReader;
+use AppBundle\Util\DateUtil;
 use AppBundle\Util\FilesystemUtil;
 use AppBundle\Util\LitterUtil;
 use AppBundle\Util\ReportUtil;
@@ -753,54 +755,45 @@ INNER JOIN (
         $animalIdsArrayString = $this->getAnimalIdsArrayString($animalIds);
 
         $eweId = self::EWE_ID;
+        $medicationsLabel = 'medications';
+        $revokedState = RequestStateType::REVOKED;
 
         $sql = "SELECT
-            a.id as $eweId,
-            vd.dd_mm_yyyy_date_of_birth as treatment_date,
-            a.date_of_birth as treatment_date_iso_format,
-            'some category' as category,
-            'some sub category' as sub_category,
-            'Enting' as treatment,
-            '' as comment, --currently just an empty string filler
-            '' as costs --currently just an empty string filler
-        FROM animal a
-            INNER JOIN view_animal_livestock_overview_details vd ON vd.animal_id = a.id
-        WHERE a.location_id NOTNULL AND a.is_alive
-            AND a.type = 'Ewe'
-            AND a.id IN $animalIdsArrayString
-        UNION
-        SELECT
-            a.id as $eweId,
-            '31-03-2012' as treatment_date,
-            '2012-03-31' as treatment_date_iso_format,
-            'some other category' as category,
-            'some other sub category' as sub_category,
-            'Massage' as treatment,
-            '' as comment, --currently just an empty string filler
-            '' as costs --currently just an empty string filler
-        FROM animal a
-        INNER JOIN view_animal_livestock_overview_details vd ON vd.animal_id = a.id
-        WHERE a.location_id NOTNULL AND a.is_alive
-            AND a.type = 'Ewe'
-            AND a.id IN $animalIdsArrayString
-        UNION
-        SELECT
-            a.id as $eweId,
-            '01-05-2014' as treatment_date,
-            '2014-05-01' as treatment_date_iso_format,
-            'another category' as category,
-            'another sub category' as sub_category,
-            'Tandheelkundige behandeling' as treatment,
-            '' as comment, --currently just an empty string filler
-            '' as costs --currently just an empty string filler
-        FROM animal a
-            INNER JOIN view_animal_livestock_overview_details vd ON vd.animal_id = a.id
-        WHERE a.location_id NOTNULL AND a.is_alive
-            AND a.type = 'Ewe'
-            AND a.id IN $animalIdsArrayString
-        ORDER BY treatment_date_iso_format
-        ";
+                    ta.animal_id as $eweId,
+                    DATE(start_date) as start_date,
+                    DATE(end_date) as end_date,
+                    description,
+                    m.medications as $medicationsLabel
+                FROM treatment t
+                    INNER JOIN treatment_animal ta on t.id = ta.treatment_id
+                    -- We can assume each treatment always has at least one medication
+                    INNER JOIN (
+                        SELECT
+                            s.treatment_id,
+                            array_agg(tm.name) as medications
+                        FROM medication_selection s
+                            INNER JOIN medication_option mo ON s.medication_option_id = mo.id
+                            INNER JOIN treatment_medication tm on mo.treatment_medication_id = tm.id
+                        GROUP BY s.treatment_id
+                    )m ON m.treatment_id = t.id
+                WHERE t.id IN (
+                        SELECT
+                            treatment_id
+                        FROM treatment_animal
+                        WHERE animal_id IN $animalIdsArrayString
+                    ) AND status <> '$revokedState' ORDER BY start_date DESC";
 
-        return $this->conn->query($sql)->fetchAll();
+        $results = $this->conn->query($sql)->fetchAll();
+
+        return array_map(function (array $result) use ($medicationsLabel) {
+            $startDate = (new \DateTime($result['start_date']))->format(DateUtil::DATE_USER_DISPLAY_FORMAT);
+            $endDate = (new \DateTime($result['end_date']))->format(DateUtil::DATE_USER_DISPLAY_FORMAT);
+
+            $displayDate = $startDate === $endDate ? $startDate : $startDate . ' - ' .$endDate;
+
+            $result[ReportLabel::DATE] = $displayDate;
+            $result[$medicationsLabel] = SqlUtil::getArrayFromPostgreSqlArrayString($result[$medicationsLabel], false);
+            return $result;
+        }, $results);
     }
 }
