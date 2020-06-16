@@ -157,6 +157,7 @@ class TreatmentMedication
     public function setName(string $name): self
     {
         $this->name = $name;
+
         return $this;
     }
 
@@ -175,6 +176,121 @@ class TreatmentMedication
     public function setIsActive(bool $isActive): self
     {
         $this->isActive = $isActive;
+
+        return $this;
+    }
+
+    /**
+     * @return float
+     */
+    public function getDosage(): float
+    {
+        return $this->dosage;
+    }
+
+    /**
+     * @param float $dosage
+     * @return TreatmentMedication
+     */
+    public function setDosage(float $dosage): self
+    {
+        $this->dosage = $dosage;
+
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getDosageUnit(): string
+    {
+        return $this->dosageUnit;
+    }
+
+    /**
+     * @param string $dosageUnit
+     * @return TreatmentMedication
+     */
+    public function setDosageUnit(string $dosageUnit): self
+    {
+        $this->dosageUnit = $dosageUnit;
+
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getRegNl(): string
+    {
+        return $this->regNl;
+    }
+
+    /**
+     * @param string $regNl
+     * @return TreatmentMedication
+     */
+    public function setRegNl(string $regNl): self
+    {
+        $this->regNl = $regNl;
+
+        return $this;
+    }
+
+    /**
+     * @return float|null
+     */
+    public function getTreatmentDuration(): ?float
+    {
+        return $this->treatmentDuration;
+    }
+
+    /**
+     * @param float|null $treatmentDuration
+     * @return TreatmentMedication
+     */
+    public function setTreatmentDuration(?float $treatmentDuration): self
+    {
+        $this->treatmentDuration = $treatmentDuration;
+
+        return $this;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getWaitingDays()
+    {
+        return $this->waitingDays;
+    }
+
+    /**
+     * @param mixed $waitingDays
+     * @return TreatmentMedication
+     */
+    public function setWaitingDays($waitingDays): self
+    {
+        $this->waitingDays = $waitingDays;
+
+        return $this;
+    }
+
+    /**
+     * @return ArrayCollection
+     */
+    public function getTreatmentTemplates(): ArrayCollection
+    {
+        return $this->treatmentTemplates;
+    }
+
+    /**
+     * @param TreatmentTemplate $treatmentTemplate
+     * @return TreatmentMedication
+     */
+    public function addTreatmentTemplate(TreatmentTemplate $treatmentTemplate): self
+    {
+        $this->treatmentTemplates->add($treatmentTemplate);
+
         return $this;
     }
 

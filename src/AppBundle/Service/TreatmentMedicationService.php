@@ -91,58 +91,23 @@ class TreatmentMedicationService extends TreatmentServiceBase implements Treatme
         if ($treatmentMedicationInDb->isActive() === false) { return Validator::createJsonResponse('Medication has been deactivated', 428); }
 
         //Deserialization and Validation
+        /** @var TreatmentMedication $treatmentMedicationFromContent */
         $treatmentMedicationFromContent = $this->baseValidateDeserializedTreatmentMedication($request);
+
         if ($treatmentMedicationFromContent instanceof JsonResponse) { return $treatmentMedicationFromContent; }
 
-        $treatmentMedicationInDbByValues = $this->treatmentMedicationRepository->findOneBy(['name' => $treatmentMedicationFromContent->getName()]);
+        $treatmentMedicationInDb
+            ->setName($treatmentMedicationFromContent->getName())
+            ->setTreatmentDuration($treatmentMedicationFromContent->getTreatmentDuration())
+            ->setWaitingDays($treatmentMedicationFromContent->getWaitingDays())
+            ->setDosage($treatmentMedicationFromContent->getDosage())
+            ->setRegNl($treatmentMedicationFromContent->getRegNl())
+            ->setDosageUnit($treatmentMedicationFromContent->getDosageUnit());
 
-        $isAnyValueUpdated = false;
-        $this->actionLogName = '';
+        $this->getManager()->persist($treatmentMedicationInDb);
+        $this->getManager()->flush();
 
-        $newName = $treatmentMedicationFromContent->getName();
-        $oldName = $treatmentMedicationInDb->getName();
-
-        if ($oldName !== $newName) {
-            $this->appendUpdateName($oldName, $newName);
-            $isAnyValueUpdated = true;
-        }
-
-        $treatmentMedicationOutput = $treatmentMedicationInDb;
-        if ($isAnyValueUpdated) {
-
-            $isSimpleUpdate = false;
-            if ($treatmentMedicationInDbByValues !== null) {
-
-                if ($treatmentMedicationInDbByValues->getId() === $treatmentMedicationInDb->getId()) {
-                    $isSimpleUpdate = true;
-                } else {
-                    if ($treatmentMedicationInDbByValues->isActive()) {
-                        return Validator::createJsonResponse('Er bestaat al een behandelings medicijn met dezelfde type', 428);
-                    } else {
-                        $treatmentMedicationInDbByValues->setIsActive(true);
-                        $this->getManager()->persist($treatmentMedicationInDbByValues);
-                        $treatmentMedicationOutput = $treatmentMedicationInDbByValues;
-
-                        $treatmentMedicationInDb->setIsActive(false);
-                        $this->getManager()->persist($treatmentMedicationInDb);
-
-                        $this->getManager()->flush();
-                    }
-                }
-            } else {
-                $isSimpleUpdate = true;
-            }
-
-            if ($isSimpleUpdate) {
-                $treatmentMedicationInDb->setName($newName);
-                $this->getManager()->persist($treatmentMedicationInDb);
-                $this->getManager()->flush();
-            }
-
-//            AdminActionLogWriter::editTreatmentMedication($this->getManager(), $admin, $this->actionLogDescription);
-        }
-
-        $output = $this->getBaseSerializer()->getDecodedJson($treatmentMedicationOutput, [JmsGroup::TREATMENT_TEMPLATE]);
+        $output = $this->getBaseSerializer()->getDecodedJson($treatmentMedicationFromContent, [JmsGroup::TREATMENT_TEMPLATE]);
         return ResultUtil::successResult($output);
     }
 
