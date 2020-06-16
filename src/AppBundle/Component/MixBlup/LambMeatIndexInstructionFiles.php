@@ -68,7 +68,7 @@ class LambMeatIndexInstructionFiles extends MixBlupInstructionFileBase implement
             ' Vetd01     T',
             ' Vetd02     T',
             ' Vetd03     T',
-            ' Spierd     T', #spierdikte',
+            ' Spierd     T #spierdikte',
             ' Bedrijf    I '.self::getBlockString($isRelani).'#ubn van geboorte', //ubn of birth
         ];
 
@@ -95,7 +95,7 @@ class LambMeatIndexInstructionFiles extends MixBlupInstructionFileBase implement
 
         $gewGebSolaniTraits = $isRelani ? '' : ' '.self::getBreedCodesModel().' Sekse Nling';
         $gew08SolaniTraits = $isRelani ? '' : ' '.self::getBreedCodesModel().' Sekse Nling Leeft08';
-        $gew20SolaniTraits = $isRelani ? '' : ' '.self::getBreedCodesModel().' Sekse Nling LeeftScan';
+        $gew20SolaniTraits = $isRelani ? '' : ' '.self::getBreedCodesModel().' Sekse Nling Leeft20';
         $vetd01SolaniTraits = $isRelani ? '' : ' '.self::getBreedCodesModel().' Sekse Nling GewScan';
         $vetd02SolaniTraits = $isRelani ? '' : ' '.self::getBreedCodesModel().' Sekse Nling GewScan';
         $vetd03SolaniTraits = $isRelani ? '' : ' '.self::getBreedCodesModel().' Sekse Nling GewScan';
@@ -110,11 +110,10 @@ class LambMeatIndexInstructionFiles extends MixBlupInstructionFileBase implement
             'GewGeb'.self::INDIRECT_SUFFIX => ' GewGeb    ~ '.$jaarBedr.$gewGebSolaniTraits.' !RANDOM WorpID G(ID,IDM)',
         ];
 
-        $commentedOut1 = [
-            'Gew08' =>  '# Gew08     ~ '.$jaarBedr.$gew08SolaniTraits.' !RANDOM WorpID G(ID)',
-        ];
+        $commentedOut1 = [];
 
         $base2 = [
+            'Gew08' =>  ' Gew08     ~ '.$jaarBedr.$gew08SolaniTraits.' !RANDOM WorpID G(ID)',
             'Gew20' =>  ' Gew20     ~ '.$jaarBedr.$gew20SolaniTraits.' !RANDOM WorpID G(ID)',
             'Vetd01' => ' Vetd01    ~ '.$jaarBedr.$vetd01SolaniTraits.' !RANDOM WorpID G(ID)',
         ];
