@@ -30,9 +30,8 @@ class EweCardReportService extends ReportServiceBase
     const FILE_NAME_REPORT_TYPE = 'EWE_CARD';
     const DATE_RESULT_NULL_REPLACEMENT = "-";
 
-    const DUPLICATE_TREATMENTS_FOR_TESTING_COUNT = 30;
-    const DUPLICATE_OFFSPRING_FOR_TESTING_COUNT = 20;
-    const ONLY_INCLUDE_FIRST_MEDICATION_PER_TREATMENT_FOR_TESTING = false;
+    const DUPLICATE_TREATMENTS_FOR_TESTING_COUNT = 1;
+    const DUPLICATE_OFFSPRING_FOR_TESTING_COUNT = 1;
 
 
     const EWE_ID = 'ewe_id';
@@ -830,10 +829,6 @@ INNER JOIN (
                 $result[$medicationsLabel][$key] = [
                     ReportLabel::NAME => $medicationLabel,
                 ];
-
-                if (self::ONLY_INCLUDE_FIRST_MEDICATION_PER_TREATMENT_FOR_TESTING) {
-                    break;
-                }
             }
 
             return $result;
