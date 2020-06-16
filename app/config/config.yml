@@ -76,6 +76,10 @@ services:
         class: Twig_Extension_StringLoader
         tags:
         - { name: twig.extension }
+    acme_hello.twig.extension.debug:
+        class: Twig_Extension_Debug
+        tags:
+            - { name: 'twig.extension' }
 
 # Swiftmailer Configuration
 swiftmailer:
