@@ -1360,3 +1360,8 @@ services:
         class: AppBundle\Serializer\CustomDateTimeHandler
         tags:
           - { name: jms_serializer.subscribing_handler, method: deserializeDateTimeToJson, type: DateTime, format: json, direction: deserialization }
+
+    # Twig extensions
+    AppBundle\Twig\TreatmentPageExtension:
+      tags:
+        - { name: twig.extension }
