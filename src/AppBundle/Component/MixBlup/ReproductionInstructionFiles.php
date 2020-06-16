@@ -18,6 +18,7 @@ class ReproductionInstructionFiles extends MixBlupInstructionFileBase implements
 {
     const TITLE_FERTILITY = 'Vruchtbaarheid';
     const TITLE_BIRTH_PROGRESS = 'Geboorteverloop';
+    const INCLUDE_COMMENTED_OUT_TRAITS = true;
 
     /**
      * @inheritDoc
@@ -63,6 +64,16 @@ class ReproductionInstructionFiles extends MixBlupInstructionFileBase implements
 
 
         $middle = [
+	    ' CovTE 	 R #rasdelen TE, BT en DK, ze zijn genetisch identiek',
+	    ' CovCF 	 R #rasdeel Clun Forest',
+	    ' CovBM 	 R #rasdeel Bleu du Maine',
+	    ' CovSW 	 R #rasdeel Swifter',
+	    ' CovNH 	 R #rasdeel Noordhollander',
+	    ' CovFL 	 R #rasdeel Flevolander',
+	    ' CovHD 	 R #rasdeel Hampshire Down',
+	    ' CovOV 	 R #overige rasdelen',
+	    ' CovHet 	 R #Heterosis van het dier',
+	    ' CovRec 	 R #Recombinatie van het dier',
             ' CovHetLam  R #Heterosis lam of worp', //Heterosis of offspring/litter
             ' CovRecLam  R #Recombinatie lam of worp', //Recombination of offspring/litter
             ' CovTE_M    R #Rasdeel TE van moeder', //BreedCode part TE of mother
@@ -165,7 +176,7 @@ class ReproductionInstructionFiles extends MixBlupInstructionFileBase implements
 
         $includeTotalBirths = $part == 1 || $part == null ? '' : ' #';
         $includeStillBirths = $part == 2 || $part == null ? '' : ' #';
-        $includeEarlyFertility = $part == 3 || $part == null ? '' : ' #';
+        $includeEarlyFertility = $part == 3 || $part == null ? '' : '';
 
         $totGebModelSolaniTraits = $isRelani ? '' : ' '.self::getBreedCodesModel().' Inductie Leeft CovHetLam CovRecLam';
         $doodGebModelSolaniTraits = $isRelani ? '' : ' '.self::getBreedCodesModel().' Inductie Leeft CovHetLam CovRecLam';
@@ -174,7 +185,7 @@ class ReproductionInstructionFiles extends MixBlupInstructionFileBase implements
         $totGebModel =  ' TotGeb  ~ '.$jaarBedr.$totGebModelSolaniTraits.' !RANDOM PermMil G(ID)';
         $doodGebModel = ' DoodGeb ~ '.$jaarBedr.$doodGebModelSolaniTraits.' !RANDOM PermMil G(ID)';
         $vroegModel =   ' Vroeg   ~ '.$jaarBedr.$vroegModelSolaniTraits.' !RANDOM G(ID)';
-        $tusLamTModel = ' # TusLamT';
+        $tusLamTModel = ' TusLamT ~ '.$jaarBedr.' Leeft !RANDOM PermMil G(ID)';
 
         if($includeCommentedOutBreedValues) {
             return [
