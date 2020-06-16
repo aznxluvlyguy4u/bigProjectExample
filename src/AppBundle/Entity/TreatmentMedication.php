@@ -125,7 +125,7 @@ class TreatmentMedication
     /**
      * @var ArrayCollection
      * @ORM\ManyToMany(targetEntity="AppBundle\Entity\TreatmentTemplate", mappedBy="treatmentMedications", cascade={"persist", "remove"})
-     * @JMS\Type("ArrayCollection<AppBundle\Entity\MedicationOption>")
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\TreatmentTemplate>")
      * @JMS\Groups({
      *     "TREATMENT_TEMPLATE",
      *     "TREATMENT_TEMPLATE_MIN",
