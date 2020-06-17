@@ -39,7 +39,6 @@ class TreatmentMedication
      * @ORM\Column(type="string")
      * @JMS\Groups({
      *     "TREATMENT_TEMPLATE",
-     *     "TREATMENT_TEMPLATE_MIN",
      *     "TREATMENT"
      * })
      */
@@ -52,7 +51,6 @@ class TreatmentMedication
      * @JMS\Type("float")
      * @JMS\Groups({
      *     "TREATMENT_TEMPLATE",
-     *     "TREATMENT_TEMPLATE_MIN",
      *     "TREATMENT"
      * })
      * @Assert\NotBlank
@@ -66,7 +64,6 @@ class TreatmentMedication
      * @JMS\Type("string")
      * @JMS\Groups({
      *     "TREATMENT_TEMPLATE",
-     *     "TREATMENT_TEMPLATE_MIN",
      *     "TREATMENT"
      * })
      * @Assert\NotBlank
@@ -80,7 +77,6 @@ class TreatmentMedication
      * @JMS\Type("string")
      * @JMS\Groups({
      *     "TREATMENT_TEMPLATE",
-     *     "TREATMENT_TEMPLATE_MIN",
      *     "TREATMENT"
      * })
      */
@@ -93,7 +89,6 @@ class TreatmentMedication
      * @JMS\Type("float")
      * @JMS\Groups({
      *     "TREATMENT_TEMPLATE",
-     *     "TREATMENT_TEMPLATE_MIN",
      *     "TREATMENT"
      * })
      */
@@ -104,7 +99,6 @@ class TreatmentMedication
      * @JMS\Type("integer")
      * @JMS\Groups({
      *     "TREATMENT_TEMPLATE",
-     *     "TREATMENT_TEMPLATE_MIN",
      *     "TREATMENT"
      * })
      */
@@ -116,7 +110,6 @@ class TreatmentMedication
      * @JMS\Type("boolean")
      * @JMS\Groups({
      *     "TREATMENT_TEMPLATE",
-     *     "TREATMENT_TEMPLATE_MIN",
      *     "TREATMENT"
      * })
      */
@@ -128,7 +121,6 @@ class TreatmentMedication
      * @JMS\Type("ArrayCollection<AppBundle\Entity\TreatmentTemplate>")
      * @JMS\Groups({
      *     "TREATMENT_TEMPLATE",
-     *     "TREATMENT_TEMPLATE_MIN",
      *     "TREATMENT"
      * })
      */

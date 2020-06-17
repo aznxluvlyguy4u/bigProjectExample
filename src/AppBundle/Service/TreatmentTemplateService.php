@@ -140,12 +140,15 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
         $admin = $this->getEmployee();
         if($admin === null) { return AdminValidator::getStandardErrorResponse(); }
 
+//        dump($this->getJmsGroupByQuery($request));die;
+
         /** @var TreatmentTemplate $template */
         $template = $this->getBaseSerializer()->deserializeToObject($request->getContent(), TreatmentTemplate::class);
 
         if (!($template instanceof TreatmentTemplate)) {
             return Validator::createJsonResponse('Json body must have the TreatmentTemplate structure', 428);
         }
+
         $template->setType($type);
 
         //Validation
@@ -154,17 +157,15 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
 
         //TODO check for duplicates
 
-        /** @var MedicationOption $medication */
+        /** @var TreatmentMedication $medication */
         foreach ($template->getMedications() as $medication)
         {
             /** @var TreatmentMedication $treatmentMedication */
-            $treatmentMedication = $this->treatmentMedicationRepository->findOneBy(['name' => $medication->getTreatmentMedication()->getName()]);
+            $treatmentMedication = $this->treatmentMedicationRepository->find($medication->getId());
 
-            $medication->setTreatmentMedication($treatmentMedication);
+            $template->removeMedication($medication);
 
-            $this->getManager()->persist($medication);
-
-            $medication->setTreatmentTemplate($template);
+            $template->addMedication($treatmentMedication);
         }
 
         $template->__construct();
@@ -284,11 +285,18 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
 
         if ($template instanceof JsonResponse) { return $template; }
 
-        /** @var MedicationOption $medication */
+        /** @var TreatmentMedication $medication */
         foreach ($template->getMedications() as $medication) {
-            if ($medication->getWaitingDays() === null) {
+            /** @var TreatmentMedication $treatmentMedication */
+            $treatmentMedication = $this->treatmentMedicationRepository->find($medication->getId());
+
+            if ($treatmentMedication->getWaitingDays() === null) {
                 throw new PreconditionFailedHttpException("'No waiting days have been filled in.'");
             }
+
+            $template->removeMedication($medication);
+
+            $template->addMedication($treatmentMedication);
         }
 
         //TODO check if the todo beneath is done
@@ -346,132 +354,27 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
         $newMedicationTreatmentDurationByDescription = [];
         $treatmentMedicationOld = [];
 
-        /** @var MedicationOption $medication */
+        /** @var TreatmentMedication $medication */
         foreach ($templateInDatabase->getMedications() as $medication)
         {
-            $treatmentMedicationOld[] = $medication->getTreatmentMedication();
+            $treatmentMedicationOld[] = $medication;
         }
 
-        $index = 0;
-
-        /** @var MedicationOption $medication */
-        foreach ($template->getMedications() as $medication)
+        /** @var TreatmentMedication $treatmentMedication */
+        foreach ($template->getMedications() as $treatmentMedication)
         {
-            $newMedicationDosagesByDescription[$medication->getTreatmentMedication()->getName()] = $medication->getDosage();
-            $newMedicationWaitingDaysByDescription[$medication->getTreatmentMedication()->getName()] = $medication->getWaitingDays();
-            $newMedicationRegNLByDescription[$medication->getTreatmentMedication()->getName()] = $medication->getRegNl();
-            $newMedicationDosageUnitByDescription[$medication->getTreatmentMedication()->getName()] = $medication->getDosageUnit();
-            $newMedicationTreatmentDurationByDescription[$medication->getTreatmentMedication()->getName()] = $medication->getTreatmentDuration();
-
-            $treatmentMedication = $medication->getTreatmentMedication();
-
-            /** @var TreatmentMedication $existingTreatmentMedication */
-            $existingTreatmentMedication = $this->getManager()
-                ->getRepository(TreatmentMedication::class)
-                ->find($treatmentMedication->getId());
-
-            if ($existingTreatmentMedication == null) {
-                if (
-                    (
-                        key_exists($index, $treatmentMedicationOld) &&
-                        $treatmentMedicationOld[$index]->getId() !== $treatmentMedication->getId()
-                    ) || !key_exists($index, $treatmentMedicationOld)
-                ) {
-                    $this->getManager()->persist($medication->getTreatmentMedication());
-                }
-            } else {
-                $medication->setTreatmentMedication($existingTreatmentMedication);
-                $this->getManager()->persist($existingTreatmentMedication);
-                $this->getManager()->persist($medication);
-            }
-
-            $index++;
-        }
-
-        $currentMedicationByDescription = [];
-
-        /** @var MedicationOption $medication */
-        foreach ($templateInDatabase->getMedications() as $medication)
-        {
-            $treatmentMedication = $medication->getTreatmentMedication();
-            $currentMedicationByDescription[$treatmentMedication->getName()] = $medication;
-
-            if (
-                key_exists($treatmentMedication->getName(), $newMedicationDosagesByDescription) &&
-                key_exists($treatmentMedication->getName(), $newMedicationWaitingDaysByDescription) &&
-                key_exists($treatmentMedication->getName(), $newMedicationRegNLByDescription) &&
-                key_exists($treatmentMedication->getName(), $newMedicationDosageUnitByDescription) &&
-                key_exists($treatmentMedication->getName(), $newMedicationTreatmentDurationByDescription)
-            ) {
-                $newMedicationDosage = $newMedicationDosagesByDescription[$treatmentMedication->getName()];
-                $newWaitingDays = $newMedicationWaitingDaysByDescription[$treatmentMedication->getName()];
-                $newRegNL = $newMedicationRegNLByDescription[$treatmentMedication->getName()];
-                $newDosageUnit = $newMedicationDosageUnitByDescription[$treatmentMedication->getName()];
-                $newTreatmentDuration = $newMedicationTreatmentDurationByDescription[$treatmentMedication->getName()];
-
-                if ($medication->getDosage() !== $newMedicationDosage) {
-                    //Update dosage
-                    $this->appendDescription($treatmentMedication->getName(). ' dosage => '.$newMedicationDosage);
-                    $medication->setDosage($newMedicationDosage);
-                    $isAnyValueUpdated = true;
-                }
-
-                if ($medication->getWaitingDays() !== $newWaitingDays) {
-                    //Update dosage
-                    $this->appendDescription($treatmentMedication->getName(). ' waiting days => '.$newWaitingDays);
-                    $medication->setWaitingDays($newWaitingDays);
-                    $isAnyValueUpdated = true;
-                }
-
-                if ($medication->getRegNl() !== $newRegNL) {
-                    //Update regNL
-                    $this->appendDescription($treatmentMedication->getName(). ' regNL => '.$newWaitingDays);
-                    $medication->setRegNl($newRegNL);
-                    $isAnyValueUpdated = true;
-                }
-
-                if ($medication->getDosageUnit() !== $newDosageUnit) {
-                    //Update dosage unit
-                    $this->appendDescription($treatmentMedication->getName(). ' dosage unit => '.$newDosageUnit);
-                    $medication->setDosageUnit($newDosageUnit);
-                    $isAnyValueUpdated = true;
-                }
-
-                if ($medication->getTreatmentDuration() != $newTreatmentDuration) {
-                    // Update treatment duration
-                    $this->appendDescription($treatmentMedication->getName(). 'treatment duration => '.$newTreatmentDuration);
-                    $medication->setTreatmentDuration($newTreatmentDuration);
-                    $isAnyValueUpdated = true;
-                }
-            } else {
-                //Remove medication
-                $this->appendDescription('remove '.$treatmentMedication->getName());
-                $templateInDatabase->removeMedication($medication);
-                $this->getManager()->remove($medication);
-                $isAnyValueUpdated = true;
-            }
-        }
-
-        /** @var MedicationOption $newMedication */
-        foreach ($template->getMedications() as $newMedication)
-        {
-            $treatmentMedication = $newMedication->getTreatmentMedication();
-            if (!key_exists($treatmentMedication->getName(), $currentMedicationByDescription)) {
-                $templateInDatabase->addMedication($newMedication);
-                $newMedication->setTreatmentTemplate($templateInDatabase);
-
-                $this->getManager()->merge($treatmentMedication);
-
-                $this->appendDescription('add '.$treatmentMedication->getName().'['.$newMedication->getDosage().']');
-                $isAnyValueUpdated = true;
-            }
+            $newMedicationDosagesByDescription[$treatmentMedication->getName()] = $treatmentMedication->getDosage();
+            $newMedicationWaitingDaysByDescription[$treatmentMedication->getName()] = $treatmentMedication->getWaitingDays();
+            $newMedicationRegNLByDescription[$treatmentMedication->getName()] = $treatmentMedication->getRegNl();
+            $newMedicationDosageUnitByDescription[$treatmentMedication->getName()] = $treatmentMedication->getDosageUnit();
+            $newMedicationTreatmentDurationByDescription[$treatmentMedication->getName()] = $treatmentMedication->getTreatmentDuration();
         }
 
         if ($isAnyValueUpdated) {
             $templateInDatabase
                 ->setEditedBy($this->getUser())
-                ->setLogDate(new DateTime())
-            ;
+                ->setLogDate(new DateTime());
+
             $this->getManager()->persist($templateInDatabase);
             $this->getManager()->flush();
 

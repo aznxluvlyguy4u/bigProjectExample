@@ -30,7 +30,6 @@ class TreatmentTemplate
      * @ORM\GeneratedValue(strategy="IDENTITY")
      * @JMS\Groups({
      *     "TREATMENT_TEMPLATE",
-     *     "TREATMENT_TEMPLATE_MIN",
      *     "TREATMENT",
      *     "TREATMEN_MIN"
      * })
@@ -76,7 +75,7 @@ class TreatmentTemplate
      * @var ArrayCollection
      * @ORM\ManyToMany(targetEntity="AppBundle\Entity\TreatmentMedication", inversedBy="treatmentTemplates", cascade={"persist", "remove"})
      * @ORM\JoinTable(name="template_medications")
-     * @JMS\Type("ArrayCollection<AppBundle\Entity\MedicationOption>")
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\TreatmentMedication>")
      * @JMS\Groups({
      *     "TREATMENT_TEMPLATE",
      *     "TREATMENT_TEMPLATE_MIN",
@@ -97,8 +96,8 @@ class TreatmentTemplate
      * @JMS\Type("boolean")
      * @JMS\Groups({
      *     "TREATMENT_TEMPLATE",
-     *     "TREATMENT_TEMPLATE_MIN",
      *     "TREATMENT",
+     *     "TREATMENT_TEMPLATE_MIN",
      *     "TREATMEN_MIN"
      * })
      */
@@ -146,8 +145,7 @@ class TreatmentTemplate
      * @Assert\NotBlank
      * @ORM\Column(type="string")
      * @JMS\Groups({
-     *     "TREATMENT_TEMPLATE",
-     *     "TREATMENT_TEMPLATE_MIN"
+     *     "TREATMENT_TEMPLATE"
      * })
      */
     private $type;
@@ -156,8 +154,7 @@ class TreatmentTemplate
      * @JMS\VirtualProperty
      * @JMS\SerializedName("dutchType")
      * @JMS\Groups({
-     *     "TREATMENT_TEMPLATE",
-     *     "TREATMENT_TEMPLATE_MIN"
+     *     "TREATMENT_TEMPLATE"
      * })
      */
     public function getDutchType() {
@@ -255,7 +252,7 @@ class TreatmentTemplate
      */
     public function getMedications()
     {
-        return $this->medications;
+        return $this->treatmentMedications;
     }
 
     /**
@@ -264,27 +261,27 @@ class TreatmentTemplate
      */
     public function setMedications($medications)
     {
-        $this->medications = $medications;
+        $this->treatmentMedications = $medications;
         return $this;
     }
 
     /**
-     * @param MedicationOption $medicationOption
+     * @param TreatmentMedication $medicationOption
      * @return TreatmentTemplate
      */
-    public function addMedication(MedicationOption $medicationOption)
+    public function addMedication(TreatmentMedication $medicationOption)
     {
-        $this->medications->add($medicationOption);
+        $this->treatmentMedications->add($medicationOption);
         return $this;
     }
 
     /**
-     * @param MedicationOption $medicationOption
+     * @param TreatmentMedication $medicationOption
      * @return TreatmentTemplate
      */
-    public function removeMedication(MedicationOption $medicationOption)
+    public function removeMedication(TreatmentMedication $medicationOption)
     {
-        $this->medications->removeElement($medicationOption);
+        $this->treatmentMedications->removeElement($medicationOption);
         return $this;
     }
 
@@ -293,7 +290,7 @@ class TreatmentTemplate
      */
     public function getTreatments()
     {
-        return $this->medications;
+        return $this->treatments;
     }
 
     /**

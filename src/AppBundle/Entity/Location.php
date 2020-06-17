@@ -37,8 +37,7 @@ class Location
    *     "RVO",
    *     "TREATMENT",
    *     "TREATMEN_MIN",
-   *     "TREATMENT_TEMPLATE",
-   *     "TREATMENT_TEMPLATE_MIN"
+   *     "TREATMENT_TEMPLATE"
    * })
    *
    */
