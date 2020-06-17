@@ -16,6 +16,7 @@ use AppBundle\Util\ResultUtil;
 use AppBundle\Util\Validator;
 use AppBundle\Validation\AdminValidator;
 use DateTime;
+use Doctrine\Common\Collections\ArrayCollection;
 use Exception;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
@@ -140,8 +141,6 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
         $admin = $this->getEmployee();
         if($admin === null) { return AdminValidator::getStandardErrorResponse(); }
 
-//        dump($this->getJmsGroupByQuery($request));die;
-
         /** @var TreatmentTemplate $template */
         $template = $this->getBaseSerializer()->deserializeToObject($request->getContent(), TreatmentTemplate::class);
 
@@ -161,7 +160,7 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
         foreach ($template->getMedications() as $medication)
         {
             /** @var TreatmentMedication $treatmentMedication */
-            $treatmentMedication = $this->treatmentMedicationRepository->find($medication->getId());
+            $treatmentMedication = $this->treatmentMedicationRepository->findOneBy(['name' => $medication->getName()]);
 
             $template->removeMedication($medication);
 
@@ -220,8 +219,7 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
 
         $template
             ->setLocation($location)
-            ->setTreatmentType($treatmentType)
-            ;
+            ->setTreatmentType($treatmentType);
 
         return $template;
     }
@@ -266,6 +264,8 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
         $templateInDatabase = $this->getTemplateByIdAndType($templateId, $type);
         if ($templateInDatabase instanceof JsonResponse) { return $templateInDatabase; }
 
+        $oldTemplateMedications = $templateInDatabase->getMedications();
+
         //new template data
         /** @var TreatmentTemplate $template */
         $template = $this->getBaseSerializer()->deserializeToObject($request->getContent(), TreatmentTemplate::class);
@@ -285,19 +285,25 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
 
         if ($template instanceof JsonResponse) { return $template; }
 
+        $newTreatmentMedications = new ArrayCollection();
+
         /** @var TreatmentMedication $medication */
         foreach ($template->getMedications() as $medication) {
             /** @var TreatmentMedication $treatmentMedication */
-            $treatmentMedication = $this->treatmentMedicationRepository->find($medication->getId());
+            $treatmentMedication = $this->treatmentMedicationRepository->findOneBy(['name' => $medication->getName()]);
 
             if ($treatmentMedication->getWaitingDays() === null) {
                 throw new PreconditionFailedHttpException("'No waiting days have been filled in.'");
             }
 
-            $template->removeMedication($medication);
+//            $templateInDatabase->removeMedication($medication);
 
-            $template->addMedication($treatmentMedication);
+            $newTreatmentMedications->add($treatmentMedication);
         }
+
+
+        $templateInDatabase->setMedications($newTreatmentMedications);
+
 
         //TODO check if the todo beneath is done
         //TODO check for duplicates
@@ -305,6 +311,10 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
         /* Update */
         $isAnyValueUpdated = false;
         $this->actionLogDescription = '';
+
+        if ($oldTemplateMedications !== $templateInDatabase->getMedications()) {
+            $isAnyValueUpdated = true;
+        }
 
         //Update Location
         $currentLocation = $templateInDatabase->getLocation();
@@ -344,30 +354,6 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
             $this->appendUpdateDescription($templateInDatabase->getDescription(), $template->getDescription());
             $templateInDatabase->setDescription($template->getDescription());
             $isAnyValueUpdated = true;
-        }
-
-        //Update medications
-        $newMedicationDosagesByDescription = [];
-        $newMedicationWaitingDaysByDescription = [];
-        $newMedicationRegNLByDescription = [];
-        $newMedicationDosageUnitByDescription = [];
-        $newMedicationTreatmentDurationByDescription = [];
-        $treatmentMedicationOld = [];
-
-        /** @var TreatmentMedication $medication */
-        foreach ($templateInDatabase->getMedications() as $medication)
-        {
-            $treatmentMedicationOld[] = $medication;
-        }
-
-        /** @var TreatmentMedication $treatmentMedication */
-        foreach ($template->getMedications() as $treatmentMedication)
-        {
-            $newMedicationDosagesByDescription[$treatmentMedication->getName()] = $treatmentMedication->getDosage();
-            $newMedicationWaitingDaysByDescription[$treatmentMedication->getName()] = $treatmentMedication->getWaitingDays();
-            $newMedicationRegNLByDescription[$treatmentMedication->getName()] = $treatmentMedication->getRegNl();
-            $newMedicationDosageUnitByDescription[$treatmentMedication->getName()] = $treatmentMedication->getDosageUnit();
-            $newMedicationTreatmentDurationByDescription[$treatmentMedication->getName()] = $treatmentMedication->getTreatmentDuration();
         }
 
         if ($isAnyValueUpdated) {

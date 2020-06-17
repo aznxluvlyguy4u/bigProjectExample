@@ -26,7 +26,6 @@ class TreatmentMedication
      * @ORM\GeneratedValue(strategy="IDENTITY")
      * @JMS\Groups({
      *     "TREATMENT_TEMPLATE",
-     *     "TREATMENT_TEMPLATE_MIN",
      *     "TREATMENT"
      * })
      */
@@ -39,6 +38,7 @@ class TreatmentMedication
      * @ORM\Column(type="string")
      * @JMS\Groups({
      *     "TREATMENT_TEMPLATE",
+     *     "TREATMENT_TEMPLATE_MIN",
      *     "TREATMENT"
      * })
      */
