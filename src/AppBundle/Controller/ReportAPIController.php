@@ -1040,6 +1040,34 @@ class ReportAPIController extends APIController {
         return $this->get('app.report.vwa.ubns_overview')->getUbnsOverviewReport($request);
     }
 
+    /**
+     * Generate Combiform and transport document as PDF.
+     *
+     * ### POST EXAMPLE ###
+     *
+     *
+     * @ApiDoc(
+     *   section = "Reports",
+     *   headers={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "required"=true,
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Generate Combiform and transport document as PDF."
+     * )
+     * @param Request $request the request object
+     * @return JsonResponse
+     * @Route("/combi-form-transport-document")
+     * @Method("POST")
+     */
+    public function getCombiFormAndTransportDocument(Request $request)
+    {
+        return $this->get('app.report.combi_form_transport_document')->getReport($request);
+    }
 
     /**
      * Generate HTML output of report for easy testing in browser.

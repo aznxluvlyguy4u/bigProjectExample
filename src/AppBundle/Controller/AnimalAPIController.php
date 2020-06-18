@@ -581,4 +581,31 @@ class AnimalAPIController extends APIController implements AnimalAPIControllerIn
 			return $this->get('app.animal')->changeNicknameOfAnimal($request, $animal);
 	}
 
+    /**
+     *
+     * Get the locations with exports or departs by depart date
+     *
+     * @ApiDoc(
+     *   section = "Animals",
+     *   requirements={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "requirement"="",
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Get the locations with exports or departs by depart date"
+     * )
+     *
+     * @param Request $request the request object
+     * @return jsonResponse
+     * @Route("-location-with-exports-or-departs")
+     * @Method("GET")
+     */
+	public function getLocationsWithExportsOrDeparts(Request $request)
+    {
+        return $this->get('app.animal')->getLocationsWithExportsOrDeparts($request);
+    }
 }
