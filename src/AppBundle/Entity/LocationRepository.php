@@ -5,11 +5,14 @@ namespace AppBundle\Entity;
 use AppBundle\Constant\Constant;
 use AppBundle\Enumerator\Country;
 use AppBundle\Enumerator\RequestStateType;
+use AppBundle\Util\RequestUtil;
 use AppBundle\Util\SqlUtil;
 use AppBundle\Util\StringUtil;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\DBAL\Types\Type;
 use Doctrine\ORM\Query\Expr\Join;
+use Exception;
+use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Class LocationRepository
@@ -197,14 +200,14 @@ class LocationRepository extends BaseRepository
      * @param bool $onlyIncludeRvoLeading
      * @param bool $maxLimitOnceADay
      * @return array
-     * @throws \Exception
+     * @throws Exception
      */
   public function getLocationsNonSyncedLocations($hasNotBeenSyncedForAtLeastThisAmountOfDays = 7,
                                                  bool $onlyIncludeRvoLeading = false,
                                                  bool $maxLimitOnceADay = true)
   {
       if (!ctype_digit($hasNotBeenSyncedForAtLeastThisAmountOfDays) && !is_int($hasNotBeenSyncedForAtLeastThisAmountOfDays)) {
-          throw new \Exception('hasNotBeenSyncedForAtLeastThisAmountOfDays should be an integer');
+          throw new Exception('hasNotBeenSyncedForAtLeastThisAmountOfDays should be an integer');
       }
 
       if ($hasNotBeenSyncedForAtLeastThisAmountOfDays <= 0) {
@@ -286,6 +289,37 @@ class LocationRepository extends BaseRepository
       return $result ? $result['country_code'] : $defaultCountryCode;
   }
 
+    /**
+     * @param Request $request
+     * @return mixed
+     * @throws Exception
+     */
+    public function getLocationWithExportsOrDeparts(Request $request)
+    {
+        $departDate = RequestUtil::getDateQuery($request, 'depart_date')->format('Y-m-d');
+
+        return $this->createQueryBuilder('location')
+            ->select('
+                location.id,
+                location.ubn,
+                company.companyName,
+                COUNT(animals.id) as animal_count
+            ')
+            ->leftJoin('location.company', 'company')
+            ->leftJoin('location.exports', 'export')
+            ->leftJoin('location.departures', 'departure')
+            ->leftJoin('location.arrivals', 'arrivals')
+            ->innerJoin('arrivals.transaction', 'a_transaction')
+            ->innerJoin('departure.transaction', 'd_transaction')
+            ->innerJoin('location.animals', 'animals')
+            ->where('arrivals.requestState = :requestState')
+            ->andWhere('export.exportDate = :departDate OR departure.departDate = :departDate')
+            ->setParameter('departDate', $departDate .' 12:00:00')
+            ->setParameter('requestState', 'FINISHED')
+            ->groupBy('location.id, company.companyName')
+            ->getQuery()
+            ->getResult();
+    }
 
     /**
      * @param int $locationIds

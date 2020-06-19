@@ -1,0 +1,446 @@
+{% extends 'bootstrap_base.html.twig' %}
+
+{% block body %}
+    {% set blankValue = '.....................................' %}
+    {% set imagesDirectory = variables.imagesDirectory ~ '/nsfo-logo.png' %}
+
+    {% if variables.location is not same as(null) %}
+        {% set location = variables.location %}
+        {% set address = location.address %}
+        {% set owner = location.owner %}
+        {% set ubn = location.ubn %}
+        {% set fullName = owner.firstName ~ ' ' ~ owner.lastName %}
+        {% set fullAddress = address.streetName ~ ' ' ~ address.addressNumber ~ ' ' ~ address.addressNumberSuffix %}
+        {% set city = address.city %}
+    {% else %}
+        {% set ubn = blankValue %}
+        {% set fullName = blankValue %}
+        {% set address = blankValue %}
+        {% set city = blankValue %}
+    {% endif %}
+
+    {% if variables.export_location is not same as(null) %}
+        {% set export_location = variables.export_location %}
+        {% set export_address = export_location.address %}
+        {% set export_owner = export_location.owner %}
+        {% set export_ubn = export_location.ubn %}
+        {% set export_fullName = export_owner.firstName ~ ' ' ~ export_owner.lastName %}
+        {% set export_fullAddress = export_address.streetName ~ ' ' ~ export_address.addressNumber ~ ' ' ~ export_address.addressNumberSuffix %}
+        {% set export_city = address.city %}
+    {% else %}
+        {% set export_ubn = blankValue %}
+        {% set export_fullName = blankValue %}
+        {% set export_address = blankValue %}
+        {% set export_city = blankValue %}
+    {% endif %}
+
+    <div id="page">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="header">
+                        <div class="title">
+                            Combi-Formulier Voedselketeninformatie (VKI) en Vervoersdocument schapen en geiten
+                        </div>
+
+                        <div class="nsfo-logo">
+                            <img src="{{ imagesDirectory }}"/>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-4">
+                    <table>
+                        <tr>
+                            <td colspan="2" style="text-decoration: underline;">UBN of NAW van bedrijf van afvoer</td>
+                        </tr>
+                        <tr>
+                            <td>UBN:</td>
+                            <td>{{ ubn }}</td>
+                        </tr>
+                        <tr>
+                            <td>Naam:</td>
+                            <td>{{ fullName }}</td>
+                        </tr>
+                        <tr>
+                            <td>Adres:</td>
+                            <td>
+                                {{ fullAddress }}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Woonplaats:</td>
+                            <td>{{ city | capitalize }}</td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="col-md-4">
+                    <table>
+                        <tr>
+                            <td colspan="2" style="text-decoration: underline;">UBN of NAW van bedrijf van aanvoer</td>
+                        </tr>
+                        <tr>
+                            <td>UBN:</td>
+                            <td>{{ export_ubn }}</td>
+                        </tr>
+                        <tr>
+                            <td>Naam:</td>
+                            <td>{{ export_fullName }}</td>
+                        </tr>
+                        <tr>
+                            <td>Adres:</td>
+                            <td>
+                                {{ export_fullAddress }}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Woonplaats:</td>
+                            <td>{{ export_city | capitalize }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-5" id="blockCanBeExported">
+                    <input type="checkbox" id="canBeExported" {% if variables.can_be_exported %}checked{% endif %}  />
+                    <label for="canBeExported" id="labelCanBeExported">
+                        Kruis aan als de dieren geëxporteerd mogen worden,
+                        omdat ze voldoen aan deze voorwaarden:
+                        De schapen en/of geiten hebben tenminste gedurende 30
+                        dagen vóór het laden, of, in het geval van dieren die minder
+                        dan 30 dagen oud zijn, sinds hun geboorte op het bedrijf van
+                        oorsprong verbleven. Gedurende de laatste 21 dagen zijn er
+                        vóór het laden geen schapen of geiten binnengebracht op
+                        het bedrijf van oorsprong en gedurende 30 dagen vóór
+                        verzending van het bedrijf van oorsprong zijn er op het
+                        bedrijf van oorsprong geen evenhoevigen binnengebracht uit
+                        derde landen.
+                    </label>
+                    <hr id="canBeExportedBorder">
+                    <b>De houder verklaart bij ondertekening van dit formulier
+                        dat hij de geboortemelding volgens zijn wettelijke
+                        verplichting heeft verricht.</b>
+                </div>
+                <div class="col-md-6">
+                    <table>
+                        <tr>
+                            <td colspan="2">Handtekening bedrijf van aanvoer:</td>
+                        </tr>
+                        <tr>
+                            <td colspan="2" style="text-decoration: underline;">UBN of NAW van de vervoerder</td>
+                        </tr>
+                        <tr>
+                            <td>UBN:</td>
+                            <td>.....................................</td>
+                        </tr>
+                        <tr>
+                            <td>Naam:</td>
+                            <td>.....................................</td>
+                        </tr>
+                        <tr>
+                            <td>Adres:</td>
+                            <td>.....................................</td>
+                        </tr>
+                        <tr>
+                            <td>Woonplaats:</td>
+                            <td>.....................................</td>
+                        </tr>
+                        <tr>
+                            <td>Kenteken:...................</td>
+                            <td>Kenteken aanhanger:...................</td>
+                        </tr>
+                        <tr>
+                            <td>Datum transport:</td>
+                            <td>{{ variables.transport_date }}</td>
+                        </tr>
+                        <tr>
+                            <td>Tijdstip vertrek:</td>
+                            <td>.....................................</td>
+                        </tr>
+                        <tr>
+                            <td>Verwachte duur van het transport:</td>
+                            <td>............. <b>:</b> .............</td>
+                        </tr>
+                        <tr>
+                            <td>Handtekening vervoerder:</td>
+                            <td></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <hr class="separator--big">
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-4">
+                    <p><u>Gegevens dieren:</u></p>
+                </div>
+                <div class="col-md-4">
+                    <p>Categorie: schaap/geit</p>
+                </div>
+                <div class="col-md-4">
+                    <p>Aantal te leveren dieren: {{ variables.animals | length }}</p>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <p>Oormerknummers (of zie aangehechte lijst):</p>
+                    <table class="overview-table">
+                        <thead>
+                            <tr>
+                                <th><b>ULN</b></th>
+                                <th>Geb.dat.</th>
+                                <th>Gesl.</th>
+                                <th>Export slacht J/N</th>
+                                <th class="separatorCol">Diervlag?</th>
+                                <th><b>ULN</b></th>
+                                <th>Geb.dat.</th>
+                                <th>Gesl.</th>
+                                <th>Export slacht J/N</th>
+                                <th>Diervlag?</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% for animal in variables.animals %}
+                            <tr>
+                                <td>{{ animal.ulnCountryCode }}{{ animal.ulnNumber }}</td>
+                                <td>{{ animal.dateOfBirth | date('d-m-Y') }}</td>
+                                <td>{{ animal.genderForAnimalDetails }}</td>
+                                <td></td>
+                                <td class="separatorCol"></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <hr class="separator--big">
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <table class="overview-table">
+                        <tr>
+                            <td class="firstTreatmentCol">Aspecten voedselketeninformatie</td>
+                            <td>Omcirkel juiste antwoord
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="firstTreatmentCol">
+                                1. Bevinden de dieren zich nog in de wettelijke wachttermijn van toegediende diergeneesmiddelen?
+                            </td>
+                            <td>Nee/Ja *</td>
+                        </tr>
+                        <tr>
+                            <td class="firstTreatmentCol">
+                                2. Zijn de dieren in de 35 dagen voorafgaande aan de slacht ziek geweest en/of behandeld geweest met
+                                diergeneesmiddelen? Zo ja, wat was de diagnose en/of de reden van behandeling?
+                            </td>
+                            <td>Nee/Ja *</td>
+                        </tr>
+                        </tr>
+                        <tr>
+                            <td class="firstTreatmentCol">
+                                Zijn de dieren behandeld met diergeneesmiddelen waarvan de wachttermijn voor vlees in de 7 dagen
+                                voorafgaande aan de slacht is verlopen? Zo ja, informatie invullen in onderstaande tabel:
+                            </td>
+                            <td>Nee/Ja *</td>
+                        </tr>
+                        <tr>
+                            <td colspan="2">
+                                <table class="overview-table">
+                                    <tr>
+                                        <td>Oormerknummers</td>
+                                        <td>Reg. NL</td>
+                                        <td>Naam diermiddel</td>
+                                        <td>Datum laatste behandeling</td>
+                                        <td>Datum einde wachttermijn</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Vul dit in en toon dit als bovenstaande antwoord ja is</td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="firstTreatmentCol">
+                                4. Is er nog andere relevante informatie te melden over de gezondheidsstatus van de af te leveren dieren, b.v. de
+                                aanwezigheid van een afgebroken injectienaald?
+                            </td>
+                            <td>Nee/Ja *</td>
+                        </tr>
+                        <tr>
+                            <td class="firstTreatmentCol"><b>Informatie over herkomstbedrijf</b></td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td class="firstTreatmentCol">
+                                5. Is er relevante informatie te melden over de status van het herkomstbedrijf, of over de regionale
+                                gezondheidsstatus?
+                            </td>
+                            <td>Nee/Ja *</td>
+                        </tr>
+                        <tr>
+                            <td class="firstTreatmentCol">
+                                6. Zijn er aanwijzingen dat er ziekten aanwezig zijn die de veiligheid van het vlees in het gedrang zouden kunnen
+                                brengen?
+                            </td>
+                            <td>Nee/Ja *</td>
+                        </tr>
+                        <tr>
+                            <td class="firstTreatmentCol">
+                                7. Zijn er onderzoeksgegevens beschikbaar die relevant zijn voor de voedselveiligheid?
+                            </td>
+                            <td>Nee/Ja *</td>
+                        </tr>
+                        <tr>
+                            <td class="firstTreatmentCol">
+                                8. Is er relevante informatie bekend over eerdere keuringen vóór en na het slachten (slachtkeuringsinformatie) van
+                                schapen of geiten van hetzelfde bedrijf?
+                            </td>
+                            <td>Nee/Ja *</td>
+                        </tr>
+                        <tr>
+                            <td class="firstTreatmentCol">
+                                9. Is er relevante informatie bekend over productiegegevens (b.v. sterfte) die ziekten aan het licht kunnen brengen?
+                            </td>
+                            <td>Nee/Ja *</td>
+                        </tr>
+                        <tr>
+                            <td colspan="2">
+                                <table class="inner-table">
+                                    <tr>
+                                        <td colspan="2">Naam en adres van de dierenarts, die normaliter diensten verleent aan het bedrijf van herkomst:</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Naam:</td>
+                                        <td>Adres:</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Postcode, woonplaats:</td>
+                                        <td>Tel:</td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+                    <p>*Waar ‘ja’ wordt geantwoord, moeten de afwijkingen hieronder vermeld worden.</p>
+                    <p class="dotted-line--full"></p>
+                    <p class="dotted-line--full"></p>
+                    <p>
+                        Aldus verklaard door de houder: .....................................................................(handtekening houder)
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block stylesheets %}
+
+    <style type="text/css">
+        html {
+            font-family: Sans-Serif, serif;
+            font-stretch: semi-condensed;
+        }
+
+        #blockCanBeExported {
+            border: 1px solid black;
+        }
+
+        #canBeExportedBorder {
+            width: 100%;
+            border: 1px solid black;
+        }
+
+        .separator--big {
+            border-bottom: 2px solid black;
+        }
+
+        .separatorCol {
+            border-right: 4px solid black;
+        }
+
+        .firstTreatmentCol {
+            width: 80%;
+        }
+
+        .dotted-line--full {
+            border-bottom: 1px dotted black;
+            margin-top: 1.5%;
+        }
+
+        #page {
+            overflow: hidden;
+            page-break-after: always;
+        }
+
+        .header {
+            font-size: 6mm;
+            width: 100%;
+        }
+
+        .nsfo-logo {
+            display: inline-block;
+            vertical-align: top;
+            width: 20%;
+        }
+
+        .nsfo-logo img {
+            height: 50px;
+            width: 150px;
+        }
+
+        .title {
+            display: inline-block;
+            vertical-align: bottom;
+            width: 70%;
+            font-weight: 700;
+            font-size: 3.5mm;
+        }
+
+        .sub-header .left {
+            float: left;
+            white-space: nowrap;
+        }
+
+        .sub-header .right {
+            float: right;
+            white-space: nowrap;
+        }
+
+        table.overview-table {
+            width: 100%;
+            border: 1px solid black;
+        }
+
+        table.inner-table {
+            width: 100%;
+        }
+
+        table.inner-table, table.inner-table td, table.inner-table  th {
+            border:none !important;
+        }
+
+        table.overview-table td, table.overview-table  th {
+            text-align: left;
+            padding: 1mm 1mm 1mm 1mm;
+            border: 1px solid black;
+        }
+    </style>
+{% endblock %}

@@ -11,7 +11,7 @@ class SettingsContainer
 
     public function __construct(int $maxFeedbackWorkers = 1)
     {
-        $this->maxFeedbackWorkers = $maxFeedbackWorkers;
+        $this->maxFeedbackWorkers = 2;
     }
 
     /**
