@@ -2,12 +2,18 @@
 
 namespace AppBundle\Service\Report;
 
+use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Constant\ReportLabel;
 use AppBundle\Entity\Animal;
+use AppBundle\Entity\DeclareDepart;
 use AppBundle\Entity\Location;
 use AppBundle\Enumerator\FileType;
+use AppBundle\Enumerator\ReasonOfDepartType;
+use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Util\NullChecker;
 use AppBundle\Util\RequestUtil;
+use AppBundle\Util\ResultUtil;
+use AppBundle\Util\SqlUtil;
 use Exception;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -31,6 +37,11 @@ class CombiFormTransportDocumentService extends ReportServiceBase
         $location = $this->getSelectedLocation($request);
 
         $PDFData = $this->getPDFData($content->toArray(), $location);
+
+        if ($PDFData instanceof JsonResponse) {
+            return $PDFData;
+        }
+
         $PDFData[ReportLabel::IMAGES_DIRECTORY] = $this->getImagesDirectory();
         $PDFData['transport_date'] = $content['transport_date'];
 
@@ -46,7 +57,7 @@ class CombiFormTransportDocumentService extends ReportServiceBase
     /**
      * @param array $requestContent
      * @param Location|null $location
-     * @return array
+     * @return JsonResponse|array
      * @throws Exception
      */
     private function getPDFData(array $requestContent, ?Location $location)
@@ -55,22 +66,31 @@ class CombiFormTransportDocumentService extends ReportServiceBase
         $exportLocation = $this->em->getRepository(Location::class)
             ->findOneBy(['ubn' => $requestContent['export_ubn']]);
 
-//        $result = [
-//            'location'        => $location,
-//            'export_location' => $exportLocation
-//        ];
+        $result = [
+            'animals' => [],
+            'can_be_exported' => false
+        ];
 
-        foreach ($requestContent['animals'] as $animalItem) {
-            /** @var Animal $animal */
-            $animal = $this->em->getRepository(Animal::class)
-                ->findOneBy([
-                    'ulnNumber' => $animalItem['uln_number'],
-                    'ulnCountryCode' => $animalItem['uln_country_code']
-                ]);
+        /** @var Animal $animal */
+        foreach ($location->getAnimals() as $animal) {
 
-            dump($animal->getArrivals()->isEmpty());
+            /** @var DeclareDepart $declareDepart */
+            $declareDepart = $animal->getDepartures()->last();
 
-            $result['can_be_exported'] = false;
+            if (!$declareDepart instanceof DeclareDepart) {
+                continue;
+            }
+
+            if (
+                $declareDepart->getDepartDate()->format('d-m-Y') !== $requestContent['transport_date'] ||
+                $declareDepart->getRequestState() === RequestStateType::FINISHED ||
+                $declareDepart->getRequestState() === RequestStateType::FINISHED_WITH_WARNING ||
+                $declareDepart->getRequestState() === RequestStateType::IMPORTED ||
+                $declareDepart->getReasonOfDepart() !== ReasonOfDepartType::BREEDING_FARM ||
+                $declareDepart->getReasonOfDepart() !== ReasonOfDepartType::RENT
+            ) {
+                continue;
+            }
 
             $diff = date_diff($animal->getDateOfBirth(), new \DateTime());
 
@@ -82,7 +102,10 @@ class CombiFormTransportDocumentService extends ReportServiceBase
 
             $result['animals'][] = $animal;
         }
-        die;
+
+        if (count($result['animals']) === 0) {
+            return ResultUtil::errorResult('No animals found for your location that match the criteria for departures.', 500);
+        }
 
         $result['location'] = $location;
         $result['export_location'] = $exportLocation;
@@ -90,6 +113,4 @@ class CombiFormTransportDocumentService extends ReportServiceBase
 
         return $result;
     }
-
-
 }
