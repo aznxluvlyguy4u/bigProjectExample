@@ -68,13 +68,12 @@ class TreatmentRepository extends BaseRepository {
                 SELECT
                     tm.name,
                     ms.waiting_time_end,
-                    mo.dosage,
-                    mo.dosage_unit,
-                    mo.reg_nl,
-                    mo.treatment_duration
+                    tm.dosage,
+                    tm.dosage_unit,
+                    tm.reg_nl,
+                    tm.treatment_duration
                FROM medication_selection ms 
-               LEFT JOIN medication_option mo ON ms.medication_option_id = mo.id
-               LEFT JOIN treatment_medication tm ON mo.treatment_medication_id = tm.id
+               LEFT JOIN treatment_medication tm ON ms.treatment_medication_id = tm.id
                WHERE ms.treatment_id = :id
             ';
             $medicineStatement = $this->getManager()->getConnection()->prepare($medicationSql);
@@ -92,6 +91,7 @@ class TreatmentRepository extends BaseRepository {
             $animalStatement->execute();
 
             $item['medications'] = $medicineStatement->fetchAll();
+
             $item['animals'] = $animalStatement->fetchAll();
 
             $item['dutchType'] = Translation::getDutchTreatmentType($item['type']);
