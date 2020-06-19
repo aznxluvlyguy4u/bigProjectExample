@@ -241,6 +241,7 @@ class CompanyRegisterReportService extends ReportServiceBase
                     AND (a.date_of_birth NOTNULL AND a.date_of_birth <= '$sampleDateString')
             GROUP BY animal_id
             )
+        ORDER BY a.animal_order_number, a.date_of_birth
         ;";
     }
 
