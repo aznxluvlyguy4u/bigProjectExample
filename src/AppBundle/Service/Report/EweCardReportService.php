@@ -463,10 +463,7 @@ class EweCardReportService extends ReportServiceBase
                     ".self::queryMaturedCount($location,OffspringMaturityType::OTHER_OFFSPRING_MATURED_AS_SURROGATE)."
                 )other_offspring_matured_as_surrogate ON other_offspring_matured_as_surrogate.maturing_mother_id = a.id
                 LEFT JOIN view_ewe_litter_age ON view_ewe_litter_age.ewe_id = a.id       
-        WHERE a.location_id NOTNULL AND a.is_alive
-          AND r.total_born NOTNULL
-          AND r.weight_at20weeks NOTNULL
-          AND a.type = '".AnimalObjectType::Ewe."'
+        WHERE a.type = '".AnimalObjectType::Ewe."'
           AND a.id IN $animalIdsArrayString";
 
         return $this->conn->query($sql)->fetchAll();
