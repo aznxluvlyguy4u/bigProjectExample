@@ -194,14 +194,14 @@ class EweCardReportService extends ReportServiceBase
 
     private function aggregateOffspringData(array $offspringDataPerEwe): array {
         $birthWeightTotal = 0;
-        $weaningWeightTotal = 0;
+        $weightAt8WeeksTotal = 0;
         $deliveryWeightTotal = 0;
         $averageGrowthTotal = 0;
         $saldoTotal = 0;
         $pricePerKgTotal = 0;
 
         $birthWeightCount = 0;
-        $weaningWeightCount = 0;
+        $weightAt8WeeksCount = 0;
         $deliveryWeightCount = 0;
         $averageGrowthCount = 0;
         $saldoCount = 0;
@@ -209,7 +209,7 @@ class EweCardReportService extends ReportServiceBase
 
         foreach ($offspringDataPerEwe as $child) {
             $birthWeight = $child['birth_weight'];
-            $weaningWeight = $child['weaning_weight'];
+            $weightAt8Weeks = $child['weight_at8weeks_kg'];
             $deliveryWeight = $child['delivery_weight'];
             $averageGrowth = $child['average_growth'];
             $saldo = $child['saldo'];
@@ -220,9 +220,9 @@ class EweCardReportService extends ReportServiceBase
                 $birthWeightCount++;
             }
 
-            if (!empty($weaningWeight)) {
-                $weaningWeightTotal += floatval($weaningWeight);
-                $weaningWeightCount++;
+            if (!empty($weightAt8Weeks)) {
+                $weightAt8WeeksTotal += floatval($weightAt8Weeks);
+                $weightAt8WeeksCount++;
             }
 
             if (!empty($deliveryWeight)) {
@@ -252,10 +252,10 @@ class EweCardReportService extends ReportServiceBase
                 ReportLabel::AVERAGE => $birthWeightTotal / (empty($birthWeightCount) ? 1 : $birthWeightCount),
                 ReportLabel::IS_EMPTY => $birthWeightCount === 0,
             ],
-            ReportLabel::WEANING_WEIGHT => [
-                ReportLabel::TOTAL => $weaningWeightTotal,
-                ReportLabel::AVERAGE => $weaningWeightTotal / (empty($weaningWeightCount) ? 1 : $weaningWeightCount),
-                ReportLabel::IS_EMPTY => $weaningWeightCount === 0,
+            ReportLabel::WEIGHT_AT_8_WEEKS => [
+                ReportLabel::TOTAL => $weightAt8WeeksTotal,
+                ReportLabel::AVERAGE => $weightAt8WeeksTotal / (empty($weightAt8WeeksCount) ? 1 : $weightAt8WeeksCount),
+                ReportLabel::IS_EMPTY => $weightAt8WeeksCount === 0,
             ],
             ReportLabel::DELIVERY_WEIGHT => [
                 ReportLabel::TOTAL => $deliveryWeightTotal,
@@ -374,26 +374,20 @@ class EweCardReportService extends ReportServiceBase
                '-' 
             END as average_alive_per_year,
              
-            COALESCE((own_offspring_matured_as_own_mother.count + other_offspring_matured_as_surrogate.count)::text, '-') as total_matured,       
+            COALESCE((own_offspring_matured_as_own_mother.count + other_offspring_matured_as_surrogate.count)::text, '-') as total_matured,       -- TODO check this value
             COALESCE(other_offspring_matured_as_surrogate.count::text, '-') as matured_for_others,
             COALESCE(own_offspring_matured_at_other_surrogate.count::text, '-') as matured_at_others,
-            CASE WHEN view_ewe_litter_age.ewe_id NOTNULL THEN
-                COALESCE(ROUND(((own_offspring_matured_as_own_mother.count + other_offspring_matured_as_surrogate.count) / view_ewe_litter_age.day_standardized_months)::numeric,1)::text, '-')
-            ELSE
-               '-' 
-            END as average_matured_per_month,
             
             CASE WHEN view_ewe_litter_age.ewe_id NOTNULL THEN
                 COALESCE(ROUND(((own_offspring_matured_as_own_mother.count + other_offspring_matured_as_surrogate.count) / view_ewe_litter_age.day_standardized_years)::numeric,1)::text, '-')
             ELSE
                '-' 
-            END as average_matured_per_year,
+            END as average_matured_per_year, -- TODO gem. groot per jaar kan ook worden berekend als totaal_groot / worpen === bijv. 7 totaal groot; in 3 worpen is dit ook 2.33
             
-            -- weaning/'spenen'-data is not available
-            '-' as average_growth_until_weaning, -- groei tot spenen
-            '-' as average_weaning_weight,
-            '-' as average_weaning_age_in_days,
-            '-' as average_weaning_growth_of_all_sucklings, 
+            grouped_8_weeks_data.average_growth_at_8_weeks as average_growth_at_8_weeks,
+            grouped_8_weeks_data.average_weight_at_8_weeks as average_weight_at_8_weeks,
+            grouped_8_weeks_data.average_weight_at_8_weeks_age_in_days as average_weight_at_8_weeks_age_in_days,
+            grouped_8_weeks_data.average_growth_at_8_weeks_of_all_sucklings as average_growth_at_8_weeks_of_all_sucklings,
             (SELECT dd_mm_yyyy FROM view_breed_value_max_generation_date) as breed_value_evaluation_date,
             -- fokwaarden
             r.total_born,
@@ -424,7 +418,7 @@ class EweCardReportService extends ReportServiceBase
                  LEFT JOIN (
                      SELECT
                         animal_mother_id,
-                        ROUND(AVG(birth_weight)::numeric,2) as average_birth_weight
+                        ROUND(AVG(birth_weight)::numeric,1) as average_birth_weight
                     FROM animal_cache c
                              INNER JOIN animal a ON c.animal_id = a.id
                              INNER JOIN litter l ON l.id = a.litter_id
@@ -441,18 +435,11 @@ class EweCardReportService extends ReportServiceBase
                     GROUP BY animal_mother_id
                 )litters_kpi ON litters_kpi.animal_mother_id = a.id
                 LEFT JOIN (
-                         SELECT
-                             animal_mother_id,
-                             MAX(standard_litter_ordinal) as litter_number,
-                             SUM(born_alive_count + stillborn_count) as animal_total_born,
-                             SUM(born_alive_count) as total_born_alive,
-                             SUM(stillborn_count) as total_deaths,
-                             ROUND(AVG(born_alive_count + stillborn_count),2) as average_litter_size,
-                             ROUND(AVG(born_alive_count),2) as average_alive_per_litter,
-                             ROUND(AVG(stillborn_count),2) as average_deaths_litter
-                         FROM litter l
-                         GROUP BY animal_mother_id
-                )grouped_litter_data_by_litter ON grouped_litter_data_by_litter.animal_mother_id = a.id
+                         ".$this->getGroupedLitterDataByLitter($animalIdsArrayString)."
+                )grouped_litter_data_by_litter ON grouped_litter_data_by_litter.mom_id = a.id
+                LEFT JOIN (
+                         ".$this->get8WeeksGroupedData($animalIdsArrayString)."
+                )grouped_8_weeks_data ON grouped_8_weeks_data.mom_id = a.id
                 LEFT JOIN (
                     ".self::queryMaturedCount($location,OffspringMaturityType::OWN_OFFSPRING_MATURED_AS_OWN_MOTHER)."
                 )own_offspring_matured_as_own_mother ON own_offspring_matured_as_own_mother.maturing_mother_id = a.id
@@ -467,6 +454,55 @@ class EweCardReportService extends ReportServiceBase
           AND a.id IN $animalIdsArrayString";
 
         return $this->conn->query($sql)->fetchAll();
+    }
+
+    private function getGroupedLitterDataByLitter(string $animalIdsArrayString): string
+    {
+        return "SELECT
+                 animal_mother_id as mom_id,
+                 MAX(standard_litter_ordinal) as litter_number,
+                 SUM(born_alive_count + stillborn_count) as animal_total_born,
+                 SUM(born_alive_count) as total_born_alive,
+                 SUM(stillborn_count) as total_deaths,
+                 ROUND(AVG(born_alive_count + stillborn_count),2) as average_litter_size,
+                 ROUND(AVG(born_alive_count),2) as average_alive_per_litter,
+                 ROUND(AVG(stillborn_count),2) as average_deaths_litter
+             FROM litter l
+             WHERE l.animal_mother_id IN $animalIdsArrayString
+             GROUP BY animal_mother_id";
+    }
+
+    private function get8WeeksGroupedData(string $animalIdsArrayString): string
+    {
+        return "SELECT
+            a.parent_mother_id as mom_id,
+            CASE WHEN AVG(ac.age_weight_at8weeks) NOTNULL AND AVG(ac.weight_at8weeks) NOTNULL THEN
+                ROUND((
+                    AVG(ac.weight_at8weeks) /
+                    AVG(ac.age_weight_at8weeks)
+                )::numeric,2)::text
+            ELSE
+                '-'
+            END as average_growth_at_8_weeks,
+            COALESCE(ROUND(AVG(ac.weight_at8weeks)::numeric,1)::text,'-') as average_weight_at_8_weeks,
+            COALESCE(ROUND(AVG(ac.age_weight_at8weeks)::numeric,1)::text,'-') as average_weight_at_8_weeks_age_in_days,
+        
+            -- eigen lammeren van deze ooi die niet bij een pleegmoeder of lambar hebben gelopen
+            CASE WHEN
+                AVG(CASE WHEN a.surrogate_id ISNULL AND a.lambar = FALSE THEN ac.weight_at8weeks END) NOTNULL AND
+                AVG(CASE WHEN a.surrogate_id ISNULL AND a.lambar = FALSE THEN ac.age_weight_at8weeks END) NOTNULL
+            THEN
+                ROUND((
+                    AVG(CASE WHEN a.surrogate_id ISNULL AND a.lambar = FALSE THEN ac.weight_at8weeks END) /
+                    AVG(CASE WHEN a.surrogate_id ISNULL AND a.lambar = FALSE THEN ac.age_weight_at8weeks END)
+                )::numeric,2)::text
+            ELSE
+                '-'
+            END as average_growth_at_8_weeks_of_all_sucklings
+        FROM animal a
+            INNER JOIN animal_cache ac on a.id = ac.animal_id
+        WHERE a.parent_mother_id IN $animalIdsArrayString
+        GROUP BY a.parent_mother_id";
     }
 
     /**
@@ -500,8 +536,7 @@ class EweCardReportService extends ReportServiceBase
             --gewicht
             ac.birth_weight as birth_weight,
             
-            -- weaning weight/'speengewicht' = weight at 8 weeks
-            COALESCE(CAST(ac.weight_at8weeks AS text),'') as weaning_weight,
+            COALESCE(CAST(ac.weight_at8weeks AS text),'') as weight_at8weeks_kg,
 
             COALESCE(delivery_weight.weight,'') as delivery_weight,
             COALESCE(growth.average_growth_rate, '') as average_growth,

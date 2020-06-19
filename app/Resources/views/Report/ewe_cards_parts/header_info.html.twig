@@ -27,7 +27,7 @@
             {% if animal.animalAndProduction.collar is empty %}
                 <h1 class="my-0" style="margin-left: 135px"><b>{{ animal.animalAndProduction.animal_order_number }}</b></h1>
             {% else %}
-                <h1 class="my-0" style="margin-left: 90px"><b>{{ animal.animalAndProduction.animal_order_number ~ ' ' ~ animal.animalAndProduction.collar }}</b></h1>
+                <h1 class="my-0" style="margin-left: 90px"><b>{{ animal.animalAndProduction.animal_order_number ~ ' ' ~ animal.animalAndProduction.collar_color ~ ' ' ~ animal.animalAndProduction.collar_number }}</b></h1>
             {% endif %}
         </div>
         <div class="row">
