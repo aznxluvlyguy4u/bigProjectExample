@@ -74,7 +74,8 @@ class TreatmentTemplate
 
     /**
      * @var ArrayCollection
-     * @ORM\OneToMany(targetEntity="AppBundle\Entity\MedicationOption", mappedBy="treatmentTemplate", cascade={"persist", "remove"})
+     * @ORM\ManyToMany(targetEntity="AppBundle\Entity\TreatmentMedication", inversedBy="treatmentTemplates", cascade={"persist", "remove"})
+     * @ORM\JoinTable(name="template_medications")
      * @JMS\Type("ArrayCollection<AppBundle\Entity\MedicationOption>")
      * @JMS\Groups({
      *     "TREATMENT_TEMPLATE",
@@ -82,7 +83,7 @@ class TreatmentTemplate
      *     "TREATMENT"
      * })
      */
-    private $medications;
+    private $treatmentMedications;
 
     /**
      * @var ArrayCollection

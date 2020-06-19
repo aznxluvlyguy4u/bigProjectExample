@@ -40,12 +40,12 @@ class MedicationSelection
     private $treatment;
 
     /**
-     * @var MedicationOption
-     * @ORM\ManyToOne(targetEntity="AppBundle\Entity\MedicationOption")
-     * @ORM\JoinColumn(name="medication_option_id", referencedColumnName="id", onDelete="CASCADE")
-     * @JMS\Type("AppBundle\Entity\MedicationOption")
+     * @var TreatmentMedication
+     * @ORM\ManyToOne(targetEntity="AppBundle\Entity\TreatmentMedication")
+     * @ORM\JoinColumn(name="treatment_medication_id", referencedColumnName="id", onDelete="CASCADE")
+     * @JMS\Type("AppBundle\Entity\TreatmentMedication")
      */
-    private $medicationOption;
+    private $treatmentMedication;
 
     /**
      * @var DateTime
@@ -100,20 +100,20 @@ class MedicationSelection
     }
 
     /**
-     * @return MedicationOption
+     * @return TreatmentMedication
      */
-    public function getMedicationOption(): MedicationOption
+    public function getTreatmentMedication(): TreatmentMedication
     {
-        return $this->medicationOption;
+        return $this->treatmentMedication;
     }
 
     /**
-     * @param MedicationOption $medicationOption
+     * @param TreatmentMedication $treatmentMedication
      * @return MedicationSelection
      */
-    public function setMedicationOption(MedicationOption $medicationOption): self
+    public function setMedicationOption(TreatmentMedication $treatmentMedication): self
     {
-        $this->medicationOption = $medicationOption;
+        $this->treatmentMedication = $treatmentMedication;
 
         return $this;
     }
