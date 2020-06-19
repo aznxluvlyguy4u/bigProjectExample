@@ -194,14 +194,14 @@ class EweCardReportService extends ReportServiceBase
 
     private function aggregateOffspringData(array $offspringDataPerEwe): array {
         $birthWeightTotal = 0;
-        $weaningWeightTotal = 0;
+        $weightAt8WeeksTotal = 0;
         $deliveryWeightTotal = 0;
         $averageGrowthTotal = 0;
         $saldoTotal = 0;
         $pricePerKgTotal = 0;
 
         $birthWeightCount = 0;
-        $weaningWeightCount = 0;
+        $weightAt8WeeksCount = 0;
         $deliveryWeightCount = 0;
         $averageGrowthCount = 0;
         $saldoCount = 0;
@@ -209,7 +209,7 @@ class EweCardReportService extends ReportServiceBase
 
         foreach ($offspringDataPerEwe as $child) {
             $birthWeight = $child['birth_weight'];
-            $weaningWeight = $child['weaning_weight'];
+            $weightAt8Weeks = $child['weight_at8weeks_kg'];
             $deliveryWeight = $child['delivery_weight'];
             $averageGrowth = $child['average_growth'];
             $saldo = $child['saldo'];
@@ -220,9 +220,9 @@ class EweCardReportService extends ReportServiceBase
                 $birthWeightCount++;
             }
 
-            if (!empty($weaningWeight)) {
-                $weaningWeightTotal += floatval($weaningWeight);
-                $weaningWeightCount++;
+            if (!empty($weightAt8Weeks)) {
+                $weightAt8WeeksTotal += floatval($weightAt8Weeks);
+                $weightAt8WeeksCount++;
             }
 
             if (!empty($deliveryWeight)) {
@@ -252,10 +252,10 @@ class EweCardReportService extends ReportServiceBase
                 ReportLabel::AVERAGE => $birthWeightTotal / (empty($birthWeightCount) ? 1 : $birthWeightCount),
                 ReportLabel::IS_EMPTY => $birthWeightCount === 0,
             ],
-            ReportLabel::WEANING_WEIGHT => [
-                ReportLabel::TOTAL => $weaningWeightTotal,
-                ReportLabel::AVERAGE => $weaningWeightTotal / (empty($weaningWeightCount) ? 1 : $weaningWeightCount),
-                ReportLabel::IS_EMPTY => $weaningWeightCount === 0,
+            ReportLabel::WEIGHT_AT_8_WEEKS => [
+                ReportLabel::TOTAL => $weightAt8WeeksTotal,
+                ReportLabel::AVERAGE => $weightAt8WeeksTotal / (empty($weightAt8WeeksCount) ? 1 : $weightAt8WeeksCount),
+                ReportLabel::IS_EMPTY => $weightAt8WeeksCount === 0,
             ],
             ReportLabel::DELIVERY_WEIGHT => [
                 ReportLabel::TOTAL => $deliveryWeightTotal,
@@ -389,11 +389,10 @@ class EweCardReportService extends ReportServiceBase
                '-' 
             END as average_matured_per_year,
             
-            -- weaning/'spenen'-data is not available
-            '-' as average_growth_until_weaning, -- groei tot spenen
-            '-' as average_weaning_weight,
-            '-' as average_weaning_age_in_days,
-            '-' as average_weaning_growth_of_all_sucklings, 
+            '-' as average_growth_until_8_weeks,
+            '-' as average_weight_at_8_weeks,
+            '-' as average_weight_at_8_weeks_age_in_days,
+            '-' as average_growth_at_8_weeks_of_all_sucklings, 
             (SELECT dd_mm_yyyy FROM view_breed_value_max_generation_date) as breed_value_evaluation_date,
             -- fokwaarden
             r.total_born,
@@ -500,8 +499,7 @@ class EweCardReportService extends ReportServiceBase
             --gewicht
             ac.birth_weight as birth_weight,
             
-            -- weaning weight/'speengewicht' = weight at 8 weeks
-            COALESCE(CAST(ac.weight_at8weeks AS text),'') as weaning_weight,
+            COALESCE(CAST(ac.weight_at8weeks AS text),'') as weight_at8weeks_kg,
 
             COALESCE(delivery_weight.weight,'') as delivery_weight,
             COALESCE(growth.average_growth_rate, '') as average_growth,
