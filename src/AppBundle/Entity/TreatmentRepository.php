@@ -40,6 +40,7 @@ class TreatmentRepository extends BaseRepository {
                 t.description,
                 t.start_date,
                 t.end_date,
+                t.revoke_date,
                 t.type,
                 t.status
             FROM treatment t
