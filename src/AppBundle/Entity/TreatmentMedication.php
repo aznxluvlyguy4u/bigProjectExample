@@ -3,6 +3,7 @@
 namespace AppBundle\Entity;
 
 use AppBundle\Traits\EntityClassInfo;
+use AppBundle\Util\StringUtil;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as JMS;
@@ -224,7 +225,7 @@ class TreatmentMedication
      */
     public function setRegNl(?string $regNl): self
     {
-        $this->regNl = $regNl;
+        $this->regNl = StringUtil::trimAndReturnNullIfEmpty($regNl);
 
         return $this;
     }

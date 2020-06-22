@@ -27,7 +27,7 @@ class StringUtil
         return strtr($fromBeginningToEnd, [$fromEndingToEnd => '', $beginning => '']);
     }
 
-    
+
     /**
      * Just remove the last 5 numbers of the uln
      *
@@ -67,6 +67,13 @@ class StringUtil
     }
 
 
+    public static function trimAndReturnNullIfEmpty(?string $input): ?string
+    {
+        $trimmedInput = trim($input);
+        return empty($trimmedInput) ? null : $trimmedInput;
+    }
+
+
     /**
      * @param string $stnOrigin
      * @return string
@@ -74,7 +81,7 @@ class StringUtil
     public static function getBreederNumberFromStnOrigin($stnOrigin)
     {
         $prefix = 'NL ';
-        
+
         $containsDash = is_int(strpos($stnOrigin, '-'));
         $isDutch = substr($stnOrigin, 0, 3) == $prefix;
         if(!$containsDash || !$isDutch) { return null; }
@@ -119,7 +126,7 @@ class StringUtil
     public static function bumpUlnNumber($ulnNumber)
     {
         if(!Validator::verifyUlnNumberFormat($ulnNumber)) { return null; }
-        
+
         $newUlnNumber = substr($ulnNumber, 0, strlen($ulnNumber)); //copy the string before editing!
         $newUlnNumber[7] = '9';
         return $newUlnNumber;
@@ -195,7 +202,7 @@ class StringUtil
     public static function trimStringWithAddedEllipsis($string, $maxLength)
     {
         if($string == null) { return null; }
-        
+
         if(strlen($string) > $maxLength) {
             return substr($string, 0, $maxLength).'...';
         } else {
@@ -255,7 +262,7 @@ class StringUtil
     {
         if($csvPedigreeCode == '' || $csvPedigreeCode == null) { return null; }
         elseif(strlen($csvPedigreeCode) < 4) { return null; }
-        
+
         if(strpos($csvPedigreeCode, ' ') !== false) {
             $stnParts = explode(' ', $csvPedigreeCode);
             $countryCode = $stnParts[0];
@@ -410,8 +417,8 @@ class StringUtil
     {
         return preg_replace('!\s+!', ' ', $stringOrArray);
     }
-    
-    
+
+
     public static function getUnicodeSymbol($unicodeCodePoint)
     {
         return mb_convert_encoding('&#x'.$unicodeCodePoint.';', 'UTF-8', 'HTML-ENTITIES');
@@ -422,7 +429,7 @@ class StringUtil
      * Only the first half of the pedigreeNumber is capitalized.
      * A lowercase first letter after the dash replaces the first letter of an animalOrderNumber,
      * in case an identical one already exists.
-     * 
+     *
      * @param string $pedigreeNumber
      * @return string
      */
@@ -471,7 +478,7 @@ class StringUtil
         return str_pad($animalOrderNumber, self::ANIMAL_ORDER_NUMBER_LENGTH, 0, STR_PAD_LEFT);
     }
 
-    
+
     /**
      * @param string $breederNumber
      * @return string
@@ -480,11 +487,11 @@ class StringUtil
     {
         return str_pad($breederNumber, self::BREEDER_NUMBER_LENGTH, 0, STR_PAD_LEFT);
     }
-    
+
 
     /**
      * Make sure only valid pedigreeNumbers are inserted!
-     * 
+     *
      * @param string $pedigreeNumber
      * @param boolean $mayOnlyContainDigits
      * @return string
@@ -530,7 +537,7 @@ class StringUtil
         if($date) {
             $dateString = $animal->getDateOfBirth()->format('Y-m-d');
         }
-        
+
         return $animal->getId().'_'.$dateString;
     }
 
