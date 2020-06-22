@@ -2326,7 +2326,7 @@ WHERE animal_id IN (
      */
     public function getExportAnimalsByExportDate(Request $request, $location_id)
     {
-        $exportDate = RequestUtil::getDateQuery($request, 'export_date')->format('Y-m-d');
+        $exportDate = RequestUtil::getDateQuery($request, 'export_date', null, true)->format('Y-m-d');
 
         $sql = "SELECT 
             animal.id AS id,

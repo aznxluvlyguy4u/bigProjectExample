@@ -16,6 +16,7 @@ use AppBundle\Util\ResultUtil;
 use AppBundle\Util\SqlUtil;
 use Exception;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 class CombiFormTransportDocumentService extends ReportServiceBase
 {
@@ -24,6 +25,7 @@ class CombiFormTransportDocumentService extends ReportServiceBase
     const FOLDER_NAME = self::TITLE;
     const FILENAME = self::TITLE;
     const TWIG_FILE = 'Report/combi_form_transport_document.html.twig';
+    const MAX_AGE = 30;
 
     /**
      * @inheritDoc
@@ -94,7 +96,7 @@ class CombiFormTransportDocumentService extends ReportServiceBase
 
             $diff = date_diff($animal->getDateOfBirth(), new \DateTime());
 
-            if ($diff->days < 30) {
+            if ($diff->days < self::MAX_AGE) {
                 if ($animal->getLocationOfBirth() === $location) {
                     $result['can_be_exported'] = true;
                 }
@@ -104,12 +106,11 @@ class CombiFormTransportDocumentService extends ReportServiceBase
         }
 
         if (count($result['animals']) === 0) {
-            return ResultUtil::errorResult('No animals found for your location that match the criteria for departures.', 500);
+            throw new BadRequestHttpException();
         }
 
         $result['location'] = $location;
         $result['export_location'] = $exportLocation;
-
 
         return $result;
     }

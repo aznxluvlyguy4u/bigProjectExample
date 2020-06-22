@@ -3,6 +3,7 @@
 namespace AppBundle\Controller;
 
 use AppBundle\Component\HttpFoundation\JsonResponse;
+use AppBundle\Service\Report\CombiFormTransportDocumentService;
 use AppBundle\Service\ReportService;
 use AppBundle\Util\ResultUtil;
 use Nelmio\ApiDocBundle\Annotation\ApiDoc;
@@ -1066,7 +1067,7 @@ class ReportAPIController extends APIController {
      */
     public function getCombiFormAndTransportDocument(Request $request)
     {
-        return $this->get('app.report.combi_form_transport_document')->getReport($request);
+        return $this->get(CombiFormTransportDocumentService::class)->getReport($request);
     }
 
     /**
