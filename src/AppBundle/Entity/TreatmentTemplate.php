@@ -241,7 +241,7 @@ class TreatmentTemplate
         $this->description = $description;
         return $this;
     }
-    
+
     /**
      * @return ArrayCollection
      *
@@ -266,22 +266,22 @@ class TreatmentTemplate
     }
 
     /**
-     * @param TreatmentMedication $medicationOption
+     * @param TreatmentMedication $TreatmentMedication
      * @return TreatmentTemplate
      */
-    public function addMedication(TreatmentMedication $medicationOption)
+    public function addMedication(TreatmentMedication $TreatmentMedication)
     {
-        $this->treatmentMedications->add($medicationOption);
+        $this->treatmentMedications->add($TreatmentMedication);
         return $this;
     }
 
     /**
-     * @param TreatmentMedication $medicationOption
+     * @param TreatmentMedication $TreatmentMedication
      * @return TreatmentTemplate
      */
-    public function removeMedication(TreatmentMedication $medicationOption)
+    public function removeMedication(TreatmentMedication $TreatmentMedication)
     {
-        $this->treatmentMedications->removeElement($medicationOption);
+        $this->treatmentMedications->removeElement($TreatmentMedication);
         return $this;
     }
 
