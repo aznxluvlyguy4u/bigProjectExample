@@ -293,7 +293,7 @@ class TreatmentTemplate
      */
     public function getTreatments()
     {
-        return $this->treatmentMedications;
+        return $this->treatments;
     }
 
     /**
