@@ -30,7 +30,6 @@ class TreatmentTemplate
      * @ORM\GeneratedValue(strategy="IDENTITY")
      * @JMS\Groups({
      *     "TREATMENT_TEMPLATE",
-     *     "TREATMENT_TEMPLATE_MIN",
      *     "TREATMENT",
      *     "TREATMEN_MIN"
      * })
@@ -97,8 +96,8 @@ class TreatmentTemplate
      * @JMS\Type("boolean")
      * @JMS\Groups({
      *     "TREATMENT_TEMPLATE",
-     *     "TREATMENT_TEMPLATE_MIN",
      *     "TREATMENT",
+     *     "TREATMENT_TEMPLATE_MIN",
      *     "TREATMEN_MIN"
      * })
      */
@@ -146,8 +145,7 @@ class TreatmentTemplate
      * @Assert\NotBlank
      * @ORM\Column(type="string")
      * @JMS\Groups({
-     *     "TREATMENT_TEMPLATE",
-     *     "TREATMENT_TEMPLATE_MIN"
+     *     "TREATMENT_TEMPLATE"
      * })
      */
     private $type;
@@ -156,8 +154,7 @@ class TreatmentTemplate
      * @JMS\VirtualProperty
      * @JMS\SerializedName("dutchType")
      * @JMS\Groups({
-     *     "TREATMENT_TEMPLATE",
-     *     "TREATMENT_TEMPLATE_MIN"
+     *     "TREATMENT_TEMPLATE"
      * })
      */
     public function getDutchType() {
