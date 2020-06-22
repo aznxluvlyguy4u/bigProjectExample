@@ -11,6 +11,7 @@ use AppBundle\Entity\TreatmentType;
 use AppBundle\Enumerator\QueryParameter;
 use AppBundle\Enumerator\TreatmentTypeOption;
 use AppBundle\Util\AdminActionLogWriter;
+use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
 use AppBundle\Util\Validator;
@@ -206,6 +207,10 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
 
 
         $treatmentType = $this->treatmentTypeRepository->findActiveOneByTypeAndDescription($type, $description);
+        if (!$treatmentType) {
+            $descriptionFirstPart = ArrayUtil::firstValue(explode(' - UBN', $description));
+            $treatmentType = $this->treatmentTypeRepository->findActiveOneByTypeAndDescription($type, $descriptionFirstPart);
+        }
 
         if (!$treatmentType) {
             if ($type === TreatmentTypeOption::INDIVIDUAL) {
