@@ -74,9 +74,9 @@ class TreatmentMedication
     private $dosageUnit;
 
     /**
-     * @var string
+     * @var string|null
      *
-     * @ORM\Column(type="string", nullable=false)
+     * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")
      * @JMS\Groups({
      *     "TREATMENT_TEMPLATE",
@@ -219,18 +219,18 @@ class TreatmentMedication
     }
 
     /**
-     * @return string
+     * @return string|null
      */
-    public function getRegNl(): string
+    public function getRegNl(): ?string
     {
         return $this->regNl;
     }
 
     /**
-     * @param string $regNl
+     * @param string|null $regNl
      * @return TreatmentMedication
      */
-    public function setRegNl(string $regNl): self
+    public function setRegNl(?string $regNl): self
     {
         $this->regNl = $regNl;
 
