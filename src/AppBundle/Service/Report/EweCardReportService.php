@@ -831,8 +831,7 @@ INNER JOIN (
                             s.treatment_id,
                             array_agg(tm.name) as medications
                         FROM medication_selection s
-                            INNER JOIN medication_option mo ON s.medication_option_id = mo.id
-                            INNER JOIN treatment_medication tm on mo.treatment_medication_id = tm.id
+                            INNER JOIN treatment_medication tm on s.treatment_medication_id = tm.id
                         GROUP BY s.treatment_id
                     )m ON m.treatment_id = t.id
                 WHERE t.id IN (
