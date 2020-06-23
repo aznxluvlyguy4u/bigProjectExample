@@ -10,7 +10,6 @@ use AppBundle\Entity\Location;
 use AppBundle\Entity\Person;
 use AppBundle\Enumerator\AnimalObjectType;
 use AppBundle\Enumerator\FileType;
-use AppBundle\Enumerator\OffspringMaturityType;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Util\AnimalArrayReader;
 use AppBundle\Util\DateUtil;
@@ -33,6 +32,7 @@ class EweCardReportService extends ReportServiceBase
     const DUPLICATE_TREATMENTS_FOR_TESTING_COUNT = 1;
     const DUPLICATE_OFFSPRING_FOR_TESTING_COUNT = 1;
 
+    const MIN_AGE_IN_DAYS_FOR_MATURITY = 90;
 
     const EWE_ID = 'ewe_id';
 
@@ -368,21 +368,16 @@ class EweCardReportService extends ReportServiceBase
        
             grouped_weights.average_birth_weight as average_birth_weight,
        
-            CASE WHEN view_ewe_litter_age.ewe_id NOTNULL THEN
-                CAST(ROUND((grouped_litter_data_by_litter.total_born_alive / view_ewe_litter_age.day_standardized_years)::numeric,1) AS TEXT)
+            CASE WHEN query_matured_counts.litter_count NOTNULL THEN
+                CAST(ROUND((grouped_litter_data_by_litter.total_born_alive / query_matured_counts.litter_count)::numeric,1) AS TEXT)
             ELSE
                '-' 
             END as average_alive_per_year,
              
-            COALESCE((own_offspring_matured_as_own_mother.count + other_offspring_matured_as_surrogate.count)::text, '-') as total_matured,       -- TODO check this value
-            COALESCE(other_offspring_matured_as_surrogate.count::text, '-') as matured_for_others,
-            COALESCE(own_offspring_matured_at_other_surrogate.count::text, '-') as matured_at_others,
-            
-            CASE WHEN view_ewe_litter_age.ewe_id NOTNULL THEN
-                COALESCE(ROUND(((own_offspring_matured_as_own_mother.count + other_offspring_matured_as_surrogate.count) / view_ewe_litter_age.day_standardized_years)::numeric,1)::text, '-')
-            ELSE
-               '-' 
-            END as average_matured_per_year, -- TODO gem. groot per jaar kan ook worden berekend als totaal_groot / worpen === bijv. 7 totaal groot; in 3 worpen is dit ook 2.33
+            query_matured_counts.total_matured,
+            query_matured_counts.matured_for_others,
+            query_matured_counts.matured_at_others,
+            query_matured_counts.average_matured_per_year,
             
             grouped_8_weeks_data.average_growth_at_8_weeks as average_growth_at_8_weeks,
             grouped_8_weeks_data.average_weight_at_8_weeks as average_weight_at_8_weeks,
@@ -441,17 +436,10 @@ class EweCardReportService extends ReportServiceBase
                          ".$this->get8WeeksGroupedData($animalIdsArrayString)."
                 )grouped_8_weeks_data ON grouped_8_weeks_data.mom_id = a.id
                 LEFT JOIN (
-                    ".self::queryMaturedCount($location,OffspringMaturityType::OWN_OFFSPRING_MATURED_AS_OWN_MOTHER)."
-                )own_offspring_matured_as_own_mother ON own_offspring_matured_as_own_mother.maturing_mother_id = a.id
-                LEFT JOIN (
-                    ".self::queryMaturedCount($location,OffspringMaturityType::OWN_OFFSPRING_MATURED_AT_OTHER_SURROGATE)."
-                )own_offspring_matured_at_other_surrogate ON own_offspring_matured_at_other_surrogate.maturing_mother_id = a.id                
-                LEFT JOIN (
-                    ".self::queryMaturedCount($location,OffspringMaturityType::OTHER_OFFSPRING_MATURED_AS_SURROGATE)."
-                )other_offspring_matured_as_surrogate ON other_offspring_matured_as_surrogate.maturing_mother_id = a.id
-                LEFT JOIN view_ewe_litter_age ON view_ewe_litter_age.ewe_id = a.id       
-        WHERE a.type = '".AnimalObjectType::Ewe."'
-          AND a.id IN $animalIdsArrayString";
+                    ".self::queryMaturedCounts($animalIdsArrayString)."
+                )query_matured_counts ON query_matured_counts.ewe_id = a.id
+                
+        WHERE a.id IN ($animalIdsArrayString) AND a.type = '".AnimalObjectType::Ewe."'";
 
         return $this->conn->query($sql)->fetchAll();
     }
@@ -726,81 +714,70 @@ INNER JOIN (
     }
 
 
-    /**
-     * @param Location $location
-     * @param string has to be from the enum OffspringMaturityType
-     * @return string
-     */
-    private static function queryMaturedCount(Location $location, string $offspringMaturityType): string
+    private static function queryMaturedCounts(string $animalIdsArrayString): string
     {
-        $maturityDaysLimit = 90;
-
-        $ubn = $location->getUbn();
-        $activeRequestStates = SqlUtil::activeRequestStateTypesJoinedList();
-
-        switch ($offspringMaturityType) {
-            case OffspringMaturityType::OWN_OFFSPRING_MATURED_AS_OWN_MOTHER:
-                $selectAndGroupBy = 'a.parent_mother_id';
-                $mainFilterAnimal = 'mom';
-                $mainFilterHasSurrogate = ' AND a.surrogate_id ISNULL';
-                break;
-            case OffspringMaturityType::OWN_OFFSPRING_MATURED_AT_OTHER_SURROGATE:
-                $selectAndGroupBy = 'a.parent_mother_id';
-                $mainFilterAnimal = 'mom';
-                $mainFilterHasSurrogate = ' AND a.surrogate_id NOTNULL';
-                break;
-            case OffspringMaturityType::OTHER_OFFSPRING_MATURED_AS_SURROGATE:
-                $selectAndGroupBy = 'a.surrogate_id';
-                $mainFilterAnimal = 'surrogate';
-                $mainFilterHasSurrogate = ' AND a.surrogate_id NOTNULL';
-                break;
-            default:
-                throw new \Exception("Unsupported OffspringMaturityType for queryMaturedCount(), input: ".$offspringMaturityType);
-        }
-
         return "SELECT
-            $selectAndGroupBy as maturing_mother_id,
-            COUNT(*) as count
-        FROM animal a
-                 INNER JOIN animal mom ON mom.id = a.parent_mother_id
-                 LEFT JOIN animal surrogate ON surrogate.id = a.surrogate_id
-                 INNER JOIN (
-                    -- Depart before 90 days age
+                    offspring_count.ewe_id,
+                    matured_own_offspring + matured_for_others as total_matured,
+                    matured_for_others,
+                    matured_at_others,
+                    l.litter_count,
+                    CASE WHEN l.animal_mother_id NOTNULL THEN
+                        COALESCE(ROUND(((matured_own_offspring + matured_for_others) / l.litter_count)::numeric,1)::text, '-')
+                    ELSE
+                       '-'
+                    END as average_matured_per_year
+                
+                FROM (
                     SELECT
-                        animal_id
+                        a.id as ewe_id,
+                        COALESCE(own_offspring.matured_as_own_mother,0) as matured_own_offspring,
+                        COALESCE(other_offspring_matured_as_surrogate.count,0) as matured_for_others,
+                        COALESCE(own_offspring.matured_at_other_surrogate,0) as matured_at_others
                     FROM animal a
-                             INNER JOIN declare_depart depart on a.id = depart.animal_id
-                             INNER JOIN declare_base db on depart.id = db.id
-                    WHERE db.request_state IN ($activeRequestStates)
-                      AND db.ubn = '$ubn'
-                      AND a.date_of_birth NOTNULL
-                      AND (EXTRACT(DAYS FROM (depart_date - a.date_of_birth)) < $maturityDaysLimit)
-        
-        
-                    GROUP BY animal_id
-        
-                    UNION
-        
-                    -- At least on 90 days old, still alive and still on location
+                        LEFT JOIN (
+                            SELECT
+                                a.parent_mother_id as own_mother_id,
+                                COUNT(*) filter ( where a.surrogate_id ISNULL) as matured_as_own_mother,
+                                COUNT(*) filter ( where a.surrogate_id NOTNULL) as matured_at_other_surrogate
+                            FROM animal a
+                            WHERE
+                                  a.parent_mother_id IN ($animalIdsArrayString)
+                              AND (
+                                  a.date_of_death ISNULL OR
+                                  --became_at_least_90_days_old
+                                  ".self::MIN_AGE_IN_DAYS_FOR_MATURITY." <= a.date_of_death::date - a.date_of_birth::date
+                              )
+                              AND a.surrogate_id ISNULL
+                            GROUP BY a.parent_mother_id
+                        )own_offspring ON own_offspring.own_mother_id = a.id
+                
+                        LEFT JOIN (
+                            SELECT
+                                a.surrogate_id as maturing_mother_id,
+                                COUNT(*) as count
+                            FROM animal a
+                             INNER JOIN animal mom ON mom.id = a.parent_mother_id
+                            WHERE a.surrogate_id NOTNULL AND
+                                  a.surrogate_id IN ($animalIdsArrayString)
+                                  AND (
+                                      a.date_of_death ISNULL OR
+                                      --became_at_least_90_days_old
+                                      ".self::MIN_AGE_IN_DAYS_FOR_MATURITY." <= a.date_of_death::date - a.date_of_birth::date
+                                  )
+                            GROUP BY a.surrogate_id
+                        )other_offspring_matured_as_surrogate ON other_offspring_matured_as_surrogate.maturing_mother_id = a.id
+                    WHERE a.id IN ($animalIdsArrayString)
+                    )offspring_count
+                LEFT JOIN (
                     SELECT
-                        r.animal_id
-                    FROM animal_residence r
-                             INNER JOIN location l ON l.id = r.location_id
-                             INNER JOIN animal a on r.animal_id = a.id
-                    WHERE l.ubn = '$ubn'
-                      --Check residences that are related to the birth and do not end before 90 days
-                      AND EXTRACT(DAYS FROM (start_date - a.date_of_birth)) <= 1
-                      AND (
-                            end_date ISNULL OR $maturityDaysLimit <= EXTRACT(DAYS FROM (end_date - a.date_of_birth))
-                        )
-                      --Must be alive until at least 90 days
-                      AND (
-                            a.date_of_death ISNULL OR
-                            (a.date_of_death NOTNULl AND (EXTRACT(DAYS FROM (a.date_of_death - a.date_of_birth)) > $maturityDaysLimit))
-                        )
-                )matured_animal ON matured_animal.animal_id = a.id
-        WHERE ($mainFilterAnimal.ubn_of_birth = '$ubn') $mainFilterHasSurrogate
-        GROUP BY $selectAndGroupBy";
+                        animal_mother_id,
+                        -- litter_ordinals are only set on active litters
+                        MAX(litter_ordinal) as litter_count
+                    FROM litter l
+                    WHERE l.animal_mother_id IN ($animalIdsArrayString)
+                    GROUP BY l.animal_mother_id
+                )l ON l.animal_mother_id = offspring_count.ewe_id";
     }
 
 
