@@ -19,6 +19,7 @@ use AppBundle\Validation\AdminValidator;
 use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\DBAL\DBALException;
+use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Exception;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
@@ -176,8 +177,8 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
 
         try {
             $this->getManager()->flush();
-        } catch (DBALException $e) {
-            throw new DBALException('FAILED TO SAVE.', 412);
+        } catch (UniqueConstraintViolationException $e) {
+            throw new BadRequestHttpException('DUPLICATE DESCRIPTION.');
         }
 
         AdminActionLogWriter::createTreatmentTemplate($this->getManager(), $admin, $request, $template);
