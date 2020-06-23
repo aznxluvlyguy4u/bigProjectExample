@@ -476,11 +476,11 @@ class EweCardReportService extends ReportServiceBase
     {
         return "SELECT
             a.parent_mother_id as mom_id,
-            CASE WHEN AVG(ac.age_weight_at8weeks) NOTNULL AND AVG(ac.weight_at8weeks) NOTNULL THEN
+            CASE WHEN AVG(ac.age_weight_at8weeks) NOTNULL AND AVG(ac.weight_at8weeks - ac.birth_weight) NOTNULL THEN
                 ROUND((
-                    AVG(ac.weight_at8weeks) /
+                    AVG(ac.weight_at8weeks - ac.birth_weight) * 1000 /
                     AVG(ac.age_weight_at8weeks)
-                )::numeric,2)::text
+                )::numeric,0)::text
             ELSE
                 '-'
             END as average_growth_at_8_weeks,
@@ -489,13 +489,13 @@ class EweCardReportService extends ReportServiceBase
         
             -- eigen lammeren van deze ooi die niet bij een pleegmoeder of lambar hebben gelopen
             CASE WHEN
-                AVG(CASE WHEN a.surrogate_id ISNULL AND a.lambar = FALSE THEN ac.weight_at8weeks END) NOTNULL AND
+                AVG(CASE WHEN a.surrogate_id ISNULL AND a.lambar = FALSE THEN ac.weight_at8weeks - ac.birth_weight END) NOTNULL AND
                 AVG(CASE WHEN a.surrogate_id ISNULL AND a.lambar = FALSE THEN ac.age_weight_at8weeks END) NOTNULL
             THEN
                 ROUND((
-                    AVG(CASE WHEN a.surrogate_id ISNULL AND a.lambar = FALSE THEN ac.weight_at8weeks END) /
+                    AVG(CASE WHEN a.surrogate_id ISNULL AND a.lambar = FALSE THEN (ac.weight_at8weeks - ac.birth_weight) * 1000 END) /
                     AVG(CASE WHEN a.surrogate_id ISNULL AND a.lambar = FALSE THEN ac.age_weight_at8weeks END)
-                )::numeric,2)::text
+                )::numeric,0)::text
             ELSE
                 '-'
             END as average_growth_at_8_weeks_of_all_sucklings
