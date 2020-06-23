@@ -201,10 +201,11 @@ class AnimalTreatmentsPerYearReportService extends ReportServiceBase
     {
         $genderTranslationValues = SqlUtil::genderTranslationValues();
         $revoked = RequestStateType::REVOKED;
+        $dateFormat = SqlUtil::TO_CHAR_DATE_FORMAT;
 
         $sql = "SELECT
-                    medication_details.start_datum,
-                    medication_details.eind_datum,
+                    to_char(medication_details.start_datum,'$dateFormat') as start_datum,
+                    to_char(medication_details.eind_datum,'$dateFormat') as eind_datum,
                     medication_details.omschrijving,
                     medication_details.behandelduur,
                     medication_details.middel,
@@ -214,7 +215,7 @@ class AnimalTreatmentsPerYearReportService extends ReportServiceBase
                     a.collar_color as halsband_kleur,
                     a.collar_number as halsband_nummer,
                     a.animal_order_number as werknummer,
-                    DATE(a.date_of_birth) as geboortedatum,
+                    to_char(a.date_of_birth,'$dateFormat') as geboortedatum,
                     NULLIF(COALESCE(NULLIF(trim(trailing '-ling' from ac.n_ling),''), CAST(a.n_ling AS TEXT)),'') as n_ling,
                     gender.dutch as geslacht,
                     a.breed_code as rascode,
@@ -272,7 +273,7 @@ class AnimalTreatmentsPerYearReportService extends ReportServiceBase
                     LEFT JOIN view_pedigree_register_abbreviation pr ON pr.pedigree_register_id = a.pedigree_register_id
                     LEFT JOIN animal mom ON mom.id = a.parent_mother_id
                     LEFT JOIN animal dad ON dad.id = a.parent_father_id
-                ORDER BY start_datum, eind_datum, a.animal_order_number";
+                ORDER BY medication_details.start_datum, medication_details.eind_datum, a.animal_order_number";
 
         $conn = $this->em->getConnection();
         $statement = $conn->prepare($sql);
