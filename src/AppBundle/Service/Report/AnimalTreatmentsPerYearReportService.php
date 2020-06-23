@@ -100,6 +100,7 @@ class AnimalTreatmentsPerYearReportService extends ReportServiceBase
                 COUNT(t.id) AS treatment_count,
                 a.id,
                 a.gender,
+                a.animal_order_number,
                 CONCAT(a.uln_country_code, a.uln_number) AS uln,
                 a.date_of_birth,
                 a.breed_code,
@@ -158,6 +159,7 @@ class AnimalTreatmentsPerYearReportService extends ReportServiceBase
 
             $result[$animalId][ReportServiceBase::staticTranslateColumnHeader($this->translator, 'uln')] = $item['uln'];
             $result[$animalId][ReportServiceBase::staticTranslateColumnHeader($this->translator, 'stn')] = $item['animal_stn'];
+            $result[$animalId][ReportServiceBase::staticTranslateColumnHeader($this->translator, 'animal_order_number')] = $item['animal_order_number'];
             $result[$animalId][ReportServiceBase::staticTranslateColumnHeader($this->translator, 'date_of_birth')] = $date_of_birth;
             $result[$animalId][ReportServiceBase::staticTranslateColumnHeader($this->translator, 'n_ling')] = ($item['n_ling']) ? $item['n_ling'] : '-';
             $result[$animalId][ReportServiceBase::staticTranslateColumnHeader($this->translator, 'gender')] =
