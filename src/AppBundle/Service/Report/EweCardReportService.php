@@ -825,7 +825,7 @@ INNER JOIN (
                     m.medications as $medicationsLabel
                 FROM treatment t
                     INNER JOIN treatment_animal ta on t.id = ta.treatment_id
-                    -- We can assume each treatment always has at least one medication
+                    -- We CANNOT assume each treatment always has at least one medication
                     LEFT JOIN (
                         SELECT
                             s.treatment_id,
