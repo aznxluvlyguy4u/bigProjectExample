@@ -7,7 +7,6 @@ use AppBundle\Enumerator\QueryType;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\SqlUtil;
 use AppBundle\Util\StringUtil;
-use Doctrine\Common\Persistence\ObjectManager;
 
 
 /**
@@ -15,12 +14,6 @@ use Doctrine\Common\Persistence\ObjectManager;
  */
 class UbnFixer extends DuplicateFixerBase
 {
-
-    public function __construct(ObjectManager $em)
-    {
-        parent::__construct($em);
-    }
-
 
     /**
      * @param CommandUtil $cmdUtil
