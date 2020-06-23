@@ -40,10 +40,6 @@ class AnimalTreatmentsPerYearReportService extends ReportServiceBase
 
             $csvData = $this->getCSVData($yearAsInt, $location);
 
-            $response = $this->generateFile($this->filename,
-                $csvData,self::TITLE,FileType::CSV,!$this->outputReportsToCacheFolderForLocalTesting
-            );
-
             return $this->generateFile($this->filename,
                 $csvData,self::TITLE,FileType::CSV,!$this->outputReportsToCacheFolderForLocalTesting
             );
