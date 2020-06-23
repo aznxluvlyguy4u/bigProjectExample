@@ -826,12 +826,14 @@ INNER JOIN (
                 FROM treatment t
                     INNER JOIN treatment_animal ta on t.id = ta.treatment_id
                     -- We can assume each treatment always has at least one medication
-                    INNER JOIN (
+                    LEFT JOIN (
                         SELECT
                             s.treatment_id,
                             array_agg(tm.name) as medications
                         FROM medication_selection s
                             INNER JOIN treatment_medication tm on s.treatment_medication_id = tm.id
+                            INNER JOIN treatment_animal ta on s.treatment_id = ta.treatment_id
+                        WHERE animal_id IN $animalIdsArrayString
                         GROUP BY s.treatment_id
                     )m ON m.treatment_id = t.id
                 WHERE t.id IN (
@@ -853,13 +855,20 @@ INNER JOIN (
             $result[ReportLabel::DATE] = $displayDate;
             $result[$medicationsLabel] = [];
 
-            foreach (
-                SqlUtil::getArrayFromPostgreSqlArrayString($medicationsListAsString, false) as
-                $key => $medicationLabel
-            ) {
-                $result[$medicationsLabel][$key] = [
-                    ReportLabel::NAME => $medicationLabel,
+            $medications = SqlUtil::getArrayFromPostgreSqlArrayString($medicationsListAsString, false);
+
+            if (empty($medications)) {
+                $result[$medicationsLabel][0] = [
+                    ReportLabel::NAME => '',
                 ];
+
+            } else {
+
+                foreach ($medications as $key => $medicationLabel) {
+                    $result[$medicationsLabel][$key] = [
+                        ReportLabel::NAME => $medicationLabel,
+                    ];
+                }
             }
 
             return $result;
