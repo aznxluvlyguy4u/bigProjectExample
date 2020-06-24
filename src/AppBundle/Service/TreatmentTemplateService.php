@@ -191,10 +191,11 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
 
     /**
      * @param TreatmentTemplate $template
+     * @param bool $ignoreMissingTreatmentType
      * @return JsonResponse|TreatmentTemplate
      * @throws Exception
      */
-    private function baseValidateDeserializedTreatmentTemplate(TreatmentTemplate $template)
+    private function baseValidateDeserializedTreatmentTemplate(TreatmentTemplate $template, bool $ignoreMissingTreatmentType = false)
     {
         $locationRequested = $template->getLocation();
         $location = null;
@@ -219,18 +220,22 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
         }
 
         if (!$treatmentType) {
-            if ($type === TreatmentTypeOption::INDIVIDUAL) {
-                $treatmentType = $this->treatmentTypeRepository->findOpenDescriptionType();
-            } else {
-                //TreatmentTypeOption::LOCATION
-                return Validator::createJsonResponse(
-                    'Treatment description does not exist in database for active TreatmentType with type = LOCATION', 428);
+            if (!$ignoreMissingTreatmentType) {
+                if ($type === TreatmentTypeOption::INDIVIDUAL) {
+                    $treatmentType = $this->treatmentTypeRepository->findOpenDescriptionType();
+                } else {
+                    //TreatmentTypeOption::LOCATION
+                    return Validator::createJsonResponse(
+                        'Treatment description does not exist in database for active TreatmentType with type = LOCATION', 428);
+                }
             }
         }
 
-        $template
-            ->setLocation($location)
-            ->setTreatmentType($treatmentType);
+        if ($treatmentType) {
+            $template->setTreatmentType($treatmentType);
+        }
+
+        $template->setLocation($location);
 
         return $template;
     }
@@ -292,7 +297,7 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
 
         $template->setType($type); //Necessary for baseValidation
 
-        $template = $this->baseValidateDeserializedTreatmentTemplate($template);
+        $template = $this->baseValidateDeserializedTreatmentTemplate($template, true);
 
         if ($template instanceof JsonResponse) { return $template; }
 
