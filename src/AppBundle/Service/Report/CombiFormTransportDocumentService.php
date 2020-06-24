@@ -101,12 +101,12 @@ class CombiFormTransportDocumentService extends ReportServiceBase
             }
 
             if (
-                $declareDepart->getDepartDate()->format('d-m-Y') !== $transportDate
-//                $declareDepart->getRequestState() === RequestStateType::FINISHED ||
-//                $declareDepart->getRequestState() === RequestStateType::FINISHED_WITH_WARNING ||
-//                $declareDepart->getRequestState() === RequestStateType::IMPORTED ||
-//                $declareDepart->getReasonOfDepart() !== ReasonOfDepartType::BREEDING_FARM ||
-//                $declareDepart->getReasonOfDepart() !== ReasonOfDepartType::RENT
+                $declareDepart->getDepartDate()->format('d-m-Y') !== $transportDate ||
+                $declareDepart->getRequestState() === RequestStateType::FINISHED ||
+                $declareDepart->getRequestState() === RequestStateType::FINISHED_WITH_WARNING ||
+                $declareDepart->getRequestState() === RequestStateType::IMPORTED ||
+                $declareDepart->getReasonOfDepart() !== ReasonOfDepartType::BREEDING_FARM ||
+                $declareDepart->getReasonOfDepart() !== ReasonOfDepartType::RENT
             ) {
                 continue;
             }
