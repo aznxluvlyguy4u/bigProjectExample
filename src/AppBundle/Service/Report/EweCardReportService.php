@@ -436,7 +436,7 @@ class EweCardReportService extends ReportServiceBase
                          ".$this->get8WeeksGroupedData($animalIdsArrayString)."
                 )grouped_8_weeks_data ON grouped_8_weeks_data.mom_id = a.id
                 LEFT JOIN (
-                    ".self::queryMaturedCounts($animalIdsArrayString)."
+                    ".self::queryMaturedCounts($animalIdsArrayString, $location)."
                 )query_matured_counts ON query_matured_counts.ewe_id = a.id
                 
         WHERE a.id IN ($animalIdsArrayString) AND a.type = '".AnimalObjectType::Ewe."'";
@@ -714,8 +714,12 @@ INNER JOIN (
     }
 
 
-    private static function queryMaturedCounts(string $animalIdsArrayString): string
+    private static function queryMaturedCounts(string $animalIdsArrayString, Location $location): string
     {
+        $activeRequestStates = SqlUtil::activeRequestStateTypesJoinedList();
+        $ubn = $location->getUbn();
+        $minAgeInDaysForMaturity = self::MIN_AGE_IN_DAYS_FOR_MATURITY;
+
         return "SELECT
                     offspring_count.ewe_id,
                     matured_own_offspring + matured_for_others as total_matured,
@@ -741,12 +745,22 @@ INNER JOIN (
                                 COUNT(*) filter ( where a.surrogate_id ISNULL) as matured_as_own_mother,
                                 COUNT(*) filter ( where a.surrogate_id NOTNULL) as matured_at_other_surrogate
                             FROM animal a
+                            LEFT JOIN (
+                                SELECT
+                                    loss.animal_id,
+                                    MAX(loss.location_id) as location_id
+                                FROM declare_loss loss
+                                    INNER JOIN declare_base db ON db.id = loss.id
+                                WHERE db.request_state IN ($activeRequestStates)
+                                GROUP BY loss.animal_id
+                            )loss ON loss.animal_id = a.id
                             WHERE
                                   a.parent_mother_id IN ($animalIdsArrayString)
                               AND (
                                   a.date_of_death ISNULL OR
-                                  --became_at_least_90_days_old
-                                  ".self::MIN_AGE_IN_DAYS_FOR_MATURITY." <= a.date_of_death::date - a.date_of_birth::date
+                                   --did not die on own location before 90 days old
+                                  NOT (a.date_of_death::date - a.date_of_birth::date < $minAgeInDaysForMaturity
+                                  AND loss.location_id IN (SELECT id FROM location WHERE ubn = '$ubn'))
                               )
                               AND a.surrogate_id ISNULL
                             GROUP BY a.parent_mother_id
@@ -757,13 +771,22 @@ INNER JOIN (
                                 a.surrogate_id as maturing_mother_id,
                                 COUNT(*) as count
                             FROM animal a
-                             INNER JOIN animal mom ON mom.id = a.parent_mother_id
+                            LEFT JOIN (
+                                SELECT
+                                    loss.animal_id,
+                                    MAX(loss.location_id) as location_id
+                                FROM declare_loss loss
+                                    INNER JOIN declare_base db ON db.id = loss.id
+                                WHERE db.request_state IN ($activeRequestStates)
+                                GROUP BY loss.animal_id
+                            )loss ON loss.animal_id = a.id                            
                             WHERE a.surrogate_id NOTNULL AND
                                   a.surrogate_id IN ($animalIdsArrayString)
                                   AND (
                                       a.date_of_death ISNULL OR
-                                      --became_at_least_90_days_old
-                                      ".self::MIN_AGE_IN_DAYS_FOR_MATURITY." <= a.date_of_death::date - a.date_of_birth::date
+                                   --did not die on own location before 90 days old
+                                  NOT (a.date_of_death::date - a.date_of_birth::date < $minAgeInDaysForMaturity
+                                  AND loss.location_id IN (SELECT id FROM location WHERE ubn = '$ubn'))
                                   )
                             GROUP BY a.surrogate_id
                         )other_offspring_matured_as_surrogate ON other_offspring_matured_as_surrogate.maturing_mother_id = a.id
