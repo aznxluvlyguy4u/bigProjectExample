@@ -7,6 +7,8 @@ use AppBundle\Constant\ReportLabel;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\DeclareDepart;
 use AppBundle\Entity\Location;
+use AppBundle\Entity\MedicationSelection;
+use AppBundle\Entity\Treatment;
 use AppBundle\Enumerator\FileType;
 use AppBundle\Enumerator\ReasonOfDepartType;
 use AppBundle\Enumerator\RequestStateType;
@@ -14,6 +16,7 @@ use AppBundle\Util\NullChecker;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
 use AppBundle\Util\SqlUtil;
+use DateTime;
 use Exception;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -71,6 +74,22 @@ class CombiFormTransportDocumentService extends ReportServiceBase
             'can_be_exported' => false
         ];
 
+        $currentDateTime =  new DateTime();
+
+        $transportDate = $requestContent['transport_date'];
+
+        $transportDateObject = new DateTime($transportDate);
+
+        $transportDateSickTime = clone $transportDateObject;
+        $transportDateWaitingTimeExpired = clone $transportDateObject;
+
+        $transportDateSickTime->modify('-35 days');
+        $transportDateWaitingTimeExpired->modify('-7 days');
+
+        $result['waitingTimeAnswer'] = 'Nee/Ja';
+        $result['sickTimeAnswer'] = 'Nee/Ja';
+        $result['waitingTimeExpiredAnswer'] = 'Nee/Ja';
+
         /** @var Animal $animal */
         foreach ($location->getAnimals() as $animal) {
 
@@ -82,21 +101,43 @@ class CombiFormTransportDocumentService extends ReportServiceBase
             }
 
             if (
-                $declareDepart->getDepartDate()->format('d-m-Y') !== $requestContent['transport_date'] ||
-                $declareDepart->getRequestState() === RequestStateType::FINISHED ||
-                $declareDepart->getRequestState() === RequestStateType::FINISHED_WITH_WARNING ||
-                $declareDepart->getRequestState() === RequestStateType::IMPORTED ||
-                $declareDepart->getReasonOfDepart() !== ReasonOfDepartType::BREEDING_FARM ||
-                $declareDepart->getReasonOfDepart() !== ReasonOfDepartType::RENT
+                $declareDepart->getDepartDate()->format('d-m-Y') !== $transportDate
+//                $declareDepart->getRequestState() === RequestStateType::FINISHED ||
+//                $declareDepart->getRequestState() === RequestStateType::FINISHED_WITH_WARNING ||
+//                $declareDepart->getRequestState() === RequestStateType::IMPORTED ||
+//                $declareDepart->getReasonOfDepart() !== ReasonOfDepartType::BREEDING_FARM ||
+//                $declareDepart->getReasonOfDepart() !== ReasonOfDepartType::RENT
             ) {
                 continue;
             }
 
-            $diff = date_diff($animal->getDateOfBirth(), new \DateTime());
+            $diff = date_diff($animal->getDateOfBirth(), $currentDateTime);
 
             if ($diff->days < 30) {
                 if ($animal->getLocationOfBirth() === $location) {
                     $result['can_be_exported'] = true;
+                }
+            }
+
+            /** @var Treatment $treatment */
+            foreach ($animal->getTreatments() as $treatment) {
+                if ($treatment->getStartDate() >= $transportDateSickTime && $treatment->getEndDate() <= $transportDateSickTime) {
+                    $result['sickTimeAnswer'] = 'Ja';
+                }
+
+                /** @var MedicationSelection $medicationSelection */
+                foreach ($treatment->getMedicationSelections() as $medicationSelection) {
+                    $endDate = clone $treatment->getEndDate();
+
+                    $endDate->modify('+'.$medicationSelection->getTreatmentMedication()->getWaitingDays().' days');
+
+                    if ($endDate >= $transportDateWaitingTimeExpired) {
+                        $result['waitingTimeExpiredAnswer'] = 'Ja';
+                    }
+
+                    if ($medicationSelection->getWaitingTimeEnd() >= $transportDateObject) {
+                        $result['waitingTimeAnswer'] = 'Ja';
+                    }
                 }
             }
 
