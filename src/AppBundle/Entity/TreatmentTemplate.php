@@ -74,15 +74,16 @@ class TreatmentTemplate
 
     /**
      * @var ArrayCollection
-     * @ORM\OneToMany(targetEntity="AppBundle\Entity\MedicationOption", mappedBy="treatmentTemplate", cascade={"persist", "remove"})
-     * @JMS\Type("ArrayCollection<AppBundle\Entity\MedicationOption>")
+     * @ORM\ManyToMany(targetEntity="AppBundle\Entity\TreatmentMedication", inversedBy="treatmentTemplates", cascade={"persist", "remove"})
+     * @ORM\JoinTable(name="template_medications")
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\TreatmentMedication>")
      * @JMS\Groups({
      *     "TREATMENT_TEMPLATE",
      *     "TREATMENT_TEMPLATE_MIN",
      *     "TREATMENT"
      * })
      */
-    private $medications;
+    private $treatmentMedications;
 
     /**
      * @var ArrayCollection
@@ -243,7 +244,7 @@ class TreatmentTemplate
         $this->description = $description;
         return $this;
     }
-    
+
     /**
      * @return ArrayCollection
      *
@@ -254,7 +255,7 @@ class TreatmentTemplate
      */
     public function getMedications()
     {
-        return $this->medications;
+        return $this->treatmentMedications;
     }
 
     /**
@@ -263,27 +264,27 @@ class TreatmentTemplate
      */
     public function setMedications($medications)
     {
-        $this->medications = $medications;
+        $this->treatmentMedications = $medications;
         return $this;
     }
 
     /**
-     * @param MedicationOption $medicationOption
+     * @param TreatmentMedication $TreatmentMedication
      * @return TreatmentTemplate
      */
-    public function addMedication(MedicationOption $medicationOption)
+    public function addMedication(TreatmentMedication $TreatmentMedication)
     {
-        $this->medications->add($medicationOption);
+        $this->treatmentMedications->add($TreatmentMedication);
         return $this;
     }
 
     /**
-     * @param MedicationOption $medicationOption
+     * @param TreatmentMedication $TreatmentMedication
      * @return TreatmentTemplate
      */
-    public function removeMedication(MedicationOption $medicationOption)
+    public function removeMedication(TreatmentMedication $TreatmentMedication)
     {
-        $this->medications->removeElement($medicationOption);
+        $this->treatmentMedications->removeElement($TreatmentMedication);
         return $this;
     }
 
@@ -292,7 +293,7 @@ class TreatmentTemplate
      */
     public function getTreatments()
     {
-        return $this->medications;
+        return $this->treatmentMedications;
     }
 
     /**
