@@ -63,7 +63,7 @@ class TreatmentTemplate
      * @var string
      * @JMS\Type("string")
      * @Assert\NotBlank
-     * @ORM\Column(type="string")
+     * @ORM\Column(type="string", unique=true)
      * @JMS\Groups({
      *     "TREATMENT_TEMPLATE",
      *     "TREATMENT_TEMPLATE_MIN"

@@ -18,6 +18,8 @@ use AppBundle\Util\Validator;
 use AppBundle\Validation\AdminValidator;
 use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\DBAL\DBALException;
+use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Exception;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
@@ -135,7 +137,7 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
      * @param Request $request
      * @param $type
      * @return JsonResponse
-     * @throws Exception
+     * @throws Exception|DBALException
      */
     private function createTemplate(Request $request, $type)
     {
@@ -173,7 +175,11 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
 
         $this->getManager()->persist($template);
 
-        $this->getManager()->flush();
+        try {
+            $this->getManager()->flush();
+        } catch (UniqueConstraintViolationException $e) {
+            throw new BadRequestHttpException('DUPLICATE DESCRIPTION.');
+        }
 
         AdminActionLogWriter::createTreatmentTemplate($this->getManager(), $admin, $request, $template);
 
