@@ -269,9 +269,9 @@ class TreatmentMedication
     }
 
     /**
-     * @return ArrayCollection
+     * @return ArrayCollection|TreatmentTemplate[]
      */
-    public function getTreatmentTemplates(): ArrayCollection
+    public function getTreatmentTemplates()
     {
         return $this->treatmentTemplates;
     }

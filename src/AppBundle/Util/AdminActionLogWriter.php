@@ -18,6 +18,7 @@ use AppBundle\Entity\LocationHealthInspection;
 use AppBundle\Entity\Person;
 use AppBundle\Entity\RetrieveAnimals;
 use AppBundle\Entity\Treatment;
+use AppBundle\Entity\TreatmentMedication;
 use AppBundle\Entity\TreatmentTemplate;
 use AppBundle\Entity\TreatmentType;
 use AppBundle\Enumerator\GenderType;
@@ -167,6 +168,27 @@ class AdminActionLogWriter
         ;
 
         $log = new ActionLog($accountOwner, $admin, UserActionType::TREATMENT_TEMPLATE_DELETE, true, $description, self::IS_USER_ENVIRONMENT);
+        DoctrineUtil::persistAndFlush($em, $log);
+
+        return $log;
+    }
+
+
+    /**
+     * @param EntityManagerInterface $em
+     * @param Employee $admin
+     * @param TreatmentMedication $medication
+     * @return ActionLog
+     */
+    public static function deleteTreatmentMedication(EntityManagerInterface $em, $admin, $medication)
+    {
+        $description =
+            'id: '.$medication->getId()
+            .', regNl: '.$medication->getRegNl()
+            .self::DESCRIPTION_MID_KEY_DUTCH.$medication->getName()
+        ;
+
+        $log = new ActionLog(null, $admin, UserActionType::TREATMENT_MEDICATION_DELETE, true, $description, self::IS_USER_ENVIRONMENT);
         DoctrineUtil::persistAndFlush($em, $log);
 
         return $log;

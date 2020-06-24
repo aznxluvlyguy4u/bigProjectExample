@@ -128,13 +128,24 @@ class TreatmentMedicationService extends TreatmentServiceBase implements Treatme
         if ($treatmentMedication->isActive() === false) { return Validator::createJsonResponse('Template has already been deactivated', 428); }
 
         $treatmentMedication->setIsActive(false);
+
+        $unlinkedTemplates = [];
+        foreach ($treatmentMedication->getTreatmentTemplates() as $template) {
+            $unlinkedTemplates[] = $template->getDescription();
+            $template->removeMedication($treatmentMedication);
+            $this->getManager()->persist($template);
+        }
+
         $this->getManager()->persist($treatmentMedication);
         $this->getManager()->flush();
 
-//        AdminActionLogWriter::deleteTreatmentMedication($this->getManager(), $admin, $treatmentMedication);
+        AdminActionLogWriter::deleteTreatmentMedication($this->getManager(), $admin, $treatmentMedication);
 
         $output = $this->getBaseSerializer()->getDecodedJson($treatmentMedication, [JmsGroup::TREATMENT_TEMPLATE]);
-        return ResultUtil::successResult($output);
+        return ResultUtil::successResult([
+            'medication' => $output,
+            'unlinkedTemplates' => $unlinkedTemplates,
+        ]);
     }
 
     /**
