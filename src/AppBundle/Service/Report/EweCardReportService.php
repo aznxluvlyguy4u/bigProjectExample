@@ -357,6 +357,9 @@ class EweCardReportService extends ReportServiceBase
             vd.formatted_predicate,
             c.gave_birth_as_one_year_old as has_given_birth_as_one_year_old,
 
+            arrival.arrival_date,       
+            depart.depart_date,
+       
             litters_kpi.litter_index as litter_index,
             litters_kpi.average_twt as average_twt,
 
@@ -440,6 +443,13 @@ class EweCardReportService extends ReportServiceBase
                 LEFT JOIN (
                     ".self::queryMaturedCounts($animalIdsArrayString, $ubn)."
                 )query_matured_counts ON query_matured_counts.ewe_id = a.id
+                
+                LEFT JOIN (
+                    ".self::departQuery($animalIdsArrayString, $ubn)."
+                )depart ON depart.animal_id = a.id
+                LEFT JOIN (
+                    ".self::arrivalQuery($animalIdsArrayString, $ubn)."
+                )arrival ON arrival.animal_id = a.id
                 
         WHERE a.id IN ($animalIdsArrayString) AND a.type = '".AnimalObjectType::Ewe."'";
 
@@ -890,5 +900,71 @@ INNER JOIN (
             }
         }
         return $treatments;
+    }
+
+
+    public static function arrivalQuery(string $animalIdsArrayString, string $ubn): string
+    {
+        $dateFormat = SqlUtil::TO_CHAR_DATE_FORMAT;
+        $activeRequestStates = SqlUtil::activeRequestStateTypesJoinedList();
+
+        return "SELECT
+                    animal_id,
+                    to_char(MAX(arrival_date), '$dateFormat') as arrival_date
+                FROM (
+                     SELECT
+                        animal_id,
+                        arrival_date
+                    FROM declare_arrival arrival
+                        INNER JOIN declare_base db on arrival.id = db.id
+                    WHERE request_state IN ($activeRequestStates)
+                        AND animal_id IN ($animalIdsArrayString)
+                        AND arrival.location_id IN (SELECT id FROM location WHERE ubn = '$ubn')
+                
+                    UNION
+                
+                    SELECT
+                        animal_id,
+                        import_date as arrival_date
+                    FROM declare_import import
+                        INNER JOIN declare_base db on import.id = db.id
+                    WHERE request_state IN ($activeRequestStates)
+                        AND animal_id IN ($animalIdsArrayString)
+                        AND import.location_id IN (SELECT id FROM location WHERE ubn = '$ubn')
+                )arrival
+                GROUP BY animal_id";
+    }
+
+
+    public static function departQuery(string $animalIdsArrayString, string $ubn): string
+    {
+        $dateFormat = SqlUtil::TO_CHAR_DATE_FORMAT;
+        $activeRequestStates = SqlUtil::activeRequestStateTypesJoinedList();
+
+        return "SELECT
+                    animal_id,
+                    to_char(MAX(depart_date), '$dateFormat') as depart_date
+                FROM (
+                     SELECT
+                        animal_id,
+                        depart_date
+                    FROM declare_depart depart
+                        INNER JOIN declare_base db on depart.id = db.id
+                    WHERE request_state IN ($activeRequestStates)
+                        AND animal_id IN ($animalIdsArrayString)
+                        AND depart.location_id IN (SELECT id FROM location WHERE ubn = '$ubn')
+                
+                    UNION
+                
+                    SELECT
+                        animal_id,
+                        export_date as depart_date
+                    FROM declare_export export
+                        INNER JOIN declare_base db on export.id = db.id
+                    WHERE request_state IN ($activeRequestStates)
+                        AND animal_id IN ($animalIdsArrayString)
+                        AND export.location_id IN (SELECT id FROM location WHERE ubn = '$ubn')
+                )depart
+                GROUP BY animal_id";
     }
 }
