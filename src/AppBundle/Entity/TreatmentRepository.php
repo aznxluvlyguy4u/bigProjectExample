@@ -44,9 +44,11 @@ class TreatmentRepository extends BaseRepository {
                 t.type,
                 t.status
             FROM treatment t
-            INNER JOIN location l ON t.location_id = l.id
+                INNER JOIN location l ON t.location_id = l.id
+                INNER JOIN treatment_animal ta ON ta.treatment_id = t.id
+                INNER JOIN animal a ON a.id = ta.animal_id
             WHERE l.ubn = :ubn
-            AND t.description LIKE :query
+            AND (t.description LIKE :query OR a.animal_order_number LIKE :query)
             ORDER BY t.create_date DESC
             OFFSET '.$perPage.' * ('.$page.' - 1)
             FETCH NEXT '.$perPage.' ROWS ONLY
