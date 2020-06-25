@@ -733,6 +733,7 @@ services:
           - '@AppBundle\Service\Report\AnimalFeaturesPerYearOfBirthReportService'
           - '@report.animals.treatments'
           - '@AppBundle\Service\InbreedingCoefficient\InbreedingCoefficientReportUpdaterService'
+          - '@AppBundle\Service\Report\CombiFormTransportDocumentService'
           - '%environment%'
 
 

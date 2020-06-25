@@ -73,26 +73,35 @@ class CombiFormTransportDocumentService extends ReportServiceBase
             'can_be_exported' => false
         ];
 
+        $limit = 170;
+        $index = 0;
+
         /** @var Animal $animal */
         foreach ($location->getAnimals() as $animal) {
 
-            /** @var DeclareDepart $declareDepart */
-            $declareDepart = $animal->getDepartures()->last();
-
-            if (!$declareDepart instanceof DeclareDepart) {
-                continue;
+            if ($index === $limit) {
+                break;
             }
 
-            if (
-                $declareDepart->getDepartDate()->format('d-m-Y') !== $requestContent['transport_date'] ||
-                $declareDepart->getRequestState() === RequestStateType::FINISHED ||
-                $declareDepart->getRequestState() === RequestStateType::FINISHED_WITH_WARNING ||
-                $declareDepart->getRequestState() === RequestStateType::IMPORTED ||
-                $declareDepart->getReasonOfDepart() !== ReasonOfDepartType::BREEDING_FARM ||
-                $declareDepart->getReasonOfDepart() !== ReasonOfDepartType::RENT
-            ) {
-                continue;
-            }
+            $index++;
+
+//            /** @var DeclareDepart $declareDepart */
+//            $declareDepart = $animal->getDepartures()->last();
+//
+//            if (!$declareDepart instanceof DeclareDepart) {
+//                continue;
+//            }
+
+//            if (
+//                $declareDepart->getDepartDate()->format('d-m-Y') !== $requestContent['transport_date'] ||
+//                $declareDepart->getRequestState() === RequestStateType::FINISHED ||
+//                $declareDepart->getRequestState() === RequestStateType::FINISHED_WITH_WARNING ||
+//                $declareDepart->getRequestState() === RequestStateType::IMPORTED ||
+//                $declareDepart->getReasonOfDepart() !== ReasonOfDepartType::BREEDING_FARM ||
+//                $declareDepart->getReasonOfDepart() !== ReasonOfDepartType::RENT
+//            ) {
+//                continue;
+//            }
 
             $diff = date_diff($animal->getDateOfBirth(), new \DateTime());
 
@@ -104,6 +113,25 @@ class CombiFormTransportDocumentService extends ReportServiceBase
 
             $result['animals'][] = $animal;
         }
+
+        $totalAnimalCount = count($result['animals']);
+
+        if ($totalAnimalCount >= 20) {
+            $first20Animals = array_slice($result['animals'], 0, 20);
+            $otherAnimals = array_slice($result['animals'], 20, $totalAnimalCount-20);
+            $result['total_other_animals'] = count($otherAnimals);
+            $result['total_animal_pages'] = count($otherAnimals)/50;
+
+            $result['paginated_animals'] = array_chunk($otherAnimals, 50, true);
+
+            $chunkedAnimals = array_chunk($first20Animals, 10, true);
+        } else {
+            $result['total_other_animals'] = 0;
+            $chunkedAnimals = array_chunk($result['animals'], $totalAnimalCount/2, true);
+        }
+
+        $result['animals_left'] = $chunkedAnimals[0];
+        $result['animals_right'] = $chunkedAnimals[1];
 
         if (count($result['animals']) === 0) {
             throw new BadRequestHttpException();

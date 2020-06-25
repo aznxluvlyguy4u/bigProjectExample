@@ -30,7 +30,7 @@
     {% else %}
         {% set export_ubn = blankValue %}
         {% set export_fullName = blankValue %}
-        {% set export_address = blankValue %}
+        {% set export_fullAddress = blankValue %}
         {% set export_city = blankValue %}
     {% endif %}
 
@@ -186,7 +186,7 @@
                 </div>
             </div>
             <div class="row">
-                <div class="col-md-12">
+                <div class="col-md-6">
                     <p>Oormerknummers (of zie aangehechte lijst):</p>
                     <table class="overview-table">
                         <thead>
@@ -195,25 +195,39 @@
                                 <th>Geb.dat.</th>
                                 <th>Gesl.</th>
                                 <th>Export slacht J/N</th>
-                                <th class="separatorCol">Diervlag?</th>
-                                <th><b>ULN</b></th>
-                                <th>Geb.dat.</th>
-                                <th>Gesl.</th>
-                                <th>Export slacht J/N</th>
                                 <th>Diervlag?</th>
                             </tr>
                         </thead>
                         <tbody>
-                        {% for animal in variables.animals %}
+                        {% for animal in variables.animals_left %}
                             <tr>
                                 <td>{{ animal.ulnCountryCode }}{{ animal.ulnNumber }}</td>
                                 <td>{{ animal.dateOfBirth | date('d-m-Y') }}</td>
                                 <td>{{ animal.genderForAnimalDetails }}</td>
                                 <td></td>
-                                <td class="separatorCol"></td>
                                 <td></td>
-                                <td></td>
-                                <td></td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="col-md-6">
+                    <table class="overview-table" id="rightAnimalTable">
+                        <thead>
+                        <tr>
+                            <th><b>ULN</b></th>
+                            <th>Geb.dat.</th>
+                            <th>Gesl.</th>
+                            <th>Export slacht J/N</th>
+                            <th>Diervlag?</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for animal in variables.animals_right %}
+                            <tr>
+                                <td>{{ animal.ulnCountryCode }}{{ animal.ulnNumber }}</td>
+                                <td>{{ animal.dateOfBirth | date('d-m-Y') }}</td>
+                                <td>{{ animal.genderForAnimalDetails }}</td>
                                 <td></td>
                                 <td></td>
                             </tr>
@@ -348,7 +362,34 @@
             </div>
         </div>
     </div>
-
+    {% if variables.total_other_animals > 0 %}
+    <div class="pageBreaker"></div>
+        {% for animals in variables.paginated_animals %}
+            <table class="overview-table">
+                <thead>
+                <tr>
+                    <th><b>ULN</b></th>
+                    <th>Geb.dat.</th>
+                    <th>Gesl.</th>
+                    <th>Export slacht J/N</th>
+                    <th>Diervlag?</th>
+                </tr>
+                </thead>
+                <tbody>
+                    {% for animal in animals %}
+                        <tr>
+                            <td>{{ animal.ulnCountryCode }}{{ animal.ulnNumber }}</td>
+                            <td>{{ animal.dateOfBirth | date('d-m-Y') }}</td>
+                            <td>{{ animal.genderForAnimalDetails }}</td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <div class="pageBreaker"></div>
+        {% endfor %}
+    {% endif %}
 {% endblock %}
 
 {% block stylesheets %}
@@ -357,6 +398,14 @@
         html {
             font-family: Sans-Serif, serif;
             font-stretch: semi-condensed;
+        }
+
+        #rightAnimalTable {
+            margin-top: 5.5%;
+        }
+
+        .pageBreaker {
+            page-break-after: always;
         }
 
         #blockCanBeExported {

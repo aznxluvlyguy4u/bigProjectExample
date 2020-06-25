@@ -7,6 +7,7 @@ use AppBundle\Service\Report\CombiFormTransportDocumentService;
 use AppBundle\Service\ReportService;
 use AppBundle\Util\ResultUtil;
 use Nelmio\ApiDocBundle\Annotation\ApiDoc;
+use SebastianBergmann\CodeCoverage\Report\Xml\Report;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Symfony\Component\HttpFoundation\Request;
@@ -1067,7 +1068,7 @@ class ReportAPIController extends APIController {
      */
     public function getCombiFormAndTransportDocument(Request $request)
     {
-        return $this->get(CombiFormTransportDocumentService::class)->getReport($request);
+        return $this->get(ReportService::class)->createVKITransportDocument($request);
     }
 
     /**
