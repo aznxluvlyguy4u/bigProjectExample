@@ -431,7 +431,7 @@ class EweCardReportService extends ReportServiceBase
                     SELECT
                         animal_mother_id,
                         ROUND(AVG(birth_interval)) as average_twt,
-                        ROUND(365::float/AVG(birth_interval),2) as litter_index
+                        ROUND(365/AVG(birth_interval),2) as litter_index
                     FROM litter l
                     WHERE standard_litter_ordinal > 1 AND birth_interval NOTNULL
                     GROUP BY animal_mother_id
