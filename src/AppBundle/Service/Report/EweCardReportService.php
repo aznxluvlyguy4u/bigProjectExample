@@ -296,6 +296,7 @@ class EweCardReportService extends ReportServiceBase
         $animalIdsArrayString = $this->getAnimalIdsArrayString($animalIds);
         $genderTranslationValues = SqlUtil::genderTranslationValues();
         $isoCountryAlphaTwoToNumericMapping = SqlUtil::isoCountryAlphaTwoToNumericMapping();
+        $blindnessFactorTranslationValues = SqlUtil::blindnessFactorTranslationValues();
 
         $mainSectionValue = SectionUtil::MAIN_SECTION;
         $complementarySectionValue = SectionUtil::COMPLEMENTARY_SECTION;
@@ -351,7 +352,7 @@ class EweCardReportService extends ReportServiceBase
                     END
             ) as opfok,
             COALESCE(vl.owner_full_name, '') as breeder_name,
-            a.blindness_factor,
+            blindness_factor.dutch as blindness_factor,
             a.scrapie_genotype,
             vd.formatted_predicate,
             c.gave_birth_as_one_year_old as has_given_birth_as_one_year_old,
@@ -408,6 +409,7 @@ class EweCardReportService extends ReportServiceBase
                  LEFT JOIN animal mom ON mom.id = a.parent_mother_id
                  LEFT JOIN animal dad ON dad.id = a.parent_father_id
                  LEFT JOIN (VALUES $genderTranslationValues) AS gender(english, dutch) ON a.type = gender.english
+                 LEFT JOIN (VALUES $blindnessFactorTranslationValues) AS blindness_factor(english, dutch) ON a.blindness_factor = blindness_factor.english
                  LEFT JOIN (VALUES $isoCountryAlphaTwoToNumericMapping) AS iso_country(alpha2, numeric) ON a.uln_country_code = iso_country.alpha2
                  LEFT JOIN view_location_details vl on a.location_of_birth_id = vl.location_id
                  LEFT JOIN (
