@@ -357,8 +357,10 @@ class EweCardReportService extends ReportServiceBase
             vd.formatted_predicate,
             c.gave_birth_as_one_year_old as has_given_birth_as_one_year_old,
 
-            arrival.arrival_date,       
-            depart.depart_date,
+            arrival.arrival_date_dd_mm_yyyy as arrival_date,       
+            CASE WHEN arrival.arrival_date < depart.depart_date THEN
+                depart.depart_date_dd_mm_yyyy
+            END depart_date,
        
             litters_kpi.litter_index as litter_index,
             litters_kpi.average_twt as average_twt,
@@ -451,7 +453,7 @@ class EweCardReportService extends ReportServiceBase
                     ".self::arrivalQuery($animalIdsArrayString, $ubn)."
                 )arrival ON arrival.animal_id = a.id
                 
-        WHERE a.id IN ($animalIdsArrayString) AND a.type = '".AnimalObjectType::Ewe."'";
+        WHERE a.id IN $animalIdsArrayString AND a.type = '".AnimalObjectType::Ewe."'";
 
         return $this->conn->query($sql)->fetchAll();
     }
@@ -766,7 +768,7 @@ INNER JOIN (
                                 GROUP BY loss.animal_id
                             )loss ON loss.animal_id = a.id
                             WHERE
-                                  a.parent_mother_id IN ($animalIdsArrayString)
+                                  a.parent_mother_id IN $animalIdsArrayString
                               AND (
                                   a.date_of_death ISNULL OR
                                    --did not die on own location before 90 days old
@@ -792,7 +794,7 @@ INNER JOIN (
                                 GROUP BY loss.animal_id
                             )loss ON loss.animal_id = a.id                            
                             WHERE a.surrogate_id NOTNULL AND
-                                  a.surrogate_id IN ($animalIdsArrayString)
+                                  a.surrogate_id IN $animalIdsArrayString
                                   AND (
                                       a.date_of_death ISNULL OR
                                    --did not die on own location before 90 days old
@@ -801,7 +803,7 @@ INNER JOIN (
                                   )
                             GROUP BY a.surrogate_id
                         )other_offspring_matured_as_surrogate ON other_offspring_matured_as_surrogate.maturing_mother_id = a.id
-                    WHERE a.id IN ($animalIdsArrayString)
+                    WHERE a.id IN $animalIdsArrayString
                     )offspring_count
                 LEFT JOIN (
                     SELECT
@@ -809,7 +811,7 @@ INNER JOIN (
                         -- litter_ordinals are only set on active litters
                         MAX(litter_ordinal) as litter_count
                     FROM litter l
-                    WHERE l.animal_mother_id IN ($animalIdsArrayString)
+                    WHERE l.animal_mother_id IN $animalIdsArrayString
                     GROUP BY l.animal_mother_id
                 )l ON l.animal_mother_id = offspring_count.ewe_id";
     }
@@ -910,7 +912,8 @@ INNER JOIN (
 
         return "SELECT
                     animal_id,
-                    to_char(MAX(arrival_date), '$dateFormat') as arrival_date
+                    MAX(arrival_date) as arrival_date,
+                    to_char(MAX(arrival_date), '$dateFormat') as arrival_date_dd_mm_yyyy
                 FROM (
                      SELECT
                         animal_id,
@@ -918,7 +921,7 @@ INNER JOIN (
                     FROM declare_arrival arrival
                         INNER JOIN declare_base db on arrival.id = db.id
                     WHERE request_state IN ($activeRequestStates)
-                        AND animal_id IN ($animalIdsArrayString)
+                        AND animal_id IN $animalIdsArrayString
                         AND arrival.location_id IN (SELECT id FROM location WHERE ubn = '$ubn')
                 
                     UNION
@@ -929,7 +932,7 @@ INNER JOIN (
                     FROM declare_import import
                         INNER JOIN declare_base db on import.id = db.id
                     WHERE request_state IN ($activeRequestStates)
-                        AND animal_id IN ($animalIdsArrayString)
+                        AND animal_id IN $animalIdsArrayString
                         AND import.location_id IN (SELECT id FROM location WHERE ubn = '$ubn')
                 )arrival
                 GROUP BY animal_id";
@@ -943,7 +946,8 @@ INNER JOIN (
 
         return "SELECT
                     animal_id,
-                    to_char(MAX(depart_date), '$dateFormat') as depart_date
+                    MAX(depart_date) as depart_date,
+                    to_char(MAX(depart_date), '$dateFormat') as depart_date_dd_mm_yyyy
                 FROM (
                      SELECT
                         animal_id,
@@ -951,7 +955,7 @@ INNER JOIN (
                     FROM declare_depart depart
                         INNER JOIN declare_base db on depart.id = db.id
                     WHERE request_state IN ($activeRequestStates)
-                        AND animal_id IN ($animalIdsArrayString)
+                        AND animal_id IN $animalIdsArrayString
                         AND depart.location_id IN (SELECT id FROM location WHERE ubn = '$ubn')
                 
                     UNION
@@ -962,7 +966,7 @@ INNER JOIN (
                     FROM declare_export export
                         INNER JOIN declare_base db on export.id = db.id
                     WHERE request_state IN ($activeRequestStates)
-                        AND animal_id IN ($animalIdsArrayString)
+                        AND animal_id IN $animalIdsArrayString
                         AND export.location_id IN (SELECT id FROM location WHERE ubn = '$ubn')
                 )depart
                 GROUP BY animal_id";
