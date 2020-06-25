@@ -191,11 +191,11 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
 
     /**
      * @param TreatmentTemplate $template
-     * @param bool $ignoreMissingTreatmentType
+     * @param bool $ignoreTreatmentTypeValidation
      * @return JsonResponse|TreatmentTemplate
      * @throws Exception
      */
-    private function baseValidateDeserializedTreatmentTemplate(TreatmentTemplate $template, bool $ignoreMissingTreatmentType = false)
+    private function baseValidateDeserializedTreatmentTemplate(TreatmentTemplate $template, bool $ignoreTreatmentTypeValidation = false)
     {
         $locationRequested = $template->getLocation();
         $location = null;
@@ -213,25 +213,24 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
         if ($type instanceof JsonResponse) { return $type; }
 
 
-        $treatmentType = $this->treatmentTypeRepository->findActiveOneByTypeAndDescription($type, $description);
-        if (!$treatmentType) {
-            $descriptionFirstPart = ArrayUtil::firstValue(explode(' - UBN', $description));
-            $treatmentType = $this->treatmentTypeRepository->findActiveOneByTypeAndDescription($type, $descriptionFirstPart);
-        }
+        if (!$ignoreTreatmentTypeValidation) {
+            $treatmentType = $this->treatmentTypeRepository->findActiveOneByTypeAndDescription($type, $description);
+            if (!$treatmentType) {
+                $descriptionFirstPart = ArrayUtil::firstValue(explode(' - UBN', $description));
+                $treatmentType = $this->treatmentTypeRepository->findActiveOneByTypeAndDescription($type,
+                    $descriptionFirstPart);
+            }
 
-        if (!$treatmentType) {
-            if (!$ignoreMissingTreatmentType) {
+            if (!$treatmentType) {
                 if ($type === TreatmentTypeOption::INDIVIDUAL) {
                     $treatmentType = $this->treatmentTypeRepository->findOpenDescriptionType();
                 } else {
                     //TreatmentTypeOption::LOCATION
                     return Validator::createJsonResponse(
-                        'Treatment description does not exist in database for active TreatmentType with type = LOCATION', 428);
+                        'Treatment description does not exist in database for active TreatmentType with type = LOCATION',
+                        428);
                 }
             }
-        }
-
-        if ($treatmentType) {
             $template->setTreatmentType($treatmentType);
         }
 
@@ -360,7 +359,8 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
         //Update TreatmentType
         /** @var TreatmentType $currentTreatmentType */
         $currentTreatmentType = $templateInDatabase->getTreatmentType();
-        if ($currentTreatmentType->getId() !== $template->getTreatmentType()->getId()) {
+        if ($template->getTreatmentType() != null && $template->getTreatmentType()->getId() != null &&
+            $currentTreatmentType->getId() !== $template->getTreatmentType()->getId()) {
             $templateInDatabase->setTreatmentType($template->getTreatmentType());
             $isAnyValueUpdated = true;
         }
