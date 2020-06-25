@@ -755,8 +755,8 @@ INNER JOIN (
                         LEFT JOIN (
                             SELECT
                                 a.parent_mother_id as own_mother_id,
-                                COUNT(*) filter ( where a.surrogate_id ISNULL) as matured_as_own_mother,
-                                COUNT(*) filter ( where a.surrogate_id NOTNULL) as matured_at_other_surrogate
+                                COUNT(*) filter ( where a.surrogate_id ISNULL AND a.lambar = FALSE) as matured_as_own_mother,
+                                COUNT(*) filter ( where a.surrogate_id NOTNULL OR lambar) as matured_at_other_surrogate
                             FROM animal a
                             LEFT JOIN (
                                 SELECT
