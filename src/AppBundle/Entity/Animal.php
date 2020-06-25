@@ -893,7 +893,7 @@ abstract class Animal
     /**
      * @var ArrayCollection
      * @ORM\OrderBy({"description" = "ASC"})
-     * @ORM\OneToMany(targetEntity="AppBundle\Entity\Treatment", mappedBy="animal", cascade={"persist", "remove"})
+     * @ORM\OneToMany(targetEntity="AppBundle\Entity\Treatment", mappedBy="animal", cascade={"persist", "remove"}, fetch="LAZY")
      * @JMS\Type("ArrayCollection<AppBundle\Entity\Treatment>")
      */
     protected $treatments;
@@ -909,7 +909,7 @@ abstract class Animal
     /**
      * @var ArrayCollection
      * @ORM\OrderBy({"id" = "DESC"})
-     * @ORM\OneToMany(targetEntity="AppBundle\Entity\ScanMeasurementSet", mappedBy="animal", cascade={"persist", "remove"})
+     * @ORM\OneToMany(targetEntity="AppBundle\Entity\ScanMeasurementSet", mappedBy="animal", cascade={"persist", "remove"}, fetch="LAZY")
      * @JMS\Type("ArrayCollection<AppBundle\Entity\ScanMeasurementSet>")
      */
     protected $scanMeasurementSetHistory;
