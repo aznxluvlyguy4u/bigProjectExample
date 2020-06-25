@@ -375,7 +375,7 @@ class EweCardReportService extends ReportServiceBase
             grouped_weights.average_birth_weight as average_birth_weight,
        
             CASE WHEN query_matured_counts.litter_count NOTNULL THEN
-                CAST(ROUND((grouped_litter_data_by_litter.total_born_alive / query_matured_counts.litter_count)::numeric,1) AS TEXT)
+                CAST(ROUND((grouped_litter_data_by_litter.total_born_alive::float / query_matured_counts.litter_count)::numeric,1) AS TEXT)
             ELSE
                '-' 
             END as average_alive_per_year,
@@ -431,7 +431,7 @@ class EweCardReportService extends ReportServiceBase
                     SELECT
                         animal_mother_id,
                         ROUND(AVG(birth_interval)) as average_twt,
-                        ROUND(365/AVG(birth_interval),2) as litter_index
+                        ROUND(365::float/AVG(birth_interval),2) as litter_index
                     FROM litter l
                     WHERE standard_litter_ordinal > 1 AND birth_interval NOTNULL
                     GROUP BY animal_mother_id
@@ -480,7 +480,7 @@ class EweCardReportService extends ReportServiceBase
             a.parent_mother_id as mom_id,
             CASE WHEN AVG(ac.age_weight_at8weeks) NOTNULL AND AVG(ac.weight_at8weeks - ac.birth_weight) NOTNULL THEN
                 ROUND((
-                    AVG(ac.weight_at8weeks - ac.birth_weight) * 1000 /
+                    (AVG(ac.weight_at8weeks - ac.birth_weight) * 1000)::float /
                     AVG(ac.age_weight_at8weeks)
                 )::numeric,0)::text
             ELSE
@@ -495,7 +495,7 @@ class EweCardReportService extends ReportServiceBase
                 AVG(CASE WHEN a.surrogate_id ISNULL AND a.lambar = FALSE THEN ac.age_weight_at8weeks END) NOTNULL
             THEN
                 ROUND((
-                    AVG(CASE WHEN a.surrogate_id ISNULL AND a.lambar = FALSE THEN (ac.weight_at8weeks - ac.birth_weight) * 1000 END) /
+                    (AVG(CASE WHEN a.surrogate_id ISNULL AND a.lambar = FALSE THEN (ac.weight_at8weeks - ac.birth_weight) * 1000 END))::float /
                     AVG(CASE WHEN a.surrogate_id ISNULL AND a.lambar = FALSE THEN ac.age_weight_at8weeks END)
                 )::numeric,0)::text
             ELSE
@@ -740,7 +740,7 @@ INNER JOIN (
                     matured_at_others,
                     l.litter_count,
                     CASE WHEN l.animal_mother_id NOTNULL THEN
-                        COALESCE(ROUND(((matured_own_offspring + matured_for_others) / l.litter_count)::numeric,1)::text, '-')
+                        COALESCE(ROUND(((matured_own_offspring + matured_for_others)::float / l.litter_count)::numeric,1)::text, '-')
                     ELSE
                        '-'
                     END as average_matured_per_year
