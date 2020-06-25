@@ -124,7 +124,7 @@ class EweCardReportService extends ReportServiceBase
 
     public function getAnimalData(Location $location) {
 
-        $animalAndProductionValues = $this->getAnimalAndProductionData($this->animalIds, $location);
+        $animalAndProductionValues = $this->getAnimalAndProductionData($this->animalIds, $location->getUbn());
 
         $offspringData = $this->getOffspringData($this->animalIds, $location);
 
@@ -287,11 +287,11 @@ class EweCardReportService extends ReportServiceBase
 
     /**
      * @param array $animalIds
-     * @param Location $location
+     * @param string $ubn
      * @return array
      * @throws \Doctrine\DBAL\DBALException
      */
-    private function getAnimalAndProductionData(array $animalIds, Location $location): array
+    private function getAnimalAndProductionData(array $animalIds, string $ubn): array
     {
         $animalIdsArrayString = $this->getAnimalIdsArrayString($animalIds);
         $genderTranslationValues = SqlUtil::genderTranslationValues();
@@ -438,7 +438,7 @@ class EweCardReportService extends ReportServiceBase
                          ".$this->get8WeeksGroupedData($animalIdsArrayString)."
                 )grouped_8_weeks_data ON grouped_8_weeks_data.mom_id = a.id
                 LEFT JOIN (
-                    ".self::queryMaturedCounts($animalIdsArrayString, $location)."
+                    ".self::queryMaturedCounts($animalIdsArrayString, $ubn)."
                 )query_matured_counts ON query_matured_counts.ewe_id = a.id
                 
         WHERE a.id IN ($animalIdsArrayString) AND a.type = '".AnimalObjectType::Ewe."'";
@@ -716,10 +716,9 @@ INNER JOIN (
     }
 
 
-    private static function queryMaturedCounts(string $animalIdsArrayString, Location $location): string
+    private static function queryMaturedCounts(string $animalIdsArrayString, string $ubn): string
     {
         $activeRequestStates = SqlUtil::activeRequestStateTypesJoinedList();
-        $ubn = $location->getUbn();
         $minAgeInDaysForMaturity = self::MIN_AGE_IN_DAYS_FOR_MATURITY;
 
         return "SELECT
