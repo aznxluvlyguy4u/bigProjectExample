@@ -1,5 +1,5 @@
 {% extends 'bootstrap_base.html.twig' %}
-
+{% block title %} Combi-Formulier VKI en Vervoersdocument schapen en geiten{% endblock %}
 {% block body %}
     {% set blankValue = '.....................................' %}
     {% set imagesDirectory = variables.imagesDirectory ~ '/nsfo-logo.png' %}
@@ -50,7 +50,7 @@
                 </div>
             </div>
             <div class="row">
-                <div class="col-md-4">
+                <div class="col-print-4">
                     <table>
                         <tr>
                             <td colspan="2" style="text-decoration: underline;">UBN of NAW van bedrijf van afvoer</td>
@@ -75,7 +75,7 @@
                         </tr>
                     </table>
                 </div>
-                <div class="col-md-4">
+                <div class="col-print-4">
                     <table>
                         <tr>
                             <td colspan="2" style="text-decoration: underline;">UBN of NAW van bedrijf van aanvoer</td>
@@ -95,14 +95,14 @@
                             </td>
                         </tr>
                         <tr>
-                            <td>Woonplaats:</td>
+                            <td>Woonplaats: </td>
                             <td>{{ export_city | capitalize }}</td>
                         </tr>
                     </table>
                 </div>
             </div>
             <div class="row">
-                <div class="col-md-5" id="blockCanBeExported">
+                <div class="col-print-5" id="blockCanBeExported">
                     <input type="checkbox" id="canBeExported" {% if variables.can_be_exported %}checked{% endif %}  />
                     <label for="canBeExported" id="labelCanBeExported">
                         Kruis aan als de dieren geëxporteerd mogen worden,
@@ -122,7 +122,7 @@
                         dat hij de geboortemelding volgens zijn wettelijke
                         verplichting heeft verricht.</b>
                 </div>
-                <div class="col-md-6">
+                <div class="col-print-6">
                     <table>
                         <tr>
                             <td colspan="2">Handtekening bedrijf van aanvoer:</td>
@@ -170,23 +170,23 @@
                 </div>
             </div>
             <div class="row">
-                <div class="col-md-12">
+                <div class="col-print-12">
                     <hr class="separator--big">
                 </div>
             </div>
             <div class="row">
-                <div class="col-md-4">
+                <div class="col-print-4">
                     <p><u>Gegevens dieren:</u></p>
                 </div>
-                <div class="col-md-4">
+                <div class="col-print-4">
                     <p>Categorie: schaap/geit</p>
                 </div>
-                <div class="col-md-4">
+                <div class="col-print-4">
                     <p>Aantal te leveren dieren: {{ variables.animals | length }}</p>
                 </div>
             </div>
             <div class="row">
-                <div class="col-md-6">
+                <div class="col-print-6">
                     <p>Oormerknummers (of zie aangehechte lijst):</p>
                     <table class="overview-table">
                         <thead>
@@ -199,50 +199,85 @@
                             </tr>
                         </thead>
                         <tbody>
-                        {% for animal in variables.animals_left %}
-                            <tr>
-                                <td>{{ animal.ulnCountryCode }}{{ animal.ulnNumber }}</td>
-                                <td>{{ animal.dateOfBirth | date('d-m-Y') }}</td>
-                                <td>{{ animal.genderForAnimalDetails }}</td>
-                                <td></td>
-                                <td></td>
-                            </tr>
-                        {% endfor %}
+                        {% if variables.animals_left | length == 0 %}
+                            {% for i in 0..10 %}
+                                <tr class="emptyTableRow">
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td class="column--small"></td>
+                                    <td></td>
+                                </tr>
+                            {% endfor %}
+                        {% else %}
+                            {% for animal in variables.animals_left %}
+                                <tr>
+                                    <td>{{ animal.ulnCountryCode }}{{ animal.ulnNumber }}</td>
+                                    <td>{{ animal.dateOfBirth | date('d-m-Y') }}</td>
+                                    <td>{{ animal.genderForAnimalDetails }}</td>
+                                    <td class="column--small"></td>
+                                    <td></td>
+                                </tr>
+                            {% endfor %}
+                            {% if variables.animals_left | length < 10 %}
+                                {% for i in 0..10-variables.animals_left | length %}
+                                    <tr class="emptyTableRow">
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td class="column--small"></td>
+                                        <td></td>
+                                    </tr>
+                                {% endfor %}
+                            {% endif %}
+                        {% endif %}
                         </tbody>
                     </table>
                 </div>
-                <div class="col-md-6">
+                <div class="col-print-6">
                     <table class="overview-table" id="rightAnimalTable">
                         <thead>
                         <tr>
                             <th><b>ULN</b></th>
                             <th>Geb.dat.</th>
                             <th>Gesl.</th>
-                            <th>Export slacht J/N</th>
+                            <th class="column--small">Export slacht J/N</th>
                             <th>Diervlag?</th>
                         </tr>
                         </thead>
                         <tbody>
-                        {% for animal in variables.animals_right %}
-                            <tr>
-                                <td>{{ animal.ulnCountryCode }}{{ animal.ulnNumber }}</td>
-                                <td>{{ animal.dateOfBirth | date('d-m-Y') }}</td>
-                                <td>{{ animal.genderForAnimalDetails }}</td>
+                        {% if variables.animals_right | length == 0 %}
+                        {% for i in 0..10 %}
+                            <tr class="emptyTableRow">
                                 <td></td>
+                                <td></td>
+                                <td></td>
+                                <td class="column--small"></td>
                                 <td></td>
                             </tr>
                         {% endfor %}
+                        {% else %}
+                            {% for animal in variables.animals_right %}
+                                <tr>
+                                    <td>{{ animal.ulnCountryCode }}{{ animal.ulnNumber }}</td>
+                                    <td>{{ animal.dateOfBirth | date('d-m-Y') }}</td>
+                                    <td>{{ animal.genderForAnimalDetails }}</td>
+                                    <td class="column--small"></td>
+                                    <td></td>
+                                </tr>
+                            {% endfor %}
+                        {% endif %}
                         </tbody>
                     </table>
                 </div>
             </div>
             <div class="row">
-                <div class="col-md-12">
+                <div class="col-print-12">
                     <hr class="separator--big">
                 </div>
             </div>
             <div class="row">
-                <div class="col-md-12">
+                <div class="col-print-12">
                     <table class="overview-table">
                         <tr>
                             <td class="firstTreatmentCol">Aspecten voedselketeninformatie</td>
@@ -371,7 +406,7 @@
                     <th><b>ULN</b></th>
                     <th>Geb.dat.</th>
                     <th>Gesl.</th>
-                    <th>Export slacht J/N</th>
+                    <th class="column--small">Export slacht J/N</th>
                     <th>Diervlag?</th>
                 </tr>
                 </thead>
@@ -381,12 +416,13 @@
                             <td>{{ animal.ulnCountryCode }}{{ animal.ulnNumber }}</td>
                             <td>{{ animal.dateOfBirth | date('d-m-Y') }}</td>
                             <td>{{ animal.genderForAnimalDetails }}</td>
-                            <td></td>
+                            <td class="column--small"></td>
                             <td></td>
                         </tr>
                     {% endfor %}
                 </tbody>
             </table>
+            <p style="float: right">Pagina {{ loop.index }}/{{ variables.total_animal_pages }}</p>
             <div class="pageBreaker"></div>
         {% endfor %}
     {% endif %}
@@ -395,13 +431,38 @@
 {% block stylesheets %}
 
     <style type="text/css">
+        .col-print-1 {width:8%;  float:left;}
+        .col-print-2 {width:16%; float:left;}
+        .col-print-3 {width:25%; float:left;}
+        .col-print-4 {width:33%; float:left;}
+        .col-print-5 {width:42%; float:left;}
+        .col-print-6 {width:50%; float:left;}
+        .col-print-7 {width:58%; float:left;}
+        .col-print-8 {width:66%; float:left;}
+        .col-print-9 {width:75%; float:left;}
+        .col-print-10{width:83%; float:left;}
+        .col-print-11{width:92%; float:left;}
+        .col-print-12{width:100%; float:left;}
+
         html {
             font-family: Sans-Serif, serif;
             font-stretch: semi-condensed;
         }
 
+        tr td {
+            height: 25px;
+        }
+
+        /*.emptyTableRow td {*/
+        /*    height: 20px;*/
+        /*}*/
+
+        .column--small {
+            width: 10%;
+        }
+
         #rightAnimalTable {
-            margin-top: 5.5%;
+            margin-top: 6.6%;
         }
 
         .pageBreaker {

@@ -42,5 +42,4 @@ class ReportType
     const TREATMENTS = 26; # Report number 19
     const MODEL_EXPORT_CERTIFICATE = 27; # Report number 20
     const ACTION_LOG = 28;
-    const VKI_TRANSPORT_DOCUMENT = 29;
 }

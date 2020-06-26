@@ -759,6 +759,7 @@ services:
           - '@app.report.livestock'
           - '@AppBundle\Service\Report\BirthListReportService'
           - '@AppBundle\Service\Report\MembersAndUsersOverviewReportService'
+          - '@AppBundle\Service\Report\CombiFormTransportDocumentService'
           - '@doctrine.orm.entity_manager'
           - '@logger'
           - '@app.serializer.base'

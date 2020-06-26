@@ -1057,14 +1057,15 @@ class ReportService
         if ($processAsWorkerTask) {
             return $this->processReportAsWorkerTask(
                 [
-                    'transport_date' => $transportDate
+                    'transport_date' => $transportDate,
+                    'export_ubn' => $content['export_ubn']
                 ],
-                $request,ReportType::VKI_TRANSPORT_DOCUMENT,
+                $request,ReportType::COMBI_FORMS_VKI_AND_TRANSPORT_DOCUMENTS,
                 $inputForHash
             );
         }
 
-        return $this->combiFormTransportDocumentService->getReport($request);
+        return $this->combiFormTransportDocumentService->getReport($transportDate, $content['export_ubn'], $location);
     }
 
     /**
@@ -1188,8 +1189,8 @@ class ReportService
     {
         try {
             $reportWorker = new ReportWorker();
-            $reportWorker->setOwner($this->userService->getAccountOwner($request));
-            $reportWorker->setActionBy($this->userService->getUser());
+            $reportWorker->setOwner($this->userService->getAccountOwner($request, $request->headers->get('AccessToken')));
+            $reportWorker->setActionBy($this->userService->getUser($request->headers->get('AccessToken')));
             $reportWorker->setLocation($this->userService->getSelectedLocation($request));
 
             $fileType = $request->query->get(QueryParameter::FILE_TYPE_QUERY, self::getDefaultFileType());
@@ -1226,8 +1227,8 @@ class ReportService
         $fileType = $request->query->get(QueryParameter::FILE_TYPE_QUERY, self::getDefaultFileType());
         $language = $request->query->get(QueryParameter::LANGUAGE, $this->translator->getLocale());
 
-        $accountOwner = $this->userService->getAccountOwner($request);
-        $user = $this->userService->getUser();
+        $accountOwner = $this->userService->getAccountOwner($request, $request->headers->get('AccessToken'));
+        $user = $this->userService->getUser($request->headers->get('AccessToken'));
         $location = $this->userService->getSelectedLocation($request);
 
         $metaDataForHash =
