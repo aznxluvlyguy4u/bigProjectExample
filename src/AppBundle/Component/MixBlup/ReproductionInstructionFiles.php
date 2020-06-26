@@ -64,16 +64,6 @@ class ReproductionInstructionFiles extends MixBlupInstructionFileBase implements
 
 
         $middle = [
-            ' CovTE 	 R #rasdelen TE, BT en DK, ze zijn genetisch identiek',
-            ' CovCF 	 R #rasdeel Clun Forest',
-            ' CovBM 	 R #rasdeel Bleu du Maine',
-            ' CovSW 	 R #rasdeel Swifter',
-            ' CovNH 	 R #rasdeel Noordhollander',
-            ' CovFL 	 R #rasdeel Flevolander',
-            ' CovHD 	 R #rasdeel Hampshire Down',
-            ' CovOV 	 R #overige rasdelen',
-            ' CovHet 	 R #Heterosis van het dier',
-            ' CovRec 	 R #Recombinatie van het dier',
             ' CovHetLam  R #Heterosis lam of worp', //Heterosis of offspring/litter
             ' CovRecLam  R #Recombinatie lam of worp', //Recombination of offspring/litter
             ' CovTE_M    R #Rasdeel TE van moeder', //BreedCode part TE of mother
