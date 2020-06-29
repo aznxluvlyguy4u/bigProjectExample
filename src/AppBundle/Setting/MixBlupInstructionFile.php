@@ -29,6 +29,7 @@ class MixBlupInstructionFile
     const FERTILITY_1 = 'InpVruchtb1.txt';
     const FERTILITY_2 = 'InpVruchtb2.txt';
     const FERTILITY_3 = 'InpVruchtb3.txt';
+    const FERTILITY_4 = 'InpVruchtb4.txt';
 
     //Worm Resistance
     const WORM_RESISTANCE = 'InpWormRes.txt';

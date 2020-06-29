@@ -71,12 +71,14 @@ class BreedIndexSetup
             BreedValueTypeConstant::TOTAL_BORN,
             BreedValueTypeConstant::STILL_BORN,
             BreedValueTypeConstant::EARLY_FERTILITY,
+            BreedValueTypeConstant::BIRTH_INTERVAL,
         ];
 
         $breedValuesInMixBlupFiles = ArrayUtil::concatArrayValues([
             ReproductionInstructionFiles::getFertilityModel(1,false),
             ReproductionInstructionFiles::getFertilityModel(2,false),
             ReproductionInstructionFiles::getFertilityModel(3,false),
+            ReproductionInstructionFiles::getFertilityModel(4,false),
         ], false);
 
         self::validateIncludedBreedValues($includedBreedValues, $breedValuesInMixBlupFiles,

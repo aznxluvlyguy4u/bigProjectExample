@@ -1070,6 +1070,7 @@ class MixBlupOutputFilesService implements MixBlupServiceInterface
                 MixBlupAnalysis::FERTILITY_1,
                 MixBlupAnalysis::FERTILITY_2,
                 MixBlupAnalysis::FERTILITY_3,
+                MixBlupAnalysis::FERTILITY_4,
             ]
         );
     }

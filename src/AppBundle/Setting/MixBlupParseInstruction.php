@@ -73,6 +73,9 @@ class MixBlupParseInstruction
                 $model = ReproductionInstructionFiles::getFertilityModel(3,false);
                 break;
 
+            case MixBlupAnalysis::FERTILITY_4:
+                $model = ReproductionInstructionFiles::getFertilityModel(4,false);
+                break;
 
             case MixBlupAnalysis::LAMB_MEAT:
                 $model = LambMeatIndexInstructionFiles::getLambMeatModel(false, false, $appendIdmBreedValues);
