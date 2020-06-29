@@ -3,6 +3,7 @@
 namespace AppBundle\Controller;
 
 use AppBundle\Component\HttpFoundation\JsonResponse;
+use AppBundle\Service\MateService;
 use Nelmio\ApiDocBundle\Annotation\ApiDoc;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
@@ -38,10 +39,10 @@ class MateAPIController extends APIController {
    */
   public function createMate(Request $request)
   {
-      return $this->get('app.mate')->createMate($request);
+      return $this->get(MateService::class)->createMate($request);
   }
-  
-  
+
+
   /**
    *
    * Edit Mate
@@ -68,10 +69,10 @@ class MateAPIController extends APIController {
    */
   public function editMate(Request $request, $messageId)
   {
-      return $this->get('app.mate')->editMate($request, $messageId);
+      return $this->get(MateService::class)->editMate($request, $messageId);
   }
-  
-  
+
+
   /**
    *
    * For the history view, get Mates which have the following requestState: OPEN or REVOKING or REVOKED or FINISHED
@@ -98,7 +99,7 @@ class MateAPIController extends APIController {
   public function getMateHistory(Request $request)
   {
       set_time_limit(0);
-      return $this->get('app.mate')->getMateHistory($request);
+      return $this->get(MateService::class)->getMateHistory($request);
   }
 
 
@@ -127,7 +128,7 @@ class MateAPIController extends APIController {
    */
   public function getMateErrors(Request $request)
   {
-      return $this->get('app.mate')->getMateErrors($request);
+      return $this->get(MateService::class)->getMateErrors($request);
   }
 
 
@@ -156,8 +157,8 @@ class MateAPIController extends APIController {
    */
   public function getMatingsToBeVerified(Request $request)
   {
-      return $this->get('app.mate')->getMatingsToBeVerified($request);
+      return $this->get(MateService::class)->getMatingsToBeVerified($request);
   }
 
-  
+
 }

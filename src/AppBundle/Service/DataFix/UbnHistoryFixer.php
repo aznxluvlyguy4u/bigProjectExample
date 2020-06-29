@@ -4,17 +4,25 @@
 namespace AppBundle\Service\DataFix;
 
 
+use AppBundle\Entity\AnimalResidence;
+use AppBundle\Entity\EditType;
 use AppBundle\Entity\Employee;
 use AppBundle\Entity\Location;
+use AppBundle\Entity\Ram;
+use AppBundle\Enumerator\AnimalTransferStatus;
 use AppBundle\Enumerator\EditTypeEnum;
+use AppBundle\Exception\MissingLocationHttpException;
+use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\DoctrineUtil;
+use AppBundle\Util\LoggerUtil;
 use AppBundle\Util\SqlUtil;
+use Psr\Log\LogLevel;
 
 class UbnHistoryFixer extends DuplicateFixerBase
 {
 
-    public function fixAllAnimalResidenceRecordsByCurrentAnimalLocation(): int
+    public function fixAllHistoricAnimalResidenceRecordsByCurrentAnimalLocation(): int
     {
         $this->removeDuplicateAnimalResidences();
         $updateCount = $this->closeInvalidOpenResidencesByTodayDateForRemovedAnimals();
@@ -22,7 +30,7 @@ class UbnHistoryFixer extends DuplicateFixerBase
     }
 
 
-    public function fixAnimalResidenceRecordsByCurrentAnimalLocationWithQuestion(CommandUtil $cmdUtil): int
+    private function askForLocationId(CommandUtil $cmdUtil): int
     {
         do {
             $locationId = $cmdUtil->questionForIntChoice(262,'location primary key');
@@ -32,8 +40,23 @@ class UbnHistoryFixer extends DuplicateFixerBase
         } while (empty($location));
 
         $this->logger->notice('UBN: '.$location->getUbn());
+        return $locationId;
+    }
 
-        $updateCount = $this->fixAnimalResidenceRecordsByCurrentAnimalLocationOfLocationId($locationId);
+
+    public function fixHistoricAnimalResidenceRecordsByCurrentAnimalLocationWithQuestion(CommandUtil $cmdUtil): int
+    {
+        $locationId = $this->askForLocationId($cmdUtil);
+        $updateCount = $this->fixHistoricAnimalResidenceRecordsByCurrentAnimalLocationOfLocationId($locationId);
+        $this->logger->notice('Update count '.$updateCount);
+        return $updateCount;
+    }
+
+
+    public function updateCurrentAnimalResidenceRecordsByCurrentLivestockWithQuestion(CommandUtil $cmdUtil): int
+    {
+        $locationId = $this->askForLocationId($cmdUtil);
+        $updateCount = $this->updateCurrentAnimalResidenceRecordsByCurrentLivestock($locationId);
         $this->logger->notice('Update count '.$updateCount);
         return $updateCount;
     }
@@ -43,11 +66,12 @@ class UbnHistoryFixer extends DuplicateFixerBase
      * @param  int  $locationId
      * @return int
      */
-    public function fixAnimalResidenceRecordsByCurrentAnimalLocationOfLocationId(int $locationId): int
+    public function fixHistoricAnimalResidenceRecordsByCurrentAnimalLocationOfLocationId(int $locationId): int
     {
         $this->removeDuplicateAnimalResidences();
         $updateCount = $this->closeInvalidOpenResidencesByTodayDateForRemovedAnimals($locationId);
-        return $this->closeInvalidOpenResidencesByTodayDateForRelocatedAnimals($locationId) + $updateCount;
+        $updateCount += $this->closeInvalidOpenResidencesByTodayDateForRelocatedAnimals($locationId);
+        return $this->removeInvalidSandwichedPendingResidences($locationId) + $updateCount;
     }
 
 
@@ -522,5 +546,252 @@ WHERE DATE(r.start_date) <= DATE(a.date_of_death)";
         }
 
         return $updateCount;
+    }
+
+
+    private function removeInvalidSandwichedPendingResidences(?int $locationId = null): int
+    {
+        $locationIdFilter = $locationId ? "AND r.location_id = $locationId " : '';
+
+        $sql = "DELETE FROM animal_residence WHERE EXISTS (
+            SELECT
+                r_pending.id
+            FROM animal_residence r_pending
+                INNER JOIN animal_residence r ON
+                    r.animal_id = r_pending.animal_id AND
+                    r.location_id = r_pending.location_id AND
+                    r_pending.end_date ISNULL
+            WHERE r_pending.is_pending = TRUE
+                AND r.is_pending = FALSE
+                AND DATE(r.start_date) <= DATE(r_pending.start_date)
+                AND DATE(r_pending.start_date) < DATE(r.end_date)
+                $locationIdFilter
+                AND animal_residence.id = r_pending.id
+        )";
+
+        return SqlUtil::updateWithCount($this->conn, $sql);
+    }
+
+
+    public function displayCurrentUbnHistoryDiscrepancies(CommandUtil $cmdUtil)
+    {
+        $locationId = self::askForLocationId($cmdUtil);
+
+        $sql = self::sqlQueryUbnHistoryDiscrepancies($locationId);
+        $this->logger->notice($sql);
+        $results = $this->conn->query($sql)->fetchAll();
+
+        $this->logger->notice(count($results)." discrepancies");
+
+        LoggerUtil::log($results, $this->logger,LogLevel::NOTICE);
+    }
+
+
+    /**
+     * @return bool Found locations to fix
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public function updateAllCurrentAnimalResidenceRecordsByCurrentLivestock(): bool
+    {
+        $sql = "SELECT id FROM location WHERE is_active ORDER BY id";
+        $results = $this->conn->query($sql)->fetchAll();
+        $locationIds = array_map(function (array $result) {
+            return $result['id'];
+        }, $results);
+
+        $totalUpdateCount = 0;
+        foreach ($locationIds as $locationId) {
+            $updateCount = $this->updateCurrentAnimalResidenceRecordsByCurrentLivestock($locationId);
+            $totalUpdateCount += $updateCount;
+            if (!empty($updateCount)) {
+                $this->logger->notice("Fixed animal_residences for locationId $locationId for $updateCount animals");
+            }
+        }
+
+        $this->logger->notice("Total animal_residences fixed for $totalUpdateCount animals");
+
+        return !empty($locationIds);
+    }
+    
+
+    /**
+     * @param int $locationId
+     * @return int update count
+     */
+    public function updateCurrentAnimalResidenceRecordsByCurrentLivestock(int $locationId): int
+    {
+        $sqlInnerSelectQuery = self::sqlQueryUbnHistoryDiscrepancies($locationId);
+
+        $animalsToFixCount = $this->conn->query($sqlInnerSelectQuery)->rowCount();
+        if ($animalsToFixCount === 0) {
+            $this->em->getRepository(Location::class)->bumpLastResidenceFixDate($locationId);
+            return $animalsToFixCount;
+        }
+
+        $this->fixHistoricAnimalResidenceRecordsByCurrentAnimalLocationOfLocationId($locationId);
+
+        $sqlSetPendingIsFalse = "UPDATE animal_residence SET is_pending = FALSE
+FROM (".
+            $sqlInnerSelectQuery
+      .") AS v(
+         animal_id,
+         location_id,
+         residence_id,
+         has_correct_residence,
+         set_pending_is_false,
+         create_new_residence,
+         close_residence
+        ) WHERE v.residence_id = animal_residence.id AND v.set_pending_is_false AND animal_residence.is_pending";
+        $updateCount = SqlUtil::updateWithCount($this->conn, $sqlSetPendingIsFalse);
+
+        $sqlCloseResidence = "UPDATE animal_residence SET is_pending = FALSE, end_date = now(),
+                            end_date_edit_type = ".EditTypeEnum::CLOSE_END_DATE_BY_CRON_FIX_REMOVED_ANIMAL."
+FROM (".
+            $sqlInnerSelectQuery
+            .") AS v(
+         animal_id,
+         location_id,
+         residence_id,
+         has_correct_residence,
+         set_pending_is_false,
+         create_new_residence,
+         close_residence
+        ) WHERE v.residence_id = animal_residence.id AND v.close_residence";
+        $updateCount += SqlUtil::updateWithCount($this->conn, $sqlCloseResidence);
+
+        // Insert new animal residences
+        $results = $this->conn->query(
+            $sqlInnerSelectQuery.
+            " AND (r.id ISNULL AND a.id NOTNULL)"  // create new residence
+        )->fetchAll();
+
+        if (!empty($results)) {
+            $location = $this->em->getRepository(Location::class)
+                ->find($locationId);
+
+            if (!$location) {
+                throw new \Exception('No location found for locationId: '.$locationId);
+            }
+
+            $now = new \DateTime();
+
+            $editType = $this->em->getRepository(EditType::class)->getEditType(EditTypeEnum::WORKER_EDIT);
+
+            foreach($results as $result) {
+                $animalId = $result['animal_id'];
+                $animal = $this->em->getReference(Ram::class, $animalId);
+
+                $residence = new AnimalResidence($location->getCountryCode(),false);
+                $residence->setAnimal($animal);
+                $residence->setLocation($location);
+                $residence->setStartDate($now);
+                $residence->setStartDateEditType($editType);
+
+                $this->em->persist($residence);
+                $updateCount++;
+            }
+            $this->em->flush();
+        }
+
+        $this->em->getRepository(Location::class)->bumpLastResidenceFixDate($locationId);
+
+        return $updateCount;
+    }
+
+
+    /**
+     * @param int $locationId
+     * @return string
+     */
+    private static function sqlQueryUbnHistoryDiscrepancies(int $locationId): string
+    {
+        return "SELECT
+                    COALESCE(r.animal_id, a.id) as animal_id,
+                    COALESCE(r.location_id, a.location_id) as location_id,
+                    r.id as residence_id,
+                    r.animal_id NOTNULL AND a.id NOTNULL AND r.is_pending = FALSE as has_correct_residence,
+                    r.animal_id NOTNULL AND a.id NOTNULL AND r.is_pending = TRUE as set_pending_is_false,
+                    r.id ISNULL AND a.id NOTNULL as create_new_residence,
+                    r.id NOTNULL AND a.id ISNULL as close_residence
+                FROM (
+                    SELECT
+                        r.*
+                    FROM animal_residence r
+                        INNER JOIN (
+                           SELECT
+                                r.animal_id,
+                                COALESCE(
+                                        MAX(CASE WHEN r.is_pending = FALSE THEN r.id END),
+                                        MAX(r.id)
+                                    ) as max_id_prioritizing_pending_is_false
+                            FROM animal_residence r
+                            WHERE
+                                r.location_id = $locationId
+                                AND DATE(r.start_date) <= DATE(now()) AND r.end_date ISNULL
+                            GROUP BY r.animal_id
+                        )animal_grouped_r ON animal_grouped_r.max_id_prioritizing_pending_is_false = r.id
+                )r
+                FULL OUTER JOIN (
+                    SELECT
+                        *
+                    FROM animal a
+                    WHERE a.is_alive AND a.location_id = $locationId 
+                      AND (a.transfer_state ISNULL OR a.transfer_state <> '".AnimalTransferStatus::TRANSFERRING."') 
+                )a ON a.id = r.animal_id AND a.location_id = r.location_id
+                WHERE (--has_correct_residence
+                          r.animal_id NOTNULL AND a.id NOTNULL AND r.is_pending = FALSE
+                      ) = FALSE";
+    }
+
+
+    /**
+     * @return array|int[] locationIds
+     */
+    public function getLocationIdsWithUbnHistoryDiscrepancies(): array
+    {
+        $sql = "SELECT
+                id as location_id
+            FROM location WHERE is_active AND last_residence_fix_date ISNULL
+            
+            UNION DISTINCT
+            
+            SELECT
+                COALESCE(r.location_id, a.location_id) as location_id
+                FROM (
+                    SELECT
+                        r.*
+                    FROM animal_residence r
+                        INNER JOIN (
+                           SELECT
+                                r.animal_id,
+                                r.location_id,
+                                COALESCE(
+                                        MAX(CASE WHEN r.is_pending = FALSE THEN r.id END),
+                                        MAX(r.id)
+                                    ) as max_id_prioritizing_pending_is_false
+                            FROM animal_residence r
+                            WHERE
+                                DATE(r.start_date) <= DATE(now()) AND r.end_date ISNULL
+                            GROUP BY r.animal_id, r.location_id
+                        )animal_grouped_r ON animal_grouped_r.max_id_prioritizing_pending_is_false = r.id
+                )r
+                FULL OUTER JOIN (
+                    SELECT
+                        *
+                    FROM animal a
+                    WHERE a.is_alive AND a.location_id NOTNULL
+                      AND (a.transfer_state ISNULL OR a.transfer_state <> '".AnimalTransferStatus::TRANSFERRING."')
+                )a ON a.id = r.animal_id AND a.location_id = r.location_id
+                WHERE (--has_correct_residence
+                          r.animal_id NOTNULL AND a.id NOTNULL AND r.is_pending = FALSE
+                      ) = FALSE
+GROUP BY COALESCE(r.location_id, a.location_id) HAVING COUNT(*) > 1
+ORDER BY location_id";
+        $results = $this->conn->query($sql)->fetchAll();
+        return array_map(function (array $result) {
+                return intval($result['location_id']);
+            },
+            $results
+        );
     }
 }

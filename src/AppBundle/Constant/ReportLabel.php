@@ -19,6 +19,8 @@ class ReportLabel
     const INVALID = 'invalid';
     const MONTHS = 'months';
     const ORDINAL = 'ordinal';
+    const AVERAGE = 'average';
+    const TOTAL = 'total';
     const TOTALS = 'totals';
     const VALUE = 'value';
     const VALUES = 'values';
@@ -135,6 +137,11 @@ class ReportLabel
     const SL = 'sl';
     const MARKINGS = 'markings';
 
+    // Weight
+    const BIRTH_WEIGHT = 'birthWeight';
+    const WEIGHT_AT_8_WEEKS = 'weightAt8Weeks';
+    const DELIVERY_WEIGHT = 'deliveryWeight';
+    const AVERAGE_GROWTH = 'averageGrowth';
 
     //Pedrigree / Bloodline
     const CHILD_KEY = 'c';
@@ -165,4 +172,8 @@ class ReportLabel
     const PHOSPHATE = 'phosphate';
 
     const DISPLAY_ZOO_TECHNICAL_DATA = 'displayZooTechnicalData';
+
+    // PRICE
+    const SALDO = 'saldo';
+    const PRICE_PER_KG = 'pricePerKg';
 }

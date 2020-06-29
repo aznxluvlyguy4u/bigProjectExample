@@ -94,7 +94,7 @@ class InbreedingCoefficientAllAnimalsUpdaterService extends InbreedingCoefficien
 
                 if (
                     $process->getFinishedAt() == null ||
-                    $process->getProcessed() !== 100
+                    $process->getProgress() !== 100
                 ) {
                     $now = new \DateTime();
                     $process->setFinishedAt($now);

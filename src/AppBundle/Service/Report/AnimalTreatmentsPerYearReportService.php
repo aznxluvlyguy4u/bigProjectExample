@@ -6,8 +6,10 @@ namespace AppBundle\Service\Report;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Entity\Location;
 use AppBundle\Enumerator\FileType;
+use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Util\ReportUtil;
 use AppBundle\Util\ResultUtil;
+use AppBundle\Util\SqlUtil;
 use DateTime;
 use Doctrine\DBAL\DBALException;
 use Exception;
@@ -40,10 +42,6 @@ class AnimalTreatmentsPerYearReportService extends ReportServiceBase
 
             $csvData = $this->getCSVData($yearAsInt, $location);
 
-            $response = $this->generateFile($this->filename,
-                $csvData,self::TITLE,FileType::CSV,!$this->outputReportsToCacheFolderForLocalTesting
-            );
-
             return $this->generateFile($this->filename,
                 $csvData,self::TITLE,FileType::CSV,!$this->outputReportsToCacheFolderForLocalTesting
             );
@@ -73,22 +71,26 @@ class AnimalTreatmentsPerYearReportService extends ReportServiceBase
     }
 
     /**
-     * @param $year
+     * @param int $year
      * @param Location|null $location
      * @return array
      * @throws DBALException
      * @throws Exception
      */
-    private function getCSVData($year, ?Location $location)
+    private function getCSVData(int $year, ?Location $location)
     {
-        $locationId = $location ? $location->getId() : null;
-        $locationUBN = $location ? $location->getUbn() : null;
-        $locationFilter = $location ? "AND (a.location_id = $locationId OR a.ubn_of_birth = '$locationUBN')" : "";
+        if ($location && $location->getUbn()) {
+            return $this->getDataForUserReport($year, $location->getUbn());
+        }
+        return $this->getDataForAdminReport($year);
+    }
 
+
+    private function getDataForAdminReport(int $year)
+    {
         $mainFilter =
             "WHERE
             date_part('year', t.start_date) = $year -- Year filter (for user and admin)
-            $locationFilter
         ";
 
         $sql = "
@@ -98,6 +100,7 @@ class AnimalTreatmentsPerYearReportService extends ReportServiceBase
                 COUNT(t.id) AS treatment_count,
                 a.id,
                 a.gender,
+                a.animal_order_number,
                 CONCAT(a.uln_country_code, a.uln_number) AS uln,
                 a.date_of_birth,
                 a.breed_code,
@@ -156,6 +159,7 @@ class AnimalTreatmentsPerYearReportService extends ReportServiceBase
 
             $result[$animalId][ReportServiceBase::staticTranslateColumnHeader($this->translator, 'uln')] = $item['uln'];
             $result[$animalId][ReportServiceBase::staticTranslateColumnHeader($this->translator, 'stn')] = $item['animal_stn'];
+            $result[$animalId][ReportServiceBase::staticTranslateColumnHeader($this->translator, 'animal_order_number')] = $item['animal_order_number'];
             $result[$animalId][ReportServiceBase::staticTranslateColumnHeader($this->translator, 'date_of_birth')] = $date_of_birth;
             $result[$animalId][ReportServiceBase::staticTranslateColumnHeader($this->translator, 'n_ling')] = ($item['n_ling']) ? $item['n_ling'] : '-';
             $result[$animalId][ReportServiceBase::staticTranslateColumnHeader($this->translator, 'gender')] =
@@ -184,5 +188,97 @@ class AnimalTreatmentsPerYearReportService extends ReportServiceBase
         }
 
         return $result;
+    }
+
+
+    /**
+     * @param  int  $treatmentYear
+     * @param  string  $ubn
+     * @return array
+     * @throws DBALException
+     */
+    private function getDataForUserReport(int $treatmentYear, string $ubn)
+    {
+        $genderTranslationValues = SqlUtil::genderTranslationValues();
+        $revoked = RequestStateType::REVOKED;
+        $dateFormat = SqlUtil::TO_CHAR_DATE_FORMAT;
+
+        $sql = "SELECT
+                    to_char(medication_details.start_datum,'$dateFormat') as start_datum,
+                    to_char(medication_details.eind_datum,'$dateFormat') as eind_datum,
+                    medication_details.omschrijving,
+                    medication_details.behandelduur,
+                    medication_details.middel,
+                    -- animal details
+                    CONCAT(a.uln_country_code,a.uln_number) as uln,
+                    NULLIF(CONCAT(a.pedigree_country_code,a.pedigree_number),'') as stn,
+                    a.collar_color as halsband_kleur,
+                    a.collar_number as halsband_nummer,
+                    a.animal_order_number as werknummer,
+                    to_char(a.date_of_birth,'$dateFormat') as geboortedatum,
+                    NULLIF(COALESCE(NULLIF(trim(trailing '-ling' from ac.n_ling),''), CAST(a.n_ling AS TEXT)),'') as n_ling,
+                    gender.dutch as geslacht,
+                    a.breed_code as rascode,
+                    pr.abbreviation as stamboek,
+                    NULLIF(CONCAT(dad.pedigree_country_code,dad.pedigree_number),'') as stn_vader,
+                    NULLIF(CONCAT(mom.pedigree_country_code,mom.pedigree_number),'') as stn_moeder
+                FROM animal a
+                    INNER JOIN (
+                        SELECT
+                            ta.animal_id,
+                            DATE(t.start_date) as start_datum,
+                            DATE(t.end_date) as eind_datum,
+                            t.description as omschrijving,
+                            CASE WHEN tm.treatment_duration ISNULL THEN
+                                null
+                            WHEN tm.treatment_duration = 1 THEN
+                                'eenmalig'
+                            ELSE
+                                CONCAT(tm.treatment_duration,' dagen')
+                            END as behandelduur,
+                            tm.name as middel
+                        FROM treatment t
+                            INNER JOIN treatment_animal ta on t.id = ta.treatment_id
+                            -- This will only include treatments with at least one medication
+                            INNER JOIN medication_selection s on s.treatment_id = t.id
+                            INNER JOIN treatment_medication tm on s.treatment_medication_id = tm.id
+                        WHERE t.is_active AND status <> '$revoked'
+                            AND EXISTS (SELECT * FROM location l WHERE l.ubn = '$ubn' AND t.location_id = l.id)
+                            AND (
+                                date_part('YEAR', t.start_date) = $treatmentYear
+                            )
+                
+                        UNION
+                
+                        SELECT
+                            ta.animal_id,
+                            DATE(t.start_date) as start_datum,
+                            DATE(t.end_date) as eind_datum,
+                            t.description as omschrijving,
+                            null as behandelduur,
+                            'geen' as middel
+                        FROM treatment t
+                            INNER JOIN treatment_animal ta on t.id = ta.treatment_id
+                        WHERE t.is_active AND status <> '$revoked'
+                            -- this will only include treatments without any medications
+                            AND NOT EXISTS (SELECT * FROM medication_selection s WHERE s.treatment_id = t.id)
+                            AND EXISTS (SELECT * FROM location l WHERE l.ubn = '$ubn' AND t.location_id = l.id)
+                            AND (
+                                date_part('YEAR', t.start_date) = $treatmentYear
+                            )
+                    )medication_details ON medication_details.animal_id = a.id
+                    -- animal details
+                    INNER JOIN animal_cache ac ON ac.animal_id = a.id
+                    INNER JOIN (VALUES $genderTranslationValues) AS gender(english, dutch) ON a.type = gender.english
+                    LEFT JOIN view_pedigree_register_abbreviation pr ON pr.pedigree_register_id = a.pedigree_register_id
+                    LEFT JOIN animal mom ON mom.id = a.parent_mother_id
+                    LEFT JOIN animal dad ON dad.id = a.parent_father_id
+                ORDER BY medication_details.start_datum, medication_details.eind_datum, a.animal_order_number";
+
+        $conn = $this->em->getConnection();
+        $statement = $conn->prepare($sql);
+        $statement->execute();
+
+        return $statement->fetchAll();
     }
 }

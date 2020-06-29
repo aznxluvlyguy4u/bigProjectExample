@@ -214,103 +214,85 @@ WHERE
 
     private function getYoungAnimalsQuery($referenceDateString): string {
         return " SELECT
-            c.id as company_id,
-            animal_count_younger_than_one_year_old
-          FROM company c
-            INNER JOIN (
-                SELECT
-                  c.id as company_id,
+                  company_id,
                   count(*) as animal_count_younger_than_one_year_old
-                FROM animal a
-                   INNER JOIN (
-                      SELECT animal_id, location_id
-                      FROM animal_residence
-                      WHERE DATE(start_date) <= '$referenceDateString'
+                FROM (
+                      SELECT animal_id, l.company_id
+                      FROM animal_residence r
+                        INNER JOIN location l ON l.id = r.location_id
+                        INNER JOIN animal a ON a.id = r.animal_id
+                        INNER JOIN company c on l.company_id = c.id
+                      WHERE is_pending = FALSE AND c.is_active AND DATE(start_date) <= '$referenceDateString'
                         AND (
                           end_date ISNULL OR
                           DATE(end_date) >= '$referenceDateString'
                         )
-                        --Group to ignore double animal_residence entries
-                      GROUP BY animal_id, location_id
-                    )g on g.animal_id = a.id
-                   INNER JOIN location l ON l.id = g.location_id
-                   INNER JOIN company c ON c.id = l.company_id
-                WHERE
-                  a.date_of_birth NOTNULL AND l.is_active AND
-                    EXTRACT(YEAR FROM AGE('$referenceDateString', a.date_of_birth)) = 0
-                GROUP BY c.id
-              ) gc ON gc.company_id = c.id
-          WHERE c.is_active ";
+                        AND a.date_of_birth NOTNULL AND l.is_active AND
+                            EXTRACT(YEAR FROM AGE('$referenceDateString', a.date_of_birth)) = 0
+                        --Group on animal to ignore double animal_residence entries
+                      GROUP BY animal_id, l.company_id
+                        ORDER BY l.company_id, animal_id
+                
+                )g
+                GROUP BY company_id ";
     }
 
 
     private function getOlderAnimalsQuery($referenceDateString): string {
-        return "SELECT
-            c.id as company_id,
-            animal_count_at_least_one_year_old
-          FROM company c
-                 INNER JOIN (
-            SELECT
-              c.id as company_id,
-              count(*) as animal_count_at_least_one_year_old
-            FROM animal a
-              INNER JOIN (
-                  SELECT animal_id, location_id
-                  FROM animal_residence
-                  WHERE DATE(start_date) <= '$referenceDateString'
-                    AND (
-                      end_date ISNULL OR
-                      DATE(end_date) >= '$referenceDateString'
-                    )
-                    --Group to ignore double animal_residence entries
-                  GROUP BY animal_id, location_id
-                )g on g.animal_id = a.id
-               INNER JOIN location l ON l.id = g.location_id
-               INNER JOIN company c ON c.id = l.company_id
-            WHERE
-              a.date_of_birth NOTNULL AND l.is_active AND
-                EXTRACT(YEAR FROM AGE('$referenceDateString', a.date_of_birth)) > 0
-            GROUP BY c.id
-          ) gc ON gc.company_id = c.id
-          WHERE c.is_active";
+        return " SELECT
+                  company_id,
+                  count(*) as animal_count_at_least_one_year_old
+                FROM (
+                      SELECT animal_id, l.company_id
+                      FROM animal_residence r
+                        INNER JOIN location l ON l.id = r.location_id
+                        INNER JOIN animal a ON a.id = r.animal_id
+                        INNER JOIN company c on l.company_id = c.id
+                      WHERE is_pending = FALSE AND c.is_active AND DATE(start_date) <= '$referenceDateString'
+                        AND (
+                          end_date ISNULL OR
+                          DATE(end_date) >= '$referenceDateString'
+                        )
+                        AND a.date_of_birth NOTNULL AND
+                            EXTRACT(YEAR FROM AGE('$referenceDateString', a.date_of_birth)) > 0
+                        --Group on animal to ignore double animal_residence entries
+                      GROUP BY animal_id, l.company_id
+                        ORDER BY l.company_id, animal_id
+                
+                )g
+                GROUP BY company_id ";
     }
 
 
     private function get6MonthsOrOlderPedigreeEwesQuery($referenceDateString): string {
         $ewe = AnimalObjectType::Ewe;
 
-        return "SELECT
-            c.id as company_id,
-            pedigree_ewes_count_at_least_six_months_old
-          FROM company c
-                 INNER JOIN (
-            SELECT
-              c.id as company_id,
-              count(*) as pedigree_ewes_count_at_least_six_months_old
-            FROM animal a
-              INNER JOIN (
-                  SELECT animal_id, location_id
-                  FROM animal_residence
-                  WHERE DATE(start_date) <= '$referenceDateString'
-                    AND (
-                      end_date ISNULL OR
-                      DATE(end_date) >= '$referenceDateString'
-                    )
-                    --Group to ignore double animal_residence entries
-                  GROUP BY animal_id, location_id
-                )g on g.animal_id = a.id
-               INNER JOIN location l ON l.id = g.location_id
-               INNER JOIN company c ON c.id = l.company_id
-            WHERE
-              a.date_of_birth NOTNULL AND l.is_active AND  
-              a.type = '$ewe' AND a.pedigree_register_id NOTNULL AND 
-              (
-                EXTRACT(YEAR FROM AGE('$referenceDateString', a.date_of_birth)) * 12 +
-                EXTRACT(MONTH FROM AGE('$referenceDateString', a.date_of_birth))
-              ) >= 6 --age in months on reference_date
-            GROUP BY c.id
-          ) gc ON gc.company_id = c.id
-          WHERE c.is_active";
+        return " SELECT
+                  company_id,
+                  count(*) as pedigree_ewes_count_at_least_six_months_old
+                FROM (
+                      SELECT animal_id, l.company_id
+                      FROM animal_residence r
+                        INNER JOIN location l ON l.id = r.location_id
+                        INNER JOIN animal a ON a.id = r.animal_id
+                        INNER JOIN company c on l.company_id = c.id
+                      WHERE is_pending = FALSE AND c.is_active AND DATE(start_date) <= '$referenceDateString'
+                        AND (
+                          end_date ISNULL OR
+                          DATE(end_date) >= '$referenceDateString'
+                        )
+                        AND a.date_of_birth NOTNULL AND l.is_active AND
+                              a.type = '$ewe' AND a.pedigree_register_id NOTNULL AND
+                              (
+                                EXTRACT(YEAR FROM AGE('$referenceDateString', a.date_of_birth)) * 12 +
+                                EXTRACT(MONTH FROM AGE('$referenceDateString', a.date_of_birth))
+                              ) >= 6 --age in months on reference_date
+                        --Group on animal to ignore double animal_residence entries
+                      GROUP BY animal_id, l.company_id
+                        ORDER BY l.company_id, animal_id
+                
+                )g
+                GROUP BY company_id ";
     }
 
 
