@@ -7,6 +7,7 @@ use AppBundle\Util\StringUtil;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as JMS;
+use phpDocumentor\Reflection\Types\Integer;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
@@ -250,7 +251,7 @@ class TreatmentMedication
     }
 
     /**
-     * @return mixed
+     * @return integer
      */
     public function getWaitingDays()
     {
@@ -258,7 +259,7 @@ class TreatmentMedication
     }
 
     /**
-     * @param mixed $waitingDays
+     * @param integer $waitingDays
      * @return TreatmentMedication
      */
     public function setWaitingDays($waitingDays): self
