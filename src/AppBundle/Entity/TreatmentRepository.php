@@ -33,7 +33,8 @@ class TreatmentRepository extends BaseRepository {
                 LOWER(tm.name) LIKE LOWER(:query) OR 
                 a.collar_number LIKE LOWER(:query) OR 
                 LOWER(a.collar_color) LIKE LOWER(:query) OR 
-                CONCAT(LOWER(a.collar_color), a.collar_number) LIKE LOWER(:query)
+                CONCAT(LOWER(a.collar_color), a.collar_number) LIKE LOWER(:query) OR
+                CONCAT(LOWER(a.collar_color), ' ', a.collar_number) LIKE LOWER(:query)
             )
         ";
 
@@ -61,7 +62,9 @@ class TreatmentRepository extends BaseRepository {
                 t.end_date,
                 t.revoke_date,
                 t.type,
-                t.status
+                t.status,
+                a.collar_color,
+                a.collar_number
             FROM treatment t
             ".$joins."
             ".$filter."
