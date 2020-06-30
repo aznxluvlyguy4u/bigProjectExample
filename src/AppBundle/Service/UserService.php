@@ -57,9 +57,8 @@ class UserService
      *
      * @param string|null $tokenCode
      *
+     * @param string $source
      * @return Person|Employee|Client
-     *
-     * @throws \LogicException If SecurityBundle is not available
      *
      * @see TokenInterface::getUser()
      */
@@ -93,8 +92,7 @@ class UserService
      */
     public function getAccountOwner(Request $request = null, $tokenCode = null)
     {
-        $loggedInUser = $this->getUser($request->headers->get('AccessToken'));
-
+        $loggedInUser = $this->getUser($tokenCode);
         /* Clients */
         if($loggedInUser instanceof Client) {
             return $loggedInUser;
@@ -105,7 +103,7 @@ class UserService
                 throw new Exception('Request cannot be empty for getAccountOwner if (loggedIn)User is not a Client');
             }
 
-            if($request->headers->has(Constant::GHOST_TOKEN_HEADER_NAMESPACE) && $tokenCode === null) {
+            if($request->headers->has(Constant::GHOST_TOKEN_HEADER_NAMESPACE)) {
                 $ghostTokenCode = $request->headers->get(Constant::GHOST_TOKEN_HEADER_NAMESPACE);
                 $ghostToken = $this->tokenRepository->findOneBy(array("code" => $ghostTokenCode));
 
@@ -166,7 +164,7 @@ class UserService
      */
     public function getSelectedLocation(Request $request)
     {
-        $client = $this->getAccountOwner($request);
+        $client = $this->getAccountOwner($request, $request->headers->get('AccessToken'));
 
         $headerValidation = null;
 
