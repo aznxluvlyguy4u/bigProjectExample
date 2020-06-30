@@ -142,7 +142,7 @@ class MateValidator extends DeclareNsfoBaseValidator
         $ramArray = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::RAM, $content);
 
         $isRamInputValid = $this->validateRamArray($ramArray);
-        $isEweInputValid = $this->validateEweArray($eweArray, $content);
+        $isEweInputValid = $this->validateEweArray($eweArray, $content, $messageId);
         $isNonAnimalInputValid = $this->validateNonAnimalValues($content);
 
         if(!$isRamInputValid || !$isEweInputValid || !$isNonAnimalInputValid || !$isMessageIdValid) {
@@ -231,9 +231,10 @@ class MateValidator extends DeclareNsfoBaseValidator
     /**
      * @param array $eweArray
      * @param ArrayCollection $content
+     * @param $mateRequestId
      * @return bool
      */
-    private function validateEweArray($eweArray, $content) {
+    private function validateEweArray($eweArray, $content, $mateRequestId = null) {
 
         $ulnString = NullChecker::getUlnStringFromArray($eweArray, null);
         if($ulnString == null) {
@@ -274,28 +275,35 @@ class MateValidator extends DeclareNsfoBaseValidator
 
             /** @var Mate $mate */
             foreach($foundAnimal->getMatings() as $mate) {
-                if($mate->getRequestState() != "REVOKED") {
-                    $startDate = new \DateTime($content['start_date']);
-                    $startDate = $startDate->setTime(0,0,0);
 
-                    $endDate = new \DateTime($content['end_date']);
-                    $endDate = $endDate->setTime(0,0,0);
+                if(!$mate->getIsOverwrittenVersion() && $mate->getRequestState() != "REVOKED") {
 
-                    $mateStartDate = $mate->getStartDate();
-                    $mateStartDate = $mateStartDate->setTime(0,0,0);
+                    if ($mate->getMessageId() !== $mateRequestId) {
 
-                    $mateEndDate = $mate->getEndDate();
-                    $mateEndDate = $mateEndDate->setTime(0,0,0);
+                        $startDate = new \DateTime($content['start_date']);
+                        $startDate = $startDate->setTime(0,0,0);
 
-                    if($startDate >= $mateStartDate && $startDate <= $mateEndDate) {
-                        $this->errors[] = $this->trans(self::START_DATE_IS_IN_A_MATING_PERIOD);
-                        return false;
+                        $endDate = new \DateTime($content['end_date']);
+                        $endDate = $endDate->setTime(0,0,0);
+
+                        $mateStartDate = $mate->getStartDate();
+                        $mateStartDate = $mateStartDate->setTime(0,0,0);
+
+                        $mateEndDate = $mate->getEndDate();
+                        $mateEndDate = $mateEndDate->setTime(0,0,0);
+
+                        if($startDate >= $mateStartDate && $startDate <= $mateEndDate) {
+                            $this->errors[] = $this->trans(self::START_DATE_IS_IN_A_MATING_PERIOD);
+                            return false;
+                        }
+
+                        if($endDate >= $mateStartDate && $endDate <= $mateEndDate) {
+                            $this->errors[] = $this->trans(self::END_DATE_IS_IN_A_MATING_PERIOD);
+                            return false;
+                        }
+
                     }
 
-                    if($endDate >= $mateStartDate && $endDate <= $mateEndDate) {
-                        $this->errors[] = $this->trans(self::END_DATE_IS_IN_A_MATING_PERIOD);
-                        return false;
-                    }
                 }
             }
 

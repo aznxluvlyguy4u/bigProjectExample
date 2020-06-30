@@ -285,4 +285,14 @@ class LocationRepository extends BaseRepository
 
       return $result ? $result['country_code'] : $defaultCountryCode;
   }
+
+
+    /**
+     * @param int $locationIds
+     */
+  public function bumpLastResidenceFixDate(int $locationIds)
+  {
+      $sql = "UPDATE location SET last_residence_fix_date = NOW() WHERE id = $locationIds";
+      $this->getConnection()->exec($sql);
+  }
 }

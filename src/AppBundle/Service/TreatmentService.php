@@ -7,6 +7,7 @@ use AppBundle\Component\Utils;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Controller\TreatmentAPIControllerInterface;
 use AppBundle\Entity\Animal;
+use AppBundle\Entity\MedicationOption;
 use AppBundle\Entity\MedicationSelection;
 use AppBundle\Entity\Treatment;
 use AppBundle\Entity\TreatmentMedication;
@@ -16,9 +17,12 @@ use AppBundle\Enumerator\TreatmentTypeOption;
 use AppBundle\Util\ActionLogWriter;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
+use DateInterval;
 use DateTime;
 use AppBundle\Util\TimeUtil;
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\DBAL\DBALException;
+use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Exception;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
@@ -114,38 +118,60 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
         // No duplicates are being created, so what is being meant with "duplicates"?
         //TODO check for duplicates
 
-        $treatmentMedicationSelections = $treatment->getMedicationSelections();
+        /** @var TreatmentTemplate $treatmentTemplate */
+        $treatmentTemplate = $em->getRepository(TreatmentTemplate::class)->find($treatment->getTreatmentTemplate()->getId());
 
-        /** @var MedicationSelection $medicationSelection */
-        foreach ($treatmentMedicationSelections as $medicationSelection)
+        /** @var MedicationOption $medicationOption */
+        foreach ($treatmentTemplate->getMedications() as $medicationOption)
         {
-            if ($medicationSelection->getWaitingDays() === null) {
-                throw new PreconditionFailedHttpException("No waiting days have been filled in.");
+            $treatmentDuration = $medicationOption->getTreatmentDuration();
+            $medicationSelection = new MedicationSelection();
+
+            $medicationSelection
+                ->setTreatment($treatment)
+                ->setMedicationOption($medicationOption)
+            ;
+
+            if ($treatmentDuration !== 'eenmalig') {
+                $roundedTreatmentDuration = round($treatmentDuration, 0, PHP_ROUND_HALF_UP);
+
+                // Subtract 1 to account for the start day of the treatment.
+                $correctedTreatmentDuration = $roundedTreatmentDuration-1;
+
+                $daysToAdd = $correctedTreatmentDuration + $medicationOption->getWaitingDays();
+
+                $treatmentStartDate = clone $treatment->getStartDate();
+                if ($daysToAdd > 0) {
+                    $treatmentStartDate->add(new DateInterval('P'.$daysToAdd.'D'));
+                }
+
+                $medicationSelection
+                    ->setWaitingTimeEnd($treatmentStartDate);
+            } else {
+                $treatmentStartDate = clone $treatment->getStartDate();
+                $medicationSelection
+                    ->setWaitingTimeEnd($treatmentStartDate->add(new DateInterval('P'.$medicationOption->getWaitingDays().'D')));
             }
 
-            $medicationSelectionName = $medicationSelection->getTreatmentMedication()->getName();
-
-            /** @var TreatmentMedication $treatmentMedication */
-            $treatmentMedication = $this->treatmentMedicationRepository->findOneBy(['name' => $medicationSelectionName]);
-
-            $medicationSelection->setTreatmentMedication($treatmentMedication);
+            $em->persist($medicationSelection);
         }
-
-        $treatmentTemplateId = $treatment->getTreatmentTemplate()->getId();
-
-        /** @var TreatmentTemplate $treatmentTemplate */
-        $treatmentTemplate = $this->treatmentTemplateRepository->find($treatmentTemplateId);
 
         $treatment->__construct();
 
         $treatment
             ->setCreationBy($this->getUser())
             ->setAnimals($existingAnimals)
-            ->setMedicationSelections($treatmentMedicationSelections)
             ->setTreatmentTemplate($treatmentTemplate);
 
         $em->persist($treatment);
-        $em->flush();
+        try {
+            $em->flush();
+        } catch (Exception $e) {
+            if ($e instanceof UniqueConstraintViolationException) {
+               return ResultUtil::errorResult('A treatment already exists!', 500);
+            }
+        }
+
 
         ActionLogWriter::createTreatment($em, $request, $loggedInUser, $treatment);
 

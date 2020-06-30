@@ -7,9 +7,13 @@ namespace AppBundle\Util;
 use AppBundle\Constant\IsoCountry;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Animal;
+use AppBundle\Entity\BlindnessFactor;
 use AppBundle\Enumerator\AnimalTransferStatus;
+use AppBundle\Enumerator\BlindnessFactorType;
+use AppBundle\Enumerator\BlindnessFactorTypeDutch;
 use AppBundle\Enumerator\BreedTypeDutch;
 use AppBundle\Enumerator\ColumnType;
+use AppBundle\Enumerator\Country;
 use AppBundle\Enumerator\DutchGender;
 use AppBundle\Enumerator\ExteriorKind;
 use AppBundle\Enumerator\GenderType;
@@ -728,6 +732,15 @@ class SqlUtil
 
 
     /**
+     * @return string
+     */
+    public static function blindnessFactorTranslationValues()
+    {
+        return SqlUtil::createSqlValuesString(BlindnessFactorTypeDutch::getConstants(), false, true);
+    }
+
+
+    /**
      * @param bool $isInformal
      * @return string
      */
@@ -936,6 +949,20 @@ class SqlUtil
     }
 
 
+    private static function countriesWithAnimalSyncs(): array
+    {
+        return [
+            Country::NL,
+        ];
+    }
+
+
+    public static function countriesWithAnimalSyncsJoinedList(): string
+    {
+        return "'" . implode("','", self::countriesWithAnimalSyncs()) . "'";
+    }
+
+
     private static function activeRequestStateTypes(): array
     {
         return [
@@ -1037,16 +1064,31 @@ class SqlUtil
     }
 
 
-    public static function getArrayFromPostgreSqlArrayString(?string $psqlArrayString): array
+    public static function getArrayFromPostgreSqlArrayString(?string $psqlArrayString, bool $onlyContainsIntegers = true): array
     {
         if (empty($psqlArrayString)) {
             return [];
         }
 
-        return json_decode(strtr($psqlArrayString,[
+
+        $translations = $onlyContainsIntegers ? [
             '{' => '[',
             '}' => ']',
-        ]), false) ?? [];
+        ] : [
+            /*
+             * Removing quotes is necessary, otherwise the json decode might fail.
+             * Quotes are automatically added in the sql response if a string contains a space
+             */
+            '"' => '',
+
+            '{' => '["',
+            '}' => '"]',
+            ',' => '","'
+        ];
+
+        $jsonArrayString = strtr($psqlArrayString, $translations);
+
+        return json_decode($jsonArrayString, false) ?? [];
     }
 
 

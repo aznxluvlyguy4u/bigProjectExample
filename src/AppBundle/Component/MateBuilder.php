@@ -14,6 +14,7 @@ use AppBundle\Entity\Ram;
 use AppBundle\Enumerator\RequestStateType;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Persistence\ObjectManager;
+use Exception;
 
 /**
  * Class MateBuilder
@@ -52,7 +53,7 @@ class MateBuilder extends NsfoBaseBuilder
         $mate->setRequestState(RequestStateType::OPEN);
 
         /* Set non-Animal values */
-        
+
         $startDate = Utils::getNullCheckedArrayCollectionDateValue(JsonInputConstant::START_DATE, $content);
         $endDate = Utils::getNullCheckedArrayCollectionDateValue(JsonInputConstant::END_DATE, $content);
         $ki = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::KI, $content);
@@ -96,7 +97,7 @@ class MateBuilder extends NsfoBaseBuilder
         if($ram instanceof Ram) {
             $mate->setStudRam($ram);
         }
-        
+
         return $mate;
     }
 
@@ -135,7 +136,6 @@ class MateBuilder extends NsfoBaseBuilder
         $mate->setApprovalDate(new \DateTime('now'));
         return $mate;
     }
-    
 
 
     /**
@@ -146,6 +146,7 @@ class MateBuilder extends NsfoBaseBuilder
      * @param Person $loggedInUser
      * @param Location $location
      * @return Mate
+     * @throws Exception
      */
     public static function edit(ObjectManager $manager, Mate $mate, ArrayCollection $content, Client $client, Person $loggedInUser, Location $location)
     {
@@ -157,6 +158,14 @@ class MateBuilder extends NsfoBaseBuilder
         //Edit current values
         $mate = self::postBase($client, $loggedInUser, $location, $mate);
         $mate = self::setMateValues($manager, $content, $location, $mate);
+
+        if (
+            $historicalMate->getStartDate() !== $mate->getStartDate() ||
+            $historicalMate->getEndDate() !== $mate->getEndDate()
+        ) {
+            $mate->removeLitter();
+        }
+
         $mate->setLogDate(new \DateTime('now'));
 
         //Set historical Mate
@@ -165,8 +174,5 @@ class MateBuilder extends NsfoBaseBuilder
 
         return $mate;
     }
-    
-    
-    
 
 }

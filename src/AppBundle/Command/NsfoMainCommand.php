@@ -626,8 +626,11 @@ class NsfoMainCommand extends ContainerAwareCommand
                 '32: Kill alive animals with a date_of_death, even if they don\'t have a declare loss', "\n",
                 '33: FORCE Fix animal residences: 1. remove duplicates, 2. close open residences by next residence, 3. close open residences by date of death', "\n",
                 '    WARNING! Only run this query if all relocations (arrivals, departs, imports, exports) are processed!', "\n",
-                '34: Fix animal residences by current location of animal: all locations', "\n",
-                '35: Fix animal residences by current location of animal: one location', "\n",
+                '34: Fix historic animal residences by current location of animal: all locations', "\n",
+                '35: Fix historic animal residences by current location of animal: one location', "\n",
+                '36: Fix current animal residences by current location of animal: all location', "\n",
+                '37: Fix current animal residences by current location of animal: one location', "\n",
+                '38: Display current animal residences discrepancies with the current livestock: one location', "\n",
                 "\n",
                 '================== DECLARES ===================', "\n",
                 '50: Fill missing messageNumbers in DeclareResponseBases where errorCode = IDR-00015', "\n\n",
@@ -669,8 +672,11 @@ class NsfoMainCommand extends ContainerAwareCommand
             case 31: DatabaseDataFixer::killResurrectedDeadAnimalsAlreadyHavingFinishedLastDeclareLoss($this->conn, $this->cmdUtil); break;
             case 32: DatabaseDataFixer::killAliveAnimalsWithADateOfDeath($this->conn, $this->cmdUtil); break;
             case 33: $this->getContainer()->get(UbnHistoryFixer::class)->forceFixAnimalResidenceRecords(); break;
-            case 34: $this->getContainer()->get(UbnHistoryFixer::class)->fixAllAnimalResidenceRecordsByCurrentAnimalLocation(); break;
-            case 35: $this->getContainer()->get(UbnHistoryFixer::class)->fixAnimalResidenceRecordsByCurrentAnimalLocationWithQuestion($this->cmdUtil); break;
+            case 34: $this->getContainer()->get(UbnHistoryFixer::class)->fixAllHistoricAnimalResidenceRecordsByCurrentAnimalLocation(); break;
+            case 35: $this->getContainer()->get(UbnHistoryFixer::class)->fixHistoricAnimalResidenceRecordsByCurrentAnimalLocationWithQuestion($this->cmdUtil); break;
+            case 36: $this->getContainer()->get(UbnHistoryFixer::class)->updateAllCurrentAnimalResidenceRecordsByCurrentLivestock(); break;
+            case 37: $this->getContainer()->get(UbnHistoryFixer::class)->updateCurrentAnimalResidenceRecordsByCurrentLivestockWithQuestion($this->cmdUtil); break;
+            case 38: $this->getContainer()->get(UbnHistoryFixer::class)->displayCurrentUbnHistoryDiscrepancies($this->cmdUtil); break;
 
             case 50: DatabaseDataFixer::fillBlankMessageNumbersForErrorMessagesWithErrorCodeIDR00015($this->conn, $this->cmdUtil); break;
 
@@ -1354,6 +1360,17 @@ class NsfoMainCommand extends ContainerAwareCommand
         $this->getInbreedingCoefficientParentPairsUpdaterService()
             ->addPair(new ParentIdsPair($ramId, $eweId), $regenerate)
         ;
+    }
+
+
+    private function askForInt($question = 'insert integer', $defaultValue = null): int
+    {
+        do {
+            $input = $this->cmdUtil->questionForIntChoice($defaultValue,$question);
+        } while (!ctype_digit($input) && !is_int($input));
+
+        $this->cmdUtil->writeln('Input: '.$input);
+        return intval($input);
     }
 
 

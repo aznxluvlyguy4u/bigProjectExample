@@ -9,7 +9,6 @@ use AppBundle\Entity\LocationRepository;
 use AppBundle\Entity\ResultTableBreedGrades;
 use AppBundle\Service\AwsExternalTestQueueService;
 use AppBundle\Service\AwsInternalTestQueueService;
-use AppBundle\Util\BreedCodeUtil;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\DoctrineUtil;
 use AppBundle\Util\NullChecker;
@@ -86,10 +85,11 @@ class NsfoTestCommand extends ContainerAwareCommand
         $option = $this->cmdUtil->generateMultiLineQuestion([
             'Choose option: ', "\n",
             '1: Find locations with highest animal count', "\n",
-            '2: Delete animal and all related records', "\n",
-            '3: Purge worker test queues', "\n",
-            '4: Get uln test data', "\n",
-            '5: Find animals with most breedValues', "\n",
+            '2: Get sql query for locations ordered by highest current livestock count and then unassigned tags count', "\n",
+            '3: Delete animal and all related records', "\n",
+            '4: Purge worker test queues', "\n",
+            '5: Get uln test data', "\n",
+            '6: Find animals with most breedValues', "\n",
             'DEFAULT: Custom test', "\n"
         ], self::DEFAULT_OPTION);
 
@@ -99,22 +99,25 @@ class NsfoTestCommand extends ContainerAwareCommand
                 $results = $this->locationRepository->findLocationsWithHighestAnimalCount();
                 $this->cmdUtil->writeln($results);
                 break;
-            case 2:
+            case 2: self::printSqlQueryLocationsOrderedByHighestCurrentLivestockCountAndThenUnassignedTagsCount(); break;
+            case 3:
                 if($this->isBlockedDatabase()) { $this->printDatabaseError(); break; }
                 $this->getContainer()->get('app.datafix.animals.exterminator')->deleteAnimalsByCliInput($this->cmdUtil);
                 break;
-            case 3:
+            case 4:
                 $purgeCount = $this->getContainer()->get(AwsExternalTestQueueService::class)->purgeQueue();
                 $this->cmdUtil->writeln('External test queue messages purged: '.$purgeCount);
                 $purgeCount = $this->getContainer()->get(AwsInternalTestQueueService::class)->purgeQueue();
                 $this->cmdUtil->writeln('Internal test queue messages purged: '.$purgeCount);
                 break;
-            case 4: $this->getUlnTestData(); break;
-            case 5: $this->getBreedValuesRankingData(); break;
+            case 5: $this->getUlnTestData(); break;
+            case 6: $this->getBreedValuesRankingData(); break;
             default:
                 $this->customTest();
                 break;
         }
+
+        echo "\r\n\r\n";
         $output->writeln('DONE');
 
 
@@ -176,5 +179,45 @@ class NsfoTestCommand extends ContainerAwareCommand
         $results = $this->em->getRepository(ResultTableBreedGrades::class)
             ->retrieveAnimalsWithMostBreedValues($limit, $locationId);
         $this->cmdUtil->writeln($results);
+    }
+
+
+    public static function printSqlQueryLocationsOrderedByHighestCurrentLivestockCountAndThenUnassignedTagsCount(): string
+    {
+        $sql = "SELECT
+    animal_count.ubn,
+    animal_count.company_name,
+    animal_count.count as current_animals_count,
+    tags_count.count as unassigned_tags_count
+FROM (
+         SELECT l.ubn,
+                c.company_name,
+                COUNT(a.id) as count,
+                'animal'    as type
+         FROM animal a
+                  INNER JOIN location l ON l.id = a.location_id
+                  INNER JOIN company c on l.company_id = c.id
+         WHERE a.is_alive
+           AND a.location_id NOTNULL
+           AND l.is_active
+           AND c.is_active
+         GROUP BY l.ubn, c.company_name
+     )animal_count
+INNER JOIN (
+    SELECT
+        l.ubn,
+        c.company_name,
+        COUNT(t.id) as count,
+        'tag' as type
+    FROM tag t
+        INNER JOIN location l ON l.id = t.location_id
+        INNER JOIN company c on l.company_id = c.id
+    WHERE t.tag_status = 'UNASSIGNED'
+        AND l.is_active AND c.is_active
+    GROUP BY l.ubn, c.company_name
+    )tags_count ON tags_count.ubn = animal_count.ubn
+ORDER BY animal_count.count DESC, tags_count.count DESC";
+        echo $sql;
+        return $sql;
     }
 }

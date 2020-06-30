@@ -33,6 +33,7 @@ use AppBundle\Util\SqlUtil;
 use AppBundle\Util\StringUtil;
 use AppBundle\Util\TimeUtil;
 use Doctrine\Common\Persistence\ObjectManager;
+use Psr\Log\LoggerInterface;
 
 /**
  * The old legacy version used entities and did not into account some nuances.
@@ -59,9 +60,9 @@ class DuplicateAnimalsFixer extends DuplicateFixerBase
      * DuplicateAnimalsFixer constructor.
      * @param ObjectManager $em
      */
-    public function __construct(ObjectManager $em)
+    public function __construct(ObjectManager $em, LoggerInterface $logger)
     {
-        parent::__construct($em);
+        parent::__construct($em, $logger);
         $this->genderChanger = new GenderChanger($this->em);
     }
 
@@ -231,10 +232,10 @@ class DuplicateAnimalsFixer extends DuplicateFixerBase
             $this->animalRepository->deleteAnimalsById($secondaryAnimalId);
             return true;
         }
-        
+
         /* 6. Double check animalOrderNumbers */
         DatabaseDataFixer::fixIncongruentAnimalOrderNumbers($this->conn, null);
-        
+
         return false;
     }
 
@@ -645,7 +646,7 @@ class DuplicateAnimalsFixer extends DuplicateFixerBase
         }
 
         /* The following values have special conditions when merging */
-        
+
         //dateOfDeath & isAlive
         $dateOfDeath1 = $primaryAnimalResultArray['date_of_death'];
         $dateOfDeath2 = $secondaryAnimalResultArray['date_of_death'];
@@ -654,14 +655,14 @@ class DuplicateAnimalsFixer extends DuplicateFixerBase
 
         if ($dateOfDeath1 != null && $isAlive1 == true) {
             $animalSqlMiddle = $animalSqlMiddle.' is_alive = FALSE,';
-            
+
         } elseif ($dateOfDeath1 == null && $dateOfDeath2 != null) {
             $animalSqlMiddle = $animalSqlMiddle." is_alive = FALSE, date_of_death = '".$dateOfDeath2."',";
-            
+
         } elseif ($isAlive2 == true && $isAlive1 == false && $dateOfDeath1 == null && $dateOfDeath2 == null) {
             $animalSqlMiddle = $animalSqlMiddle.' is_alive = TRUE,';
         }
-        
+
         //litterId: related to mother and dateOfBirth
         $litterId1 = $primaryAnimalResultArray['litter_id'];
         $litterId2 = $secondaryAnimalResultArray['litter_id'];
@@ -700,7 +701,7 @@ class DuplicateAnimalsFixer extends DuplicateFixerBase
             $animalSqlMiddle = $animalSqlMiddle." transfer_state = ".StringUtil::getNullAsStringOrWrapInQuotes($transferState2).",";
         }
 
-        
+
         if($animalSqlMiddle != '') {
             $this->conn->exec($animalSqlBeginning.rtrim($animalSqlMiddle,',').$animalSqlEnd);
         }
@@ -777,7 +778,7 @@ class DuplicateAnimalsFixer extends DuplicateFixerBase
                       AND new.type = 'Neuter' AND new.name ISNULL
                 ORDER BY replace_date";
         $results = $this->conn->query($sql)->fetchAll();
-        
+
         $totalCount = count($results);
         if($totalCount == 0) {
             $this->cmdUtil->writeln('There are no duplicate animals due to tagReplace errors!');

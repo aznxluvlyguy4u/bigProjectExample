@@ -18,6 +18,7 @@ class ReproductionInstructionFiles extends MixBlupInstructionFileBase implements
 {
     const TITLE_FERTILITY = 'Vruchtbaarheid';
     const TITLE_BIRTH_PROGRESS = 'Geboorteverloop';
+    const INCLUDE_COMMENTED_OUT_TRAITS = true;
 
     /**
      * @inheritDoc
@@ -26,14 +27,16 @@ class ReproductionInstructionFiles extends MixBlupInstructionFileBase implements
     {
         return [
             MixBlupInstructionFile::BIRTH_PROGRESS => self::generateBirthProgressInstructionFile(),
-            //FERTILITY exceeds 1 million calculations, so we split it up in 3 parts.
+            //FERTILITY exceeds 1 million calculations, so we split it up in 4 parts.
             MixBlupInstructionFile::FERTILITY_1 => self::generateFertilityInstructionFile(1),
             MixBlupInstructionFile::FERTILITY_2 => self::generateFertilityInstructionFile(2),
             MixBlupInstructionFile::FERTILITY_3 => self::generateFertilityInstructionFile(3),
+            MixBlupInstructionFile::FERTILITY_4 => self::generateFertilityInstructionFile(4),
             MixBlupInstructionFile::relani(MixBlupInstructionFile::BIRTH_PROGRESS) => self::generateBirthProgressRelaniInstructionFile(),
             MixBlupInstructionFile::relani(MixBlupInstructionFile::FERTILITY_1) => self::generateFertilityRelaniInstructionFile(1),
             MixBlupInstructionFile::relani(MixBlupInstructionFile::FERTILITY_2) => self::generateFertilityRelaniInstructionFile(2),
             MixBlupInstructionFile::relani(MixBlupInstructionFile::FERTILITY_3) => self::generateFertilityRelaniInstructionFile(3),
+            MixBlupInstructionFile::relani(MixBlupInstructionFile::FERTILITY_4) => self::generateFertilityRelaniInstructionFile(4),
         ];
     }
 
@@ -166,6 +169,7 @@ class ReproductionInstructionFiles extends MixBlupInstructionFileBase implements
         $includeTotalBirths = $part == 1 || $part == null ? '' : ' #';
         $includeStillBirths = $part == 2 || $part == null ? '' : ' #';
         $includeEarlyFertility = $part == 3 || $part == null ? '' : ' #';
+        $includeBirthInterval = $part == 4 || $part == null ? '' : ' #';
 
         $totGebModelSolaniTraits = $isRelani ? '' : ' '.self::getBreedCodesModel().' Inductie Leeft CovHetLam CovRecLam';
         $doodGebModelSolaniTraits = $isRelani ? '' : ' '.self::getBreedCodesModel().' Inductie Leeft CovHetLam CovRecLam';
@@ -174,14 +178,14 @@ class ReproductionInstructionFiles extends MixBlupInstructionFileBase implements
         $totGebModel =  ' TotGeb  ~ '.$jaarBedr.$totGebModelSolaniTraits.' !RANDOM PermMil G(ID)';
         $doodGebModel = ' DoodGeb ~ '.$jaarBedr.$doodGebModelSolaniTraits.' !RANDOM PermMil G(ID)';
         $vroegModel =   ' Vroeg   ~ '.$jaarBedr.$vroegModelSolaniTraits.' !RANDOM G(ID)';
-        $tusLamTModel = ' # TusLamT';
+        $tusLamTModel = ' TusLamT ~ '.$jaarBedr.' Leeft !RANDOM PermMil G(ID)';
 
         if($includeCommentedOutBreedValues) {
             return [
                 'TotGeb' =>     $includeTotalBirths.$totGebModel,
                 'DoodGeb' =>    $includeStillBirths.$doodGebModel,
                 'Vroeg' =>      $includeEarlyFertility.$vroegModel,
-                'TusLamT' =>    $tusLamTModel,
+                'TusLamT' =>    $includeBirthInterval.$tusLamTModel,
             ];
 
         } else {
@@ -189,6 +193,7 @@ class ReproductionInstructionFiles extends MixBlupInstructionFileBase implements
                 case 1: return ['TotGeb' => $totGebModel];
                 case 2: return ['DoodGeb' => $doodGebModel];
                 case 3: return ['Vroeg' => $vroegModel];
+                case 4: return ['TusLamT' => $doodGebModel];
                 default: return [];
             }
         }

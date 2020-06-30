@@ -340,7 +340,9 @@ WHERE child.id = $childId AND mother_litter.id NOTNULL";
      * @throws DBALException
      */
     private static function setDefaultSurrogateLitter(Connection $conn, string $litterIdFilter) {
-        $sql = "UPDATE animal SET surrogate_litter_id = NULL WHERE surrogate_id ISNULL ".$litterIdFilter;
+        $sql = "UPDATE animal
+                SET surrogate_litter_id = NULL
+                WHERE surrogate_id ISNULL AND surrogate_litter_id NOTNULL ".$litterIdFilter;
         $stmt = $conn->prepare($sql);
         $stmt->execute();
     }

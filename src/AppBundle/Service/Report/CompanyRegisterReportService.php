@@ -57,7 +57,7 @@ class CompanyRegisterReportService extends ReportServiceBase
         $this->location = $location;
 
         /** Do this before running the report query */
-        $this->ubnHistoryFixer->fixAnimalResidenceRecordsByCurrentAnimalLocationOfLocationId($location->getId());
+        $this->ubnHistoryFixer->fixHistoricAnimalResidenceRecordsByCurrentAnimalLocationOfLocationId($location->getId());
 
         if ($options->getFileType() === FileType::CSV) {
             return $this->generateCsvFileBySqlQuery(
@@ -241,6 +241,7 @@ class CompanyRegisterReportService extends ReportServiceBase
                     AND (a.date_of_birth NOTNULL AND a.date_of_birth <= '$sampleDateString')
             GROUP BY animal_id
             )
+        ORDER BY a.animal_order_number, a.date_of_birth
         ;";
     }
 

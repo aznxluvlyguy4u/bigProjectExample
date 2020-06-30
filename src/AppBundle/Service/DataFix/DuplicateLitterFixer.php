@@ -12,6 +12,7 @@ use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\LitterUtil;
 use Doctrine\Common\Persistence\ObjectManager;
+use Psr\Log\LoggerInterface;
 
 /**
  * Class DuplicateLitterFixer
@@ -28,12 +29,11 @@ class DuplicateLitterFixer extends DuplicateFixerBase
 
 
     /**
-     * DuplicateAnimalsFixer constructor.
      * @param ObjectManager $em
      */
-    public function __construct(ObjectManager $em)
+    public function __construct(ObjectManager $em, LoggerInterface $logger)
     {
-        parent::__construct($em);
+        parent::__construct($em, $logger);
         $this->litterRepository = $this->em->getRepository(Litter::class);
     }
 

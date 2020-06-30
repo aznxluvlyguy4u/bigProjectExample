@@ -4,6 +4,7 @@ namespace AppBundle\Entity;
 
 use AppBundle\Component\Utils;
 use AppBundle\Traits\EntityClassInfo;
+use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as JMS;
@@ -36,8 +37,7 @@ class Location
    *     "RVO",
    *     "TREATMENT",
    *     "TREATMEN_MIN",
-   *     "TREATMENT_TEMPLATE",
-   *     "TREATMENT_TEMPLATE_MIN"
+   *     "TREATMENT_TEMPLATE"
    * })
    *
    */
@@ -63,6 +63,22 @@ class Location
      * @Expose
      */
     private $locationId;
+
+    /**
+     * @var DateTime
+     * @ORM\Column(type="datetime", options={"default":"CURRENT_TIMESTAMP"}, nullable=false)
+     * @Assert\Date
+     * @JMS\Type("DateTime")
+     */
+    private $creationDate;
+
+    /**
+     * @var DateTime|null
+     * @ORM\Column(type="datetime", nullable=true)
+     * @Assert\Date
+     * @JMS\Type("DateTime")
+     */
+    private $lastResidenceFixDate;
 
     /**
      * @var string
@@ -423,6 +439,8 @@ class Location
         $this->animalRelocations = new ArrayCollection();
         $this->animalAnnotations = new ArrayCollection();
         $this->setLocationId(Utils::generateTokenCode());
+
+        $this->creationDate = new \DateTime();
     }
 
     /**
@@ -1381,4 +1399,42 @@ class Location
     {
         $this->animalAnnotations->removeElement($annotation);
     }
+
+    /**
+     * @return DateTime
+     */
+    public function getCreationDate(): DateTime
+    {
+        return $this->creationDate;
+    }
+
+    /**
+     * @param DateTime $creationDate
+     * @return Location
+     */
+    public function setCreationDate(DateTime $creationDate): Location
+    {
+        $this->creationDate = $creationDate;
+        return $this;
+    }
+
+    /**
+     * @return DateTime|null
+     */
+    public function getLastResidenceFixDate(): ?DateTime
+    {
+        return $this->lastResidenceFixDate;
+    }
+
+    /**
+     * @param DateTime|null $lastResidenceFixDate
+     * @return Location
+     */
+    public function setLastResidenceFixDate(?DateTime $lastResidenceFixDate): Location
+    {
+        $this->lastResidenceFixDate = $lastResidenceFixDate;
+        return $this;
+    }
+
+
 }

@@ -22,27 +22,12 @@
         {% set logoPath = images_dir~'/nsfo-logo@2x.png' %}
     {% endif %}
 
-    {% for animal in variables %}
+    {% for animal in variables.animals %}
 
         <div class="container p-2">
 
             {# calc averages #}
             {% set offspringCount = animal.offspring|length %}
-            {% set totalBirthWeight = 0 %}
-            {% set totalWeaningWeight = 0 %}
-            {% set totalDeliveryWeight = 0 %}
-            {% set totalAverageGrowth = 0 %}
-            {% set totalSaldo = 0 %}
-            {% set totalPricePerKg = 0 %}
-
-            {% for offspring in animal.offspring %}
-                {% set totalBirthWeight = totalBirthWeight + offspring.birth_weight|number_format(2) %}
-                {% set totalWeaningWeight = totalWeaningWeight + offspring.weaning_weight|number_format(2) %}
-                {% set totalDeliveryWeight = totalDeliveryWeight + offspring.delivery_weight|number_format(2) %}
-                {% set totalAverageGrowth = totalAverageGrowth + offspring.average_growth|number_format(2) %}
-                {% set totalSaldo = totalSaldo + offspring.saldo|number_format(2) %}
-                {% set totalPricePerKg = totalPricePerKg + offspring.price_per_kg|number_format(2) %}
-            {% endfor %}
 
             {# calc pages needed for offspring #}
             {% set maxRowsPage1 = 28 %}
@@ -52,6 +37,7 @@
             {% set offspringPages =  offspringCount > maxRowsPage1 ? ((offspringCount - maxRowsPage1) / maxRowsPagex) |round(0, 'ceil') : 0 %}
 
             {# calc pages needed for treatments #}
+            {% set medicationsCount = animal.medicationsCount %}
             {% set treatmentCount = animal.treatments|length %}
             {% set treatmentRowsPage1 = 0 %}
             {% set treatmentPages = 0 %}
@@ -62,6 +48,7 @@
             {# HEADER INFO #}
             {% set vars = {
                 'animal' : animal,
+                'userData' : variables.userData,
                 'pageNumber' : pageNumber
             } %}
             {% embed "/Report/ewe_cards_parts/header_info.html.twig" with vars %}
@@ -79,12 +66,6 @@
                 'animal' : animal,
                 'showAverage' : offspringCount <= maxRowsPage1,
                 'offspringCount' : offspringCount,
-                'totalBirthWeight' : totalBirthWeight,
-                'totalWeaningWeight' : totalWeaningWeight,
-                'totalDeliveryWeight' : totalDeliveryWeight,
-                'totalAverageGrowth' : totalAverageGrowth,
-                'totalSaldo' : totalSaldo,
-                'totalPricePerKg' : totalPricePerKg,
                 'maxRowsPage1' : maxRowsPage1,
             } %}
             {% embed "/Report/ewe_cards_parts/offsprings_page_1.html.twig" with vars %}
@@ -95,7 +76,8 @@
 
                 {# recalc remaning treatment pages #}
                 {% set treatmentRowsPage1 = maxCombinedRowsPage1 - offspringCount %}
-                {% set treatmentPages =  treatmentCount > treatmentRowsPage1 ? ((treatmentCount - treatmentRowsPage1) / maxRowsPagex) |round(0, 'ceil') : 0 %}
+                {% set remainingOffspringsLastPage = eweCardOffspringRemainingOnLastPage(animal.offspring|length, maxRowsPage1, maxRowsPagex) %}
+                {% set treatmentPages =  treatmentPageCount(animal.treatments,maxRowsPagex,maxCombinedRowsPagex,remainingOffspringsLastPage) %}
 
                 {% set vars = {
                     'animal' : animal,
@@ -137,12 +119,6 @@
                     {% set vars = {
                         'animal' : animal,
                         'offspringCount' : offspringCount,
-                        'totalBirthWeight' : totalBirthWeight,
-                        'totalWeaningWeight' : totalWeaningWeight,
-                        'totalDeliveryWeight' : totalDeliveryWeight,
-                        'totalAverageGrowth' : totalAverageGrowth,
-                        'totalSaldo' : totalSaldo,
-                        'totalPricePerKg' : totalPricePerKg,
                         'maxRowsPage1' : maxRowsPage1,
                         'maxRowsPagex' : maxRowsPagex,
                         'page': page,
@@ -157,7 +133,7 @@
 
                         {# recalc remaning treatment pages #}
                         {% set treatmentRowsPage1 = maxCombinedRowsPagex - remainingOffsprings %}
-                        {% set treatmentPages =  treatmentCount > treatmentRowsPage1 ? ((treatmentCount - treatmentRowsPage1) / maxRowsPagex) |round(0, 'ceil') : 0 %}
+                        {% set treatmentPages =  treatmentPageCount(animal.treatments,maxRowsPagex,maxCombinedRowsPagex, remainingOffsprings) %}
 
                         {% set vars = {
                             'animal' : animal,
@@ -183,8 +159,9 @@
             {% for page in 1..treatmentPages %}
 
                 {# calc offset per page and remainingOffsprings #}
-                {% set offset = (treatmentRowsPage1 + ((page-1) * maxRowsPagex)) %}
-                {% set remainingOffsprings = animal.offspring|length - offset %}
+                {% set remainingOffspringsLastPage = eweCardOffspringRemainingOnLastPage(animal.offspring|length, maxRowsPage1, maxRowsPagex) %}
+                {% set offset = treatmentOffset(animal.treatments,maxRowsPagex,maxCombinedRowsPagex, remainingOffspringsLastPage, page-1) %}
+
                 {% set pageNumber = pageNumber + 1 %}
 
                 <div class="container p-2">

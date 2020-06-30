@@ -5,12 +5,14 @@ namespace AppBundle\Service\Report;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 
 use AppBundle\Constant\Constant;
+use AppBundle\Constant\ReportLabel;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Person;
 use AppBundle\Enumerator\AnimalObjectType;
 use AppBundle\Enumerator\FileType;
-use AppBundle\Enumerator\OffspringMaturityType;
+use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Util\AnimalArrayReader;
+use AppBundle\Util\DateUtil;
 use AppBundle\Util\FilesystemUtil;
 use AppBundle\Util\LitterUtil;
 use AppBundle\Util\ReportUtil;
@@ -26,6 +28,11 @@ class EweCardReportService extends ReportServiceBase
     const FILENAME = self::TITLE;
     const FILE_NAME_REPORT_TYPE = 'EWE_CARD';
     const DATE_RESULT_NULL_REPLACEMENT = "-";
+
+    const DUPLICATE_TREATMENTS_FOR_TESTING_COUNT = 1;
+    const DUPLICATE_OFFSPRING_FOR_TESTING_COUNT = 1;
+
+    const MIN_AGE_IN_DAYS_FOR_MATURITY = 90;
 
     const EWE_ID = 'ewe_id';
 
@@ -69,7 +76,9 @@ class EweCardReportService extends ReportServiceBase
      */
     private function getPdfReport(Person $actionBy, Location $location)
     {
-        $data = $this->getAnimalData($location);
+        $data = [];
+        $data['animals'] = $this->getAnimalData($location);
+        $data['userData'] = $this->getUserData($location);
 
         $additionalData = [
             'bootstrap_css' => FilesystemUtil::getAssetsDirectory($this->rootDir). '/bootstrap-3.3.7-dist/css/bootstrap.min.css',
@@ -115,7 +124,7 @@ class EweCardReportService extends ReportServiceBase
 
     public function getAnimalData(Location $location) {
 
-        $animalAndProductionValues = $this->getAnimalAndProductionData($this->animalIds, $location);
+        $animalAndProductionValues = $this->getAnimalAndProductionData($this->animalIds, $location->getUbn());
 
         $offspringData = $this->getOffspringData($this->animalIds, $location);
 
@@ -124,14 +133,40 @@ class EweCardReportService extends ReportServiceBase
         $data = [];
 
         foreach ($this->animalIds as $animalId) {
+            $offspringDataPerEwe = $this->filterDataForAnimalId($animalId, $offspringData);
             $data[$animalId] = [
                 'animalAndProduction' => $this->filterAnimalAndProductionDataForAnimalId($animalId, $animalAndProductionValues),
-                'offspring' => $this->filterDataForAnimalId($animalId, $offspringData),
+                'offspring' => $offspringDataPerEwe,
+                'offspringAggregateData' => $this->aggregateOffspringData($offspringDataPerEwe),
                 'treatments' => $this->filterDataForAnimalId($animalId, $treatments),
+                'medicationsCount' => $this->getMedicationCount($treatments),
             ];
         }
 
         return $data;
+    }
+
+
+    private function getMedicationCount(array $treatments): int
+    {
+        $medicationCountPerTreatment = array_map(function (array $treatment) {
+            return count($treatment['medications']);
+        }, $treatments);
+        return array_sum($medicationCountPerTreatment);
+    }
+
+    private function getUserData(Location $location): array {
+
+        $owner = $location->getCompany()->getOwner();
+        $locationAddress = $location->getAddress();
+
+        return [
+            'fullName' => $owner->getFullName(),
+            'ubn' => $location->getUbn(),
+            'locationAddress' => $locationAddress->getFullStreetNameAndNumber(),
+            'locationPostalCode' => $locationAddress->getPostalCode(),
+            'locationCity' => $locationAddress->getCity()
+        ];
     }
 
     private function filterAnimalAndProductionDataForAnimalId(int $animalId, array $data): array {
@@ -156,24 +191,115 @@ class EweCardReportService extends ReportServiceBase
         );
     }
 
+
+    private function aggregateOffspringData(array $offspringDataPerEwe): array {
+        $birthWeightTotal = 0;
+        $weightAt8WeeksTotal = 0;
+        $deliveryWeightTotal = 0;
+        $averageGrowthTotal = 0;
+        $saldoTotal = 0;
+        $pricePerKgTotal = 0;
+
+        $birthWeightCount = 0;
+        $weightAt8WeeksCount = 0;
+        $deliveryWeightCount = 0;
+        $averageGrowthCount = 0;
+        $saldoCount = 0;
+        $pricePerKgCount = 0;
+
+        foreach ($offspringDataPerEwe as $child) {
+            $birthWeight = $child['birth_weight'];
+            $weightAt8Weeks = $child['weight_at8weeks_kg'];
+            $deliveryWeight = $child['delivery_weight'];
+            $averageGrowth = $child['average_growth'];
+            $saldo = $child['saldo'];
+            $pricePerKg = $child['price_per_kg'];
+
+            if (!empty($birthWeight)) {
+                $birthWeightTotal += floatval($birthWeight);
+                $birthWeightCount++;
+            }
+
+            if (!empty($weightAt8Weeks)) {
+                $weightAt8WeeksTotal += floatval($weightAt8Weeks);
+                $weightAt8WeeksCount++;
+            }
+
+            if (!empty($deliveryWeight)) {
+                $deliveryWeightTotal += floatval($deliveryWeight);
+                $deliveryWeightCount++;
+            }
+
+            if (!empty($averageGrowth)) {
+                $averageGrowthTotal += floatval($averageGrowth);
+                $averageGrowthCount++;
+            }
+
+            if (!empty($saldo)) {
+                $saldoTotal += floatval($saldo);
+                $saldoCount++;
+            }
+
+            if (!empty($pricePerKg)) {
+                $pricePerKgTotal += floatval($pricePerKg);
+                $pricePerKgCount++;
+            }
+        }
+
+        return [
+            ReportLabel::BIRTH_WEIGHT => [
+                ReportLabel::TOTAL => $birthWeightTotal,
+                ReportLabel::AVERAGE => $birthWeightTotal / (empty($birthWeightCount) ? 1 : $birthWeightCount),
+                ReportLabel::IS_EMPTY => $birthWeightCount === 0,
+            ],
+            ReportLabel::WEIGHT_AT_8_WEEKS => [
+                ReportLabel::TOTAL => $weightAt8WeeksTotal,
+                ReportLabel::AVERAGE => $weightAt8WeeksTotal / (empty($weightAt8WeeksCount) ? 1 : $weightAt8WeeksCount),
+                ReportLabel::IS_EMPTY => $weightAt8WeeksCount === 0,
+            ],
+            ReportLabel::DELIVERY_WEIGHT => [
+                ReportLabel::TOTAL => $deliveryWeightTotal,
+                ReportLabel::AVERAGE => $deliveryWeightTotal / (empty($deliveryWeightCount) ? 1 : $deliveryWeightCount),
+                ReportLabel::IS_EMPTY => $deliveryWeightCount === 0,
+            ],
+            ReportLabel::AVERAGE_GROWTH => [
+                ReportLabel::TOTAL => $averageGrowthTotal,
+                ReportLabel::AVERAGE => $averageGrowthTotal / (empty($averageGrowthCount) ? 1 : $averageGrowthCount),
+                ReportLabel::IS_EMPTY => $averageGrowthCount === 0,
+            ],
+            ReportLabel::SALDO => [
+                ReportLabel::TOTAL => $saldoTotal,
+                ReportLabel::AVERAGE => $saldoTotal / (empty($saldoCount) ? 1 : $saldoCount),
+                ReportLabel::IS_EMPTY => $saldoCount === 0,
+            ],
+            ReportLabel::PRICE_PER_KG => [
+                ReportLabel::TOTAL => $pricePerKgTotal,
+                ReportLabel::AVERAGE => $pricePerKgTotal / (empty($pricePerKgCount) ? 1 : $pricePerKgCount),
+                ReportLabel::IS_EMPTY => $pricePerKgCount === 0,
+            ],
+        ];
+    }
+
+
     private function getAnimalIdsArrayString(array $animalIds): string {
         return "(".SqlUtil::getFilterListString($animalIds, false).")";
     }
 
     /**
      * @param array $animalIds
-     * @param Location $location
+     * @param string $ubn
      * @return array
      * @throws \Doctrine\DBAL\DBALException
      */
-    private function getAnimalAndProductionData(array $animalIds, Location $location): array
+    private function getAnimalAndProductionData(array $animalIds, string $ubn): array
     {
         $animalIdsArrayString = $this->getAnimalIdsArrayString($animalIds);
         $genderTranslationValues = SqlUtil::genderTranslationValues();
         $isoCountryAlphaTwoToNumericMapping = SqlUtil::isoCountryAlphaTwoToNumericMapping();
+        $blindnessFactorTranslationValues = SqlUtil::blindnessFactorTranslationValues();
 
-        $mainSectionValue = strtolower(SectionUtil::MAIN_SECTION);
-        $complementarySectionValue = strtolower(SectionUtil::COMPLEMENTARY_SECTION);
+        $mainSectionValue = SectionUtil::MAIN_SECTION;
+        $complementarySectionValue = SectionUtil::COMPLEMENTARY_SECTION;
 
         $mainSectionBreedTypesArrayString = "(".SqlUtil::getFilterListString(SectionUtil::mainSectionBreedTypes(), true).")";
         $complementarySectionBreedTypesArrayString = "(".SqlUtil::getFilterListString(SectionUtil::secondarySectionBreedTypes(), true).")";
@@ -226,11 +352,16 @@ class EweCardReportService extends ReportServiceBase
                     END
             ) as opfok,
             COALESCE(vl.owner_full_name, '') as breeder_name,
-            a.blindness_factor,
+            blindness_factor.dutch as blindness_factor,
             a.scrapie_genotype,
             vd.formatted_predicate,
             c.gave_birth_as_one_year_old as has_given_birth_as_one_year_old,
 
+            arrival.arrival_date_dd_mm_yyyy as arrival_date,       
+            CASE WHEN arrival.arrival_date < depart.depart_date THEN
+                depart.depart_date_dd_mm_yyyy
+            END depart_date,
+       
             litters_kpi.litter_index as litter_index,
             litters_kpi.average_twt as average_twt,
 
@@ -243,32 +374,21 @@ class EweCardReportService extends ReportServiceBase
        
             grouped_weights.average_birth_weight as average_birth_weight,
        
-            CASE WHEN view_ewe_litter_age.ewe_id NOTNULL THEN
-                CAST(ROUND((grouped_litter_data_by_litter.total_born_alive / view_ewe_litter_age.day_standardized_years)::numeric,1) AS TEXT)
+            CASE WHEN query_matured_counts.litter_count NOTNULL THEN
+                CAST(ROUND((grouped_litter_data_by_litter.total_born_alive::float / query_matured_counts.litter_count)::numeric,1) AS TEXT)
             ELSE
                '-' 
             END as average_alive_per_year,
              
-            COALESCE((own_offspring_matured_as_own_mother.count + other_offspring_matured_as_surrogate.count)::text, '-') as total_matured,       
-            COALESCE(other_offspring_matured_as_surrogate.count::text, '-') as matured_for_others,
-            COALESCE(own_offspring_matured_at_other_surrogate.count::text, '-') as matured_at_others,
-            CASE WHEN view_ewe_litter_age.ewe_id NOTNULL THEN
-                COALESCE(ROUND(((own_offspring_matured_as_own_mother.count + other_offspring_matured_as_surrogate.count) / view_ewe_litter_age.day_standardized_months)::numeric,1)::text, '-')
-            ELSE
-               '-' 
-            END as average_matured_per_month,
+            query_matured_counts.total_matured,
+            query_matured_counts.matured_for_others,
+            query_matured_counts.matured_at_others,
+            query_matured_counts.average_matured_per_year,
             
-            CASE WHEN view_ewe_litter_age.ewe_id NOTNULL THEN
-                COALESCE(ROUND(((own_offspring_matured_as_own_mother.count + other_offspring_matured_as_surrogate.count) / view_ewe_litter_age.day_standardized_years)::numeric,1)::text, '-')
-            ELSE
-               '-' 
-            END as average_matured_per_year,
-            
-            -- weaning/'spenen'-data is not available
-            '-' as average_growth_until_weaning, -- groei tot spenen
-            '-' as average_weaning_weight,
-            '-' as average_weaning_age_in_days,
-            '-' as average_weaning_growth_of_all_sucklings, 
+            grouped_8_weeks_data.average_growth_at_8_weeks as average_growth_at_8_weeks,
+            grouped_8_weeks_data.average_weight_at_8_weeks as average_weight_at_8_weeks,
+            grouped_8_weeks_data.average_weight_at_8_weeks_age_in_days as average_weight_at_8_weeks_age_in_days,
+            grouped_8_weeks_data.average_growth_at_8_weeks_of_all_sucklings as average_growth_at_8_weeks_of_all_sucklings,
             (SELECT dd_mm_yyyy FROM view_breed_value_max_generation_date) as breed_value_evaluation_date,
             -- fokwaarden
             r.total_born,
@@ -294,12 +414,13 @@ class EweCardReportService extends ReportServiceBase
                  LEFT JOIN animal mom ON mom.id = a.parent_mother_id
                  LEFT JOIN animal dad ON dad.id = a.parent_father_id
                  LEFT JOIN (VALUES $genderTranslationValues) AS gender(english, dutch) ON a.type = gender.english
+                 LEFT JOIN (VALUES $blindnessFactorTranslationValues) AS blindness_factor(english, dutch) ON a.blindness_factor = blindness_factor.english
                  LEFT JOIN (VALUES $isoCountryAlphaTwoToNumericMapping) AS iso_country(alpha2, numeric) ON a.uln_country_code = iso_country.alpha2
                  LEFT JOIN view_location_details vl on a.location_of_birth_id = vl.location_id
                  LEFT JOIN (
                      SELECT
                         animal_mother_id,
-                        ROUND(AVG(birth_weight)::numeric,2) as average_birth_weight
+                        ROUND(AVG(birth_weight)::numeric,1) as average_birth_weight
                     FROM animal_cache c
                              INNER JOIN animal a ON c.animal_id = a.id
                              INNER JOIN litter l ON l.id = a.litter_id
@@ -316,35 +437,74 @@ class EweCardReportService extends ReportServiceBase
                     GROUP BY animal_mother_id
                 )litters_kpi ON litters_kpi.animal_mother_id = a.id
                 LEFT JOIN (
-                         SELECT
-                             animal_mother_id,
-                             MAX(standard_litter_ordinal) as litter_number,
-                             SUM(born_alive_count + stillborn_count) as animal_total_born,
-                             SUM(born_alive_count) as total_born_alive,
-                             SUM(stillborn_count) as total_deaths,
-                             ROUND(AVG(born_alive_count + stillborn_count),2) as average_litter_size,
-                             ROUND(AVG(born_alive_count),2) as average_alive_per_litter,
-                             ROUND(AVG(stillborn_count),2) as average_deaths_litter
-                         FROM litter l
-                         GROUP BY animal_mother_id
-                )grouped_litter_data_by_litter ON grouped_litter_data_by_litter.animal_mother_id = a.id
+                         ".$this->getGroupedLitterDataByLitter($animalIdsArrayString)."
+                )grouped_litter_data_by_litter ON grouped_litter_data_by_litter.mom_id = a.id
                 LEFT JOIN (
-                    ".self::queryMaturedCount($location,OffspringMaturityType::OWN_OFFSPRING_MATURED_AS_OWN_MOTHER)."
-                )own_offspring_matured_as_own_mother ON own_offspring_matured_as_own_mother.maturing_mother_id = a.id
+                         ".$this->get8WeeksGroupedData($animalIdsArrayString)."
+                )grouped_8_weeks_data ON grouped_8_weeks_data.mom_id = a.id
                 LEFT JOIN (
-                    ".self::queryMaturedCount($location,OffspringMaturityType::OWN_OFFSPRING_MATURED_AT_OTHER_SURROGATE)."
-                )own_offspring_matured_at_other_surrogate ON own_offspring_matured_at_other_surrogate.maturing_mother_id = a.id                
+                    ".self::queryMaturedCounts($animalIdsArrayString, $ubn)."
+                )query_matured_counts ON query_matured_counts.ewe_id = a.id
+                
                 LEFT JOIN (
-                    ".self::queryMaturedCount($location,OffspringMaturityType::OTHER_OFFSPRING_MATURED_AS_SURROGATE)."
-                )other_offspring_matured_as_surrogate ON other_offspring_matured_as_surrogate.maturing_mother_id = a.id
-                LEFT JOIN view_ewe_litter_age ON view_ewe_litter_age.ewe_id = a.id       
-        WHERE a.location_id NOTNULL AND a.is_alive
-          AND r.total_born NOTNULL
-          AND r.weight_at20weeks NOTNULL
-          AND a.type = '".AnimalObjectType::Ewe."'
-          AND a.id IN $animalIdsArrayString";
+                    ".self::departQuery($animalIdsArrayString, $ubn)."
+                )depart ON depart.animal_id = a.id
+                LEFT JOIN (
+                    ".self::arrivalQuery($animalIdsArrayString, $ubn)."
+                )arrival ON arrival.animal_id = a.id
+                
+        WHERE a.id IN $animalIdsArrayString AND a.type = '".AnimalObjectType::Ewe."'";
 
         return $this->conn->query($sql)->fetchAll();
+    }
+
+    private function getGroupedLitterDataByLitter(string $animalIdsArrayString): string
+    {
+        return "SELECT
+                 animal_mother_id as mom_id,
+                 MAX(standard_litter_ordinal) as litter_number,
+                 SUM(born_alive_count + stillborn_count) as animal_total_born,
+                 SUM(born_alive_count) as total_born_alive,
+                 SUM(stillborn_count) as total_deaths,
+                 ROUND(AVG(born_alive_count + stillborn_count),2) as average_litter_size,
+                 ROUND(AVG(born_alive_count),2) as average_alive_per_litter,
+                 ROUND(AVG(stillborn_count),2) as average_deaths_litter
+             FROM litter l
+             WHERE l.animal_mother_id IN $animalIdsArrayString
+             GROUP BY animal_mother_id";
+    }
+
+    private function get8WeeksGroupedData(string $animalIdsArrayString): string
+    {
+        return "SELECT
+            a.parent_mother_id as mom_id,
+            CASE WHEN AVG(ac.age_weight_at8weeks) NOTNULL AND AVG(ac.weight_at8weeks - ac.birth_weight) NOTNULL THEN
+                ROUND((
+                    (AVG(ac.weight_at8weeks - ac.birth_weight) * 1000)::float /
+                    AVG(ac.age_weight_at8weeks)
+                )::numeric,0)::text
+            ELSE
+                '-'
+            END as average_growth_at_8_weeks,
+            COALESCE(ROUND(AVG(ac.weight_at8weeks)::numeric,1)::text,'-') as average_weight_at_8_weeks,
+            COALESCE(ROUND(AVG(ac.age_weight_at8weeks)::numeric,1)::text,'-') as average_weight_at_8_weeks_age_in_days,
+        
+            -- eigen lammeren van deze ooi die niet bij een pleegmoeder of lambar hebben gelopen
+            CASE WHEN
+                AVG(CASE WHEN a.surrogate_id ISNULL AND a.lambar = FALSE THEN ac.weight_at8weeks - ac.birth_weight END) NOTNULL AND
+                AVG(CASE WHEN a.surrogate_id ISNULL AND a.lambar = FALSE THEN ac.age_weight_at8weeks END) NOTNULL
+            THEN
+                ROUND((
+                    (AVG(CASE WHEN a.surrogate_id ISNULL AND a.lambar = FALSE THEN (ac.weight_at8weeks - ac.birth_weight) * 1000 END))::float /
+                    AVG(CASE WHEN a.surrogate_id ISNULL AND a.lambar = FALSE THEN ac.age_weight_at8weeks END)
+                )::numeric,0)::text
+            ELSE
+                '-'
+            END as average_growth_at_8_weeks_of_all_sucklings
+        FROM animal a
+            INNER JOIN animal_cache ac on a.id = ac.animal_id
+        WHERE a.parent_mother_id IN $animalIdsArrayString
+        GROUP BY a.parent_mother_id";
     }
 
     /**
@@ -378,8 +538,7 @@ class EweCardReportService extends ReportServiceBase
             --gewicht
             ac.birth_weight as birth_weight,
             
-            -- weaning/'spenen'-data is not available
-            '' as weaning_weight,
+            COALESCE(CAST(ac.weight_at8weeks AS text),'') as weight_at8weeks_kg,
 
             COALESCE(delivery_weight.weight,'') as delivery_weight,
             COALESCE(growth.average_growth_rate, '') as average_growth,
@@ -401,7 +560,20 @@ class EweCardReportService extends ReportServiceBase
         ORDER BY vd.date_of_birth ASC
 ";
 
-        return $this->conn->query($sql)->fetchAll();
+        $primaryOutput = $this->conn->query($sql)->fetchAll();
+
+        if (self::DUPLICATE_OFFSPRING_FOR_TESTING_COUNT <= 1) {
+            return $primaryOutput;
+        }
+
+        $offspring = [];
+        for ($i = 1; $i <= self::DUPLICATE_OFFSPRING_FOR_TESTING_COUNT; $i++) {
+            foreach ($primaryOutput as $item) {
+                $item['uln_country_code'] = $item['uln_country_code'].$i;
+                $offspring[] = $item;
+            }
+        }
+        return $offspring;
     }
 
 
@@ -556,81 +728,92 @@ INNER JOIN (
     }
 
 
-    /**
-     * @param Location $location
-     * @param string has to be from the enum OffspringMaturityType
-     * @return string
-     */
-    private static function queryMaturedCount(Location $location, string $offspringMaturityType): string
+    private static function queryMaturedCounts(string $animalIdsArrayString, string $ubn): string
     {
-        $maturityDaysLimit = 90;
-
-        $ubn = $location->getUbn();
         $activeRequestStates = SqlUtil::activeRequestStateTypesJoinedList();
-
-        switch ($offspringMaturityType) {
-            case OffspringMaturityType::OWN_OFFSPRING_MATURED_AS_OWN_MOTHER:
-                $selectAndGroupBy = 'a.parent_mother_id';
-                $mainFilterAnimal = 'mom';
-                $mainFilterHasSurrogate = ' AND a.surrogate_id ISNULL';
-                break;
-            case OffspringMaturityType::OWN_OFFSPRING_MATURED_AT_OTHER_SURROGATE:
-                $selectAndGroupBy = 'a.parent_mother_id';
-                $mainFilterAnimal = 'mom';
-                $mainFilterHasSurrogate = ' AND a.surrogate_id NOTNULL';
-                break;
-            case OffspringMaturityType::OTHER_OFFSPRING_MATURED_AS_SURROGATE:
-                $selectAndGroupBy = 'a.surrogate_id';
-                $mainFilterAnimal = 'surrogate';
-                $mainFilterHasSurrogate = ' AND a.surrogate_id NOTNULL';
-                break;
-            default:
-                throw new \Exception("Unsupported OffspringMaturityType for queryMaturedCount(), input: ".$offspringMaturityType);
-        }
+        $minAgeInDaysForMaturity = self::MIN_AGE_IN_DAYS_FOR_MATURITY;
 
         return "SELECT
-            $selectAndGroupBy as maturing_mother_id,
-            COUNT(*) as count
-        FROM animal a
-                 INNER JOIN animal mom ON mom.id = a.parent_mother_id
-                 LEFT JOIN animal surrogate ON surrogate.id = a.surrogate_id
-                 INNER JOIN (
-                    -- Depart before 90 days age
+                    offspring_count.ewe_id,
+                    matured_own_offspring + matured_for_others as total_matured,
+                    matured_for_others,
+                    matured_at_others,
+                    l.litter_count,
+                    CASE WHEN l.animal_mother_id NOTNULL THEN
+                        COALESCE(ROUND(((matured_own_offspring + matured_for_others)::float / l.litter_count)::numeric,1)::text, '-')
+                    ELSE
+                       '-'
+                    END as average_matured_per_year
+                
+                FROM (
                     SELECT
-                        animal_id
+                        a.id as ewe_id,
+                        COALESCE(own_offspring.matured_as_own_mother,0) as matured_own_offspring,
+                        COALESCE(other_offspring_matured_as_surrogate.count,0) as matured_for_others,
+                        COALESCE(own_offspring.matured_at_other_surrogate,0) as matured_at_others
                     FROM animal a
-                             INNER JOIN declare_depart depart on a.id = depart.animal_id
-                             INNER JOIN declare_base db on depart.id = db.id
-                    WHERE db.request_state IN ($activeRequestStates)
-                      AND db.ubn = '$ubn'
-                      AND a.date_of_birth NOTNULL
-                      AND (EXTRACT(DAYS FROM (depart_date - a.date_of_birth)) < $maturityDaysLimit)
-        
-        
-                    GROUP BY animal_id
-        
-                    UNION
-        
-                    -- At least on 90 days old, still alive and still on location
+                        LEFT JOIN (
+                            SELECT
+                                a.parent_mother_id as own_mother_id,
+                                COUNT(*) filter ( where a.surrogate_id ISNULL AND a.lambar = FALSE) as matured_as_own_mother,
+                                COUNT(*) filter ( where a.surrogate_id NOTNULL OR lambar) as matured_at_other_surrogate
+                            FROM animal a
+                            LEFT JOIN (
+                                SELECT
+                                    loss.animal_id,
+                                    MAX(loss.location_id) as location_id
+                                FROM declare_loss loss
+                                    INNER JOIN declare_base db ON db.id = loss.id
+                                WHERE db.request_state IN ($activeRequestStates)
+                                GROUP BY loss.animal_id
+                            )loss ON loss.animal_id = a.id
+                            WHERE
+                                  a.parent_mother_id IN $animalIdsArrayString
+                              AND (
+                                  a.date_of_death ISNULL OR
+                                   --did not die on own location before 90 days old
+                                  NOT (a.date_of_death::date - a.date_of_birth::date < $minAgeInDaysForMaturity
+                                  AND loss.location_id IN (SELECT id FROM location WHERE ubn = '$ubn'))
+                              )
+                              AND a.surrogate_id ISNULL
+                            GROUP BY a.parent_mother_id
+                        )own_offspring ON own_offspring.own_mother_id = a.id
+                
+                        LEFT JOIN (
+                            SELECT
+                                a.surrogate_id as maturing_mother_id,
+                                COUNT(*) as count
+                            FROM animal a
+                            LEFT JOIN (
+                                SELECT
+                                    loss.animal_id,
+                                    MAX(loss.location_id) as location_id
+                                FROM declare_loss loss
+                                    INNER JOIN declare_base db ON db.id = loss.id
+                                WHERE db.request_state IN ($activeRequestStates)
+                                GROUP BY loss.animal_id
+                            )loss ON loss.animal_id = a.id                            
+                            WHERE a.surrogate_id NOTNULL AND
+                                  a.surrogate_id IN $animalIdsArrayString
+                                  AND (
+                                      a.date_of_death ISNULL OR
+                                   --did not die on own location before 90 days old
+                                  NOT (a.date_of_death::date - a.date_of_birth::date < $minAgeInDaysForMaturity
+                                  AND loss.location_id IN (SELECT id FROM location WHERE ubn = '$ubn'))
+                                  )
+                            GROUP BY a.surrogate_id
+                        )other_offspring_matured_as_surrogate ON other_offspring_matured_as_surrogate.maturing_mother_id = a.id
+                    WHERE a.id IN $animalIdsArrayString
+                    )offspring_count
+                LEFT JOIN (
                     SELECT
-                        r.animal_id
-                    FROM animal_residence r
-                             INNER JOIN location l ON l.id = r.location_id
-                             INNER JOIN animal a on r.animal_id = a.id
-                    WHERE l.ubn = '$ubn'
-                      --Check residences that are related to the birth and do not end before 90 days
-                      AND EXTRACT(DAYS FROM (start_date - a.date_of_birth)) <= 1
-                      AND (
-                            end_date ISNULL OR $maturityDaysLimit <= EXTRACT(DAYS FROM (end_date - a.date_of_birth))
-                        )
-                      --Must be alive until at least 90 days
-                      AND (
-                            a.date_of_death ISNULL OR
-                            (a.date_of_death NOTNULl AND (EXTRACT(DAYS FROM (a.date_of_death - a.date_of_birth)) > $maturityDaysLimit))
-                        )
-                )matured_animal ON matured_animal.animal_id = a.id
-        WHERE ($mainFilterAnimal.ubn_of_birth = '$ubn') $mainFilterHasSurrogate
-        GROUP BY $selectAndGroupBy";
+                        animal_mother_id,
+                        -- litter_ordinals are only set on active litters
+                        MAX(litter_ordinal) as litter_count
+                    FROM litter l
+                    WHERE l.animal_mother_id IN $animalIdsArrayString
+                    GROUP BY l.animal_mother_id
+                )l ON l.animal_mother_id = offspring_count.ewe_id";
     }
 
 
@@ -644,54 +827,148 @@ INNER JOIN (
         $animalIdsArrayString = $this->getAnimalIdsArrayString($animalIds);
 
         $eweId = self::EWE_ID;
+        $medicationsLabel = 'medications';
+        $revokedState = RequestStateType::REVOKED;
 
         $sql = "SELECT
-            a.id as $eweId,
-            vd.dd_mm_yyyy_date_of_birth as treatment_date,
-            a.date_of_birth as treatment_date_iso_format,
-            'some category' as category,
-            'some sub category' as sub_category,
-            'Enting' as treatment,
-            '' as comment, --currently just an empty string filler
-            '' as costs --currently just an empty string filler
-        FROM animal a
-            INNER JOIN view_animal_livestock_overview_details vd ON vd.animal_id = a.id
-        WHERE a.location_id NOTNULL AND a.is_alive
-            AND a.type = 'Ewe'
-            AND a.id IN $animalIdsArrayString
-        UNION
-        SELECT
-            a.id as $eweId,
-            '31-03-2012' as treatment_date,
-            '2012-03-31' as treatment_date_iso_format,
-            'some other category' as category,
-            'some other sub category' as sub_category,
-            'Massage' as treatment,
-            '' as comment, --currently just an empty string filler
-            '' as costs --currently just an empty string filler
-        FROM animal a
-        INNER JOIN view_animal_livestock_overview_details vd ON vd.animal_id = a.id
-        WHERE a.location_id NOTNULL AND a.is_alive
-            AND a.type = 'Ewe'
-            AND a.id IN $animalIdsArrayString
-        UNION
-        SELECT
-            a.id as $eweId,
-            '01-05-2014' as treatment_date,
-            '2014-05-01' as treatment_date_iso_format,
-            'another category' as category,
-            'another sub category' as sub_category,
-            'Tandheelkundige behandeling' as treatment,
-            '' as comment, --currently just an empty string filler
-            '' as costs --currently just an empty string filler
-        FROM animal a
-            INNER JOIN view_animal_livestock_overview_details vd ON vd.animal_id = a.id
-        WHERE a.location_id NOTNULL AND a.is_alive
-            AND a.type = 'Ewe'
-            AND a.id IN $animalIdsArrayString
-        ORDER BY treatment_date_iso_format
-        ";
+                    ta.animal_id as $eweId,
+                    DATE(start_date) as start_date,
+                    DATE(end_date) as end_date,
+                    description,
+                    m.medications as $medicationsLabel
+                FROM treatment t
+                    INNER JOIN treatment_animal ta on t.id = ta.treatment_id
+                    -- We CANNOT assume each treatment always has at least one medication
+                    LEFT JOIN (
+                        SELECT
+                            s.treatment_id,
+                            array_agg(tm.name) as medications
+                        FROM medication_selection s
+                            INNER JOIN treatment_medication tm on s.treatment_medication_id = tm.id
+                            INNER JOIN treatment_animal ta on s.treatment_id = ta.treatment_id
+                        WHERE animal_id IN $animalIdsArrayString
+                        GROUP BY s.treatment_id
+                    )m ON m.treatment_id = t.id
+                WHERE t.id IN (
+                        SELECT
+                            treatment_id
+                        FROM treatment_animal
+                        WHERE animal_id IN $animalIdsArrayString
+                    ) AND status <> '$revokedState' ORDER BY start_date DESC";
 
-        return $this->conn->query($sql)->fetchAll();
+        $results = $this->conn->query($sql)->fetchAll();
+
+        $primaryOutput = array_map(function (array $result) use ($medicationsLabel) {
+            $startDate = (new \DateTime($result['start_date']))->format(DateUtil::DATE_USER_DISPLAY_FORMAT);
+            $endDate = (new \DateTime($result['end_date']))->format(DateUtil::DATE_USER_DISPLAY_FORMAT);
+            $medicationsListAsString = $result[$medicationsLabel];
+
+            $displayDate = $startDate === $endDate ? $startDate : $startDate . ' - ' .$endDate;
+
+            $result[ReportLabel::DATE] = $displayDate;
+            $result[$medicationsLabel] = [];
+
+            $medications = SqlUtil::getArrayFromPostgreSqlArrayString($medicationsListAsString, false);
+
+            if (empty($medications)) {
+                $result[$medicationsLabel][0] = [
+                    ReportLabel::NAME => '',
+                ];
+
+            } else {
+
+                foreach ($medications as $key => $medicationLabel) {
+                    $result[$medicationsLabel][$key] = [
+                        ReportLabel::NAME => $medicationLabel,
+                    ];
+                }
+            }
+
+            return $result;
+        }, $results);
+
+        if (self::DUPLICATE_TREATMENTS_FOR_TESTING_COUNT <= 1) {
+            return $primaryOutput;
+        }
+
+        $treatments = [];
+        for ($i = 1; $i <= self::DUPLICATE_TREATMENTS_FOR_TESTING_COUNT; $i++) {
+            foreach ($primaryOutput as $item) {
+
+                foreach ($item[$medicationsLabel] as $key => $medication) {
+                    $item[$medicationsLabel][$key][ReportLabel::NAME] = $item[$medicationsLabel][$key][ReportLabel::NAME].$i;
+                }
+                $treatments[] = $item;
+            }
+        }
+        return $treatments;
+    }
+
+
+    public static function arrivalQuery(string $animalIdsArrayString, string $ubn): string
+    {
+        $dateFormat = SqlUtil::TO_CHAR_DATE_FORMAT;
+        $activeRequestStates = SqlUtil::activeRequestStateTypesJoinedList();
+
+        return "SELECT
+                    animal_id,
+                    MAX(arrival_date) as arrival_date,
+                    to_char(MAX(arrival_date), '$dateFormat') as arrival_date_dd_mm_yyyy
+                FROM (
+                     SELECT
+                        animal_id,
+                        arrival_date
+                    FROM declare_arrival arrival
+                        INNER JOIN declare_base db on arrival.id = db.id
+                    WHERE request_state IN ($activeRequestStates)
+                        AND animal_id IN $animalIdsArrayString
+                        AND arrival.location_id IN (SELECT id FROM location WHERE ubn = '$ubn')
+                
+                    UNION
+                
+                    SELECT
+                        animal_id,
+                        import_date as arrival_date
+                    FROM declare_import import
+                        INNER JOIN declare_base db on import.id = db.id
+                    WHERE request_state IN ($activeRequestStates)
+                        AND animal_id IN $animalIdsArrayString
+                        AND import.location_id IN (SELECT id FROM location WHERE ubn = '$ubn')
+                )arrival
+                GROUP BY animal_id";
+    }
+
+
+    public static function departQuery(string $animalIdsArrayString, string $ubn): string
+    {
+        $dateFormat = SqlUtil::TO_CHAR_DATE_FORMAT;
+        $activeRequestStates = SqlUtil::activeRequestStateTypesJoinedList();
+
+        return "SELECT
+                    animal_id,
+                    MAX(depart_date) as depart_date,
+                    to_char(MAX(depart_date), '$dateFormat') as depart_date_dd_mm_yyyy
+                FROM (
+                     SELECT
+                        animal_id,
+                        depart_date
+                    FROM declare_depart depart
+                        INNER JOIN declare_base db on depart.id = db.id
+                    WHERE request_state IN ($activeRequestStates)
+                        AND animal_id IN $animalIdsArrayString
+                        AND depart.location_id IN (SELECT id FROM location WHERE ubn = '$ubn')
+                
+                    UNION
+                
+                    SELECT
+                        animal_id,
+                        export_date as depart_date
+                    FROM declare_export export
+                        INNER JOIN declare_base db on export.id = db.id
+                    WHERE request_state IN ($activeRequestStates)
+                        AND animal_id IN $animalIdsArrayString
+                        AND export.location_id IN (SELECT id FROM location WHERE ubn = '$ubn')
+                )depart
+                GROUP BY animal_id";
     }
 }

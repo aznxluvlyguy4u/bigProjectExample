@@ -195,7 +195,7 @@ class Treatment implements TreatmentInterface
      *     "TREATMENT_MIN"
      * })
      */
-    private $status = RequestStateType::CREATED;
+    private $status = RequestStateType::COMPLETED;
 
     /**
      * @var Person
@@ -529,6 +529,7 @@ class Treatment implements TreatmentInterface
 
     /**
      * @param Person $revokedBy
+     * @return Treatment
      */
     public function setRevokedBy(Person $revokedBy): self
     {

@@ -107,14 +107,14 @@ class MixBlupSetting
             ],
             MixBlupAnalysis::FERTILITY_1 => [
                 BreedValueTypeConstant::TOTAL_BORN,
-                BreedValueTypeConstant::BIRTH_INTERVAL,
             ],
             MixBlupAnalysis::FERTILITY_2 => [
                 BreedValueTypeConstant::STILL_BORN,
-                BreedValueTypeConstant::BIRTH_INTERVAL,
             ],
             MixBlupAnalysis::FERTILITY_3 => [
                 BreedValueTypeConstant::EARLY_FERTILITY,
+            ],
+            MixBlupAnalysis::FERTILITY_4 => [
                 BreedValueTypeConstant::BIRTH_INTERVAL,
             ],
             // WormResistance
