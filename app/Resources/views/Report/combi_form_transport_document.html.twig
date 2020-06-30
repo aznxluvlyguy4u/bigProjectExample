@@ -315,76 +315,27 @@
                                         <td>Datum laatste behandeling</td>
                                         <td>Datum einde wachttermijn</td>
                                     </tr>
-                                    <tr class="bigTableRow">
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
-                                    </tr>
-                                    <tr class="bigTableRow">
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
-                                    </tr>
-                                    <tr class="bigTableRow">
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
-                                    </tr>
-                                    <tr class="bigTableRow">
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
-                                    </tr>
-                                    <tr class="bigTableRow">
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
-                                    </tr>
-                                    <tr class="bigTableRow">
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
-                                    </tr>
-                                    <tr class="bigTableRow">
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
-                                    </tr>
-                                    <tr class="bigTableRow">
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
-                                    </tr>
-                                    <tr class="bigTableRow">
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
-                                    </tr>
-                                    <tr class="bigTableRow">
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
-                                    </tr>
+                                    {% if variables.first_animals_waiting_time_expired | length == 0 %}
+                                    {% for i in 0..10 %}
+                                        <tr class="bigTableRow">
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                        </tr>
+                                    {% endfor %}
+                                    {% else %}
+                                        {% for animal in variables.first_animals_waiting_time_expired %}
+                                        <tr class="bigTableRow">
+                                            <td>{{ animal.uln }}</td>
+                                            <td>{{ animal.reg_nl }}</td>
+                                            <td>{{ animal.medication_name }}</td>
+                                            <td>{{ animal.latest_treatment_date }}</td>
+                                            <td>{{ animal.waiting_term_end_date }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    {% endif %}
                                 </table>
                             </td>
                         </tr>
@@ -485,7 +436,36 @@
                     {% endfor %}
                 </tbody>
             </table>
-            <p style="float: right">Pagina {{ loop.index }}/{{ variables.total_animal_pages }}</p>
+            <p style="float: right">Dieren voor transport pagina {{ loop.index }}/{{ variables.total_animal_pages }}</p>
+            <div class="pageBreaker"></div>
+        {% endfor %}
+    {% endif %}
+    {% if variables.total_paginated_waiting_time_expired_animals > 0 %}
+        <div class="pageBreaker"></div>
+        {% for animals in variables.paginated_waiting_time_expired_animals %}
+            <table class="overview-table">
+                <thead>
+                <tr>
+                    <th>Oormerknummers</th>
+                    <th>Reg. NL</th>
+                    <th>Naam diermiddel</th>
+                    <th>Datum laatste behandeling</th>
+                    <th>Datum einde wachttermijn</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for animal in animals %}
+                    <tr>
+                        <td>{{ animal.uln }}</td>
+                        <td>{{ animal.reg_nl }}</td>
+                        <td>{{ animal.medication_name }}</td>
+                        <td>{{ animal.latest_treatment_date }}</td>
+                        <td>{{ animal.waiting_term_end_date }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            <p style="float: right">Diergeneesmiddelen (vraag #3) pagina {{ loop.index }}/{{ variables.total_waiting_time_expired_animal_pages }}</p>
             <div class="pageBreaker"></div>
         {% endfor %}
     {% endif %}
