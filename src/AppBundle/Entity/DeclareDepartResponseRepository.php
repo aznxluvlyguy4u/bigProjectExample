@@ -62,7 +62,8 @@ class DeclareDepartResponseRepository extends BaseRepository {
                 a.pedigree_number LIKE :query OR
                 LOWER(a.collar_color) LIKE LOWER(:query) OR
                 a.collar_number LIKE :query OR
-                CONCAT(LOWER(a.collar_color), a.collar_number) LIKE LOWER(:query)
+                CONCAT(LOWER(a.collar_color), a.collar_number) LIKE LOWER(:query) OR
+                CONCAT(LOWER(a.collar_color), ' ', a.collar_number) LIKE LOWER(:query)
             ) 
             AND request_state IN (
             '".RequestStateType::OPEN."', 
@@ -120,7 +121,7 @@ class DeclareDepartResponseRepository extends BaseRepository {
 
         return [
             'totalItems' => $totalItems,
-            'items' =>$statement->fetchAll()
+            'items' => $statement->fetchAll()
         ];
     }
 

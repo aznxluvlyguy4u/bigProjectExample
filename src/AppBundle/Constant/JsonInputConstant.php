@@ -50,6 +50,8 @@ class JsonInputConstant
     const COLLAR = 'collar';
     const COLOR = 'color';
     const NUMBER = 'number';
+    const COLLAR_COLOR = self::COLLAR.'_'.self::COLOR;
+    const COLLAR_NUMBER = self::COLLAR.'_'.self::NUMBER;
 
     const LITTERS = 'litters';
     const COUNTRY = 'country';
