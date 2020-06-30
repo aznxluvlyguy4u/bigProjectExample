@@ -929,14 +929,14 @@ FROM (
         FROM (
                 SELECT
                        e.animal_id,
-                       MAX(e.general_appearance) as general_appearance
+                       -- Assumption that only one DD/DF exists/matters
+                       MAX(CASE WHEN (kind IN ($ddOrDfExteriorKindsJoinedList)) THEN e.general_appearance ELSE 0 END) as general_appearance
                 FROM exterior e
                        INNER JOIN measurement m on e.id = m.id
-                WHERE m.is_active AND e.general_appearance NOTNULL AND 75 <= e.general_appearance
-                -- Only include DD/DF if no HH/HK exists
-                -- Assumption that only one DD/DF exists/matters
-                AND kind IN ($ddOrDfExteriorKindsJoinedList) AND kind NOT IN ($hhOrHkExteriorKindsJoinedList)
+                WHERE m.is_active AND e.general_appearance NOTNULL AND 75 <= e.general_appearance                
                 GROUP BY e.animal_id
+                -- Only include DD/DF if no HH/HK exists
+                HAVING SUM(CASE WHEN (kind IN ($hhOrHkExteriorKindsJoinedList)) THEN 1 ELSE 0 END) = 0
 
                 UNION
 
