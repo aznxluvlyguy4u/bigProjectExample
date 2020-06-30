@@ -31,6 +31,7 @@ class MixBlupAnalysis
     const FERTILITY_1 = 'Vruchtb1';
     const FERTILITY_2 = 'Vruchtb2';
     const FERTILITY_3 = 'Vruchtb3';
+    const FERTILITY_4 = 'Vruchtb4';
 
     //Worm Resistance
     const WORM_RESISTANCE = 'WormRes';
