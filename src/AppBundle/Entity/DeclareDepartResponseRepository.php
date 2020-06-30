@@ -56,14 +56,12 @@ class DeclareDepartResponseRepository extends BaseRepository {
         $filter = "
             WHERE ( 
                 dd.ubn_new_owner LIKE :query OR
-                LOWER(a.uln_country_code) LIKE LOWER(:query) OR
-                a.uln_number LIKE :query OR 
-                LOWER(a.pedigree_country_code) LIKE LOWER(:query) OR
-                a.pedigree_number LIKE :query OR
-                LOWER(a.collar_color) LIKE LOWER(:query) OR
-                a.collar_number LIKE :query OR
-                CONCAT(LOWER(a.collar_color), a.collar_number) LIKE LOWER(:query) OR
-                CONCAT(LOWER(a.collar_color), ' ', a.collar_number) LIKE LOWER(:query)
+                CONCAT(LOWER(a.collar_color),a.collar_number) LIKE LOWER(:query) OR
+                CONCAT(LOWER(a.collar_color), ' ', a.collar_number) LIKE LOWER(:query) OR
+                LOWER(CONCAT(a.uln_country_code, a.uln_number)) LIKE LOWER(:query) OR
+                LOWER(CONCAT(a.uln_country_code, ' ', a.uln_number)) LIKE LOWER(:query) OR
+                LOWER(CONCAT(a.pedigree_country_code, a.pedigree_number)) LIKE LOWER(:query) OR
+                LOWER(CONCAT(a.pedigree_country_code, ' ', a.pedigree_number)) LIKE LOWER(:query) 
             ) 
             AND request_state IN (
             '".RequestStateType::OPEN."', 
