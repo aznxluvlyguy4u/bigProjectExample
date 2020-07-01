@@ -893,7 +893,7 @@ abstract class Animal
     /**
      * @var ArrayCollection
      * @ORM\OrderBy({"description" = "ASC"})
-     * @ORM\OneToMany(targetEntity="AppBundle\Entity\Treatment", mappedBy="animal", cascade={"persist", "remove"}, fetch="LAZY")
+     * @ORM\ManyToMany(targetEntity="AppBundle\Entity\Treatment", mappedBy="animals", cascade={"persist", "remove"}, fetch="LAZY")
      * @JMS\Type("ArrayCollection<AppBundle\Entity\Treatment>")
      */
     protected $treatments;
