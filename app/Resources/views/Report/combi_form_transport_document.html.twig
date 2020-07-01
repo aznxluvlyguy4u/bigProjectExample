@@ -288,22 +288,22 @@
                             <td class="firstTreatmentCol">
                                 1. Bevinden de dieren zich nog in de wettelijke wachttermijn van toegediende diergeneesmiddelen?
                             </td>
-                            <td>Nee/Ja *</td>
+                            <td>{{ variables.waitingTimeAnswer }} *</td>
                         </tr>
                         <tr>
                             <td class="firstTreatmentCol">
                                 2. Zijn de dieren in de 35 dagen voorafgaande aan de slacht ziek geweest en/of behandeld geweest met
                                 diergeneesmiddelen? Zo ja, wat was de diagnose en/of de reden van behandeling?
                             </td>
-                            <td>Nee/Ja *</td>
+                            <td>{{ variables.sickTimeAnswer }} *</td>
                         </tr>
                         </tr>
                         <tr>
                             <td class="firstTreatmentCol">
-                                Zijn de dieren behandeld met diergeneesmiddelen waarvan de wachttermijn voor vlees in de 7 dagen
+                                3. Zijn de dieren behandeld met diergeneesmiddelen waarvan de wachttermijn voor vlees in de 7 dagen
                                 voorafgaande aan de slacht is verlopen? Zo ja, informatie invullen in onderstaande tabel:
                             </td>
-                            <td>Nee/Ja *</td>
+                            <td>{{ variables.waitingTimeExpiredAnswer }} *</td>
                         </tr>
                         <tr>
                             <td colspan="2">
@@ -315,8 +315,71 @@
                                         <td>Datum laatste behandeling</td>
                                         <td>Datum einde wachttermijn</td>
                                     </tr>
-                                    <tr>
-                                        <td>Vul dit in en toon dit als bovenstaande antwoord ja is</td>
+                                    <tr class="bigTableRow">
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                    </tr>
+                                    <tr class="bigTableRow">
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                    </tr>
+                                    <tr class="bigTableRow">
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                    </tr>
+                                    <tr class="bigTableRow">
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                    </tr>
+                                    <tr class="bigTableRow">
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                    </tr>
+                                    <tr class="bigTableRow">
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                    </tr>
+                                    <tr class="bigTableRow">
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                    </tr>
+                                    <tr class="bigTableRow">
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                    </tr>
+                                    <tr class="bigTableRow">
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                    </tr>
+                                    <tr class="bigTableRow">
+                                        <td></td>
                                         <td></td>
                                         <td></td>
                                         <td></td>
@@ -551,6 +614,10 @@
             text-align: left;
             padding: 1mm 1mm 1mm 1mm;
             border: 1px solid black;
+        }
+
+        .bigTableRow {
+            height: 25px;
         }
     </style>
 {% endblock %}
