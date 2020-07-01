@@ -38,12 +38,28 @@ class MateOutput
         $nullReplacementText = '';
 
         if($mate->getStudEwe() instanceof Ewe) {
-            $eweUlnCountryCode = $mate->getStudEwe()->getUlnCountryCode();
-            $eweUlnNumber = $mate->getStudEwe()->getUlnNumber();
+            /** @var Ewe $studEwe */
+            $studEwe = $mate->getStudEwe();
+            $eweUlnCountryCode = $studEwe->getUlnCountryCode();
+            $eweUlnNumber = $studEwe->getUlnNumber();
+            $eweCollarColor = $studEwe->getCollarColor();
+            $eweCollarNumber = $studEwe->getCollarNumber();
         } else {
             $eweUlnCountryCode = $nullReplacementText;
             $eweUlnNumber = $nullReplacementText;
+            $eweCollarColor = $nullReplacementText;
+            $eweCollarNumber = $nullReplacementText;
         }
+
+       if ($mate->getStudRam() instanceof Ram) {
+           /** @var Ram $studRam */
+           $studRam = $mate->getStudRam();
+           $ramCollarColor = $studRam->getCollarColor();
+           $ramCollarNumber = $studRam->getCollarNumber();
+       } else {
+           $ramCollarColor = $nullReplacementText;
+           $ramCollarNumber = $nullReplacementText;
+       }
 
         $res = [
             JsonInputConstant::MESSAGE_ID => $mate->getMessageId(),
@@ -54,11 +70,15 @@ class MateOutput
             JsonInputConstant::PMSG => $mate->getPmsg(),
             JsonInputConstant::RAM => [
                 JsonInputConstant::ULN_COUNTRY_CODE => $mate->getRamUlnCountryCode(),
-                JsonInputConstant::ULN_NUMBER => $mate->getRamUlnNumber()
+                JsonInputConstant::ULN_NUMBER => $mate->getRamUlnNumber(),
+                JsonInputConstant::COLLAR_COLOR => $ramCollarColor,
+                JsonInputConstant::COLLAR_NUMBER => $ramCollarNumber
             ],
             JsonInputConstant::EWE => [
                 JsonInputConstant::ULN_COUNTRY_CODE => $eweUlnCountryCode,
-                JsonInputConstant::ULN_NUMBER => $eweUlnNumber
+                JsonInputConstant::ULN_NUMBER => $eweUlnNumber,
+                JsonInputConstant::COLLAR_COLOR => $eweCollarColor,
+                JsonInputConstant::COLLAR_NUMBER => $eweCollarNumber
             ],
             JsonInputConstant::RELATION_NUMBER_KEEPER => $mate->getRelationNumberKeeper(),
             JsonInputConstant::UBN => $mate->getUbn(),
