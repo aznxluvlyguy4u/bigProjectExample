@@ -21,56 +21,48 @@ use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 class CombiFormTransportDocumentService extends ReportServiceBase
 {
 
-    const TITLE = 'combi_formulier_vki__transport_document';
-    const FOLDER_NAME = self::TITLE;
+    const TITLE = 'combi_form_vki_transport_document';
     const FILENAME = self::TITLE;
     const TWIG_FILE = 'Report/combi_form_transport_document.html.twig';
     const MAX_AGE = 30;
+    const OTHER_ANIMALS_PER_PAGE = 40;
+    const ANIMAL_LIMIT = 20;
 
     /**
      * @inheritDoc
      * @throws Exception
      */
-    function getReport(Request $request)
+    function getReport($transportDate, $exportUBN, ?Location $location = null)
     {
-        $content = RequestUtil::getContentAsArrayCollection($request);
 
-        /** @var Location $location */
-        $location = $this->getSelectedLocation($request);
-
-        $PDFData = $this->getPDFData($content->toArray(), $location);
+        $PDFData = $this->getPDFData($transportDate, $exportUBN, $location);
+        $this->filename = $this->translate(self::FILENAME);
 
         if ($PDFData instanceof JsonResponse) {
             return $PDFData;
         }
 
-        $PDFData[ReportLabel::IMAGES_DIRECTORY] = $this->getImagesDirectory();
-        $PDFData['transport_date'] = $content['transport_date'];
-
-        return $this->getPdfReportBase(self::TWIG_FILE, $PDFData);
-    }
-
-    private function setFileNameValues()
-    {
-        $this->filename = $this->translate(self::FILENAME);
-        $this->extension = FileType::PDF;
+        return $this->getPdfReportBase(self::TWIG_FILE, $PDFData, false);
     }
 
     /**
-     * @param array $requestContent
+     * @param $transportDate
+     * @param $exportUbn
      * @param Location|null $location
      * @return JsonResponse|array
      * @throws Exception
      */
-    private function getPDFData(array $requestContent, ?Location $location)
+    private function getPDFData($transportDate, $exportUbn, ?Location $location)
     {
         /** @var Location $exportLocation */
         $exportLocation = $this->em->getRepository(Location::class)
-            ->findOneBy(['ubn' => $requestContent['export_ubn']]);
+            ->findOneBy(['ubn' => $exportUbn]);
 
         $result = [
             'animals' => [],
-            'can_be_exported' => false
+            'can_be_exported' => false,
+            'transport_date' => $transportDate,
+            ReportLabel::IMAGES_DIRECTORY => $this->getImagesDirectory()
         ];
 
         /** @var Animal $animal */
@@ -84,7 +76,7 @@ class CombiFormTransportDocumentService extends ReportServiceBase
             }
 
             if (
-                $declareDepart->getDepartDate()->format('d-m-Y') !== $requestContent['transport_date'] ||
+                $declareDepart->getDepartDate()->format('d-m-Y') !== $transportDate ||
                 $declareDepart->getRequestState() === RequestStateType::FINISHED ||
                 $declareDepart->getRequestState() === RequestStateType::FINISHED_WITH_WARNING ||
                 $declareDepart->getRequestState() === RequestStateType::IMPORTED ||
@@ -105,8 +97,43 @@ class CombiFormTransportDocumentService extends ReportServiceBase
             $result['animals'][] = $animal;
         }
 
-        if (count($result['animals']) === 0) {
+        $totalAnimalCount = count($result['animals']);
+
+        if ($totalAnimalCount === 0) {
             throw new BadRequestHttpException();
+        }
+
+        if ($totalAnimalCount >= self::ANIMAL_LIMIT) {
+            $firstAnimals = array_slice($result['animals'], 0, self::ANIMAL_LIMIT);
+
+            if ($totalAnimalCount === self::ANIMAL_LIMIT) {
+                $totalAnimalCount = $totalAnimalCount+1;
+            }
+
+            $otherAnimals = array_slice($result['animals'], self::ANIMAL_LIMIT, $totalAnimalCount-self::ANIMAL_LIMIT);
+            $result['total_other_animals'] = count($otherAnimals);
+            $result['total_animal_pages'] = ceil(count($otherAnimals)/self::OTHER_ANIMALS_PER_PAGE);
+
+            $result['paginated_animals'] = array_chunk($otherAnimals, self::OTHER_ANIMALS_PER_PAGE, true);
+
+            $chunkedAnimals = array_chunk($firstAnimals, self::ANIMAL_LIMIT/2, true);
+        } else {
+            $result['total_other_animals'] = 0;
+
+            if ($totalAnimalCount === 1) {
+                $size = $totalAnimalCount;
+            } else {
+                $size = $totalAnimalCount/2;
+            }
+
+            $chunkedAnimals = array_chunk($result['animals'], $size, true);
+        }
+
+        $result['animals_left'] = $chunkedAnimals[0];
+        if (count($chunkedAnimals) > 1) {
+            $result['animals_right'] = $chunkedAnimals[1];
+        } else {
+            $result['animals_right'] = [];
         }
 
         $result['location'] = $location;

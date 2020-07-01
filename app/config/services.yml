@@ -733,6 +733,7 @@ services:
           - '@AppBundle\Service\Report\AnimalFeaturesPerYearOfBirthReportService'
           - '@report.animals.treatments'
           - '@AppBundle\Service\InbreedingCoefficient\InbreedingCoefficientReportUpdaterService'
+          - '@AppBundle\Service\Report\CombiFormTransportDocumentService'
           - '%environment%'
 
 
@@ -758,6 +759,7 @@ services:
           - '@app.report.livestock'
           - '@AppBundle\Service\Report\BirthListReportService'
           - '@AppBundle\Service\Report\MembersAndUsersOverviewReportService'
+          - '@AppBundle\Service\Report\CombiFormTransportDocumentService'
           - '@doctrine.orm.entity_manager'
           - '@logger'
           - '@app.serializer.base'
