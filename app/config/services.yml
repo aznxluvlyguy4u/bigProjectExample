@@ -583,6 +583,9 @@ services:
         parent: app.report.base
         class: AppBundle\Service\Report\VwaUbnsOverviewReportService
 
+    AppBundle\Service\Report\CombiFormTransportDocumentService:
+      parent: app.report.base
+
     AppBundle\Report\PedigreeCertificate:
         arguments:
             - '@doctrine.orm.entity_manager'

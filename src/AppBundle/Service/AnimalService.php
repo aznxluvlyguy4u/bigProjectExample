@@ -631,9 +631,12 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
 
         $isEwesWithLastMate = false;
         $isLivestockWithLastWeight = false;
+        $isLiveStockExport = false;
+
         switch ($type) {
             case LiveStockQueryType::EWES_WITH_LAST_MATE; $isEwesWithLastMate = true; break;
             case LiveStockQueryType::LAST_WEIGHT; $isLivestockWithLastWeight = true; break;
+            case LiveStockQueryType::EXPORT; $isLiveStockExport = true; break;
             default; break;
         }
 
@@ -652,7 +655,12 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
             $jmsGroups = AnimalRepository::getLivestockWithLastWeightJmsGroups();
             $jmsGroups[] = JmsGroup::IS_NOT_HISTORIC_ANIMAL;
 
-        } else {
+        } else if ($isLiveStockExport) {
+            $livestock = $this->getManager()->getRepository(Animal::class)
+                ->getExportAnimalsByExportDate($request, $location->getId());
+            $jmsGroups = [JmsGroup::LIVESTOCK, JmsGroup::IS_NOT_HISTORIC_ANIMAL];
+        }
+        else {
             $livestock = $this->getManager()->getRepository(Animal::class)
                 ->getLiveStock($location, $this->getCacheService(), $this->getBaseSerializer(), true);
             $jmsGroups = [JmsGroup::LIVESTOCK, JmsGroup::IS_NOT_HISTORIC_ANIMAL];
@@ -669,6 +677,15 @@ class AnimalService extends DeclareControllerServiceBase implements AnimalAPICon
         return ResultUtil::successResult($serializedLivestockAnimals);
     }
 
+    /**
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function getLocationsWithExportsOrDeparts(Request $request)
+    {
+        return ResultUtil::successResult($this->getManager()->getRepository(Location::class)
+        ->getLocationWithExportsOrDeparts($request));
+    }
 
     /**
      * @param Animal[] $animals

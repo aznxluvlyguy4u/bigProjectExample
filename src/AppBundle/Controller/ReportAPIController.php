@@ -3,6 +3,7 @@
 namespace AppBundle\Controller;
 
 use AppBundle\Component\HttpFoundation\JsonResponse;
+use AppBundle\Service\Report\CombiFormTransportDocumentService;
 use AppBundle\Service\ReportService;
 use AppBundle\Util\ResultUtil;
 use Nelmio\ApiDocBundle\Annotation\ApiDoc;
@@ -1040,6 +1041,34 @@ class ReportAPIController extends APIController {
         return $this->get('app.report.vwa.ubns_overview')->getUbnsOverviewReport($request);
     }
 
+    /**
+     * Generate Combiform and transport document as PDF.
+     *
+     * ### POST EXAMPLE ###
+     *
+     *
+     * @ApiDoc(
+     *   section = "Reports",
+     *   headers={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "required"=true,
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Generate Combiform and transport document as PDF."
+     * )
+     * @param Request $request the request object
+     * @return JsonResponse
+     * @Route("/combi-form-transport-document")
+     * @Method("POST")
+     */
+    public function getCombiFormAndTransportDocument(Request $request)
+    {
+        return $this->get(CombiFormTransportDocumentService::class)->getReport($request);
+    }
 
     /**
      * Generate HTML output of report for easy testing in browser.
