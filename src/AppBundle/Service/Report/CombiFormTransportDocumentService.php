@@ -116,6 +116,18 @@ class CombiFormTransportDocumentService extends ReportServiceBase
                 }
             }
 
+            $iterator = $animal->getTreatments()->getIterator();
+
+            $iterator->uasort(function($first, $second) {
+                return $first->getEndDate() > $second->getEndDate();
+            });
+
+            $lastTreatmentEndDate = '';
+
+            if (isset($iterator->getArrayCopy()[0])) {
+                $lastTreatmentEndDate = $iterator->getArrayCopy()[0]->getEndDate()->format('d-m-Y');
+            }
+
             /** @var Treatment $treatment */
             foreach ($animal->getTreatments() as $treatment) {
                 if ($treatment->getStartDate() >= $transportDateSickTime && $treatment->getEndDate() <= $transportDateSickTime) {
@@ -131,13 +143,13 @@ class CombiFormTransportDocumentService extends ReportServiceBase
 
                     $endDate->modify('+'.$treatmentMedication->getWaitingDays().' days');
 
-                    if ($endDate >= $transportDateWaitingTimeExpired) {
+                    if ($endDate >= $transportDateWaitingTimeExpired && $treatment->getEndDate()->format('d-m-Y') == $lastTreatmentEndDate) {
                         $this->result['waitingTimeExpiredAnswer'] = 'Ja';
                         $this->result['waiting_time_expired_animals'][] = [
-                            'uln' => $animal->getUln(),
-                            'reg_nl' => $treatmentMedication->getRegNl(),
-                            'medication_name' => $treatmentMedication->getName(),
-                            'latest_treatment_date' => $treatment->getEndDate()->format('d-m-Y'),
+                            'uln'                   => $animal->getUln(),
+                            'reg_nl'                => $treatmentMedication->getRegNl(),
+                            'medication_name'       => $treatmentMedication->getName(),
+                            'latest_treatment_date' => $lastTreatmentEndDate,
                             'waiting_term_end_date' => $medicationSelection->getWaitingTimeEnd()->format('d-m-Y')
                         ];
                     }
