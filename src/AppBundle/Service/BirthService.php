@@ -180,6 +180,8 @@ class BirthService extends DeclareControllerServiceBase implements BirthAPIContr
                     mother.uln_number AS mother_uln_number,
                     mother.collar_color AS mother_collar_color,
                     mother.collar_number AS mother_collar_number,
+                    father.collar_color AS father_collar_color,
+                    father.collar_number AS father_collar_number,
                     father.uln_country_code AS father_uln_country_code,
                     father.uln_number AS father_uln_number
                 FROM declare_nsfo_base

@@ -124,7 +124,7 @@ class EweCardReportService extends ReportServiceBase
 
     public function getAnimalData(Location $location) {
 
-        $animalAndProductionValues = $this->getAnimalAndProductionData($this->animalIds, $location);
+        $animalAndProductionValues = $this->getAnimalAndProductionData($this->animalIds, $location->getUbn());
 
         $offspringData = $this->getOffspringData($this->animalIds, $location);
 
@@ -287,15 +287,16 @@ class EweCardReportService extends ReportServiceBase
 
     /**
      * @param array $animalIds
-     * @param Location $location
+     * @param string $ubn
      * @return array
      * @throws \Doctrine\DBAL\DBALException
      */
-    private function getAnimalAndProductionData(array $animalIds, Location $location): array
+    private function getAnimalAndProductionData(array $animalIds, string $ubn): array
     {
         $animalIdsArrayString = $this->getAnimalIdsArrayString($animalIds);
         $genderTranslationValues = SqlUtil::genderTranslationValues();
         $isoCountryAlphaTwoToNumericMapping = SqlUtil::isoCountryAlphaTwoToNumericMapping();
+        $blindnessFactorTranslationValues = SqlUtil::blindnessFactorTranslationValues();
 
         $mainSectionValue = SectionUtil::MAIN_SECTION;
         $complementarySectionValue = SectionUtil::COMPLEMENTARY_SECTION;
@@ -351,11 +352,16 @@ class EweCardReportService extends ReportServiceBase
                     END
             ) as opfok,
             COALESCE(vl.owner_full_name, '') as breeder_name,
-            a.blindness_factor,
+            blindness_factor.dutch as blindness_factor,
             a.scrapie_genotype,
             vd.formatted_predicate,
             c.gave_birth_as_one_year_old as has_given_birth_as_one_year_old,
 
+            arrival.arrival_date_dd_mm_yyyy as arrival_date,       
+            CASE WHEN arrival.arrival_date < depart.depart_date THEN
+                depart.depart_date_dd_mm_yyyy
+            END depart_date,
+       
             litters_kpi.litter_index as litter_index,
             litters_kpi.average_twt as average_twt,
 
@@ -369,7 +375,7 @@ class EweCardReportService extends ReportServiceBase
             grouped_weights.average_birth_weight as average_birth_weight,
        
             CASE WHEN query_matured_counts.litter_count NOTNULL THEN
-                CAST(ROUND((grouped_litter_data_by_litter.total_born_alive / query_matured_counts.litter_count)::numeric,1) AS TEXT)
+                CAST(ROUND((grouped_litter_data_by_litter.total_born_alive::float / query_matured_counts.litter_count)::numeric,1) AS TEXT)
             ELSE
                '-' 
             END as average_alive_per_year,
@@ -408,6 +414,7 @@ class EweCardReportService extends ReportServiceBase
                  LEFT JOIN animal mom ON mom.id = a.parent_mother_id
                  LEFT JOIN animal dad ON dad.id = a.parent_father_id
                  LEFT JOIN (VALUES $genderTranslationValues) AS gender(english, dutch) ON a.type = gender.english
+                 LEFT JOIN (VALUES $blindnessFactorTranslationValues) AS blindness_factor(english, dutch) ON a.blindness_factor = blindness_factor.english
                  LEFT JOIN (VALUES $isoCountryAlphaTwoToNumericMapping) AS iso_country(alpha2, numeric) ON a.uln_country_code = iso_country.alpha2
                  LEFT JOIN view_location_details vl on a.location_of_birth_id = vl.location_id
                  LEFT JOIN (
@@ -436,10 +443,17 @@ class EweCardReportService extends ReportServiceBase
                          ".$this->get8WeeksGroupedData($animalIdsArrayString)."
                 )grouped_8_weeks_data ON grouped_8_weeks_data.mom_id = a.id
                 LEFT JOIN (
-                    ".self::queryMaturedCounts($animalIdsArrayString, $location)."
+                    ".self::queryMaturedCounts($animalIdsArrayString, $ubn)."
                 )query_matured_counts ON query_matured_counts.ewe_id = a.id
                 
-        WHERE a.id IN ($animalIdsArrayString) AND a.type = '".AnimalObjectType::Ewe."'";
+                LEFT JOIN (
+                    ".self::departQuery($animalIdsArrayString, $ubn)."
+                )depart ON depart.animal_id = a.id
+                LEFT JOIN (
+                    ".self::arrivalQuery($animalIdsArrayString, $ubn)."
+                )arrival ON arrival.animal_id = a.id
+                
+        WHERE a.id IN $animalIdsArrayString AND a.type = '".AnimalObjectType::Ewe."'";
 
         return $this->conn->query($sql)->fetchAll();
     }
@@ -466,7 +480,7 @@ class EweCardReportService extends ReportServiceBase
             a.parent_mother_id as mom_id,
             CASE WHEN AVG(ac.age_weight_at8weeks) NOTNULL AND AVG(ac.weight_at8weeks - ac.birth_weight) NOTNULL THEN
                 ROUND((
-                    AVG(ac.weight_at8weeks - ac.birth_weight) * 1000 /
+                    (AVG(ac.weight_at8weeks - ac.birth_weight) * 1000)::float /
                     AVG(ac.age_weight_at8weeks)
                 )::numeric,0)::text
             ELSE
@@ -481,7 +495,7 @@ class EweCardReportService extends ReportServiceBase
                 AVG(CASE WHEN a.surrogate_id ISNULL AND a.lambar = FALSE THEN ac.age_weight_at8weeks END) NOTNULL
             THEN
                 ROUND((
-                    AVG(CASE WHEN a.surrogate_id ISNULL AND a.lambar = FALSE THEN (ac.weight_at8weeks - ac.birth_weight) * 1000 END) /
+                    (AVG(CASE WHEN a.surrogate_id ISNULL AND a.lambar = FALSE THEN (ac.weight_at8weeks - ac.birth_weight) * 1000 END))::float /
                     AVG(CASE WHEN a.surrogate_id ISNULL AND a.lambar = FALSE THEN ac.age_weight_at8weeks END)
                 )::numeric,0)::text
             ELSE
@@ -714,10 +728,9 @@ INNER JOIN (
     }
 
 
-    private static function queryMaturedCounts(string $animalIdsArrayString, Location $location): string
+    private static function queryMaturedCounts(string $animalIdsArrayString, string $ubn): string
     {
         $activeRequestStates = SqlUtil::activeRequestStateTypesJoinedList();
-        $ubn = $location->getUbn();
         $minAgeInDaysForMaturity = self::MIN_AGE_IN_DAYS_FOR_MATURITY;
 
         return "SELECT
@@ -727,7 +740,7 @@ INNER JOIN (
                     matured_at_others,
                     l.litter_count,
                     CASE WHEN l.animal_mother_id NOTNULL THEN
-                        COALESCE(ROUND(((matured_own_offspring + matured_for_others) / l.litter_count)::numeric,1)::text, '-')
+                        COALESCE(ROUND(((matured_own_offspring + matured_for_others)::float / l.litter_count)::numeric,1)::text, '-')
                     ELSE
                        '-'
                     END as average_matured_per_year
@@ -742,8 +755,8 @@ INNER JOIN (
                         LEFT JOIN (
                             SELECT
                                 a.parent_mother_id as own_mother_id,
-                                COUNT(*) filter ( where a.surrogate_id ISNULL) as matured_as_own_mother,
-                                COUNT(*) filter ( where a.surrogate_id NOTNULL) as matured_at_other_surrogate
+                                COUNT(*) filter ( where a.surrogate_id ISNULL AND a.lambar = FALSE) as matured_as_own_mother,
+                                COUNT(*) filter ( where a.surrogate_id NOTNULL OR lambar) as matured_at_other_surrogate
                             FROM animal a
                             LEFT JOIN (
                                 SELECT
@@ -755,7 +768,7 @@ INNER JOIN (
                                 GROUP BY loss.animal_id
                             )loss ON loss.animal_id = a.id
                             WHERE
-                                  a.parent_mother_id IN ($animalIdsArrayString)
+                                  a.parent_mother_id IN $animalIdsArrayString
                               AND (
                                   a.date_of_death ISNULL OR
                                    --did not die on own location before 90 days old
@@ -781,7 +794,7 @@ INNER JOIN (
                                 GROUP BY loss.animal_id
                             )loss ON loss.animal_id = a.id                            
                             WHERE a.surrogate_id NOTNULL AND
-                                  a.surrogate_id IN ($animalIdsArrayString)
+                                  a.surrogate_id IN $animalIdsArrayString
                                   AND (
                                       a.date_of_death ISNULL OR
                                    --did not die on own location before 90 days old
@@ -790,7 +803,7 @@ INNER JOIN (
                                   )
                             GROUP BY a.surrogate_id
                         )other_offspring_matured_as_surrogate ON other_offspring_matured_as_surrogate.maturing_mother_id = a.id
-                    WHERE a.id IN ($animalIdsArrayString)
+                    WHERE a.id IN $animalIdsArrayString
                     )offspring_count
                 LEFT JOIN (
                     SELECT
@@ -798,7 +811,7 @@ INNER JOIN (
                         -- litter_ordinals are only set on active litters
                         MAX(litter_ordinal) as litter_count
                     FROM litter l
-                    WHERE l.animal_mother_id IN ($animalIdsArrayString)
+                    WHERE l.animal_mother_id IN $animalIdsArrayString
                     GROUP BY l.animal_mother_id
                 )l ON l.animal_mother_id = offspring_count.ewe_id";
     }
@@ -889,5 +902,73 @@ INNER JOIN (
             }
         }
         return $treatments;
+    }
+
+
+    public static function arrivalQuery(string $animalIdsArrayString, string $ubn): string
+    {
+        $dateFormat = SqlUtil::TO_CHAR_DATE_FORMAT;
+        $activeRequestStates = SqlUtil::activeRequestStateTypesJoinedList();
+
+        return "SELECT
+                    animal_id,
+                    MAX(arrival_date) as arrival_date,
+                    to_char(MAX(arrival_date), '$dateFormat') as arrival_date_dd_mm_yyyy
+                FROM (
+                     SELECT
+                        animal_id,
+                        arrival_date
+                    FROM declare_arrival arrival
+                        INNER JOIN declare_base db on arrival.id = db.id
+                    WHERE request_state IN ($activeRequestStates)
+                        AND animal_id IN $animalIdsArrayString
+                        AND arrival.location_id IN (SELECT id FROM location WHERE ubn = '$ubn')
+                
+                    UNION
+                
+                    SELECT
+                        animal_id,
+                        import_date as arrival_date
+                    FROM declare_import import
+                        INNER JOIN declare_base db on import.id = db.id
+                    WHERE request_state IN ($activeRequestStates)
+                        AND animal_id IN $animalIdsArrayString
+                        AND import.location_id IN (SELECT id FROM location WHERE ubn = '$ubn')
+                )arrival
+                GROUP BY animal_id";
+    }
+
+
+    public static function departQuery(string $animalIdsArrayString, string $ubn): string
+    {
+        $dateFormat = SqlUtil::TO_CHAR_DATE_FORMAT;
+        $activeRequestStates = SqlUtil::activeRequestStateTypesJoinedList();
+
+        return "SELECT
+                    animal_id,
+                    MAX(depart_date) as depart_date,
+                    to_char(MAX(depart_date), '$dateFormat') as depart_date_dd_mm_yyyy
+                FROM (
+                     SELECT
+                        animal_id,
+                        depart_date
+                    FROM declare_depart depart
+                        INNER JOIN declare_base db on depart.id = db.id
+                    WHERE request_state IN ($activeRequestStates)
+                        AND animal_id IN $animalIdsArrayString
+                        AND depart.location_id IN (SELECT id FROM location WHERE ubn = '$ubn')
+                
+                    UNION
+                
+                    SELECT
+                        animal_id,
+                        export_date as depart_date
+                    FROM declare_export export
+                        INNER JOIN declare_base db on export.id = db.id
+                    WHERE request_state IN ($activeRequestStates)
+                        AND animal_id IN $animalIdsArrayString
+                        AND export.location_id IN (SELECT id FROM location WHERE ubn = '$ubn')
+                )depart
+                GROUP BY animal_id";
     }
 }

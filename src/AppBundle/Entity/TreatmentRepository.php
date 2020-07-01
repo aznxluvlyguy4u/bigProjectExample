@@ -25,15 +25,35 @@ class TreatmentRepository extends BaseRepository {
     {
         $searchQuery = "%".$searchQuery."%";
 
+        $filter = "
+            WHERE l.ubn = :ubn
+            AND (
+                LOWER(t.description) LIKE LOWER(:query) OR 
+                a.animal_order_number LIKE LOWER(:query) OR 
+                LOWER(tm.name) LIKE LOWER(:query) OR 
+                a.collar_number LIKE LOWER(:query) OR 
+                LOWER(a.collar_color) LIKE LOWER(:query) OR 
+                CONCAT(LOWER(a.collar_color), a.collar_number) LIKE LOWER(:query) OR
+                CONCAT(LOWER(a.collar_color), ' ', a.collar_number) LIKE LOWER(:query)
+            )
+        ";
+
+        $joins = "
+            INNER JOIN location l ON t.location_id = l.id
+            INNER JOIN treatment_animal ta ON ta.treatment_id = t.id
+            INNER JOIN animal a ON a.id = ta.animal_id
+            LEFT JOIN medication_selection ms ON ms.treatment_id = t.id
+            LEFT JOIN treatment_medication tm ON tm.id = ms.treatment_medication_id
+        ";
+
         $countSql = "
             SELECT COUNT(t.id) AS total FROM treatment t
-            INNER JOIN location l ON t.location_id = l.id 
-            WHERE l.ubn = :ubn
-            AND t.description LIKE :query
+            ".$joins."
+            ".$filter."
             GROUP BY l.id
         ";
 
-        $sql = '
+        $sql = "
             SELECT 
                 t.id as treatment_id,
                 t.create_date,
@@ -42,15 +62,16 @@ class TreatmentRepository extends BaseRepository {
                 t.end_date,
                 t.revoke_date,
                 t.type,
-                t.status
+                t.status,
+                a.collar_color,
+                a.collar_number
             FROM treatment t
-            INNER JOIN location l ON t.location_id = l.id
-            WHERE l.ubn = :ubn
-            AND t.description LIKE :query
+            ".$joins."
+            ".$filter."
             ORDER BY t.create_date DESC
-            OFFSET '.$perPage.' * ('.$page.' - 1)
-            FETCH NEXT '.$perPage.' ROWS ONLY
-        ';
+            OFFSET ".$perPage." * (".$page." - 1)
+            FETCH NEXT ".$perPage." ROWS ONLY
+        ";
 
         $countStatement = $this->getManager()->getConnection()->prepare($countSql);
         $countStatement->bindParam('ubn', $ubn);

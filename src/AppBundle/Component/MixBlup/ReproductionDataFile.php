@@ -37,7 +37,7 @@ class ReproductionDataFile extends MixBlupDataFileBase implements MixBlupDataFil
     static function generateDataFile(Connection $conn)
     {
         $dynamicColumnWidths = self::dynamicColumnWidths($conn);
-        
+
         $records = [];
         foreach (self::getDataBySql($conn) as $data)
         {
@@ -77,7 +77,7 @@ class ReproductionDataFile extends MixBlupDataFileBase implements MixBlupDataFil
 
             $records[] = $record;
         }
-        
+
         return $records;
     }
 
@@ -117,7 +117,7 @@ class ReproductionDataFile extends MixBlupDataFileBase implements MixBlupDataFil
             ORDER BY '.self::RECORD_TYPE_ORDINATION;
         return $conn->query($sql)->fetchAll();
     }
-    
+
 
     /**
      * @return string
@@ -170,8 +170,8 @@ class ReproductionDataFile extends MixBlupDataFileBase implements MixBlupDataFil
                   AND mom.date_of_birth NOTNULL
                   ".self::getErrorLogAnimalPedigreeFilter('mom.id');
     }
-    
-    
+
+
     /**
      * @return string
      */
@@ -229,6 +229,7 @@ class ReproductionDataFile extends MixBlupDataFileBase implements MixBlupDataFil
     {
         $nullReplacement = "'".MixBlupInstructionFileBase::MISSING_REPLACEMENT."'";
         $geneDiversityNullReplacement = "'".MixBlupInstructionFileBase::GENE_DIVERSITY_MISSING_REPLACEMENT."'";
+        $flCode = BreedCodeType::FL;
 
         return "SELECT
                   ".self::LITTER_ORDINATION." as ".self::RECORD_TYPE_ORDINATION.",
@@ -254,7 +255,10 @@ class ReproductionDataFile extends MixBlupDataFileBase implements MixBlupDataFil
                   $nullReplacement as ".JsonInputConstant::BIRTH_WEIGHT.",
                   $nullReplacement as ".JsonInputConstant::BIRTH_PROGRESS.",
                   COALESCE(l.gestation_period, $nullReplacement) as ".JsonInputConstant::GESTATION_PERIOD.",
-                  COALESCE(l.birth_interval, $nullReplacement) as ".JsonInputConstant::BIRTH_INTERVAL.",
+                  -- only include birth interval / TusLamT for FL animals
+                  CASE WHEN COALESCE(mom.breed_code LIKE '%$flCode%',FALSE) THEN
+                      COALESCE(l.birth_interval, $nullReplacement) 
+                  ELSE $nullReplacement END as ".JsonInputConstant::BIRTH_INTERVAL.",                  
                   mom.".JsonInputConstant::UBN_OF_BIRTH."
                 FROM litter l
                   INNER JOIN declare_nsfo_base b ON l.id = b.id
