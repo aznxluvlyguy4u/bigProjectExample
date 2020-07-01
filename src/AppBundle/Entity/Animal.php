@@ -3249,7 +3249,7 @@ abstract class Animal
     }
 
     /**
-     * @return ArrayCollection
+     * @return ArrayCollection|Treatment[]
      */
     public function getTreatments()
     {
