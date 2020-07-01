@@ -139,7 +139,7 @@ class ReportLabel
 
     // Weight
     const BIRTH_WEIGHT = 'birthWeight';
-    const WEANING_WEIGHT = 'weaningWeight';
+    const WEIGHT_AT_8_WEEKS = 'weightAt8Weeks';
     const DELIVERY_WEIGHT = 'deliveryWeight';
     const AVERAGE_GROWTH = 'averageGrowth';
 

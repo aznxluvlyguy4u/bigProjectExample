@@ -7,7 +7,10 @@ namespace AppBundle\Util;
 use AppBundle\Constant\IsoCountry;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Entity\Animal;
+use AppBundle\Entity\BlindnessFactor;
 use AppBundle\Enumerator\AnimalTransferStatus;
+use AppBundle\Enumerator\BlindnessFactorType;
+use AppBundle\Enumerator\BlindnessFactorTypeDutch;
 use AppBundle\Enumerator\BreedTypeDutch;
 use AppBundle\Enumerator\ColumnType;
 use AppBundle\Enumerator\Country;
@@ -725,6 +728,15 @@ class SqlUtil
 
     public static function isoCountryAlphaTwoToNumericMapping() {
         return SqlUtil::createSqlValuesString(IsoCountry::numericByAlpha2(), false, false);
+    }
+
+
+    /**
+     * @return string
+     */
+    public static function blindnessFactorTranslationValues()
+    {
+        return SqlUtil::createSqlValuesString(BlindnessFactorTypeDutch::getConstants(), false, true);
     }
 
 

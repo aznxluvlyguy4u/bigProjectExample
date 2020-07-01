@@ -25,31 +25,53 @@ class TreatmentRepository extends BaseRepository {
     {
         $searchQuery = "%".$searchQuery."%";
 
+        $filter = "
+            WHERE l.ubn = :ubn
+            AND (
+                LOWER(t.description) LIKE LOWER(:query) OR 
+                a.animal_order_number LIKE LOWER(:query) OR 
+                LOWER(tm.name) LIKE LOWER(:query) OR 
+                a.collar_number LIKE LOWER(:query) OR 
+                LOWER(a.collar_color) LIKE LOWER(:query) OR 
+                CONCAT(LOWER(a.collar_color), a.collar_number) LIKE LOWER(:query) OR
+                CONCAT(LOWER(a.collar_color), ' ', a.collar_number) LIKE LOWER(:query)
+            )
+        ";
+
+        $joins = "
+            INNER JOIN location l ON t.location_id = l.id
+            INNER JOIN treatment_animal ta ON ta.treatment_id = t.id
+            INNER JOIN animal a ON a.id = ta.animal_id
+            LEFT JOIN medication_selection ms ON ms.treatment_id = t.id
+            LEFT JOIN treatment_medication tm ON tm.id = ms.treatment_medication_id
+        ";
+
         $countSql = "
             SELECT COUNT(t.id) AS total FROM treatment t
-            INNER JOIN location l ON t.location_id = l.id 
-            WHERE l.ubn = :ubn
-            AND t.description LIKE :query
+            ".$joins."
+            ".$filter."
             GROUP BY l.id
         ";
 
-        $sql = '
+        $sql = "
             SELECT 
                 t.id as treatment_id,
                 t.create_date,
                 t.description,
                 t.start_date,
                 t.end_date,
+                t.revoke_date,
                 t.type,
-                t.status
+                t.status,
+                a.collar_color,
+                a.collar_number
             FROM treatment t
-            INNER JOIN location l ON t.location_id = l.id
-            WHERE l.ubn = :ubn
-            AND t.description LIKE :query
+            ".$joins."
+            ".$filter."
             ORDER BY t.create_date DESC
-            OFFSET '.$perPage.' * ('.$page.' - 1)
-            FETCH NEXT '.$perPage.' ROWS ONLY
-        ';
+            OFFSET ".$perPage." * (".$page." - 1)
+            FETCH NEXT ".$perPage." ROWS ONLY
+        ";
 
         $countStatement = $this->getManager()->getConnection()->prepare($countSql);
         $countStatement->bindParam('ubn', $ubn);
@@ -68,13 +90,12 @@ class TreatmentRepository extends BaseRepository {
                 SELECT
                     tm.name,
                     ms.waiting_time_end,
-                    mo.dosage,
-                    mo.dosage_unit,
-                    mo.reg_nl,
-                    mo.treatment_duration
+                    tm.dosage,
+                    tm.dosage_unit,
+                    tm.reg_nl,
+                    tm.treatment_duration
                FROM medication_selection ms 
-               LEFT JOIN medication_option mo ON ms.medication_option_id = mo.id
-               LEFT JOIN treatment_medication tm ON mo.treatment_medication_id = tm.id
+               LEFT JOIN treatment_medication tm ON ms.treatment_medication_id = tm.id
                WHERE ms.treatment_id = :id
             ';
             $medicineStatement = $this->getManager()->getConnection()->prepare($medicationSql);
@@ -92,6 +113,7 @@ class TreatmentRepository extends BaseRepository {
             $animalStatement->execute();
 
             $item['medications'] = $medicineStatement->fetchAll();
+
             $item['animals'] = $animalStatement->fetchAll();
 
             $item['dutchType'] = Translation::getDutchTreatmentType($item['type']);

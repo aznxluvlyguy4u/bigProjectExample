@@ -121,15 +121,15 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
         /** @var TreatmentTemplate $treatmentTemplate */
         $treatmentTemplate = $em->getRepository(TreatmentTemplate::class)->find($treatment->getTreatmentTemplate()->getId());
 
-        /** @var MedicationOption $medicationOption */
-        foreach ($treatmentTemplate->getMedications() as $medicationOption)
+        /** @var TreatmentMedication $treatmentMedication */
+        foreach ($treatmentTemplate->getMedications() as $treatmentMedication)
         {
-            $treatmentDuration = $medicationOption->getTreatmentDuration();
+            $treatmentDuration = $treatmentMedication->getTreatmentDuration();
             $medicationSelection = new MedicationSelection();
 
             $medicationSelection
                 ->setTreatment($treatment)
-                ->setMedicationOption($medicationOption)
+                ->setTreatmentMedication($treatmentMedication)
             ;
 
             if ($treatmentDuration !== 'eenmalig') {
@@ -138,7 +138,7 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
                 // Subtract 1 to account for the start day of the treatment.
                 $correctedTreatmentDuration = $roundedTreatmentDuration-1;
 
-                $daysToAdd = $correctedTreatmentDuration + $medicationOption->getWaitingDays();
+                $daysToAdd = $correctedTreatmentDuration + $treatmentMedication->getWaitingDays();
 
                 $treatmentStartDate = clone $treatment->getStartDate();
                 if ($daysToAdd > 0) {
@@ -150,7 +150,7 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
             } else {
                 $treatmentStartDate = clone $treatment->getStartDate();
                 $medicationSelection
-                    ->setWaitingTimeEnd($treatmentStartDate->add(new DateInterval('P'.$medicationOption->getWaitingDays().'D')));
+                    ->setWaitingTimeEnd($treatmentStartDate->add(new DateInterval('P'.$treatmentMedication->getWaitingDays().'D')));
             }
 
             $em->persist($medicationSelection);

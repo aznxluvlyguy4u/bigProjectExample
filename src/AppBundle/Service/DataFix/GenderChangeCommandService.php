@@ -13,7 +13,6 @@ use AppBundle\Enumerator\AnimalObjectType;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\DoctrineUtil;
 use AppBundle\Util\GenderChanger;
-use Doctrine\Common\Persistence\ObjectManager;
 use Symfony\Component\HttpFoundation\JsonResponse;
 
 /**
@@ -21,11 +20,6 @@ use Symfony\Component\HttpFoundation\JsonResponse;
  */
 class GenderChangeCommandService extends DuplicateFixerBase
 {
-
-    public function __construct(ObjectManager $em)
-    {
-        parent::__construct($em);
-    }
 
 
     /**

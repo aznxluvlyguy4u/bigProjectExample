@@ -31,7 +31,7 @@
                                     <td>gesl.</td>
                                     <td colspan="2">lamnummer</td>
                                     <td>geb.</td>
-                                    <td>/speen</td>
+                                    <td>/8 wk</td>
                                     <td>/aflev</td>
                                     <td>groei</td>
                                     <td>Bestem.</td>
@@ -59,7 +59,7 @@
                                             {% endif %}
                                         </td>
                                         <td>{{ firstOffspring.birth_weight }}</td>
-                                        <td>{{ firstOffspring.weaning_weight }}</td>
+                                        <td>{{ firstOffspring.weight_at8weeks_kg }}</td>
                                         <td>{{ firstOffspring.delivery_weight }}</td>
                                         <td>{{ firstOffspring.average_growth }}</td>
                                         <td>{{ firstOffspring.destination }}</td>
@@ -93,7 +93,7 @@
                                     <td>gesl.</td>
                                     <td colspan="2">lamnummer</td>
                                     <td>geb.</td>
-                                    <td>/speen</td>
+                                    <td>/8 wk</td>
                                     <td>/aflev</td>
                                     <td>groei</td>
                                     <td>Bestem.</td>
@@ -132,7 +132,7 @@
                                                 &nbsp;&nbsp;&nbsp;
                                             </td>
                                             <td>{{ offspring.birth_weight }}</td>
-                                            <td>{{ offspring.weaning_weight }}</td>
+                                            <td>{{ offspring.weight_at8weeks_kg }}</td>
                                             <td>{{ offspring.delivery_weight }}</td>
                                             <td>{{ offspring.average_growth }}</td>
                                             <td>{{ offspring.destination }}</td>
@@ -148,8 +148,8 @@
                                             <td colspan="2" class="text-center  border-top-1">Gem.</td>
                                             <td class="border-top-1">{{ (animal.offspringAggregateData.birthWeight.average) | number_format(1) }}</td>
                                             <td class="border-top-1">
-                                                {% if not animal.offspringAggregateData.weaningWeight.isEmpty %}
-                                                    {{ (animal.offspringAggregateData.weaningWeight.average) | number_format(1) }}</td>
+                                                {% if not animal.offspringAggregateData.weightAt8Weeks.isEmpty %}
+                                                    {{ (animal.offspringAggregateData.weightAt8Weeks.average) | number_format(1) }}</td>
                                                 {% endif %}
                                             <td class="border-top-1">
                                                 {% if not animal.offspringAggregateData.deliveryWeight.isEmpty %}

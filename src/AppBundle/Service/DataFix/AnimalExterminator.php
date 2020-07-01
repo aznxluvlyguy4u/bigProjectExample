@@ -5,20 +5,9 @@ namespace AppBundle\Service\DataFix;
 
 
 use AppBundle\Util\CommandUtil;
-use Doctrine\Common\Persistence\ObjectManager;
 
 class AnimalExterminator extends DuplicateFixerBase
 {
-    /**
-     * AnimalExterminator constructor.
-     * @param ObjectManager $em
-     */
-    public function __construct(ObjectManager $em)
-    {
-        parent::__construct($em);
-    }
-
-
     /**
      * @param CommandUtil $cmdUtil
      * @return bool
@@ -26,7 +15,7 @@ class AnimalExterminator extends DuplicateFixerBase
     public function deleteAnimalsByCliInput(CommandUtil $cmdUtil)
     {
         $this->setCmdUtil($cmdUtil);
-        
+
         $option = $this->cmdUtil->generateMultiLineQuestion([
             ' ', "\n",
             'Choose option: ', "\n",
