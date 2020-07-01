@@ -129,6 +129,10 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
             $treatmentMedicationInDB = $this->getManager()
                 ->getRepository(TreatmentMedication::class)->find($treatmentMedication->getId());
 
+            if (!$treatmentMedicationInDB) {
+                throw new PreconditionFailedHttpException('Medication with '. $treatmentMedication->getId(). 'does not exist.');
+            }
+
             $treatmentDuration = $treatmentMedicationInDB->getTreatmentDuration();
             $medicationSelection = new MedicationSelection();
 
