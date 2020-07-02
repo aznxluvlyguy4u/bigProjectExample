@@ -12,7 +12,8 @@ use AppBundle\Entity\Treatment;
 use AppBundle\Entity\TreatmentMedication;
 use DateTime;
 use Exception;
-use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class CombiFormTransportDocumentService extends ReportServiceBase
 {
@@ -145,7 +146,12 @@ class CombiFormTransportDocumentService extends ReportServiceBase
         $totalWaitingTimeExpiredAnimals = count($this->result['waiting_time_expired_animals']);
 
         if ($totalAnimalCount === 0) {
-            throw new BadRequestHttpException("No animals found for ubn ". $location->getUbn());
+            $errorMessage = $this->trans("NO ANIMALS FOUND FOR TRANSPORT DATE %transportDate% AND UBN OF ARRIVAL %ubnOfArrival%",
+                [
+                   '%transportDate%' => $transportDate,
+                   '%ubnOfArrival%' => $exportUbn
+                ]);
+            throw new NotFoundHttpException($errorMessage, null, Response::HTTP_NOT_FOUND);
         }
 
         if ($totalAnimalCount >= self::ANIMAL_LIMIT) {

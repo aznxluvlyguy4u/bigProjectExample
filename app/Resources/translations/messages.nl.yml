@@ -515,6 +515,7 @@ IS MISSING: ontbreekt
 NO ANIMAL FOUND FOR GIVEN ULN: er is geen dier gevonden voor het opgegeven ULN
 YOU DO NOT HAVE PERMISSION TO CHANGE THE FOLLOWING VALUES: U heeft geen authorizatie om deze waarden aan te passen
 NO ACTIVE INSPECTOR FOUND FOR GIVEN ID: Er is geen actieve inspecteur gevonden voor de opgegeven id
+NO ANIMALS FOUND FOR TRANSPORT DATE %transportDate% AND UBN OF ARRIVAL %ubnOfArrival%: Geen dieren gevonden voor transportdatum %transportDate% en ubn van aanvoer %ubnOfArrival%
 
 SURROGATE MOTHER NO EWE FOUND FOR GIVEN ID: Pleegmoeder invoer fout. Er is geen ooi gevonden voor het opgegeven id
 SURROGATE MOTHER IS SAME AS CHILD: Pleegmoeder is het identiek aan het kind
