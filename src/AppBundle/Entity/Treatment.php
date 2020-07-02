@@ -47,8 +47,8 @@ class Treatment implements TreatmentInterface
     private $location;
 
     /**
-     * @var Animal
-     * @ORM\ManyToMany(targetEntity="Animal", inversedBy="treatments", cascade={"remove"})
+     * @var Animal[]|ArrayCollection
+     * @ORM\ManyToMany(targetEntity="Animal", inversedBy="treatments", cascade={"remove"}, fetch="LAZY")
      * @JMS\Type("ArrayCollection<AppBundle\Entity\Animal>")
      *
      * @JMS\Groups({
