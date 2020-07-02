@@ -7,7 +7,6 @@ use AppBundle\Util\StringUtil;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as JMS;
-use phpDocumentor\Reflection\Types\Integer;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
@@ -97,6 +96,7 @@ class TreatmentMedication
     private $treatmentDuration;
 
     /**
+     * @var int
      * @ORM\Column(type="integer", nullable=false)
      * @JMS\Type("integer")
      * @JMS\Groups({
@@ -253,7 +253,7 @@ class TreatmentMedication
     /**
      * @return integer
      */
-    public function getWaitingDays()
+    public function getWaitingDays(): int
     {
         return $this->waitingDays;
     }
