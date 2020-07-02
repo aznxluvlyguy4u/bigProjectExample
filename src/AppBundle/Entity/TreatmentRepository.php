@@ -47,14 +47,13 @@ class TreatmentRepository extends BaseRepository {
         ";
 
         $countSql = "
-            SELECT COUNT(t.id) AS total FROM treatment t
+            SELECT DISTINCT t.id FROM treatment t
             ".$joins."
             ".$filter."
-            GROUP BY l.id
         ";
 
         $sql = "
-            SELECT 
+            SELECT DISTINCT 
                 t.id as treatment_id,
                 t.create_date,
                 t.description,
@@ -62,9 +61,7 @@ class TreatmentRepository extends BaseRepository {
                 t.end_date,
                 t.revoke_date,
                 t.type,
-                t.status,
-                a.collar_color,
-                a.collar_number
+                t.status
             FROM treatment t
             ".$joins."
             ".$filter."
@@ -122,7 +119,7 @@ class TreatmentRepository extends BaseRepository {
 
         return [
             'items'      => $results,
-            'totalItems' => $countStatement->fetch()['total']
+            'totalItems' => count($countStatement->fetchAll())
         ];
     }
 
