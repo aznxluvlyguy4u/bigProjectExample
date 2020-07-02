@@ -175,7 +175,7 @@ class CombiFormTransportDocumentService extends ReportServiceBase
             if ($totalAnimalCount === 1) {
                 $size = $totalAnimalCount;
             } else {
-                $size = $totalAnimalCount/2;
+                $size = (int) ceil($totalAnimalCount/2);
             }
 
             $chunkedAnimals = array_chunk($this->result['animals'], $size, true);

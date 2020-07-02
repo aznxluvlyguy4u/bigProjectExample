@@ -220,7 +220,7 @@
                                 </tr>
                             {% endfor %}
                             {% if variables.animals_left | length < 10 %}
-                                {% for i in 0..10-variables.animals_left | length %}
+                                {% for i in 1..10-variables.animals_left | length %}
                                     <tr class="emptyTableRow">
                                         <td></td>
                                         <td></td>
@@ -263,9 +263,20 @@
                                     <td>{{ animal.dateOfBirth | date('d-m-Y') }}</td>
                                     <td>{{ animal.genderForAnimalDetails }}</td>
                                     <td class="column--small"></td>
-                                    <td></td>
+                                    <td>{{ variables.animals_right | length }}</td>
                                 </tr>
                             {% endfor %}
+                            {% if variables.animals_right | length < 10 %}
+                                {% for i in 1..10-variables.animals_right | length %}
+                                    <tr class="emptyTableRow">
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td class="column--small"></td>
+                                        <td></td>
+                                    </tr>
+                                {% endfor %}
+                            {% endif %}
                         {% endif %}
                         </tbody>
                     </table>
