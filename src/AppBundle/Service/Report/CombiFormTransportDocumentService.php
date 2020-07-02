@@ -10,16 +10,8 @@ use AppBundle\Entity\Location;
 use AppBundle\Entity\MedicationSelection;
 use AppBundle\Entity\Treatment;
 use AppBundle\Entity\TreatmentMedication;
-use AppBundle\Enumerator\FileType;
-use AppBundle\Enumerator\ReasonOfDepartType;
-use AppBundle\Enumerator\RequestStateType;
-use AppBundle\Util\NullChecker;
-use AppBundle\Util\RequestUtil;
-use AppBundle\Util\ResultUtil;
-use AppBundle\Util\SqlUtil;
 use DateTime;
 use Exception;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 class CombiFormTransportDocumentService extends ReportServiceBase
@@ -88,25 +80,11 @@ class CombiFormTransportDocumentService extends ReportServiceBase
         $this->result['total_animal_pages'] = 0;
         $this->result['total_waiting_time_expired_animal_pages'] = 0;
 
+        $animalsForTransportOptions = $this->em->getRepository(DeclareDepart::class)
+            ->getDepartAnimals($transportDateObject, true, $exportUbn, $location, false);
+
         /** @var Animal $animal */
-        foreach ($location->getAnimals() as $animal) {
-            /** @var DeclareDepart $declareDepart */
-            $declareDepart = $animal->getDepartures()->last();
-
-            if (!$declareDepart instanceof DeclareDepart) {
-                continue;
-            }
-
-            if (
-                $declareDepart->getDepartDate()->format('d-m-Y') !== $transportDate ||
-                $declareDepart->getRequestState() === RequestStateType::FINISHED ||
-                $declareDepart->getRequestState() === RequestStateType::FINISHED_WITH_WARNING ||
-                $declareDepart->getRequestState() === RequestStateType::IMPORTED ||
-                $declareDepart->getReasonOfDepart() !== ReasonOfDepartType::BREEDING_FARM ||
-                $declareDepart->getReasonOfDepart() !== ReasonOfDepartType::RENT
-            ) {
-                continue;
-            }
+        foreach ($animalsForTransportOptions as $animal) {
 
             $diff = date_diff($animal->getDateOfBirth(), $currentDateTime);
 

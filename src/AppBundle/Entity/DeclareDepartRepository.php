@@ -4,10 +4,16 @@ namespace AppBundle\Entity;
 
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
+use AppBundle\Enumerator\ReasonOfDepartType;
+use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\SqlUtil;
+use AppBundle\Util\TimeUtil;
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\ORM\Query\Expr\Andx;
+use Doctrine\ORM\Query\Expr\Join;
+use Doctrine\ORM\QueryBuilder;
 
 /**
  * Class DeclareDepartRepository
@@ -149,4 +155,99 @@ class DeclareDepartRepository extends BaseRepository {
         }, $results);
     }
 
+
+    /**
+     * @param  \DateTime  $departOrExportDate
+     * @param  bool  $mustHaveNonSlaughterReasonOfDepart
+     * @param  string|null  $ubnNewOwner
+     * @param  Location|null  $location
+     * @param  bool  $includeExports
+     * @return array|Animal[]
+     */
+    public function getDepartAnimals(
+        \DateTime $departOrExportDate,
+        bool $mustHaveNonSlaughterReasonOfDepart,
+        ?string $ubnNewOwner = null,
+        ?Location $location = null,
+        bool $includeExports = false
+    ): array
+    {
+        $dayOfDateTimeFilterInput = "'".TimeUtil::getDayOfDateTime($departOrExportDate)->format(SqlUtil::DATE_FORMAT)."'";
+        $dayAfterDateTimeFilterInput = "'".TimeUtil::getDayAfterDateTime($departOrExportDate)->format(SqlUtil::DATE_FORMAT)."'";
+
+
+        $departQb = $this->getManager()->createQueryBuilder();
+        $departQb = $departQb
+            ->select('d')
+            ->from (DeclareDepart::class, 'd')
+            ->innerJoin('d.animal', 'a', Join::WITH, $departQb->expr()->eq('d.animal', 'a.id'))
+            ->where($this->getDepartAnimalsBaseFilter($departQb, $location))
+            ->andWhere($departQb->expr()->andX(
+                $departQb->expr()->gte('d.departDate',$dayOfDateTimeFilterInput),
+                $departQb->expr()->lt('d.departDate',$dayAfterDateTimeFilterInput),
+                (
+                    !empty($ubnNewOwner) ? $departQb->expr()->eq('d.ubnNewOwner', "'".$ubnNewOwner."'") : null
+                ),
+                (
+                    $mustHaveNonSlaughterReasonOfDepart ? $departQb->expr()->orX(
+                        $departQb->expr()->eq('d.reasonOfDepart',"'".ReasonOfDepartType::BREEDING_FARM."'"),
+                        $departQb->expr()->eq('d.reasonOfDepart',"'".ReasonOfDepartType::RENT."'")
+                    ) : null
+                )
+            ))
+        ;
+        $departs = $departQb->getQuery()->getResult();
+
+
+        $exports = [];
+        if ($includeExports) {
+            $exportQb = $this->getManager()->createQueryBuilder();
+            $exportQb = $exportQb
+                ->select('d')
+                ->from (DeclareExport::class, 'd')
+                ->innerJoin('d.animal', 'a', Join::WITH, $exportQb->expr()->eq('d.animal', 'a.id'))
+                ->where($this->getDepartAnimalsBaseFilter($exportQb, $location))
+                ->andWhere($exportQb->expr()->andX(
+                    $exportQb->expr()->gte('d.exportDate',$dayOfDateTimeFilterInput),
+                    $exportQb->expr()->lt('d.exportDate',$dayAfterDateTimeFilterInput)
+                ))
+            ;
+            $exports = $exportQb->getQuery()->getResult();
+        }
+
+        $animals = [];
+
+        foreach ([$departs, $exports] as $relocations) {
+            /** @var RelocationDeclareInterface $relocation */
+            foreach ($relocations as $relocation) {
+                $animal = $relocation->getAnimal();
+                if (!$animal) {
+                    continue;
+                }
+
+                // In case of duplicate animal order numbers, the animalId is added as suffix just in case
+                $key = $animal->getAnimalOrderNumber() . '-' . $animal->getId();
+                $animals[$key] = $animal;
+            }
+        }
+
+        // Sort animals by animal order number
+        ksort($animals);
+
+        return $animals;
+    }
+
+    private function getDepartAnimalsBaseFilter(QueryBuilder $qb, ?Location $location): Andx
+    {
+        $locationQueryFilter = $location && $location->getId() ? $qb->expr()->eq('d.location', $location->getId()) : null;
+
+        return $qb->expr()->andX(
+            $qb->expr()->orX(
+                $qb->expr()->eq('d.requestState', "'".RequestStateType::FINISHED."'"),
+                $qb->expr()->eq('d.requestState', "'".RequestStateType::FINISHED_WITH_WARNING."'"),
+                $qb->expr()->eq('d.requestState', "'".RequestStateType::IMPORTED."'")
+            ),
+            $locationQueryFilter
+        );
+    }
 }
