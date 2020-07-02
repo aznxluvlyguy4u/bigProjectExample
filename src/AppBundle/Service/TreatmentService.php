@@ -7,7 +7,6 @@ use AppBundle\Component\Utils;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Controller\TreatmentAPIControllerInterface;
 use AppBundle\Entity\Animal;
-use AppBundle\Entity\MedicationOption;
 use AppBundle\Entity\MedicationSelection;
 use AppBundle\Entity\Treatment;
 use AppBundle\Entity\TreatmentMedication;
@@ -308,20 +307,10 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
 
         $startDate = Utils::getNullCheckedArrayCollectionDateValue(JsonInputConstant::START_DATE, $content);
         $endDate = Utils::getNullCheckedArrayCollectionDateValue(JsonInputConstant::END_DATE, $content);
-        $treatmentTemplateDescription = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::DESCRIPTION, $content);
-
-        /** @var TreatmentTemplate $treatmentTemplate */
-        $treatmentTemplate = $em->getRepository(TreatmentTemplate::class)->findOneBy(['description' => $treatmentTemplateDescription]);
-
-        if ($treatmentTemplate === null) {
-            throw new PreconditionFailedHttpException("No TreatmentTemplate was found with the description: ".$treatmentTemplateDescription);
-        }
 
         $treatment
             ->setStartDate($startDate)
-            ->setEndDate($endDate)
-            ->setTreatmentTemplate($treatmentTemplate)
-            ->setDescription($treatmentTemplate->getDescription());
+            ->setEndDate($endDate);
 
         //Validation
         $treatment = $this->baseValidateDeserializedTreatment($treatment);
