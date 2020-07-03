@@ -41,7 +41,7 @@ class DeclareExportResponseRepository extends BaseRepository {
         $joins = "
           INNER JOIN declare_export de ON de.id = db.id
           INNER JOIN (
-            SELECT dbr.request_id, dbr.message_number, dbr.error_code, dbr.error_message
+            SELECT dbr.id, dbr.request_id, dbr.message_number, dbr.error_code, dbr.error_message
             FROM declare_base_response dbr
               INNER JOIN (
                            SELECT request_id, MAX(log_date) as log_date
@@ -94,7 +94,7 @@ class DeclareExportResponseRepository extends BaseRepository {
                 FROM declare_base db
                 ".$joins."
                 ".$filter."
-                ORDER BY db.log_date DESC
+                ORDER BY db.log_date DESC, r.id DESC
                 OFFSET 10 * (".$page." - 1)
                 FETCH NEXT 10 ROWS ONLY"
         ;
