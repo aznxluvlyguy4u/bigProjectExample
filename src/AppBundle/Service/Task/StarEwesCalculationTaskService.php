@@ -314,9 +314,6 @@ FROM (
          WHERE
              standard_litter_ordinal NOTNULL
            AND
-           -- Month of the age should be between 0 and 6
-                 EXTRACT(MONTH FROM AGE(l.litter_date, a.date_of_birth)) <= 6
-           AND
            -- Minimum age is 4 years
                  EXTRACT(YEAR FROM AGE(l.litter_date, a.date_of_birth)) >= 4
      )count_results
@@ -379,9 +376,7 @@ GROUP BY animal_mother_id HAVING bool_and(has_valid_offspring_count)";
                      WHERE standard_litter_ordinal NOTNULL
                  )definitive_offspring ON definitive_offspring.litter_id = l.id
                  WHERE
-                     l.standard_litter_ordinal NOTNULL AND
-                   -- Month of the age should be between 0 and 6
-                         month_of_age_of_mother_at_litter_date <= 6
+                     l.standard_litter_ordinal NOTNULL
                    AND
                    -- Minimum age is 4 years
                          year_of_age_of_mother_at_litter_date >= 4
