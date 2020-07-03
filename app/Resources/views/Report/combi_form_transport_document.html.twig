@@ -427,22 +427,22 @@
         {% for animals in variables.paginated_animals %}
             <table class="overview-table">
                 <thead>
-                <tr>
-                    <th><b>ULN</b></th>
-                    <th>Geb.dat.</th>
-                    <th>Gesl.</th>
-                    <th class="column--small">Export slacht J/N</th>
-                    <th>Diervlag?</th>
+                <tr class="medium-row">
+                    <th class="medium-row"><b>ULN</b></th>
+                    <th class="medium-row">Geb.dat.</th>
+                    <th class="medium-row">Gesl.</th>
+                    <th class="column--small medium-row">Export slacht J/N</th>
+                    <th class="medium-row">Diervlag?</th>
                 </tr>
                 </thead>
                 <tbody>
                     {% for animal in animals %}
-                        <tr>
-                            <td>{{ animal.ulnCountryCode }}{{ animal.ulnNumber }}</td>
-                            <td>{{ animal.dateOfBirth | date('d-m-Y') }}</td>
-                            <td>{{ animal.genderForAnimalDetails }}</td>
-                            <td class="column--small"></td>
-                            <td></td>
+                        <tr class="medium-row">
+                            <td class="medium-row">{{ animal.ulnCountryCode }}{{ animal.ulnNumber }}</td>
+                            <td class="medium-row">{{ animal.dateOfBirth | date('d-m-Y') }}</td>
+                            <td class="medium-row">{{ animal.genderForAnimalDetails }}</td>
+                            <td class="column--small medium-row"></td>
+                            <td class="medium-row"></td>
                         </tr>
                     {% endfor %}
                 </tbody>
@@ -507,10 +507,6 @@
             height: 25px;
         }
 
-        /*.emptyTableRow td {*/
-        /*    height: 20px;*/
-        /*}*/
-
         .column--small {
             width: 10%;
         }
@@ -521,6 +517,10 @@
 
         .pageBreaker {
             page-break-after: always;
+        }
+
+        .medium-row {
+            height: 10px;
         }
 
         #blockCanBeExported {
