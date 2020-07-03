@@ -236,6 +236,9 @@ services:
     AppBundle\Service\DataFix\UbnHistoryFixer:
       parent: app.datafix.base.duplicate
 
+    AppBundle\Service\DataFix\UbnHistoryOneTimeFixer:
+      parent: app.datafix.base.duplicate
+
     app.datafix.base:
         abstract: true
         arguments:
