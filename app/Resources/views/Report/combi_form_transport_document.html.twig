@@ -201,32 +201,32 @@
                         <tbody>
                         {% if variables.animals_left | length == 0 %}
                             {% for i in 0..10 %}
-                                <tr class="emptyTableRow">
-                                    <td></td>
-                                    <td></td>
-                                    <td></td>
-                                    <td class="column--small"></td>
-                                    <td></td>
+                                <tr class="medium-row-empty">
+                                    <td class="medium-row-empty"></td>
+                                    <td class="medium-row-empty"></td>
+                                    <td class="medium-row-empty"></td>
+                                    <td class="column--small medium-row-empty"></td>
+                                    <td class="medium-row-empty"></td>
                                 </tr>
                             {% endfor %}
                         {% else %}
                             {% for animal in variables.animals_left %}
                                 <tr>
-                                    <td>{{ animal.ulnCountryCode }}{{ animal.ulnNumber }}</td>
-                                    <td>{{ animal.dateOfBirth | date('d-m-Y') }}</td>
-                                    <td>{{ animal.genderForAnimalDetails }}</td>
-                                    <td class="column--small"></td>
-                                    <td></td>
+                                    <td class="medium-row">{{ animal.ulnCountryCode }}{{ animal.ulnNumber }}</td>
+                                    <td class="medium-row">{{ animal.dateOfBirth | date('d-m-Y') }}</td>
+                                    <td class="medium-row">{{ animal.genderForAnimalDetails }}</td>
+                                    <td class="column--small medium-row"></td>
+                                    <td class="medium-row"></td>
                                 </tr>
                             {% endfor %}
                             {% if variables.animals_left | length < 10 %}
                                 {% for i in 1..10-variables.animals_left | length %}
-                                    <tr class="emptyTableRow">
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
-                                        <td class="column--small"></td>
-                                        <td></td>
+                                    <tr class="medium-row-empty">
+                                        <td class="medium-row-empty"></td>
+                                        <td class="medium-row-empty"></td>
+                                        <td class="medium-row-empty"></td>
+                                        <td class="column--small medium-row-empty"></td>
+                                        <td class="medium-row-empty"></td>
                                     </tr>
                                 {% endfor %}
                             {% endif %}
@@ -248,32 +248,32 @@
                         <tbody>
                         {% if variables.animals_right | length == 0 %}
                         {% for i in 0..10 %}
-                            <tr class="emptyTableRow">
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td class="column--small"></td>
-                                <td></td>
+                            <tr class="medium-row-empty">
+                                <td class="medium-row-empty"></td>
+                                <td class="medium-row-empty"></td>
+                                <td class="medium-row-empty"></td>
+                                <td class="column--small medium-row-empty"></td>
+                                <td class="medium-row-empty"></td>
                             </tr>
                         {% endfor %}
                         {% else %}
                             {% for animal in variables.animals_right %}
-                                <tr>
-                                    <td>{{ animal.ulnCountryCode }}{{ animal.ulnNumber }}</td>
-                                    <td>{{ animal.dateOfBirth | date('d-m-Y') }}</td>
-                                    <td>{{ animal.genderForAnimalDetails }}</td>
-                                    <td class="column--small"></td>
-                                    <td></td>
+                                <tr class="medium-row">
+                                    <td class="medium-row">{{ animal.ulnCountryCode }}{{ animal.ulnNumber }}</td>
+                                    <td class="medium-row">{{ animal.dateOfBirth | date('d-m-Y') }}</td>
+                                    <td class="medium-row">{{ animal.genderForAnimalDetails }}</td>
+                                    <td class="column--small medium-row"></td>
+                                    <td class="medium-row"></td>
                                 </tr>
                             {% endfor %}
                             {% if variables.animals_right | length < 10 %}
                                 {% for i in 1..10-variables.animals_right | length %}
-                                    <tr class="emptyTableRow">
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
-                                        <td class="column--small"></td>
-                                        <td></td>
+                                    <tr class="medium-row-empty">
+                                        <td class="medium-row-empty"></td>
+                                        <td class="medium-row-empty"></td>
+                                        <td class="medium-row-empty"></td>
+                                        <td class="column--small medium-row-empty"></td>
+                                        <td class="medium-row-empty"></td>
                                     </tr>
                                 {% endfor %}
                             {% endif %}
@@ -503,9 +503,9 @@
             font-stretch: semi-condensed;
         }
 
-        tr td {
-            height: 25px;
-        }
+        /*tr td {*/
+        /*    height: 25px;*/
+        /*}*/
 
         .column--small {
             width: 10%;
@@ -521,6 +521,10 @@
 
         .medium-row {
             height: 10px;
+        }
+
+        .medium-row-empty {
+            height: 20px;
         }
 
         #blockCanBeExported {
