@@ -7,7 +7,6 @@ use AppBundle\Component\Utils;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Controller\TreatmentAPIControllerInterface;
 use AppBundle\Entity\Animal;
-use AppBundle\Entity\MedicationOption;
 use AppBundle\Entity\MedicationSelection;
 use AppBundle\Entity\Treatment;
 use AppBundle\Entity\TreatmentMedication;
@@ -121,15 +120,24 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
         /** @var TreatmentTemplate $treatmentTemplate */
         $treatmentTemplate = $em->getRepository(TreatmentTemplate::class)->find($treatment->getTreatmentTemplate()->getId());
 
-        /** @var MedicationOption $medicationOption */
-        foreach ($treatmentTemplate->getMedications() as $medicationOption)
-        {
-            $treatmentDuration = $medicationOption->getTreatmentDuration();
+        $medicationSelections = new ArrayCollection();
+
+        /** @var TreatmentMedication $treatmentMedication */
+        foreach ($treatment->getTreatmentTemplate()->getMedications() as $treatmentMedication) {
+            /** @var TreatmentMedication $treatmentMedicationInDB */
+            $treatmentMedicationInDB = $this->getManager()
+                ->getRepository(TreatmentMedication::class)->find($treatmentMedication->getId());
+
+            if (!$treatmentMedicationInDB) {
+                throw new PreconditionFailedHttpException('Medication with '. $treatmentMedication->getId(). 'does not exist.');
+            }
+
+            $treatmentDuration = $treatmentMedicationInDB->getTreatmentDuration();
             $medicationSelection = new MedicationSelection();
 
             $medicationSelection
                 ->setTreatment($treatment)
-                ->setMedicationOption($medicationOption)
+                ->setTreatmentMedication($treatmentMedicationInDB)
             ;
 
             if ($treatmentDuration !== 'eenmalig') {
@@ -138,7 +146,7 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
                 // Subtract 1 to account for the start day of the treatment.
                 $correctedTreatmentDuration = $roundedTreatmentDuration-1;
 
-                $daysToAdd = $correctedTreatmentDuration + $medicationOption->getWaitingDays();
+                $daysToAdd = $correctedTreatmentDuration + $treatmentMedicationInDB->getWaitingDays();
 
                 $treatmentStartDate = clone $treatment->getStartDate();
                 if ($daysToAdd > 0) {
@@ -150,8 +158,10 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
             } else {
                 $treatmentStartDate = clone $treatment->getStartDate();
                 $medicationSelection
-                    ->setWaitingTimeEnd($treatmentStartDate->add(new DateInterval('P'.$medicationOption->getWaitingDays().'D')));
+                    ->setWaitingTimeEnd($treatmentStartDate->add(new DateInterval('P'.$treatmentMedicationInDB->getWaitingDays().'D')));
             }
+
+            $medicationSelections->add($medicationSelection);
 
             $em->persist($medicationSelection);
         }
@@ -159,6 +169,7 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
         $treatment->__construct();
 
         $treatment
+            ->setMedicationSelections($medicationSelections)
             ->setCreationBy($this->getUser())
             ->setAnimals($existingAnimals)
             ->setTreatmentTemplate($treatmentTemplate);
@@ -296,20 +307,10 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
 
         $startDate = Utils::getNullCheckedArrayCollectionDateValue(JsonInputConstant::START_DATE, $content);
         $endDate = Utils::getNullCheckedArrayCollectionDateValue(JsonInputConstant::END_DATE, $content);
-        $treatmentTemplateDescription = Utils::getNullCheckedArrayCollectionValue(JsonInputConstant::DESCRIPTION, $content);
-
-        /** @var TreatmentTemplate $treatmentTemplate */
-        $treatmentTemplate = $em->getRepository(TreatmentTemplate::class)->findOneBy(['description' => $treatmentTemplateDescription]);
-
-        if ($treatmentTemplate === null) {
-            throw new PreconditionFailedHttpException("No TreatmentTemplate was found with the description: ".$treatmentTemplateDescription);
-        }
 
         $treatment
             ->setStartDate($startDate)
-            ->setEndDate($endDate)
-            ->setTreatmentTemplate($treatmentTemplate)
-            ->setDescription($treatmentTemplate->getDescription());
+            ->setEndDate($endDate);
 
         //Validation
         $treatment = $this->baseValidateDeserializedTreatment($treatment);

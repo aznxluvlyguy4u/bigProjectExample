@@ -229,6 +229,7 @@ class ReproductionDataFile extends MixBlupDataFileBase implements MixBlupDataFil
     {
         $nullReplacement = "'".MixBlupInstructionFileBase::MISSING_REPLACEMENT."'";
         $geneDiversityNullReplacement = "'".MixBlupInstructionFileBase::GENE_DIVERSITY_MISSING_REPLACEMENT."'";
+        $flCode = BreedCodeType::FL;
 
         return "SELECT
                   ".self::LITTER_ORDINATION." as ".self::RECORD_TYPE_ORDINATION.",
@@ -255,7 +256,7 @@ class ReproductionDataFile extends MixBlupDataFileBase implements MixBlupDataFil
                   $nullReplacement as ".JsonInputConstant::BIRTH_PROGRESS.",
                   COALESCE(l.gestation_period, $nullReplacement) as ".JsonInputConstant::GESTATION_PERIOD.",
                   -- only include birth interval / TusLamT for FL animals
-                  CASE WHEN COALESCE(a.breed_code LIKE '%FL%',FALSE) THEN
+                  CASE WHEN COALESCE(mom.breed_code LIKE '%$flCode%',FALSE) THEN
                       COALESCE(l.birth_interval, $nullReplacement) 
                   ELSE $nullReplacement END as ".JsonInputConstant::BIRTH_INTERVAL.",                  
                   mom.".JsonInputConstant::UBN_OF_BIRTH."

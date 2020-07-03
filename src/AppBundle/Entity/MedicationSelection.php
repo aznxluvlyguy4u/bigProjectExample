@@ -111,7 +111,7 @@ class MedicationSelection
      * @param TreatmentMedication $treatmentMedication
      * @return MedicationSelection
      */
-    public function setMedicationOption(TreatmentMedication $treatmentMedication): self
+    public function setTreatmentMedication(TreatmentMedication $treatmentMedication): self
     {
         $this->treatmentMedication = $treatmentMedication;
 
