@@ -96,6 +96,7 @@ class TreatmentMedication
     private $treatmentDuration;
 
     /**
+     * @var int
      * @ORM\Column(type="integer", nullable=false)
      * @JMS\Type("integer")
      * @JMS\Groups({
@@ -250,15 +251,15 @@ class TreatmentMedication
     }
 
     /**
-     * @return mixed
+     * @return integer
      */
-    public function getWaitingDays()
+    public function getWaitingDays(): int
     {
         return $this->waitingDays;
     }
 
     /**
-     * @param mixed $waitingDays
+     * @param integer $waitingDays
      * @return TreatmentMedication
      */
     public function setWaitingDays($waitingDays): self

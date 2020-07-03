@@ -29,6 +29,7 @@ use AppBundle\Service\InbreedingCoefficient\InbreedingCoefficientReportUpdaterSe
 use AppBundle\Service\Report\AnimalFeaturesPerYearOfBirthReportService;
 use AppBundle\Service\Report\AnimalTreatmentsPerYearReportService;
 use AppBundle\Service\Report\BirthListReportService;
+use AppBundle\Service\Report\CombiFormTransportDocumentService;
 use AppBundle\Service\Report\EweCardReportService;
 use AppBundle\Service\Report\ClientNotesOverviewReportService;
 use AppBundle\Service\Report\CompanyRegisterReportService;
@@ -56,6 +57,7 @@ use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\ORMException;
 use Enqueue\Client\ProducerInterface;
 use Enqueue\Util\JSON;
+use Exception;
 use Symfony\Bridge\Monolog\Logger;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -142,6 +144,9 @@ class ReportService
     /** @var InbreedingCoefficientReportUpdaterService */
     private $inbreedingCoefficientReportUpdaterService;
 
+    /** @var CombiFormTransportDocumentService */
+    private $combiFormTransportDocumentService;
+
     /** @var string */
     private $environment;
 
@@ -167,7 +172,8 @@ class ReportService
      * @param FertilizerAccountingReport $fertilizerAccountingReport
      * @param AnimalFeaturesPerYearOfBirthReportService $animalFeaturesPerYearOfBirthReportService
      * @param AnimalTreatmentsPerYearReportService $animalTreatmentsPerYearReportService
-     * @param InbreedingCoefficientReportUpdaterService $inbreedingCoefficientReportUpdaterService
+     * @param InbreedingCoefficientReportUpdaterService $inbreedingCoefficientReportUpdaterService,
+     * @param CombiFormTransportDocumentService $combiFormTransportDocumentService,
      * @param string $environment
      */
     public function __construct(
@@ -192,6 +198,7 @@ class ReportService
         AnimalFeaturesPerYearOfBirthReportService $animalFeaturesPerYearOfBirthReportService,
         AnimalTreatmentsPerYearReportService $animalTreatmentsPerYearReportService,
         InbreedingCoefficientReportUpdaterService $inbreedingCoefficientReportUpdaterService,
+        CombiFormTransportDocumentService $combiFormTransportDocumentService,
         string $environment
     )
     {
@@ -216,13 +223,14 @@ class ReportService
         $this->animalFeaturesPerYearOfBirthReportService = $animalFeaturesPerYearOfBirthReportService;
         $this->animalTreatmentsPerYearReportService = $animalTreatmentsPerYearReportService;
         $this->inbreedingCoefficientReportUpdaterService = $inbreedingCoefficientReportUpdaterService;
+        $this->combiFormTransportDocumentService = $combiFormTransportDocumentService;
         $this->environment = $environment;
     }
 
     /**
      * @param Request $request
      * @return array|null
-     * @throws \Exception
+     * @throws Exception
      */
     public function getReports(Request $request): ?array
     {
@@ -237,7 +245,7 @@ class ReportService
     /**
      * @param Request $request
      * @return JsonResponse
-     * @throws \Exception
+     * @throws Exception
      */
     public function createLiveStockReport(Request $request)
     {
@@ -254,7 +262,7 @@ class ReportService
     /**
      * @param Request $request
      * @return JsonResponse
-     * @throws \Exception
+     * @throws Exception
      */
     private function createLiveStockReportWithoutWorker(Request $request)
     {
@@ -301,10 +309,10 @@ class ReportService
 
 
     /**
-     * @param \Exception $e
+     * @param Exception $e
      * @param int|null $workerId
      */
-    private function processWorkerError(\Exception $e, int $workerId = null)
+    private function processWorkerError(Exception $e, int $workerId = null)
     {
         $this->logExceptionAsError($e);
         if ($workerId) {
@@ -324,7 +332,7 @@ class ReportService
     /**
      * @param Request $request
      * @return \AppBundle\Component\HttpFoundation\JsonResponse|\Symfony\Component\HttpFoundation\JsonResponse
-     * @throws \Exception
+     * @throws Exception
      */
     public function createPedigreeCertificates(Request $request)
     {
@@ -356,7 +364,7 @@ class ReportService
      * @param Request $request
      * @param  $content
      * @return JsonResponse
-     * @throws \Exception
+     * @throws Exception
      */
     private function createPedigreeCertificatesWithoutWorker(Request $request, $content = null)
     {
@@ -405,7 +413,7 @@ class ReportService
     /**
      * @param Request $request
      * @return JsonResponse
-     * @throws \Exception
+     * @throws Exception
      */
     public function createPopRepReport(Request $request)
     {
@@ -480,7 +488,7 @@ class ReportService
      * @param Request $request
      * @param ArrayCollection|null $content
      * @return JsonResponse
-     * @throws \Exception
+     * @throws Exception
      */
     public function createEweCardReport(Request $request, $content = null)
     {
@@ -526,7 +534,7 @@ class ReportService
     /**
      * @param Request $request
      * @return JsonResponse
-     * @throws \Exception
+     * @throws Exception
      */
     public function createAnimalFeaturesPerYearOfBirthReport(Request $request)
     {
@@ -568,7 +576,7 @@ class ReportService
     /**
      * @param Request $request
      * @return JsonResponse
-     * @throws \Exception
+     * @throws Exception
      */
     public function createAnimalTreatmentsPerYearReport(Request $request)
     {
@@ -654,7 +662,7 @@ class ReportService
     /**
      * @param Request $request
      * @return \AppBundle\Component\HttpFoundation\JsonResponse|\Symfony\Component\HttpFoundation\JsonResponse
-     * @throws \Exception
+     * @throws Exception
      */
     public function createAnimalsOverviewReport(Request $request)
     {
@@ -687,7 +695,7 @@ class ReportService
     /**
      * @param Request $request
      * @return JsonResponse
-     * @throws \Exception
+     * @throws Exception
      */
     public function createInbreedingCoefficientsReport(Request $request)
     {
@@ -754,7 +762,7 @@ class ReportService
     /**
      * @param Request $request
      * @return JsonResponse
-     * @throws \Exception
+     * @throws Exception
      */
     public function createFertilizerAccountingReport(Request $request)
     {
@@ -784,7 +792,7 @@ class ReportService
     /**
      * @param Request $request
      * @return JsonResponse|\Symfony\Component\HttpFoundation\JsonResponse
-     * @throws \Exception
+     * @throws Exception
      */
     public function createAnnualTe100UbnProductionReport(Request $request)
     {
@@ -899,7 +907,7 @@ class ReportService
     /**
      * @param Request $request
      * @return JsonResponse
-     * @throws \Exception
+     * @throws Exception
      */
     public function createCompanyRegisterReport(Request $request)
     {
@@ -942,7 +950,7 @@ class ReportService
     /**
      * @param Request $request
      * @return JsonResponse
-     * @throws \Exception
+     * @throws Exception
      */
     public function createWeightsPerYearOfBirthReport(Request $request)
     {
@@ -980,7 +988,7 @@ class ReportService
     /**
      * @param Request $request
      * @return JsonResponse
-     * @throws \Exception
+     * @throws Exception
      */
     public function createClientNotesOverviewReport(Request $request)
     {
@@ -1029,7 +1037,41 @@ class ReportService
     /**
      * @param Request $request
      * @return JsonResponse
-     * @throws \Exception
+     * @throws Exception
+     */
+    public function createVKITransportDocument(Request $request)
+    {
+        $processAsWorkerTask = RequestUtil::getBooleanQuery($request,QueryParameter::PROCESS_AS_WORKER_TASK,true);
+
+        $content = RequestUtil::getContentAsArrayCollection($request);
+
+        /** @var Location $location */
+        $location = $this->userService->getSelectedLocation($request);
+
+        $ubn = is_null($location) ? "" : $location->getUbn();
+
+        $transportDate = $content['transport_date'];
+
+        $inputForHash = $ubn.$transportDate;
+
+        if ($processAsWorkerTask) {
+            return $this->processReportAsWorkerTask(
+                [
+                    'transport_date' => $transportDate,
+                    'export_ubn' => $content['export_ubn']
+                ],
+                $request,ReportType::COMBI_FORMS_VKI_AND_TRANSPORT_DOCUMENTS,
+                $inputForHash
+            );
+        }
+
+        return $this->combiFormTransportDocumentService->getReport($transportDate, $content['export_ubn'], $location);
+    }
+
+    /**
+     * @param Request $request
+     * @return JsonResponse
+     * @throws Exception
      */
     public function createMembersAndUsersOverviewReportService(Request $request)
     {
@@ -1108,7 +1150,6 @@ class ReportService
     {
         $workerId = null;
         try {
-
             if ($this->isSimilarNonExpiredReportAlreadyInProgress($request, $reportType, $inputForHash)) {
                 return $this->reportWorkerInProgressAlreadyExistErrorResponse();
             }
@@ -1122,7 +1163,7 @@ class ReportService
 
             $this->producer->sendCommand(WorkerAction::GENERATE_REPORT, $messageBodyAsArray);
         }
-        catch(\Exception $e) {
+        catch(Exception $e) {
             $this->processWorkerError($e, $workerId);
             return ResultUtil::internalServerError();
         }
@@ -1135,7 +1176,7 @@ class ReportService
      * @param int $reportType
      * @param string $inputForHash
      * @return bool
-     * @throws \Exception
+     * @throws Exception
      */
     private function isSimilarNonExpiredReportAlreadyInProgress(Request $request, int $reportType, string $inputForHash): bool
     {
@@ -1148,8 +1189,8 @@ class ReportService
     {
         try {
             $reportWorker = new ReportWorker();
-            $reportWorker->setOwner($this->userService->getAccountOwner($request));
-            $reportWorker->setActionBy($this->userService->getUser());
+            $reportWorker->setOwner($this->userService->getAccountOwner($request, $request->headers->get('AccessToken')));
+            $reportWorker->setActionBy($this->userService->getUser($request->headers->get('AccessToken')));
             $reportWorker->setLocation($this->userService->getSelectedLocation($request));
 
             $fileType = $request->query->get(QueryParameter::FILE_TYPE_QUERY, self::getDefaultFileType());
@@ -1164,7 +1205,7 @@ class ReportService
 
             return $reportWorker->getId();
         }
-        catch(\Exception $e) {
+        catch(Exception $e) {
             $this->logExceptionAsError($e);
         }
 
@@ -1177,7 +1218,7 @@ class ReportService
      * @param int $reportType
      * @param string $inputForHash
      * @return string
-     * @throws \Exception
+     * @throws Exception
      */
     private function getReportWorkerHash(Request $request, int $reportType, string $inputForHash): string
     {
@@ -1186,8 +1227,8 @@ class ReportService
         $fileType = $request->query->get(QueryParameter::FILE_TYPE_QUERY, self::getDefaultFileType());
         $language = $request->query->get(QueryParameter::LANGUAGE, $this->translator->getLocale());
 
-        $accountOwner = $this->userService->getAccountOwner($request);
-        $user = $this->userService->getUser();
+        $accountOwner = $this->userService->getAccountOwner($request, $request->headers->get('AccessToken'));
+        $user = $this->userService->getUser($request->headers->get('AccessToken'));
         $location = $this->userService->getSelectedLocation($request);
 
         $metaDataForHash =
@@ -1225,7 +1266,7 @@ class ReportService
 
     /**
      * @return \DateTime
-     * @throws \Exception
+     * @throws Exception
      */
     public static function getMaxNonExpiredDate(): \DateTime
     {
@@ -1236,7 +1277,7 @@ class ReportService
     }
 
     /**
-     * @param \Exception $exception
+     * @param Exception $exception
      */
     public function logExceptionAsError($exception)
     {
@@ -1250,7 +1291,7 @@ class ReportService
      * @param $reportType
      * @param $base64encodedBody
      * @return JsonResponse
-     * @throws \Exception
+     * @throws Exception
      */
     public function testReportTemplate(Request $request, $reportType, $base64encodedBody)
     {
