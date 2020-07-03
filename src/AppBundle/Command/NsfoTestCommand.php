@@ -9,6 +9,7 @@ use AppBundle\Entity\LocationRepository;
 use AppBundle\Entity\ResultTableBreedGrades;
 use AppBundle\Service\AwsExternalTestQueueService;
 use AppBundle\Service\AwsInternalTestQueueService;
+use AppBundle\Service\DataFix\UbnHistoryOneTimeFixer;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\DoctrineUtil;
 use AppBundle\Util\NullChecker;
@@ -81,6 +82,11 @@ class NsfoTestCommand extends ContainerAwareCommand
         $output->writeln(CommandUtil::generateTitle(self::TITLE));
         $output->writeln([DoctrineUtil::getDatabaseHostAndNameString($em),'']);
 
+        /** @var UbnHistoryOneTimeFixer $service */
+        $service = $this->getContainer()->get(UbnHistoryOneTimeFixer::class);
+        $service->fix();
+
+        die;
 
         $option = $this->cmdUtil->generateMultiLineQuestion([
             'Choose option: ', "\n",
