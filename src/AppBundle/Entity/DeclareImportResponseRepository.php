@@ -57,7 +57,7 @@ class DeclareImportResponseRepository extends BaseRepository {
         $joins = "
               INNER JOIN declare_import di ON di.id = db.id
                INNER JOIN (
-                 SELECT dbr.request_id, dbr.message_number, dbr.error_code, dbr.error_message
+                 SELECT dbr.id as response_id, dbr.request_id, dbr.message_number, dbr.error_code, dbr.error_message
                  FROM declare_base_response dbr
                    INNER JOIN (
                                 SELECT request_id, MAX(log_date) as log_date
@@ -68,16 +68,15 @@ class DeclareImportResponseRepository extends BaseRepository {
                  LEFT JOIN animal a ON a.id = di.animal_id 
         ";
 
-        $countSql = "SELECT COUNT(*) AS totalitems
+        $countSql = "SELECT DISTINCT a.id
              FROM declare_base db
              ".$joins."   
              ".$filter."
-             GROUP BY a.location_id"
-        ;
+         ";
 
-        $sql = "SELECT 
+        $sql = "SELECT DISTINCT 
                     db.request_id, 
-                    log_date, 
+                    db.log_date,
                     a.uln_country_code, 
                     a.uln_number,
                     a.pedigree_country_code, 
@@ -88,35 +87,29 @@ class DeclareImportResponseRepository extends BaseRepository {
                     import_date as arrival_date, 
                     a.animal_country_origin as country_origin, 
                     animal_uln_number_origin, 
-                    request_state, 
+                    request_state,
+                    r.response_id,
                     r.message_number, 
                     r.error_code, 
                     r.error_message
                 FROM declare_base db
              ".$joins."   
              ".$filter."
-                ORDER BY db.log_date DESC
+                ORDER BY db.log_date DESC, r.response_id DESC
                 OFFSET 10 * (".$page." - 1)
                 FETCH NEXT 10 ROWS ONLY"
         ;
 
-        $totalItems = 0;
-
-        $statement = $this->getManager()->getConnection()->prepare($countSql);
-        $statement->bindParam('query', $query);
-        $statement->execute();
-        $countResult = $statement->fetchAll();
-
-        if (!empty($countResult)) {
-            $totalItems = $countResult[0]['totalitems'];
-        }
+        $countStatement = $this->getManager()->getConnection()->prepare($countSql);
+        $countStatement->bindParam('query', $query);
+        $countStatement->execute();
 
         $statement = $this->getManager()->getConnection()->prepare($sql);
         $statement->bindParam('query', $query);
         $statement->execute();
 
         return [
-            'totalItems' => $totalItems,
+            'totalItems' => count($countStatement->fetchAll()),
             'items' => $statement->fetchAll()
         ];
     }
