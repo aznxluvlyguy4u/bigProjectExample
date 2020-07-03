@@ -57,7 +57,7 @@ class DeclareImportResponseRepository extends BaseRepository {
         $joins = "
               INNER JOIN declare_import di ON di.id = db.id
                INNER JOIN (
-                 SELECT dbr.id, dbr.request_id, dbr.message_number, dbr.error_code, dbr.error_message
+                 SELECT dbr.id as response_id, dbr.request_id, dbr.message_number, dbr.error_code, dbr.error_message
                  FROM declare_base_response dbr
                    INNER JOIN (
                                 SELECT request_id, MAX(log_date) as log_date
@@ -87,14 +87,15 @@ class DeclareImportResponseRepository extends BaseRepository {
                     import_date as arrival_date, 
                     a.animal_country_origin as country_origin, 
                     animal_uln_number_origin, 
-                    request_state, 
+                    request_state,
+                    r.response_id,
                     r.message_number, 
                     r.error_code, 
                     r.error_message
                 FROM declare_base db
              ".$joins."   
              ".$filter."
-                ORDER BY db.log_date DESC, r.id DESC
+                ORDER BY db.log_date DESC, r.response_id DESC
                 OFFSET 10 * (".$page." - 1)
                 FETCH NEXT 10 ROWS ONLY"
         ;

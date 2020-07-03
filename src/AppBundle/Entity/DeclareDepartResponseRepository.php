@@ -42,7 +42,7 @@ class DeclareDepartResponseRepository extends BaseRepository {
         $joins = "
           INNER JOIN declare_depart dd ON dd.id = db.id
           INNER JOIN (
-            SELECT dbr.id, dbr.request_id, dbr.message_number, dbr.error_code, dbr.error_message
+            SELECT dbr.id as response_id, dbr.request_id, dbr.message_number, dbr.error_code, dbr.error_message
             FROM declare_base_response dbr
               INNER JOIN (
                            SELECT request_id, MAX(log_date) as log_date
@@ -90,14 +90,15 @@ class DeclareDepartResponseRepository extends BaseRepository {
                     depart_date, 
                     ubn_new_owner, 
                     reason_of_depart, 
-                    request_state, 
+                    request_state,
+                    r.response_id,
                     r.message_number,
                     r.error_code, 
                     r.error_message
                 FROM declare_base db
                 ".$joins."
                 ".$filter."
-                ORDER BY db.log_date DESC, r.id DESC
+                ORDER BY db.log_date DESC, r.response_id DESC
                 OFFSET 10 * (".$page." - 1)
                 FETCH NEXT 10 ROWS ONLY"
         ;
