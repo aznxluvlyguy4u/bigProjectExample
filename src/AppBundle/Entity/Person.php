@@ -9,6 +9,7 @@ use AppBundle\Util\StringUtil;
 use AppBundle\Util\TimeUtil;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
+use Exception;
 use JMS\Serializer\Annotation as JMS;
 use JMS\Serializer\Annotation\ExclusionPolicy;
 use JMS\Serializer\Annotation\Expose;
@@ -110,7 +111,8 @@ abstract class Person implements UserInterface
    *     "TREATMENT",
    *     "USER_MEASUREMENT",
    *     "VWA",
-   *     "DOSSIER"
+   *     "DOSSIER",
+   *     "REGISTRATION"
    * })
    * @Expose
    */
@@ -138,7 +140,8 @@ abstract class Person implements UserInterface
    *     "TREATMENT",
    *     "USER_MEASUREMENT",
    *     "VWA",
-   *     "DOSSIER"
+   *     "DOSSIER",
+   *     "REGISTRATION"
    * })
    * @Expose
    */
@@ -155,7 +158,8 @@ abstract class Person implements UserInterface
    *     "BASIC",
    *     "GHOST_LOGIN",
    *     "VWA",
-   *     "DOSSIER"
+   *     "DOSSIER",
+   *     "REGISTRATION"
    * })
    * @Expose
    */
@@ -189,7 +193,9 @@ abstract class Person implements UserInterface
 
   /**
    * @ORM\Column(type="string", length=64, nullable=false)
-   *
+   * @JMS\Groups({
+   *     "REGISTRATION"
+   * })
    */
   protected $password;
 
@@ -621,7 +627,8 @@ abstract class Person implements UserInterface
      *
      * @param string $accessToken
      *
-     * @return Person
+     * @return void|Person
+     * @throws Exception
      */
     public function setAccessToken($accessToken)
     {
@@ -635,6 +642,8 @@ abstract class Person implements UserInterface
       }
       //if no AccessTokens were found
       $this->addToken(new Token(TokenType::ACCESS, $accessToken));
+
+      return $this;
     }
 
   /**
@@ -661,12 +670,15 @@ abstract class Person implements UserInterface
     return $this->tokens;
   }
 
-  /**
-   * @param ArrayCollection $tokens
-   */
+    /**
+     * @param ArrayCollection $tokens
+     * @return Person
+     */
   public function setTokens($tokens)
   {
     $this->tokens = $tokens;
+
+    return $this;
   }
 
   /**
@@ -718,12 +730,15 @@ abstract class Person implements UserInterface
     return $this->personId;
   }
 
-  /**
-   * @param string $personId
-   */
+    /**
+     * @param string $personId
+     * @return Person
+     */
   public function setPersonId($personId)
   {
     $this->personId = $personId;
+
+    return $this;
   }
 
     /**
