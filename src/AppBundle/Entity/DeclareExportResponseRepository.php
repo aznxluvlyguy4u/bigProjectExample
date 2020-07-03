@@ -71,15 +71,15 @@ class DeclareExportResponseRepository extends BaseRepository {
             AND a.location_id = ".$locationId."
         ";
 
-        $countSql = "SELECT COUNT(*) AS totalitems
+        $countSql = "SELECT DISTINCT a.id
                 FROM declare_base db
                 ".$joins."
                 ".$filter."
-                GROUP BY a.location_id";
+            ";
 
-        $sql = "SELECT 
+        $sql = "SELECT DISTINCT 
                     db.request_id, 
-                    log_date, 
+                    db.log_date, 
                     a.uln_country_code, 
                     a.uln_number,
                     a.pedigree_country_code,
@@ -99,23 +99,17 @@ class DeclareExportResponseRepository extends BaseRepository {
                 FETCH NEXT 10 ROWS ONLY"
         ;
 
-         $totalItems = 0;
 
-        $statement = $this->getManager()->getConnection()->prepare($countSql);
-        $statement->bindParam('query', $query);
-        $statement->execute();
-        $countResult = $statement->fetchAll();
-
-         if (!empty($countResult)) {
-             $totalItems = $countResult[0]['totalitems'];
-         }
+        $countStatement = $this->getManager()->getConnection()->prepare($countSql);
+        $countStatement->bindParam('query', $query);
+        $countStatement->execute();
 
         $statement = $this->getManager()->getConnection()->prepare($sql);
         $statement->bindParam('query', $query);
         $statement->execute();
 
         return [
-            'totalItems' => $totalItems,
+            'totalItems' => count($countStatement->fetchAll()),
             'items' =>$statement->fetchAll()
         ];
     }
