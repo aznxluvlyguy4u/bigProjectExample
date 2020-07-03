@@ -88,6 +88,32 @@ class EmailService
         return $this->swiftMailer->send($message) > 0;
     }
 
+    /**
+     * @param Person $newUser
+     * @return bool
+     * @throws Error
+     */
+    public function sendNewUserEmail(Person $newUser) {
+        //Confirmation message back to the sender
+        $message = \Swift_Message::newInstance()
+            ->setSubject(Constant::NEW_USER_MAIL_SUBJECT_HEADER)
+            ->setFrom($this->mailerSourceAddress)
+            ->setTo($this->notificationEmailAddresses)
+            ->setBody(
+                $this->templating->render(
+                // app/Resources/views/...
+                    'Auth/new_user_email.html.twig',
+                    [
+                        'newUser' => $newUser,
+                        'subject' => Constant::NEW_USER_MAIL_SUBJECT_HEADER
+                    ]
+                ),
+                'text/html'
+            )
+            ->setSender($this->mailerSourceAddress);
+
+        return $this->swiftMailer->send($message) > 0;
+    }
 
     /**
      * @param Person $person

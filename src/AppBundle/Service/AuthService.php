@@ -4,7 +4,7 @@
 namespace AppBundle\Service;
 
 
-use AppBundle\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
 use AppBundle\Constant\JsonInputConstant;
@@ -19,6 +19,7 @@ use AppBundle\Util\ResultUtil;
 use AppBundle\Validation\HeaderValidation;
 use AppBundle\Validation\PasswordValidator;
 use Doctrine\ORM\EntityManagerInterface;
+use Exception;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 
@@ -28,12 +29,53 @@ class AuthService extends AuthServiceBase
     /**
      * @param Request $request
      * @return JsonResponse
+     * @throws Exception
      */
     public function signUpUser(Request $request)
     {
-        return ResultUtil::errorResult('no online registration available at the moment', 403);
+        $data = RequestUtil::getContentAsArray($request);
+
+        $password = $data['password'];
+
+        $passwordValidator = new PasswordValidator($password);
+        if(!$passwordValidator->getIsPasswordValid()) {
+            return $passwordValidator->createJsonErrorResponse();
+        }
+
+        /** @var Person $person */
+        $person = $this->getBaseSerializer()->deserializeToObject($request->getContent(), Person::class);
+
+        $person->__construct(
+            $data['first_name'],
+            $data['last_name'],
+            $data['email_address'],
+            $this->encoder->encodePassword($person, $password)
+        );
+
+        $person->setIsActive(false);
+
+        $this->getManager()->persist($person);
+        $this->getManager()->flush();
+
+        $this->emailService->sendNewUserEmail($person);
+
+        return new JsonResponse(
+            $this->getBaseSerializer()->getDecodedJson($person, ['REGISTRATION']),
+            200
+        );
     }
 
+    public function acceptPerson(Person $person) {
+        $person->setIsActive(true);
+
+        $this->getManager()->persist($person);
+        $this->getManager()->flush();
+
+        return new JsonResponse(
+            $this->getBaseSerializer()->getDecodedJson($person, ['REGISTRATION']),
+            200
+        );
+    }
 
     /**
      * @param $credentials
