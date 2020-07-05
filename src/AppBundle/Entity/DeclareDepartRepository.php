@@ -158,7 +158,6 @@ class DeclareDepartRepository extends BaseRepository {
 
     /**
      * @param  \DateTime  $departOrExportDate
-     * @param  bool  $mustHaveNonSlaughterReasonOfDepart
      * @param  string|null  $ubnNewOwner
      * @param  Location|null  $location
      * @param  bool  $includeExports
@@ -166,7 +165,6 @@ class DeclareDepartRepository extends BaseRepository {
      */
     public function getDepartAnimals(
         \DateTime $departOrExportDate,
-        bool $mustHaveNonSlaughterReasonOfDepart,
         ?string $ubnNewOwner = null,
         ?Location $location = null,
         bool $includeExports = false
@@ -187,12 +185,6 @@ class DeclareDepartRepository extends BaseRepository {
                 $departQb->expr()->lt('d.departDate',$dayAfterDateTimeFilterInput),
                 (
                     !empty($ubnNewOwner) ? $departQb->expr()->eq('d.ubnNewOwner', "'".$ubnNewOwner."'") : null
-                ),
-                (
-                    $mustHaveNonSlaughterReasonOfDepart ? $departQb->expr()->orX(
-                        $departQb->expr()->eq('d.reasonOfDepart',"'".ReasonOfDepartType::BREEDING_FARM."'"),
-                        $departQb->expr()->eq('d.reasonOfDepart',"'".ReasonOfDepartType::RENT."'")
-                    ) : null
                 )
             ))
         ;

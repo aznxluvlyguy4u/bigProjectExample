@@ -82,7 +82,7 @@ class CombiFormTransportDocumentService extends ReportServiceBase
         $this->result['total_waiting_time_expired_animal_pages'] = 0;
 
         $animalsForTransportOptions = $this->em->getRepository(DeclareDepart::class)
-            ->getDepartAnimals($transportDateObject, true, $exportUbn, $location, false);
+            ->getDepartAnimals($transportDateObject, $exportUbn, $location, false);
 
         /** @var Animal $animal */
         foreach ($animalsForTransportOptions as $animal) {
