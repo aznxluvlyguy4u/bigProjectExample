@@ -40,7 +40,8 @@ class AuthService extends AuthServiceBase
         $this->getManager()->persist($registration);
         $this->getManager()->flush();
 
-        $this->emailService->sendNewRegistrationEmail($registration);
+        $this->emailService->sendNewRegistrationEmail($registration, 'beheerder');
+        $this->emailService->sendNewRegistrationEmail($registration, $registration->getFullName());
 
         return new JsonResponse(
             $this->getBaseSerializer()->getDecodedJson($registration),
