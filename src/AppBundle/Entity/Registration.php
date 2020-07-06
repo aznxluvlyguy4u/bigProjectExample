@@ -31,6 +31,14 @@ class Registration
      * @ORM\Column(type="string")
      * @JMS\Type("string")
      */
+    private $status;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(type="string")
+     * @JMS\Type("string")
+     */
     private $firstName;
 
     /**
@@ -111,6 +119,22 @@ class Registration
     public function getId()
     {
         return $this->id;
+    }
+
+    /**
+     * @return string
+     */
+    public function getStatus(): string
+    {
+        return $this->status;
+    }
+
+    /**
+     * @param string $status
+     */
+    public function setStatus(string $status): void
+    {
+        $this->status = $status;
     }
 
     /**

@@ -37,6 +37,8 @@ class AuthService extends AuthServiceBase
         /** @var Registration $registration */
         $registration = $this->getBaseSerializer()->deserializeToObject($request->getContent(), Registration::class);
 
+        $registration->setStatus('NEW');
+
         $this->getManager()->persist($registration);
         $this->getManager()->flush();
 
