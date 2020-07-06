@@ -81,7 +81,6 @@ class NsfoTestCommand extends ContainerAwareCommand
         $output->writeln(CommandUtil::generateTitle(self::TITLE));
         $output->writeln([DoctrineUtil::getDatabaseHostAndNameString($em),'']);
 
-
         $option = $this->cmdUtil->generateMultiLineQuestion([
             'Choose option: ', "\n",
             '1: Find locations with highest animal count', "\n",

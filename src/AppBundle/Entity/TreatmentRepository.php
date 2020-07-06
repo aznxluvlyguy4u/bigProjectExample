@@ -33,7 +33,8 @@ class TreatmentRepository extends BaseRepository {
                 LOWER(tm.name) LIKE LOWER(:query) OR 
                 a.collar_number LIKE LOWER(:query) OR 
                 LOWER(a.collar_color) LIKE LOWER(:query) OR 
-                CONCAT(LOWER(a.collar_color), a.collar_number) LIKE LOWER(:query)
+                CONCAT(LOWER(a.collar_color), a.collar_number) LIKE LOWER(:query) OR
+                CONCAT(LOWER(a.collar_color), ' ', a.collar_number) LIKE LOWER(:query)
             )
         ";
 
@@ -46,14 +47,13 @@ class TreatmentRepository extends BaseRepository {
         ";
 
         $countSql = "
-            SELECT COUNT(t.id) AS total FROM treatment t
+            SELECT DISTINCT t.id FROM treatment t
             ".$joins."
             ".$filter."
-            GROUP BY l.id
         ";
 
         $sql = "
-            SELECT 
+            SELECT DISTINCT 
                 t.id as treatment_id,
                 t.create_date,
                 t.description,
@@ -119,7 +119,7 @@ class TreatmentRepository extends BaseRepository {
 
         return [
             'items'      => $results,
-            'totalItems' => $countStatement->fetch()['total']
+            'totalItems' => count($countStatement->fetchAll())
         ];
     }
 

@@ -47,8 +47,8 @@ class Treatment implements TreatmentInterface
     private $location;
 
     /**
-     * @var Animal
-     * @ORM\ManyToMany(targetEntity="Animal", inversedBy="treatments", cascade={"remove"})
+     * @var Animal[]|ArrayCollection
+     * @ORM\ManyToMany(targetEntity="Animal", inversedBy="treatments", cascade={"remove"}, fetch="LAZY")
      * @JMS\Type("ArrayCollection<AppBundle\Entity\Animal>")
      *
      * @JMS\Groups({
@@ -111,10 +111,10 @@ class Treatment implements TreatmentInterface
     private $owner;
 
     /**
-     * @var Employee
-     * @ORM\ManyToOne(targetEntity="Employee")
+     * @var Person
+     * @ORM\ManyToOne(targetEntity="Person")
      * @ORM\JoinColumn(name="creation_by", referencedColumnName="id")
-     * @JMS\Type("AppBundle\Entity\Employee")
+     * @JMS\Type("AppBundle\Entity\Person")
      *
      * @JMS\Groups({
      *     "TREATMENT"
@@ -123,10 +123,10 @@ class Treatment implements TreatmentInterface
     private $creationBy;
 
     /**
-     * @var Employee
-     * @ORM\ManyToOne(targetEntity="Employee")
+     * @var Person
+     * @ORM\ManyToOne(targetEntity="Person")
      * @ORM\JoinColumn(name="edited_by", referencedColumnName="id")
-     * @JMS\Type("AppBundle\Entity\Employee")
+     * @JMS\Type("AppBundle\Entity\Person")
      *
      * @JMS\Groups({
      *     "TREATMENT"
@@ -135,10 +135,10 @@ class Treatment implements TreatmentInterface
     private $editedBy;
 
     /**
-     * @var Employee
-     * @ORM\ManyToOne(targetEntity="Employee")
+     * @var Person
+     * @ORM\ManyToOne(targetEntity="Person")
      * @ORM\JoinColumn(name="deleted_by", referencedColumnName="id")
-     * @JMS\Type("AppBundle\Entity\Employee")
+     * @JMS\Type("AppBundle\Entity\Person")
      *
      * @JMS\Groups({
      *     "TREATMENT"
@@ -394,7 +394,7 @@ class Treatment implements TreatmentInterface
     }
 
     /**
-     * @return Employee
+     * @return Person
      */
     public function getCreationBy()
     {
@@ -402,7 +402,7 @@ class Treatment implements TreatmentInterface
     }
 
     /**
-     * @param Employee $creationBy
+     * @param Person $creationBy
      * @return Treatment
      */
     public function setCreationBy($creationBy)
@@ -412,7 +412,7 @@ class Treatment implements TreatmentInterface
     }
 
     /**
-     * @return Employee
+     * @return Person
      */
     public function getEditedBy()
     {
@@ -420,7 +420,7 @@ class Treatment implements TreatmentInterface
     }
 
     /**
-     * @param Employee $editedBy
+     * @param Person $editedBy
      * @return Treatment
      */
     public function setEditedBy($editedBy)
@@ -430,7 +430,7 @@ class Treatment implements TreatmentInterface
     }
 
     /**
-     * @return Employee
+     * @return Person
      */
     public function getDeletedBy()
     {
@@ -438,7 +438,7 @@ class Treatment implements TreatmentInterface
     }
 
     /**
-     * @param Employee $deletedBy
+     * @param Person $deletedBy
      * @return Treatment
      */
     public function setDeletedBy($deletedBy)

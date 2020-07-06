@@ -18,6 +18,7 @@ use AppBundle\Util\Finder;
 use AppBundle\Validation\AdminValidator;
 use AppBundle\Validation\HeaderValidation;
 use Doctrine\ORM\EntityManagerInterface;
+use Exception;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 
@@ -56,9 +57,8 @@ class UserService
      *
      * @param string|null $tokenCode
      *
+     * @param string $source
      * @return Person|Employee|Client
-     *
-     * @throws \LogicException If SecurityBundle is not available
      *
      * @see TokenInterface::getUser()
      */
@@ -88,24 +88,22 @@ class UserService
      * @param Request $request
      * @param string|null $tokenCode
      * @return Client|null
-     * @throws \Exception
+     * @throws Exception
      */
     public function getAccountOwner(Request $request = null, $tokenCode = null)
     {
         $loggedInUser = $this->getUser($tokenCode);
-
         /* Clients */
         if($loggedInUser instanceof Client) {
             return $loggedInUser;
 
             /* Admins with a GhostToken */
         } else if ($loggedInUser instanceof Employee) {
-
             if ($request === null) {
-                throw new \Exception('Request cannot be empty for getAccountOwner if (loggedIn)User is not a Client');
+                throw new Exception('Request cannot be empty for getAccountOwner if (loggedIn)User is not a Client');
             }
 
-            if($request->headers->has(Constant::GHOST_TOKEN_HEADER_NAMESPACE) && $tokenCode === null) {
+            if($request->headers->has(Constant::GHOST_TOKEN_HEADER_NAMESPACE)) {
                 $ghostTokenCode = $request->headers->get(Constant::GHOST_TOKEN_HEADER_NAMESPACE);
                 $ghostToken = $this->tokenRepository->findOneBy(array("code" => $ghostTokenCode));
 
@@ -130,7 +128,7 @@ class UserService
     /**
      * @param Request $request
      * @return bool
-     * @throws \Exception
+     * @throws Exception
      */
     public function isRequestFromUserFrontend(Request $request)
     {
@@ -162,10 +160,12 @@ class UserService
     /**
      * @param Request $request
      * @return Location|null
+     * @throws Exception
      */
     public function getSelectedLocation(Request $request)
     {
-        $client = $this->getAccountOwner($request);
+        $client = $this->getAccountOwner($request, $request->headers->get('AccessToken'));
+
         $headerValidation = null;
 
         if($client) {
