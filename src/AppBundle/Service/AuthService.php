@@ -4,6 +4,7 @@
 namespace AppBundle\Service;
 
 
+use AppBundle\Entity\Registration;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
@@ -33,34 +34,16 @@ class AuthService extends AuthServiceBase
      */
     public function signUpUser(Request $request)
     {
-        $data = RequestUtil::getContentAsArray($request);
+        /** @var Registration $registration */
+        $registration = $this->getBaseSerializer()->deserializeToObject($request->getContent(), Registration::class);
 
-        $password = $data['password'];
-
-        $passwordValidator = new PasswordValidator($password);
-        if(!$passwordValidator->getIsPasswordValid()) {
-            return $passwordValidator->createJsonErrorResponse();
-        }
-
-        /** @var Person $person */
-        $person = $this->getBaseSerializer()->deserializeToObject($request->getContent(), Person::class);
-
-        $person->__construct(
-            $data['first_name'],
-            $data['last_name'],
-            $data['email_address'],
-            $this->encoder->encodePassword($person, $password)
-        );
-
-        $person->setIsActive(false);
-
-        $this->getManager()->persist($person);
+        $this->getManager()->persist($registration);
         $this->getManager()->flush();
 
-        $this->emailService->sendNewUserEmail($person);
+        $this->emailService->sendNewRegistrationEmail($registration);
 
         return new JsonResponse(
-            $this->getBaseSerializer()->getDecodedJson($person, ['REGISTRATION']),
+            $this->getBaseSerializer()->getDecodedJson($registration),
             200
         );
     }

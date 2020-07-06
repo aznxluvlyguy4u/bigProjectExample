@@ -289,11 +289,31 @@
                                                     <table>
                                                         <tr>
                                                             <td><b>Naam:</b></td>
-                                                            <td>{{ newUser.firstName }} {{ newUser.lastName }}</td>
+                                                            <td>{{ registration.fullName }}</td>
                                                         </tr>
                                                         <tr>
-                                                            <td><b>E-mail adres:</b></td>
-                                                            <td>{{ newUser.emailAddress }}</td>
+                                                            <td><b>Adres:</b></td>
+                                                            <td>{{ registration.fullAddress }}</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td><b>Postcode:</b></td>
+                                                            <td>{{ registration.postalCode }}</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td><b>Woonplaats:</b></td>
+                                                            <td>{{ registration.city }}</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td><b>Telefoon-nummer:</b></td>
+                                                            <td>{{ registration.phoneNumber }}</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td><b>UBN:</b></td>
+                                                            <td>{{ registration.ubn }}</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td><b>BRS:</b></td>
+                                                            <td>{{ registration.brs }}</td>
                                                         </tr>
                                                     </table>
                                                     <br>

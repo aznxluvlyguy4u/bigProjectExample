@@ -11,6 +11,7 @@ use AppBundle\Entity\Client;
 use AppBundle\Entity\Employee;
 use AppBundle\Entity\LocationHealthMessage;
 use AppBundle\Entity\Person;
+use AppBundle\Entity\Registration;
 use AppBundle\Entity\VwaEmployee;
 use AppBundle\Enumerator\RequestType;
 use Symfony\Bridge\Monolog\Logger;
@@ -89,11 +90,11 @@ class EmailService
     }
 
     /**
-     * @param Person $newUser
+     * @param Registration $registration
      * @return bool
      * @throws Error
      */
-    public function sendNewUserEmail(Person $newUser) {
+    public function sendNewRegistrationEmail(Registration $registration) {
         //Confirmation message back to the sender
         $message = \Swift_Message::newInstance()
             ->setSubject(Constant::NEW_USER_MAIL_SUBJECT_HEADER)
@@ -104,7 +105,7 @@ class EmailService
                 // app/Resources/views/...
                     'Auth/new_user_email.html.twig',
                     [
-                        'newUser' => $newUser,
+                        'registration' => $registration,
                         'subject' => Constant::NEW_USER_MAIL_SUBJECT_HEADER
                     ]
                 ),
