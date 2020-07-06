@@ -91,22 +91,32 @@ class EmailService
 
     /**
      * @param Registration $registration
+     * @param string $receiver
      * @return bool
      * @throws Error
      */
-    public function sendNewRegistrationEmail(Registration $registration) {
+    public function sendNewRegistrationEmail(Registration $registration, $receiver) {
+        if ($receiver === 'beheerder') {
+            $receiverEmailAddresses = $this->notificationEmailAddresses;
+            $subject = Constant::NEW_USER_MAIL_SUBJECT_HEADER_ADMIN;
+        } else {
+            $receiverEmailAddresses = [$registration->getEmailAddress()];
+            $subject = Constant::NEW_USER_MAIL_SUBJECT_HEADER_USER;
+        }
+
         //Confirmation message back to the sender
         $message = \Swift_Message::newInstance()
-            ->setSubject(Constant::NEW_USER_MAIL_SUBJECT_HEADER)
+            ->setSubject($subject)
             ->setFrom($this->mailerSourceAddress)
-            ->setTo($this->notificationEmailAddresses)
+            ->setTo($receiverEmailAddresses)
             ->setBody(
                 $this->templating->render(
                 // app/Resources/views/...
                     'Auth/new_user_email.html.twig',
                     [
                         'registration' => $registration,
-                        'subject' => Constant::NEW_USER_MAIL_SUBJECT_HEADER
+                        'subject' => $subject,
+                        'receiver' => $receiver
                     ]
                 ),
                 'text/html'
