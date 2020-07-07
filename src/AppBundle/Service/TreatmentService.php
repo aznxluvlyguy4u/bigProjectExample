@@ -2,15 +2,19 @@
 
 namespace AppBundle\Service;
 
+use AppBundle\Component\AnimalFlagMessageBuilder;
 use AppBundle\Component\HttpFoundation\JsonResponse;
+use AppBundle\Component\MessageBuilderBase;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Controller\TreatmentAPIControllerInterface;
 use AppBundle\Entity\Animal;
+use AppBundle\Entity\DeclareAnimalFlag;
 use AppBundle\Entity\MedicationSelection;
 use AppBundle\Entity\Treatment;
 use AppBundle\Entity\TreatmentMedication;
 use AppBundle\Entity\TreatmentTemplate;
+use AppBundle\Enumerator\ActionType;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\TreatmentTypeOption;
 use AppBundle\Util\ActionLogWriter;
@@ -33,6 +37,9 @@ use Symfony\Component\Validator\Constraints\Date;
  */
 class TreatmentService extends TreatmentServiceBase implements TreatmentAPIControllerInterface
 {
+
+    /** @var string */
+    private $environment;
 
     /**
      * @param Request $request
@@ -111,6 +118,35 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
                 $existingAnimals->add($existingAnimal);
             } else {
                 throw new PreconditionFailedHttpException("Animal with id ".$animalId." not found");
+            }
+
+            if (strtolower($treatment->getDescription()) === 'q-koorts') {
+                $treatment->setStatus(RequestStateType::OPEN);
+
+                $declareAnimalFlag = MessageBuilderBase::setStandardDeclareBaseValues(
+                    new DeclareAnimalFlag(),
+                    $client,
+                    $loggedInUser,
+                    ActionType::V_MUTATE,
+                    true
+                );
+
+                $declareAnimalFlag
+                    ->setAnimal($existingAnimal)
+                    ->setLocation($location)
+                    ->setFlagType('OVL IN HIS')
+                    ->setFlagStartDate($treatment->getStartDate())
+                    ->setFlagEndDate($treatment->getEndDate())
+                ;
+
+                $em->persist($declareAnimalFlag);
+                $em->flush();
+
+                $animalFlagMessageBuilder = new AnimalFlagMessageBuilder($em, $this->environment);
+
+                $messageObject = $animalFlagMessageBuilder->buildMessage($declareAnimalFlag, $client, $loggedInUser,$location);
+
+                $this->sendMessageObjectToQueue($messageObject);
             }
         }
 
@@ -354,5 +390,15 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
     function getLocationTreatments(Request $request)
     {
         // TODO: Implement getLocationTreatments() method.
+    }
+
+    /**
+     * @required Set at initialization
+     *
+     * @param $environment
+     */
+    public function setEnvironment($environment)
+    {
+        $this->environment = $environment;
     }
 }

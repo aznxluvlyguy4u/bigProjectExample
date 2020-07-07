@@ -637,6 +637,19 @@ services:
     app.treatment:
         parent: app.treatment.base
         class: AppBundle\Service\TreatmentService
+        calls:
+          - method: setEnvironment
+            arguments:
+              - '%kernel.environment%'
+          - method: setIrSerializer
+            arguments:
+              - '@app.serializer.ir'
+          - method: setExternalQueueService
+            arguments:
+              - '@AppBundle\Service\AwsExternalQueueService'
+          - method: setRequestMessageBuilder
+            arguments:
+              - '@app.request.message_builder'
 
     app.treatment.template:
         parent: app.treatment.base

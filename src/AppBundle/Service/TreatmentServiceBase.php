@@ -7,7 +7,6 @@ namespace AppBundle\Service;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\Location;
-use AppBundle\Entity\MedicationOption;
 use AppBundle\Entity\Treatment;
 use AppBundle\Entity\TreatmentRepository;
 use AppBundle\Entity\TreatmentLocation;
@@ -28,7 +27,7 @@ use Symfony\Component\HttpFoundation\Request;
  * Class TreatmentServiceBase
  * @package AppBundle\Service
  */
-class TreatmentServiceBase extends ControllerServiceBase
+class TreatmentServiceBase extends DeclareControllerServiceBase
 {
     /** @var TreatmentRepository */
     protected $treatmentAnimalRepository;
