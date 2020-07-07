@@ -433,7 +433,8 @@ class EweCardReportService extends ReportServiceBase
                         ROUND(AVG(birth_interval)) as average_twt,
                         ROUND(365/AVG(birth_interval),2) as litter_index
                     FROM litter l
-                    WHERE standard_litter_ordinal > 1 AND birth_interval NOTNULL
+                        -- litter oridinals are only set on active litters
+                    WHERE standard_litter_ordinal NOTNULL AND standard_litter_ordinal > 1 AND birth_interval NOTNULL
                     GROUP BY animal_mother_id
                 )litters_kpi ON litters_kpi.animal_mother_id = a.id
                 LEFT JOIN (
@@ -460,6 +461,8 @@ class EweCardReportService extends ReportServiceBase
 
     private function getGroupedLitterDataByLitter(string $animalIdsArrayString): string
     {
+        $activeRequestStateTypes = SqlUtil::activeRequestStateTypesForLittersJoinedList();
+
         return "SELECT
                  animal_mother_id as mom_id,
                  MAX(standard_litter_ordinal) as litter_number,
@@ -470,7 +473,9 @@ class EweCardReportService extends ReportServiceBase
                  ROUND(AVG(born_alive_count),2) as average_alive_per_litter,
                  ROUND(AVG(stillborn_count),2) as average_deaths_litter
              FROM litter l
-             WHERE l.animal_mother_id IN $animalIdsArrayString
+                INNER JOIN declare_nsfo_base dnb on l.id = dnb.id
+             WHERE l.animal_mother_id IN $animalIdsArrayString 
+               AND dnb.request_state IN ($activeRequestStateTypes) AND l.status IN ($activeRequestStateTypes)
              GROUP BY animal_mother_id";
     }
 
