@@ -11,14 +11,25 @@ use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as JMS;
 use Symfony\Component\Validator\Constraints as Assert;
 
-
 /**
  * Class TreatmentTemplate
  *
  * @ORM\Entity(repositoryClass="AppBundle\Entity\TreatmentTemplateRepository")
  * @package AppBundle\Entity
+ * @ORM\InheritanceType("JOINED")
+ * @ORM\DiscriminatorColumn(name="templateType", type="string")
+ * @ORM\DiscriminatorMap({"QFever"="QFever", "Default"="DefaultTreatmentTemplate"})
+ * @JMS\Discriminator(field="templateType", disabled=false, map={
+ *                        "QFever" : "AppBundle\Entity\QFever",
+ *                        "Default" : "AppBundle\Entity\DefaultTreatmentTemplate"
+ *                      },
+ *                      groups = {
+ *                          "TREATMENT_TEMPLATE",
+ *                          "TREATMENT"
+ *                      }
+ *                  )
  */
-class TreatmentTemplate
+abstract class TreatmentTemplate
 {
     use EntityClassInfo;
 
