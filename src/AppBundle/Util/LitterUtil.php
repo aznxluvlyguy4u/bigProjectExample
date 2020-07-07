@@ -471,7 +471,7 @@ FROM (
              SUM(l.born_alive_count) OVER (PARTITION BY animal_mother_id ORDER BY standard_litter_ordinal) as count
          FROM litter l
                   INNER JOIN declare_nsfo_base dnb on l.id = dnb.id
-         WHERE dnb.request_state IN ($activeRequestStateTypes)
+         WHERE dnb.request_state IN ($activeRequestStateTypes) AND l.status IN ($activeRequestStateTypes)
            $animalMotherIdFilter
            AND standard_litter_ordinal NOTNULL
          ORDER BY animal_mother_id, standard_litter_ordinal
