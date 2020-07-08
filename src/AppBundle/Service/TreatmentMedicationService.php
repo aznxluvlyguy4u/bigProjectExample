@@ -54,7 +54,7 @@ class TreatmentMedicationService extends TreatmentServiceBase implements Treatme
         $this->getManager()->persist($treatmentMedication);
         $this->getManager()->flush();
 
-//        AdminActionLogWriter::createTreatmentType($this->getManager(), $admin, $request, $treatmentMedication);
+        AdminActionLogWriter::createTreatmentMedication($this->getManager(), $admin, $treatmentMedication);
 
         $output = $this->getBaseSerializer()->getDecodedJson($treatmentMedication, [JmsGroup::TREATMENT_TEMPLATE]);
         return ResultUtil::successResult($output);

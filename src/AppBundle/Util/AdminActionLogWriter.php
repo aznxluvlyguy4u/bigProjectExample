@@ -219,6 +219,28 @@ class AdminActionLogWriter
 
 
     /**
+     * @param EntityManagerInterface $em
+     * @param Employee $admin
+     * @param TreatmentMedication $medication
+     * @return ActionLog
+     */
+    public static function createTreatmentMedication(EntityManagerInterface $em, $admin, $medication)
+    {
+        $description = $medication->getName()
+            .': dosage '.$medication->getDosage().' '.$medication->getDosageUnit()
+            .', regNl '.$medication->getRegNl()
+            .', duration '.$medication->getTreatmentDuration()
+            .', waitingDays '.$medication->getWaitingDays()
+        ;
+
+        $log = new ActionLog(null, $admin, UserActionType::TREATMENT_MEDICATION_CREATE, true, $description, self::IS_USER_ENVIRONMENT);
+        DoctrineUtil::persistAndFlush($em, $log);
+
+        return $log;
+    }
+
+
+    /**
      * @param ObjectManager $em
      * @param Employee $admin
      * @param Request $request
