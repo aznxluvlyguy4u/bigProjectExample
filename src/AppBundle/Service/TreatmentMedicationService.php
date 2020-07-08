@@ -48,23 +48,8 @@ class TreatmentMedicationService extends TreatmentServiceBase implements Treatme
 
         //Deserialization and Validation
         /** @var TreatmentMedication $treatmentMedicationFromContent */
-        $treatmentMedicationFromContent = $this->baseValidateDeserializedTreatmentMedication($request);
-        if ($treatmentMedicationFromContent instanceof JsonResponse) { return $treatmentMedicationFromContent; }
-
-        /** @var TreatmentMedication $treatmentMedicationInDb */
-        $treatmentMedicationInDb = $this->treatmentMedicationRepository
-            ->findOneBy(['name' => $treatmentMedicationFromContent->getName()]);
-
-        $treatmentMedication = $treatmentMedicationFromContent;
-        if ($treatmentMedicationInDb) {
-            if ($treatmentMedicationInDb->isActive()) {
-                return Validator::createJsonResponse('Behandelings medicatie bestaat al', 428);
-            } else {
-                //Reactivate
-                $treatmentMedicationInDb->setIsActive(true);
-                $treatmentMedication = $treatmentMedicationInDb;
-            }
-        }
+        $treatmentMedication = $this->baseValidateDeserializedTreatmentMedication($request);
+        if ($treatmentMedication instanceof JsonResponse) { return $treatmentMedication; }
 
         $this->getManager()->persist($treatmentMedication);
         $this->getManager()->flush();
