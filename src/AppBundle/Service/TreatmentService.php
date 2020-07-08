@@ -123,15 +123,7 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
             if (strtolower($treatment->getDescription()) === 'q-koorts') {
                 $treatment->setStatus(RequestStateType::OPEN);
 
-                $declareAnimalFlag = MessageBuilderBase::setStandardDeclareBaseValues(
-                    new DeclareAnimalFlag(),
-                    $client,
-                    $loggedInUser,
-                    ActionType::V_MUTATE,
-                    true
-                );
-
-                $declareAnimalFlag
+                $declareAnimalFlag = (new DeclareAnimalFlag())
                     ->setAnimal($existingAnimal)
                     ->setLocation($location)
                     ->setFlagType('OVL IN HIS')
@@ -144,7 +136,7 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
 
                 $animalFlagMessageBuilder = new AnimalFlagMessageBuilder($em, $this->environment);
 
-                $messageObject = $animalFlagMessageBuilder->buildMessage($declareAnimalFlag, $client, $loggedInUser,$location);
+                $messageObject = $animalFlagMessageBuilder->buildMessage($declareAnimalFlag, $client, $loggedInUser, $location);
 
                 $this->sendMessageObjectToQueue($messageObject);
             }
