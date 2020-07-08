@@ -17,9 +17,9 @@ use Symfony\Component\Validator\Constraints as Assert;
  * @ORM\Entity(repositoryClass="AppBundle\Entity\TreatmentTemplateRepository")
  * @package AppBundle\Entity
  * @ORM\InheritanceType("JOINED")
- * @ORM\DiscriminatorColumn(name="templateType", type="string")
+ * @ORM\DiscriminatorColumn(name="templatetype", type="string")
  * @ORM\DiscriminatorMap({"QFever"="QFever", "Default"="DefaultTreatmentTemplate"})
- * @JMS\Discriminator(field="templateType", disabled=false, map={
+ * @JMS\Discriminator(field="templatetype", disabled=false, map={
  *                        "QFever" : "AppBundle\Entity\QFever",
  *                        "Default" : "AppBundle\Entity\DefaultTreatmentTemplate"
  *                      },
@@ -160,6 +160,15 @@ abstract class TreatmentTemplate
      * })
      */
     private $type;
+
+    /**
+     * @var int
+     *
+     * @ORM\Column(type="integer", nullable=false, options={"default":AppBundle\Enumerator\AnimalType::sheep})
+     * @JMS\Type("integer")
+     * @Assert\NotNull
+     */
+    private $animalType;
 
     /**
      * @JMS\VirtualProperty
@@ -466,4 +475,25 @@ abstract class TreatmentTemplate
         }
         return $nullReplacement;
     }
+
+    /**
+     * @return int
+     */
+    public function getAnimalType(): int
+    {
+        return $this->animalType;
+    }
+
+    /**
+     * @param  int  $animalType
+     * @return TreatmentTemplate
+     */
+    public function setAnimalType(int $animalType): TreatmentTemplate
+    {
+        $this->animalType = $animalType;
+        return $this;
+    }
+
+
+
 }

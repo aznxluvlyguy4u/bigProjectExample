@@ -4,17 +4,18 @@ namespace AppBundle\Service;
 
 use AppBundle\Component\AnimalFlagMessageBuilder;
 use AppBundle\Component\HttpFoundation\JsonResponse;
-use AppBundle\Component\MessageBuilderBase;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Controller\TreatmentAPIControllerInterface;
 use AppBundle\Entity\Animal;
+use AppBundle\Entity\Client;
 use AppBundle\Entity\DeclareAnimalFlag;
 use AppBundle\Entity\MedicationSelection;
+use AppBundle\Entity\Person;
+use AppBundle\Entity\QFever;
 use AppBundle\Entity\Treatment;
 use AppBundle\Entity\TreatmentMedication;
 use AppBundle\Entity\TreatmentTemplate;
-use AppBundle\Enumerator\ActionType;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\TreatmentTypeOption;
 use AppBundle\Util\ActionLogWriter;
@@ -24,12 +25,10 @@ use DateInterval;
 use DateTime;
 use AppBundle\Util\TimeUtil;
 use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\DBAL\DBALException;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Exception;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
-use Symfony\Component\Validator\Constraints\Date;
 
 /**
  * Class TreatmentService
@@ -40,6 +39,9 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
 
     /** @var AnimalFlagMessageBuilder */
     private $animalFlagMessageBuilder;
+
+    /** @var QFeverService */
+    private $qFeverService;
 
     /**
      * @param Request $request
@@ -94,15 +96,15 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
         $treatment = $this->baseValidateDeserializedTreatment($treatment);
         if ($treatment instanceof JsonResponse) { return $treatment; }
 
-        $historicAnimalsIds = new ArrayCollection();
+        /** @var TreatmentTemplate $treatmentTemplate */
+        $treatmentTemplate = $em->getRepository(TreatmentTemplate::class)->find($treatment->getTreatmentTemplate()->getId());
 
         $historicAnimals = $em->getRepository(Animal::class)
             ->getHistoricLiveStock($location, $this->getCacheService(), $this->getBaseSerializer());
 
-        /** @var Animal $historicAnimal */
-        foreach ($historicAnimals as $historicAnimal) {
-            $historicAnimalsIds->add($historicAnimal->getId());
-        }
+        $historicAnimalsIds = array_map(function (Animal $animal) {
+            return $animal->getId();
+        }, $historicAnimals);
 
         /** @var ArrayCollection<Animal> $existingAnimals */
         $existingAnimals = new ArrayCollection();
@@ -114,37 +116,22 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
             /** @var Animal $existingAnimal */
             $existingAnimal = $em->getRepository(Animal::class)->find($animalId);
 
-            if ($existingAnimal !== null || in_array($animalId, $historicAnimalsIds->toArray())) {
+            if ($existingAnimal !== null || in_array($animalId, $historicAnimalsIds)) {
                 $existingAnimals->add($existingAnimal);
             } else {
                 throw new PreconditionFailedHttpException("Animal with id ".$animalId." not found");
             }
-
-            if (strtolower($treatment->getDescription()) === 'q-koorts') {
-                $treatment->setStatus(RequestStateType::OPEN);
-
-                $declareAnimalFlag = (new DeclareAnimalFlag())
-                    ->setAnimal($existingAnimal)
-                    ->setLocation($location)
-                    ->setFlagType('OVL IN HIS')
-                    ->setFlagStartDate($treatment->getStartDate())
-                    ->setFlagEndDate($treatment->getEndDate())
-                ;
-
-                $em->persist($declareAnimalFlag);
-                $em->flush();
-
-                $messageObject = $this->animalFlagMessageBuilder->buildMessage($declareAnimalFlag, $client, $loggedInUser, $location);
-
-                $this->sendMessageObjectToQueue($messageObject);
-            }
         }
+
+        $this->validateQFeverFlagsForAllAnimals($treatmentTemplate, $existingAnimals); //TODO
+
+        // First complete all the validation before sending any messages to RVO!
+
+        $this->createAndSendQFeverRvoMessages($treatment, $treatmentTemplate, $existingAnimals, $client, $loggedInUser);
+
 
         // No duplicates are being created, so what is being meant with "duplicates"?
         //TODO check for duplicates
-
-        /** @var TreatmentTemplate $treatmentTemplate */
-        $treatmentTemplate = $em->getRepository(TreatmentTemplate::class)->find($treatment->getTreatmentTemplate()->getId());
 
         $medicationSelections = new ArrayCollection();
 
@@ -216,6 +203,52 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
 
         return ResultUtil::successResult($output);
     }
+
+
+    private function validateQFeverFlagsForAllAnimals(
+        TreatmentTemplate $template,
+        ArrayCollection $existingAnimals
+    )
+    {
+        $flagType = $this->qFeverService->getFlagType($template->getDescription(), $template->getAnimalType());
+        foreach ($existingAnimals as $existingAnimal) {
+            // TODO check if existing animal already has the $flagType. Throw exception in that case.
+        }
+    }
+
+
+    private function createAndSendQFeverRvoMessages(
+        Treatment $treatment, TreatmentTemplate $template, ArrayCollection $existingAnimals,
+        Client $client, Person $loggedInUser)
+    {
+        $isQFeverTreatment = $this->qFeverService->isQFeverDescription($treatment->getDescription());
+
+        if ($isQFeverTreatment && $template instanceof QFever) {
+
+            $flagType = $this->qFeverService->getFlagType($template->getDescription(), $template->getAnimalType());
+
+            foreach ($existingAnimals as $existingAnimal) {
+
+                $treatment->setStatus(RequestStateType::OPEN);
+
+                $declareAnimalFlag = (new DeclareAnimalFlag())
+                    ->setAnimal($existingAnimal)
+                    ->setLocation($treatment->getLocation())
+                    ->setFlagType($flagType)
+                    ->setFlagStartDate($treatment->getStartDate())
+                    ->setFlagEndDate($treatment->getEndDate());
+
+                $this->getManager()->persist($declareAnimalFlag);
+                $this->getManager()->flush();
+
+                $messageObject = $this->animalFlagMessageBuilder->buildMessage($declareAnimalFlag, $client,
+                    $loggedInUser, $treatment->getLocation());
+
+                $this->sendMessageObjectToQueue($messageObject);
+            }
+        }
+    }
+
 
     /**
      * @param Treatment $treatment
@@ -390,5 +423,15 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
     public function setAnimalFlagMessageBuilder(AnimalFlagMessageBuilder $animalFlagMessageBuilder)
     {
         $this->animalFlagMessageBuilder = $animalFlagMessageBuilder;
+    }
+
+    /**
+     * @required Set at initialization
+     *
+     * @param  QFeverService  $qFeverService
+     */
+    public function setQFeverService(QFeverService $qFeverService)
+    {
+        $this->qFeverService = $qFeverService;
     }
 }

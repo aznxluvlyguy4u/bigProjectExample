@@ -10,16 +10,7 @@ use Doctrine\ORM\Mapping as ORM;
  * @package AppBundle\Entity
  * @ORM\Entity()
  */
-class DefaultTreatmentTemplate
+class DefaultTreatmentTemplate extends TreatmentTemplate
 {
     use EntityClassInfo;
-
-    /**
-     * @var integer
-     *
-     * @ORM\Id
-     * @ORM\Column(type="integer")
-     * @ORM\GeneratedValue(strategy="IDENTITY")
-     */
-    private $id;
 }

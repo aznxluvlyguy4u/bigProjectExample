@@ -13,35 +13,17 @@ use Symfony\Component\Validator\Constraints as Assert;
  *
  * @ORM\Entity(repositoryClass="AppBundle\Entity\QFeverRepository")
  */
-class QFever
+class QFever extends TreatmentTemplate
 {
     use EntityClassInfo;
 
     /**
-     * @var integer
-     *
-     * @ORM\Id
-     * @ORM\Column(type="integer")
-     * @ORM\GeneratedValue(strategy="IDENTITY")
-     */
-    private $id;
-
-    /**
      * @var string
      *
-     * @ORM\Column(type="string")
+     * @ORM\Column(type="string", nullable=false)
      * @JMS\Type("string")
      */
-    private $name;
-
-    /**
-     * @var string
-     *
-     * @ORM\Column(type="string")
-     * @JMS\Type("string")
-     * @Assert\NotNull
-     */
-    private $animalType;
+    private $qFeverType;
 
     /**
      * @var string
@@ -52,48 +34,20 @@ class QFever
     private $flagType;
 
     /**
-     * @return int
-     */
-    public function getId(): int
-    {
-        return $this->id;
-    }
-
-    /**
      * @return string
      */
-    public function getName(): string
+    public function getQFeverType(): string
     {
-        return $this->name;
+        return $this->qFeverType;
     }
 
     /**
-     * @param string $name
+     * @param  string  $qFeverType
      * @return QFever
      */
-    public function setName(string $name): self
+    public function setQFeverType(string $qFeverType): QFever
     {
-        $this->name = $name;
-
-        return $this;
-    }
-
-    /**
-     * @return string
-     */
-    public function getAnimalType(): string
-    {
-        return $this->animalType;
-    }
-
-    /**
-     * @param string $animalType
-     * @return QFever
-     */
-    public function setAnimalType(string $animalType): self
-    {
-        $this->animalType = $animalType;
-
+        $this->qFeverType = $qFeverType;
         return $this;
     }
 
