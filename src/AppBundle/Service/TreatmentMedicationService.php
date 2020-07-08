@@ -14,6 +14,7 @@ use AppBundle\Util\Validator;
 use AppBundle\Validation\AdminValidator;
 use Exception;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 /**
  * Class TreatmentMedicationService
@@ -49,7 +50,6 @@ class TreatmentMedicationService extends TreatmentServiceBase implements Treatme
         //Deserialization and Validation
         /** @var TreatmentMedication $treatmentMedicationFromContent */
         $treatmentMedication = $this->baseValidateDeserializedTreatmentMedication($request);
-        if ($treatmentMedication instanceof JsonResponse) { return $treatmentMedication; }
 
         $this->getManager()->persist($treatmentMedication);
         $this->getManager()->flush();
@@ -78,8 +78,6 @@ class TreatmentMedicationService extends TreatmentServiceBase implements Treatme
         //Deserialization and Validation
         /** @var TreatmentMedication $treatmentMedicationFromContent */
         $treatmentMedicationFromContent = $this->baseValidateDeserializedTreatmentMedication($request);
-
-        if ($treatmentMedicationFromContent instanceof JsonResponse) { return $treatmentMedicationFromContent; }
 
         $treatmentMedicationInDb
             ->setName($treatmentMedicationFromContent->getName())
@@ -135,18 +133,18 @@ class TreatmentMedicationService extends TreatmentServiceBase implements Treatme
 
     /**
      * @param Request $request
-     * @return JsonResponse|TreatmentMedication
+     * @return TreatmentMedication
      */
     private function baseValidateDeserializedTreatmentMedication($request)
     {
         /** @var TreatmentMedication $treatmentMedication */
         $treatmentMedication = $this->getBaseSerializer()->deserializeToObject($request->getContent(), TreatmentMedication::class);
         if (!($treatmentMedication instanceof TreatmentMedication)) {
-            return Validator::createJsonResponse('Json body must have the TreatmentMedication structure', 428);
+            throw new BadRequestHttpException('Json body must have the TreatmentMedication structure');
         }
 
         if ($treatmentMedication->getName() === null) {
-            return Validator::createJsonResponse('Name is missing', 428);
+            throw new BadRequestHttpException('Name is missing');
         }
 
         return $treatmentMedication;
