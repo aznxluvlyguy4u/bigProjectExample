@@ -629,7 +629,7 @@ services:
         parent: app.abstract_base.controller
 
     app.treatment.base:
-        parent: app.abstract_base.controller
+        parent: app.abstract_base.declare
         abstract: true
         calls:
           - method: onInit
@@ -638,18 +638,9 @@ services:
         parent: app.treatment.base
         class: AppBundle\Service\TreatmentService
         calls:
-          - method: setEnvironment
+          - method: setAnimalFlagMessageBuilder
             arguments:
-              - '%kernel.environment%'
-          - method: setIrSerializer
-            arguments:
-              - '@app.serializer.ir'
-          - method: setExternalQueueService
-            arguments:
-              - '@AppBundle\Service\AwsExternalQueueService'
-          - method: setRequestMessageBuilder
-            arguments:
-              - '@app.request.message_builder'
+              - '@AppBundle\Component\AnimalFlagMessageBuilder'
 
     app.treatment.template:
         parent: app.treatment.base
@@ -1361,6 +1352,16 @@ services:
     AppBundle\Service\SettingsContainer:
         arguments:
           - '%max_feedback_workers%'
+
+
+    app.component.message.builder.base:
+        abstract: true
+        arguments:
+          - '@doctrine.orm.entity_manager'
+          - '%kernel.environment%'
+
+    AppBundle\Component\AnimalFlagMessageBuilder:
+        parent: app.component.message.builder.base
 
     # Listeners
     AppBundle\EventListener\ViewListener:

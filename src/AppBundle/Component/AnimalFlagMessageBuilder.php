@@ -15,11 +15,6 @@ class AnimalFlagMessageBuilder extends MessageBuilderBase
      */
     private $person;
 
-    public function __construct(ObjectManager $em, $currentEnvironment)
-    {
-        parent::__construct($em, $currentEnvironment);
-    }
-
     /**
      *
      * Accept front-end input and create a complete NSFO+IenR Message.

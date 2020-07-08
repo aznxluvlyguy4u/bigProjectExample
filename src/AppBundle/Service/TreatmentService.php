@@ -38,8 +38,8 @@ use Symfony\Component\Validator\Constraints\Date;
 class TreatmentService extends TreatmentServiceBase implements TreatmentAPIControllerInterface
 {
 
-    /** @var string */
-    private $environment;
+    /** @var AnimalFlagMessageBuilder */
+    private $animalFlagMessageBuilder;
 
     /**
      * @param Request $request
@@ -134,9 +134,7 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
                 $em->persist($declareAnimalFlag);
                 $em->flush();
 
-                $animalFlagMessageBuilder = new AnimalFlagMessageBuilder($em, $this->environment);
-
-                $messageObject = $animalFlagMessageBuilder->buildMessage($declareAnimalFlag, $client, $loggedInUser, $location);
+                $messageObject = $this->animalFlagMessageBuilder->buildMessage($declareAnimalFlag, $client, $loggedInUser, $location);
 
                 $this->sendMessageObjectToQueue($messageObject);
             }
@@ -387,10 +385,10 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
     /**
      * @required Set at initialization
      *
-     * @param $environment
+     * @param $animalFlagMessageBuilder
      */
-    public function setEnvironment($environment)
+    public function setAnimalFlagMessageBuilder(AnimalFlagMessageBuilder $animalFlagMessageBuilder)
     {
-        $this->environment = $environment;
+        $this->animalFlagMessageBuilder = $animalFlagMessageBuilder;
     }
 }
