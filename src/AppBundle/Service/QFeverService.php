@@ -26,7 +26,29 @@ class QFeverService
     }
 
 
-    public function getFlagType(string $treatmentDescription, int $animalType = AnimalType::sheep): string
+    public static function getFlagType(string $treatmentDescription, int $animalType = AnimalType::sheep): string
+    {
+        $qFeverTypeLetter = self::qFeverTypeLetter($treatmentDescription);
+        $animalLetter = self::getFlagTypeAnimalLetter($animalType);
+
+        $currentYear = date('Y');
+        $lastTwoLettersOfCurrentYear = substr($currentYear, 2,2);
+
+        return 'Q_'.$qFeverTypeLetter.'_'.$animalLetter.'_'.$lastTwoLettersOfCurrentYear;
+    }
+
+
+    private static function getFlagTypeAnimalLetter(int $animalType): string
+    {
+        switch ($animalType) {
+            case AnimalType::sheep: $animalLetter = 'S'; break;
+            case AnimalType::goat: $animalLetter = 'G'; break;
+            default: throw new \Exception('Invalid animalType letter: '.$animalType);
+        }
+        return $animalLetter;
+    }
+
+    public static function qFeverTypeLetter(string $treatmentDescription): string
     {
         switch ($treatmentDescription) {
             case QFeverDescription::BASIC_VACCINATION_FIRST:
@@ -41,19 +63,6 @@ class QFeverService
             default:
                 throw new \Exception('Invalid QFever treatment description: '.$treatmentDescription);
         }
-
-        switch ($animalType) {
-            case AnimalType::sheep: $animalLetter = 'S'; break;
-            case AnimalType::goat: $animalLetter = 'G'; break;
-            default: throw new \Exception('Invalid animalType letter: '.$animalType);
-        }
-
-        $currentYear = date('Y');
-        $lastTwoLettersOfCurrentYear = substr($currentYear, 2,2);
-
-        return 'Q_'.$vaccinationTypeLetter.'_'.$animalLetter.'_'.$lastTwoLettersOfCurrentYear;
+        return $vaccinationTypeLetter;
     }
-
-
-
 }

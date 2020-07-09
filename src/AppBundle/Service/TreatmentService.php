@@ -209,7 +209,7 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
         ArrayCollection $existingAnimals
     )
     {
-        $flagType = $this->qFeverService->getFlagType($template->getDescription(), $template->getAnimalType());
+        $flagType = QFeverService::getFlagType($template->getDescription(), $template->getAnimalType());
         foreach ($existingAnimals as $existingAnimal) {
             // TODO check if existing animal already has the $flagType. Throw exception in that case.
         }
@@ -224,7 +224,7 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
 
         if ($isQFeverTreatment && $template instanceof QFever) {
 
-            $flagType = $this->qFeverService->getFlagType($template->getDescription(), $template->getAnimalType());
+            $flagType = QFeverService::getFlagType($template->getDescription(), $template->getAnimalType());
 
             foreach ($existingAnimals as $existingAnimal) {
 
