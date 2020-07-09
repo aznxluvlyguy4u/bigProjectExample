@@ -643,7 +643,7 @@ services:
               - '@AppBundle\Component\AnimalFlagMessageBuilder'
           - method: setQFeverService
             arguments:
-              - '@AppBundle\Services\QFeverDescription'
+              - '@AppBundle\Services\QFeverService'
 
     app.treatment.template:
         parent: app.treatment.base
@@ -657,7 +657,7 @@ services:
       parent: app.treatment.base
       class: AppBundle\Service\TreatmentMedicationService
 
-    AppBundle\Services\QFeverDescription:
+    AppBundle\Services\QFeverService:
         arguments:
           - '@doctrine.orm.entity_manager'
 
