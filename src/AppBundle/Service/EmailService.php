@@ -92,7 +92,7 @@ class EmailService
 
     /**
      * @param Registration $registration
-     * @return array
+     * @return bool
      * @throws Error
      */
     public function sendNewRegistrationEmails(Registration $registration) {
@@ -133,10 +133,8 @@ class EmailService
             )
             ->setSender($this->mailerSourceAddress);
 
-        return [
-            'admin' => $this->swiftMailer->send($adminMessage) > 0,
-            'user' => $this->swiftMailer->send($userMessage) > 0
-        ];
+        return $this->swiftMailer->send($adminMessage) > 0 && $this->swiftMailer->send($userMessage) > 0;
+
     }
 
     /**

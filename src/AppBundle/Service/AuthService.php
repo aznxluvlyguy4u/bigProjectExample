@@ -78,7 +78,9 @@ class AuthService extends AuthServiceBase
         $this->getManager()->persist($registration);
         $this->getManager()->flush();
 
-        $this->emailService->sendNewRegistrationEmails($registration);
+       if (!$this->emailService->sendNewRegistrationEmails($registration)) {
+           throw new PreconditionFailedHttpException($this->translateUcFirstLower('THE REGISTRATIONS EMAILS HAVE NOT BEEN SENT'));
+       }
 
         return new JsonResponse(
             $this->getBaseSerializer()->getDecodedJson($registration),
