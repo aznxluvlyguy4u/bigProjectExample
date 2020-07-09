@@ -130,8 +130,6 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
 
         // First complete all the validation before sending any messages to RVO!
 
-        $this->createAndSendQFeverRvoMessages($treatment, $treatmentTemplate, $existingAnimals, $client, $loggedInUser);
-
         $medicationSelections = new ArrayCollection();
 
         /** @var TreatmentMedication $treatmentMedication */
@@ -195,6 +193,8 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
             }
         }
 
+        // The treatment has to be persisted first before being able to persist DeclareAnimalFlag
+        $this->createAndSendQFeverRvoMessages($treatment, $treatmentTemplate, $existingAnimals, $client, $loggedInUser);
 
         ActionLogWriter::createTreatment($em, $request, $loggedInUser, $treatment);
 
@@ -239,11 +239,11 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
                     ->setTreatment($treatment)
                 ;
 
-                $this->getManager()->persist($declareAnimalFlag);
-                $this->getManager()->flush();
-
                 $messageObject = $this->animalFlagMessageBuilder->buildMessage($declareAnimalFlag, $client,
                     $loggedInUser, $treatment->getLocation());
+
+                $this->getManager()->persist($messageObject);
+                $this->getManager()->flush();
 
                 $this->sendMessageObjectToQueue($messageObject);
             }
