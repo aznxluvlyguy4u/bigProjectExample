@@ -4,6 +4,7 @@
 namespace AppBundle\Service;
 
 
+use AppBundle\Entity\Location;
 use AppBundle\Entity\Registration;
 use AppBundle\Util\Validator;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -51,10 +52,22 @@ class AuthService extends AuthServiceBase
         /** @var Registration $registration */
         $registration = $this->getBaseSerializer()->deserializeToObject($request->getContent(), Registration::class);
 
-        $existingNewRegistration = $this->getManager()->getRepository(Registration::class)->findOneBy(['status' => 'NEW', 'ubn' => $registration->getUbn()]);
+        $ubn = $registration->getUbn();
+
+        if (!Validator::hasValidUbnFormat($ubn)) {
+            throw new PreconditionFailedHttpException($this->translateUcFirstLower('UBN IS NOT A VALID NUMBER').': '.$ubn);
+        }
+
+        $existingLocation = $this->getManager()->getRepository(Location::class)->findOneBy(['ubn' => $ubn]);
+
+        if ($existingLocation) {
+            throw new PreconditionFailedHttpException($this->translateUcFirstLower('A LOCATION WITH THIS UBN ALREADY EXISTS').': '.$ubn);
+        }
+
+        $existingNewRegistration = $this->getManager()->getRepository(Registration::class)->findOneBy(['status' => 'NEW', 'ubn' => $ubn]);
 
         if ($existingNewRegistration) {
-            throw new PreconditionFailedHttpException('A new user already exists for the ubn: '. $registration->getUbn());
+            throw new PreconditionFailedHttpException($this->translateUcFirstLower('A NEW USER ALREADY EXISTS WITH THIS UBN').': '.$ubn);
         }
 
         $errors = $this->validator->validate($registration);
