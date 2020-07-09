@@ -471,7 +471,7 @@ FROM (
              SUM(l.born_alive_count) OVER (PARTITION BY animal_mother_id ORDER BY standard_litter_ordinal) as count
          FROM litter l
                   INNER JOIN declare_nsfo_base dnb on l.id = dnb.id
-         WHERE dnb.request_state IN ($activeRequestStateTypes)
+         WHERE dnb.request_state IN ($activeRequestStateTypes) AND l.status IN ($activeRequestStateTypes)
            $animalMotherIdFilter
            AND standard_litter_ordinal NOTNULL
          ORDER BY animal_mother_id, standard_litter_ordinal
@@ -917,9 +917,40 @@ FROM (
         $subLitterIdFilter = !empty($litterId) && is_int($litterId) ? " AND litter_id = $litterId " : '';
 
         $definitiveExteriorKindsJoinedList = SqlUtil::definitiveExteriorKindsJoinedList();
+        $ddOrDfExteriorKindsJoinedList = SqlUtil::ddOrDfExteriorKindsJoinedList();
+        $hhOrHkExteriorKindsJoinedList = SqlUtil::hhOrHkExteriorKindsJoinedList();
 
         $ramType = AnimalObjectType::Ram;
         $eweType = AnimalObjectType::Ewe;
+
+        $sqlQueryUniqueDefinitiveGeneralAppearanceByAnimalId = "SELECT
+            ge.animal_id,
+            MAX(general_appearance) as general_appearance
+        FROM (
+                SELECT
+                       e.animal_id,
+                       -- Assumption that only one DD/DF exists/matters
+                       MAX(CASE WHEN (kind IN ($ddOrDfExteriorKindsJoinedList)) THEN e.general_appearance ELSE 0 END) as general_appearance
+                FROM exterior e
+                       INNER JOIN measurement m on e.id = m.id
+                WHERE m.is_active AND e.general_appearance NOTNULL AND 75 <= e.general_appearance                
+                GROUP BY e.animal_id
+                -- Only include DD/DF if no HH/HK exists
+                HAVING SUM(CASE WHEN (kind IN ($hhOrHkExteriorKindsJoinedList)) THEN 1 ELSE 0 END) = 0
+
+                UNION
+
+                SELECT
+                       e.animal_id,
+                       MAX(e.general_appearance) as general_appearance
+                FROM exterior e
+                       INNER JOIN measurement m on e.id = m.id
+                WHERE m.is_active AND e.general_appearance NOTNULL AND 75 <= e.general_appearance
+                -- Assumption that only one HH/HK exists/matters
+                AND kind IN ($hhOrHkExteriorKindsJoinedList)
+                GROUP BY e.animal_id
+        )ge GROUP BY ge.animal_id ";
+
 
         $sql = "UPDATE litter SET star_ewe_base_points = v.star_ewe_base_points
 FROM (   
@@ -948,11 +979,10 @@ FROM (
                               ELSE 0 END
                               as star_ewe_points
                       FROM animal
-                               INNER JOIN exterior e on animal.id = e.animal_id
-                               INNER JOIN measurement m on e.id = m.id
-                      WHERE m.is_active AND e.general_appearance NOTNULL AND 75 <= e.general_appearance
-                        AND litter_id NOTNULL $subLitterIdFilter AND animal.type = '$eweType'
-                        AND kind IN ($definitiveExteriorKindsJoinedList)
+                          INNER JOIN (
+                                $sqlQueryUniqueDefinitiveGeneralAppearanceByAnimalId
+                            )e ON e.animal_id = animal.id
+                      WHERE litter_id NOTNULL $subLitterIdFilter AND animal.type = '$eweType'
                   )ewe_star_ewe_points
              GROUP BY litter_id
          )definitive_graded_daughters ON definitive_graded_daughters.litter_id = l.id
@@ -975,10 +1005,10 @@ FROM (
                               ELSE 0 END
                               as star_ewe_points
                       FROM animal
-                               INNER JOIN exterior e on animal.id = e.animal_id
-                               INNER JOIN measurement m on e.id = m.id
-                      WHERE m.is_active AND e.general_appearance NOTNULL AND litter_id NOTNULL $subLitterIdFilter AND animal.type = '$ramType'
-                        AND kind IN ($definitiveExteriorKindsJoinedList)
+                            INNER JOIN (
+                                $sqlQueryUniqueDefinitiveGeneralAppearanceByAnimalId
+                            )e ON e.animal_id = animal.id
+                        WHERE litter_id NOTNULL $subLitterIdFilter AND animal.type = '$ramType'
                   )ram_star_ewe_points
              GROUP BY litter_id
          )definitive_graded_sons ON definitive_graded_sons.litter_id = l.id

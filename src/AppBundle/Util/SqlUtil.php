@@ -995,6 +995,28 @@ class SqlUtil
     }
 
 
+    public static function hhOrHkExteriorKindsJoinedList(): string
+    {
+        return "'" . implode("','",
+                [
+                    ExteriorKind::HH_, // herhaalde keuring
+                    ExteriorKind::HK_, // herkeuring
+                ]
+            ) . "'";
+    }
+
+
+    public static function ddOrDfExteriorKindsJoinedList(): string
+    {
+        return "'" . implode("','",
+                [
+                    ExteriorKind::DD_, // direct definitief
+                    ExteriorKind::DF_, // definitieve keuring
+                ]
+            ) . "'";
+    }
+
+
     public static function definitiveExteriorKindsJoinedList(): string
     {
         return "'" . implode("','",

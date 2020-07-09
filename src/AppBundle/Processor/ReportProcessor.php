@@ -19,6 +19,7 @@ use AppBundle\Service\Report\AnnualActiveLivestockReportService;
 use AppBundle\Service\Report\AnnualTe100UbnProductionReportService;
 use AppBundle\Service\Report\BirthListReportService;
 use AppBundle\Service\Report\ClientNotesOverviewReportService;
+use AppBundle\Service\Report\CombiFormTransportDocumentService;
 use AppBundle\Service\Report\EweCardReportService;
 use AppBundle\Service\Report\CompanyRegisterReportService;
 use AppBundle\Service\Report\FertilizerAccountingReport;
@@ -133,6 +134,9 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
     /**  @var AnimalTreatmentsPerYearReportService */
     private $animalTreatmentsPerYearService;
 
+    /** @var CombiFormTransportDocumentService */
+    private $combiFormTransportDocumentService;
+
     /** @var BaseSerializer */
     private $serializer;
 
@@ -163,6 +167,7 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
      * @param LiveStockReportService $liveStockReportService
      * @param BirthListReportService $birthListReportService
      * @param MembersAndUsersOverviewReportService $membersAndUsersOverviewReport
+     * @param CombiFormTransportDocumentService $combiFormTransportDocumentService,
      * @param EntityManager $em
      * @param Logger $logger
      * @param BaseSerializer $serializer
@@ -188,6 +193,7 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
         LiveStockReportService $liveStockReportService,
         BirthListReportService $birthListReportService,
         MembersAndUsersOverviewReportService $membersAndUsersOverviewReport,
+        CombiFormTransportDocumentService $combiFormTransportDocumentService,
         EntityManager $em,
         Logger $logger,
         BaseSerializer $serializer
@@ -216,6 +222,7 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
         $this->popRepInputFileService = $popRepInputFileService;
         $this->animalFeaturesPerYearOfBirthService = $animalFeaturesPerYearOfBirthService;
         $this->animalTreatmentsPerYearService = $animalTreatmentsPerYearService;
+        $this->combiFormTransportDocumentService = $combiFormTransportDocumentService;
     }
 
     public function process(PsrMessage $message, PsrContext $context)
@@ -365,6 +372,11 @@ class ReportProcessor implements PsrProcessor, CommandSubscriberInterface
                 case ReportType::TREATMENTS:
                 {
                     $data = $this->animalTreatmentsPerYearService->getReport($data['year'], $worker->getLocation(), $data['is_admin']);
+                    break;
+                }
+                case ReportType::COMBI_FORMS_VKI_AND_TRANSPORT_DOCUMENTS:
+                {
+                    $data = $this->combiFormTransportDocumentService->getReport($data['transport_date'], $data['export_ubn'], $worker->getLocation());
                     break;
                 }
             }

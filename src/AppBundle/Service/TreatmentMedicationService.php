@@ -14,6 +14,7 @@ use AppBundle\Util\Validator;
 use AppBundle\Validation\AdminValidator;
 use Exception;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 /**
  * Class TreatmentMedicationService
@@ -48,28 +49,12 @@ class TreatmentMedicationService extends TreatmentServiceBase implements Treatme
 
         //Deserialization and Validation
         /** @var TreatmentMedication $treatmentMedicationFromContent */
-        $treatmentMedicationFromContent = $this->baseValidateDeserializedTreatmentMedication($request);
-        if ($treatmentMedicationFromContent instanceof JsonResponse) { return $treatmentMedicationFromContent; }
-
-        /** @var TreatmentMedication $treatmentMedicationInDb */
-        $treatmentMedicationInDb = $this->treatmentMedicationRepository
-            ->findOneBy(['name' => $treatmentMedicationFromContent->getName()]);
-
-        $treatmentMedication = $treatmentMedicationFromContent;
-        if ($treatmentMedicationInDb) {
-            if ($treatmentMedicationInDb->isActive()) {
-                return Validator::createJsonResponse('Behandelings medicatie bestaat al', 428);
-            } else {
-                //Reactivate
-                $treatmentMedicationInDb->setIsActive(true);
-                $treatmentMedication = $treatmentMedicationInDb;
-            }
-        }
+        $treatmentMedication = $this->baseValidateDeserializedTreatmentMedication($request);
 
         $this->getManager()->persist($treatmentMedication);
         $this->getManager()->flush();
 
-//        AdminActionLogWriter::createTreatmentType($this->getManager(), $admin, $request, $treatmentMedication);
+        AdminActionLogWriter::createTreatmentMedication($this->getManager(), $admin, $treatmentMedication);
 
         $output = $this->getBaseSerializer()->getDecodedJson($treatmentMedication, [JmsGroup::TREATMENT_TEMPLATE]);
         return ResultUtil::successResult($output);
@@ -93,8 +78,6 @@ class TreatmentMedicationService extends TreatmentServiceBase implements Treatme
         //Deserialization and Validation
         /** @var TreatmentMedication $treatmentMedicationFromContent */
         $treatmentMedicationFromContent = $this->baseValidateDeserializedTreatmentMedication($request);
-
-        if ($treatmentMedicationFromContent instanceof JsonResponse) { return $treatmentMedicationFromContent; }
 
         $treatmentMedicationInDb
             ->setName($treatmentMedicationFromContent->getName())
@@ -150,18 +133,18 @@ class TreatmentMedicationService extends TreatmentServiceBase implements Treatme
 
     /**
      * @param Request $request
-     * @return JsonResponse|TreatmentMedication
+     * @return TreatmentMedication
      */
     private function baseValidateDeserializedTreatmentMedication($request)
     {
         /** @var TreatmentMedication $treatmentMedication */
         $treatmentMedication = $this->getBaseSerializer()->deserializeToObject($request->getContent(), TreatmentMedication::class);
         if (!($treatmentMedication instanceof TreatmentMedication)) {
-            return Validator::createJsonResponse('Json body must have the TreatmentMedication structure', 428);
+            throw new BadRequestHttpException('Json body must have the TreatmentMedication structure');
         }
 
         if ($treatmentMedication->getName() === null) {
-            return Validator::createJsonResponse('Name is missing', 428);
+            throw new BadRequestHttpException('Name is missing');
         }
 
         return $treatmentMedication;
