@@ -3,6 +3,7 @@
 namespace AppBundle\Entity;
 
 
+use AppBundle\Enumerator\AnimalType;
 use AppBundle\Traits\EntityClassInfo;
 use AppBundle\Util\Translation;
 use DateTime;
@@ -115,6 +116,17 @@ abstract class TreatmentTemplate
     private $isActive;
 
     /**
+     * @var boolean
+     * @ORM\Column(type="boolean", nullable=false, options={"default":true})
+     * @JMS\Type("boolean")
+     * @JMS\Groups({
+     *     "TREATMENT_TEMPLATE",
+     *     "TREATMENT"
+     * })
+     */
+    private $isEditable;
+
+    /**
      * @var \DateTime
      * @ORM\Column(type="datetime", options={"default":"CURRENT_TIMESTAMP"}, nullable=true)
      * @Assert\Date
@@ -188,6 +200,8 @@ abstract class TreatmentTemplate
     {
         $this->logDate = new \DateTime();
         $this->isActive = true;
+        $this->isEditable = true;
+        $this->setAnimalType(AnimalType::sheep);
     }
 
     /**
@@ -494,6 +508,23 @@ abstract class TreatmentTemplate
         return $this;
     }
 
+    /**
+     * @return bool
+     */
+    public function isEditable(): bool
+    {
+        return $this->isEditable;
+    }
+
+    /**
+     * @param  bool  $isEditable
+     * @return TreatmentTemplate
+     */
+    public function setIsEditable(bool $isEditable): TreatmentTemplate
+    {
+        $this->isEditable = $isEditable;
+        return $this;
+    }
 
 
 }
