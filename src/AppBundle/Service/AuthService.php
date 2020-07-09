@@ -23,6 +23,7 @@ use AppBundle\Validation\PasswordValidator;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
 use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
@@ -49,6 +50,12 @@ class AuthService extends AuthServiceBase
     {
         /** @var Registration $registration */
         $registration = $this->getBaseSerializer()->deserializeToObject($request->getContent(), Registration::class);
+
+        $existingNewRegistration = $this->getManager()->getRepository(Registration::class)->findOneBy(['status' => 'NEW', 'ubn' => $registration->getUbn()]);
+
+        if ($existingNewRegistration) {
+            throw new PreconditionFailedHttpException('A new user already exists for the ubn: '. $registration->getUbn());
+        }
 
         $errors = $this->validator->validate($registration);
         Validator::throwExceptionWithFormattedErrorMessageIfHasErrors($errors);
