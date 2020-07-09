@@ -87,10 +87,14 @@ class AuthService extends AuthServiceBase
     }
 
     public function acceptPerson(Person $person) {
-        $person->setIsActive(true);
+        if (!$person->getIsActive()) {
+            $person->setIsActive(true);
 
-        $this->getManager()->persist($person);
-        $this->getManager()->flush();
+            $this->getManager()->persist($person);
+            $this->getManager()->flush();
+        } else {
+            throw new PreconditionFailedHttpException($this->translateUcFirstLower('THE USER IS ALREADY ACTIVATED'));
+        }
 
         return new JsonResponse(
             $this->getBaseSerializer()->getDecodedJson($person, ['REGISTRATION']),

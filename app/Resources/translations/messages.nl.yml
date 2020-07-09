@@ -461,6 +461,7 @@ LOCATION ADDRESS COUNTRY CANNOT BE EMPTY: Land van locatieadres mag niet leeg zi
 UBN IS NOT A VALID NUMBER: Het UBN is geen geldig nummer
 A LOCATION WITH THIS UBN ALREADY EXISTS: Een locatie met deze UBN bestaal al
 A NEW USER ALREADY EXISTS WITH THIS UBN: Een nieuwe gebruiker bestaat al met deze UBN
+THE USER IS ALREADY ACTIVATED: De gebruiker is al geactiveerd
 INVOICES THAT ARE ALREADY CANCELLED, SENT BUT UNPAID OR PAID CANNOT BE EDITED ANYMORE: Facturen die al zijn geannuleerd of verzonden kunnen niet meer worden aangepast
 NO LOCATION FOUND FOR LOCATION ID: Geen locatie is gevonden voor locatie_id
 LOCATION CANNOT BE EMPTY: Locatie mag niet leeg zijn
