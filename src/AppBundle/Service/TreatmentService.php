@@ -125,13 +125,12 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
 
         $this->validateQFeverFlagsForAllAnimals($treatmentTemplate, $existingAnimals); //TODO
 
+        // No duplicates are being created, so what is being meant with "duplicates"?
+        //TODO check for duplicates
+
         // First complete all the validation before sending any messages to RVO!
 
         $this->createAndSendQFeverRvoMessages($treatment, $treatmentTemplate, $existingAnimals, $client, $loggedInUser);
-
-
-        // No duplicates are being created, so what is being meant with "duplicates"?
-        //TODO check for duplicates
 
         $medicationSelections = new ArrayCollection();
 
