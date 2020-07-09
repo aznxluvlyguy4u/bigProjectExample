@@ -26,14 +26,6 @@ class QFever extends TreatmentTemplate
     private $qFeverType;
 
     /**
-     * @var string
-     *
-     * @ORM\Column(type="string")
-     * @JMS\Type("string")
-     */
-    private $flagType;
-
-    /**
      * @return string
      */
     public function getQFeverType(): string
@@ -48,25 +40,6 @@ class QFever extends TreatmentTemplate
     public function setQFeverType(string $qFeverType): QFever
     {
         $this->qFeverType = $qFeverType;
-        return $this;
-    }
-
-    /**
-     * @return string
-     */
-    public function getFlagType(): string
-    {
-        return $this->flagType;
-    }
-
-    /**
-     * @param string $flagType
-     * @return QFever
-     */
-    public function setFlagType(string $flagType): self
-    {
-        $this->flagType = $flagType;
-
         return $this;
     }
 }
