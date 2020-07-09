@@ -295,4 +295,24 @@ class DeclareAnimalFlag extends DeclareBase
     {
         return $this->responses;
     }
+
+    /**
+     * @return Treatment
+     */
+    public function getTreatment(): Treatment
+    {
+        return $this->treatment;
+    }
+
+    /**
+     * @param  Treatment  $treatment
+     * @return DeclareAnimalFlag
+     */
+    public function setTreatment(Treatment $treatment): DeclareAnimalFlag
+    {
+        $this->treatment = $treatment;
+        return $this;
+    }
+
+
 }
