@@ -236,6 +236,7 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
                     ->setFlagType($flagType)
                     ->setFlagStartDate($treatment->getStartDate())
                     ->setFlagEndDate($treatment->getEndDate())
+                    ->setTreatment($treatment)
                 ;
 
                 $this->getManager()->persist($declareAnimalFlag);
