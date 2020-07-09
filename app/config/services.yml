@@ -816,6 +816,10 @@ services:
     app.security.auth:
         parent: app.abstract_base.auth
         class: AppBundle\Service\AuthService
+        calls:
+          - method: setValidator
+            arguments:
+              - '@validator'
 
     app.security.admin_auth:
         parent: app.abstract_base.auth

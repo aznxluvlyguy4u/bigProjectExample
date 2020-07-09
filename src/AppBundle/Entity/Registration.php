@@ -5,6 +5,7 @@ namespace AppBundle\Entity;
 use AppBundle\Traits\EntityClassInfo;
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as JMS;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * Class Registration
@@ -38,6 +39,7 @@ class Registration
      *
      * @ORM\Column(type="string")
      * @JMS\Type("string")
+     * @Assert\NotBlank
      */
     private $firstName;
 
@@ -46,6 +48,7 @@ class Registration
      *
      * @ORM\Column(type="string")
      * @JMS\Type("string")
+     * @Assert\NotBlank
      */
     private $lastName;
 
@@ -54,6 +57,7 @@ class Registration
      *
      * @ORM\Column(type="string")
      * @JMS\Type("string")
+     * @Assert\NotBlank
      */
     private $emailAddress;
 
@@ -94,6 +98,7 @@ class Registration
      *
      * @ORM\Column(type="string")
      * @JMS\Type("string")
+     * @Assert\NotBlank
      */
     private $ubn;
 

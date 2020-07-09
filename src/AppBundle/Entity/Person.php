@@ -382,6 +382,16 @@ abstract class Person implements UserInterface
         return StringUtil::getFullName($this->firstName, $this->lastName);
     }
 
+    /**
+     * Person constructor.
+     * @param null $firstName
+     * @param null $lastName
+     * @param null $emailAddress
+     * @param string $password
+     * @param null $username
+     * @param null $cellphoneNumber
+     * @throws Exception
+     */
   public function __construct($firstName = null, $lastName = null, $emailAddress = null,
                               $password = '', $username = null, $cellphoneNumber = null)
   {

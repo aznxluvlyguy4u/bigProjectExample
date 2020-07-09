@@ -5,6 +5,7 @@ namespace AppBundle\Service;
 
 
 use AppBundle\Entity\Registration;
+use AppBundle\Util\Validator;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
@@ -23,9 +24,21 @@ use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class AuthService extends AuthServiceBase
 {
+
+    /** @var ValidatorInterface $validator */
+    private $validator;
+
+    /**
+     * @param ValidatorInterface $validator
+     */
+    public function setValidator(ValidatorInterface $validator)
+    {
+        $this->validator = $validator;
+    }
 
     /**
      * @param Request $request
@@ -36,6 +49,9 @@ class AuthService extends AuthServiceBase
     {
         /** @var Registration $registration */
         $registration = $this->getBaseSerializer()->deserializeToObject($request->getContent(), Registration::class);
+
+        $errors = $this->validator->validate($registration);
+        Validator::throwExceptionWithFormattedErrorMessageIfHasErrors($errors);
 
         $registration->setStatus('NEW');
 
