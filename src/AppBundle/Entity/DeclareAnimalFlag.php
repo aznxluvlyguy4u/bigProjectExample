@@ -32,6 +32,9 @@ class DeclareAnimalFlag extends DeclareBase
      * @Assert\NotBlank
      * @ORM\ManyToOne(targetEntity="Animal", inversedBy="flags", cascade={"persist"})
      * @JMS\Type("AppBundle\Entity\Animal")
+     * @JMS\Groups({
+     *     "RVO"
+     * })
      */
     private $animal;
 
@@ -49,6 +52,7 @@ class DeclareAnimalFlag extends DeclareBase
      * @JMS\Type("string")
      * @JMS\Groups({
      *     "ERROR_DETAILS",
+     *     "RVO",
      *     "TREATMENT"
      * })
      */
@@ -63,6 +67,7 @@ class DeclareAnimalFlag extends DeclareBase
      * @JMS\Type("DateTime")
      * @JMS\Groups({
      *     "ERROR_DETAILS",
+     *     "RVO",
      *     "TREATMENT"
      * })
      */
@@ -77,6 +82,7 @@ class DeclareAnimalFlag extends DeclareBase
      * @JMS\Type("DateTime")
      * @JMS\Groups({
      *     "ERROR_DETAILS",
+     *     "RVO",
      *     "TREATMENT"
      * })
      */
