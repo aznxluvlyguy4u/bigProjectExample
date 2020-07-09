@@ -5,6 +5,7 @@ namespace AppBundle\Entity;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Traits\EntityClassInfo;
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as JMS;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -19,6 +20,7 @@ class DeclareAnimalFlag extends DeclareBase
     use EntityClassInfo;
 
     /**
+     * @var Location
      * @Assert\NotBlank
      * @ORM\ManyToOne(targetEntity="Location", inversedBy="flags", cascade={"persist"})
      * @JMS\Type("AppBundle\Entity\Location")
@@ -26,6 +28,7 @@ class DeclareAnimalFlag extends DeclareBase
     private $location;
 
     /**
+     * @var Animal
      * @Assert\NotBlank
      * @ORM\ManyToOne(targetEntity="Animal", inversedBy="flags", cascade={"persist"})
      * @JMS\Type("AppBundle\Entity\Animal")
@@ -44,6 +47,10 @@ class DeclareAnimalFlag extends DeclareBase
      * @ORM\Column(type="string", nullable=true)
      * @Assert\Length(max = 10)
      * @JMS\Type("string")
+     * @JMS\Groups({
+     *     "ERROR_DETAILS",
+     *     "TREATMENT"
+     * })
      */
     private $flagType;
 
@@ -54,6 +61,10 @@ class DeclareAnimalFlag extends DeclareBase
      * @Assert\Date
      * @Assert\NotBlank
      * @JMS\Type("DateTime")
+     * @JMS\Groups({
+     *     "ERROR_DETAILS",
+     *     "TREATMENT"
+     * })
      */
     private $flagStartDate;
 
@@ -64,6 +75,10 @@ class DeclareAnimalFlag extends DeclareBase
      * @Assert\Date
      * @Assert\NotBlank
      * @JMS\Type("DateTime")
+     * @JMS\Groups({
+     *     "ERROR_DETAILS",
+     *     "TREATMENT"
+     * })
      */
     private $flagEndDate;
 
@@ -74,6 +89,49 @@ class DeclareAnimalFlag extends DeclareBase
      * @JMS\Type("ArrayCollection<AppBundle\Entity\DeclareAnimalFlagResponse>")
      */
     private $responses;
+
+    /**
+     * @JMS\VirtualProperty
+     * @JMS\SerializedName("uln")
+     * @JMS\Groups({
+     *     "ERROR_DETAILS",
+     *     "TREATMENT"
+     * })
+     * @return string
+     */
+    public function getUln(): string {
+        return $this->animal ? $this->animal->getUln(): '';
+    }
+
+    /**
+     * @JMS\VirtualProperty
+     * @JMS\SerializedName("animal_id")
+     * @JMS\Groups({
+     *     "ERROR_DETAILS",
+     *     "TREATMENT"
+     * })
+     * @return int|null
+     */
+    public function getAnimalId(): ?int {
+        return $this->animal ? $this->animal->getId(): null;
+    }
+
+    /**
+     * @JMS\VirtualProperty
+     * @JMS\SerializedName("last_response")
+     * @JMS\Groups({
+     *     "ERROR_DETAILS"
+     * })
+     * @return DeclareAnimalFlagResponse
+     */
+    public function lastResponse(): ?DeclareAnimalFlagResponse
+    {
+        $criteria = Criteria::create()
+            ->orderBy(['id', Criteria::DESC])
+            ->getFirstResult();
+        return $this->responses->matching($criteria)->first();
+    }
+
 
     public function __construct() {
       parent::__construct();

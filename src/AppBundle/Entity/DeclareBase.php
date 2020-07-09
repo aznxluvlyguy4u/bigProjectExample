@@ -121,6 +121,7 @@ abstract class DeclareBase implements DeclareLogInterface, DeclareBaseInterface
      *     "ADMIN_HIDDEN_STATUS",
      *     "ERROR_DETAILS",
      *     "HIDDEN_STATUS",
+     *     "TREATMENT"
      *     "RVO"
      * })
      */
