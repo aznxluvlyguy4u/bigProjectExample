@@ -33,6 +33,14 @@ class DeclareAnimalFlag extends DeclareBase
     private $animal;
 
     /**
+     * @var Treatment
+     * @Assert\NotBlank
+     * @ORM\ManyToOne(targetEntity="Treatment", inversedBy="declareAnimalFlags", cascade={"persist"})
+     * @JMS\Type("AppBundle\Entity\Treatment")
+     */
+    private $treatment;
+
+    /**
      * @ORM\Column(type="string", nullable=true)
      * @Assert\Length(max = 10)
      * @JMS\Type("string")
