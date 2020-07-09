@@ -6,6 +6,7 @@ namespace AppBundle\Service;
 
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Registration;
+use AppBundle\Enumerator\JmsGroup;
 use AppBundle\Util\Validator;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use AppBundle\Component\Utils;
@@ -24,6 +25,7 @@ use AppBundle\Validation\PasswordValidator;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
 use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
@@ -99,8 +101,8 @@ class AuthService extends AuthServiceBase
         }
 
         return new JsonResponse(
-            $this->getBaseSerializer()->getDecodedJson($person, ['REGISTRATION']),
-            200
+            $this->getBaseSerializer()->getDecodedJson($person, [JmsGroup::REGISTRATION]),
+            Response::HTTP_OK
         );
     }
 
