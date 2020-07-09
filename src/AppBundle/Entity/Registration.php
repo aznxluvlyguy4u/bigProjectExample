@@ -58,6 +58,10 @@ class Registration
      * @ORM\Column(type="string")
      * @JMS\Type("string")
      * @Assert\NotBlank
+     * @Assert\Email(
+     *     message = "The email '{{ value }}' is not a valid email.",
+     *     checkMX = true
+     * )
      */
     private $emailAddress;
 
@@ -67,15 +71,23 @@ class Registration
      * @ORM\Column(type="string")
      * @JMS\Type("string")
      */
-    private $address;
+    private $streetName;
 
     /**
-     * @var string
+     * @var integer
      *
      * @ORM\Column(type="integer")
      * @JMS\Type("integer")
      */
     private $addressNumber;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(type="string")
+     * @JMS\Type("string")
+     */
+    private $addressNumberSuffix;
 
     /**
      * @var string
@@ -193,17 +205,17 @@ class Registration
     /**
      * @return mixed
      */
-    public function getAddress()
+    public function getStreetName()
     {
-        return $this->address;
+        return $this->streetName;
     }
 
     /**
-     * @param mixed $address
+     * @param mixed $streetName
      */
-    public function setAddress($address): void
+    public function setStreetName($streetName): void
     {
-        $this->address = $address;
+        $this->streetName = $streetName;
     }
 
     /**
@@ -220,6 +232,25 @@ class Registration
     public function setAddressNumber($addressNumber): void
     {
         $this->addressNumber = $addressNumber;
+    }
+
+    /**
+     * @return string
+     */
+    public function getAddressNumberSuffix(): string
+    {
+        return $this->addressNumberSuffix;
+    }
+
+    /**
+     * @param string $addressNumberSuffix
+     * @return Registration
+     */
+    public function setAddressNumberSuffix(string $addressNumberSuffix): self
+    {
+        $this->addressNumberSuffix = $addressNumberSuffix;
+
+        return $this;
     }
 
     /**
