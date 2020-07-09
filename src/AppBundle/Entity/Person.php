@@ -637,7 +637,7 @@ abstract class Person implements UserInterface
      *
      * @param string $accessToken
      *
-     * @return void|Person
+     * @return Person
      * @throws Exception
      */
     public function setAccessToken($accessToken)
@@ -647,7 +647,7 @@ abstract class Person implements UserInterface
         if($token->getType() == TokenType::ACCESS) {
           $token->setCode($accessToken);
           $token->setCreationDateTime(new \DateTime());
-          return;
+          return $this;
         }
       }
       //if no AccessTokens were found
