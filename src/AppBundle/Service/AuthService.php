@@ -59,7 +59,7 @@ class AuthService extends AuthServiceBase
         Validator::throwExceptionWithFormattedErrorMessageIfHasErrors($errors);
 
         $registration->setStatus(RegistrationStatus::NEW);
-        
+
         $ubn = $registration->getUbn();
 
         if (!Validator::hasValidUbnFormat($ubn)) {
@@ -75,7 +75,7 @@ class AuthService extends AuthServiceBase
         $existingNewRegistration = $this->getManager()->getRepository(Registration::class)->findOneBy(['status' => RegistrationStatus::NEW, 'ubn' => $ubn]);
 
         if ($existingNewRegistration) {
-            throw new PreconditionFailedHttpException($this->translateUcFirstLower('A NEW USER ALREADY EXISTS WITH THIS UBN').': '.$ubn);
+            throw new PreconditionFailedHttpException($this->translateUcFirstLower('A NEW REGISTRATION ALREADY EXISTS FOR THIS UBN').': '.$ubn);
         }
 
         $this->getManager()->persist($registration);

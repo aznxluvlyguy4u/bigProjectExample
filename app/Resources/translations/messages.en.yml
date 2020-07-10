@@ -451,7 +451,7 @@ BILLING ADDRESS COUNTRY CANNOT BE EMPTY: Country of billing address cannot be em
 LOCATION ADDRESS COUNTRY CANNOT BE EMPTY: Country of location address cannot be empty
 UBN IS NOT A VALID NUMBER: The UBN is not a valid number
 A LOCATION WITH THIS UBN ALREADY EXISTS: A location with UBN already exists
-A NEW USER ALREADY EXISTS WITH THIS UBN: A new user already exists with this UBN
+A NEW REGISTRATION ALREADY EXISTS FOR THIS UBN: A new registration already exists for this UBN
 THE USER IS ALREADY ACTIVATED: The user is already activated
 THE REGISTRATIONS EMAILS HAVE NOT BEEN SENT: The registration emails have not been sent
 INVOICES THAT ARE ALREADY CANCELLED, SENT BUT UNPAID OR PAID CANNOT BE EDITED ANYMORE: Invoices that are already cancelled or sent cannot be edited anymore
