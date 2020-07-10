@@ -60,7 +60,7 @@ class AuthService extends AuthServiceBase
             throw new PreconditionFailedHttpException($this->translateUcFirstLower('UBN IS NOT A VALID NUMBER').': '.$ubn);
         }
 
-        $existingLocation = $this->getManager()->getRepository(Location::class)->findOneBy(['ubn' => $ubn]);
+        $existingLocation = $this->getManager()->getRepository(Location::class)->findOneByActiveUbn($ubn);
 
         if ($existingLocation) {
             throw new PreconditionFailedHttpException($this->translateUcFirstLower('A LOCATION WITH THIS UBN ALREADY EXISTS').': '.$ubn);
