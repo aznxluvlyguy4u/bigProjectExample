@@ -1,4 +1,37 @@
+address:
+  city:
+    not_blank: City cannot be empty
+  number:
+    not_blank: address number cannot be empty
+  postalcode:
+    not_blank: Postalcode cannot be empty
+  street:
+    name:
+      not_blank: Streetname cannot be empty
+
+brs:
+  not_blank: BRS cannot be empty
+
 decimal:
   limit:
     max:
       exceeded: The decimal count is %number% and exceeds the max decimal count of %limit%.
+
+email:
+  address:
+    invalid:
+      format: The email address {{ value }} has an invalid format.
+    not_blank: cannot be empty
+
+name:
+  last:
+    not_blank: First name cannot be empty
+  first:
+    not_blank: Last name cannot be empty
+
+phone:
+  number:
+    not_blank: Phonenumber cannot be empty
+
+ubn:
+  not_blank: UBN cannot be empty

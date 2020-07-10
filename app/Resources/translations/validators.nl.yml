@@ -1,4 +1,37 @@
+address:
+  city:
+    not_blank: Woonplaats mag niet leeg zijn.
+  number:
+    not_blank: Huisnummer mag niet leeg zijn.
+  postalcode:
+    not_blank: Postcode mag niet leeg zijn.
+  street:
+    name:
+      not_blank: Straatnaam mag niet leeg zijn.
+
+brs:
+  not_blank: BRS mag niet leeg zijn.
+
 decimal:
   limit:
     max:
       exceeded: Het decimalen aantal is %number% en overschrijdt het maximaal aantal toegestane decimalen van %limit%.
+
+email:
+  address:
+    invalid:
+      format: Het emailadres {{ value }} heeft een ongeldig format.
+    not_blank: Het emailadres mag niet leeg zijn.
+
+name:
+  last:
+    not_blank: Achternaam mag niet leeg zijn.
+  first:
+    not_blank: Voornaam mag niet leeg zijn.
+
+phone:
+  number:
+    not_blank: Telefoonummer mag niet leeg zijn.
+
+ubn:
+  not_blank: UBN mag niet leeg zijn.
