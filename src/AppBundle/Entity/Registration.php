@@ -39,7 +39,7 @@ class Registration
      *
      * @ORM\Column(type="string", nullable=false)
      * @JMS\Type("string")
-     * @Assert\NotBlank
+     * @Assert\NotBlank(message="name.first.not_blank")
      */
     private $firstName;
 
@@ -48,7 +48,7 @@ class Registration
      *
      * @ORM\Column(type="string", nullable=false)
      * @JMS\Type("string")
-     * @Assert\NotBlank
+     * @Assert\NotBlank(message="name.last.not_blank")
      */
     private $lastName;
 
@@ -57,9 +57,9 @@ class Registration
      *
      * @ORM\Column(type="string", nullable=false)
      * @JMS\Type("string")
-     * @Assert\NotBlank
+     * @Assert\NotBlank(message="email.address.not_blank")
      * @Assert\Email(
-     *     message = "The email '{{ value }}' is not a valid email.",
+     *     message = "email.address.invalid.format",
      *     checkMX = true
      * )
      */
@@ -70,7 +70,7 @@ class Registration
      *
      * @ORM\Column(type="string", nullable=false)
      * @JMS\Type("string")
-     * @Assert\NotBlank
+     * @Assert\NotBlank(message="address.street.name.not_blank")
      */
     private $streetName;
 
@@ -79,7 +79,7 @@ class Registration
      *
      * @ORM\Column(type="integer", nullable=false)
      * @JMS\Type("integer")
-     * @Assert\NotBlank
+     * @Assert\NotBlank(message="address.number.not_blank")
      */
     private $addressNumber;
 
@@ -96,7 +96,7 @@ class Registration
      *
      * @ORM\Column(type="string", nullable=false)
      * @JMS\Type("string")
-     * @Assert\NotBlank
+     * @Assert\NotBlank(message="address.postalcode.not_blank")
      */
     private $postalCode;
 
@@ -105,7 +105,7 @@ class Registration
      *
      * @ORM\Column(type="string", nullable=false)
      * @JMS\Type("string")
-     * @Assert\NotBlank
+     * @Assert\NotBlank(message="address.city.not_blank")
      */
     private $city;
 
@@ -114,7 +114,7 @@ class Registration
      *
      * @ORM\Column(type="string", nullable=false)
      * @JMS\Type("string")
-     * @Assert\NotBlank
+     * @Assert\NotBlank(message="ubn.not_blank")
      */
     private $ubn;
 
@@ -123,7 +123,7 @@ class Registration
      *
      * @ORM\Column(type="string", nullable=false)
      * @JMS\Type("string")
-     * @Assert\NotBlank
+     * @Assert\NotBlank(message="brs.not_blank")
      */
     private $brs;
 
@@ -132,7 +132,7 @@ class Registration
      *
      * @ORM\Column(type="string", nullable=false)
      * @JMS\Type("string")
-     * @Assert\NotBlank
+     * @Assert\NotBlank(message="phone.number.not_blank")
      */
     private $phoneNumber;
 
