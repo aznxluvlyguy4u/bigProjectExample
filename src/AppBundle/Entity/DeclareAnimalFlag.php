@@ -24,6 +24,9 @@ class DeclareAnimalFlag extends DeclareBase
      * @Assert\NotBlank
      * @ORM\ManyToOne(targetEntity="Location", inversedBy="flags", cascade={"persist"})
      * @JMS\Type("AppBundle\Entity\Location")
+     * @JMS\Groups({
+     *     "RVO"
+     * })
      */
     private $location;
 
