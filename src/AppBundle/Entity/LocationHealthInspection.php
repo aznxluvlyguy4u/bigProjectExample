@@ -83,10 +83,12 @@ class LocationHealthInspection
     private $endDate;
 
     /**
-     * @var integer
+     * @var \DateTime
      *
-     * @ORM\Column(type="integer", nullable=true)
-     * @JMS\Type("integer")
+     * @ORM\Column(type="datetime", nullable=false, options={"default":"CURRENT_TIMESTAMP"})
+     * @Assert\Date
+     * @Assert\NotBlank
+     * @JMS\Type("DateTime")
      */
     private $totalLeadTime;
 
