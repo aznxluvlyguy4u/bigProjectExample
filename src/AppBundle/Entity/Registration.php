@@ -18,7 +18,7 @@ class Registration
     use EntityClassInfo;
 
     /**
-     * @var integer
+     * @var int
      *
      * @ORM\Id
      * @ORM\Column(type="integer")
@@ -29,7 +29,7 @@ class Registration
     /**
      * @var string
      *
-     * @ORM\Column(type="string")
+     * @ORM\Column(type="string", nullable=false)
      * @JMS\Type("string")
      */
     private $status;
@@ -37,7 +37,7 @@ class Registration
     /**
      * @var string
      *
-     * @ORM\Column(type="string")
+     * @ORM\Column(type="string", nullable=false)
      * @JMS\Type("string")
      * @Assert\NotBlank
      */
@@ -46,7 +46,7 @@ class Registration
     /**
      * @var string
      *
-     * @ORM\Column(type="string")
+     * @ORM\Column(type="string", nullable=false)
      * @JMS\Type("string")
      * @Assert\NotBlank
      */
@@ -55,7 +55,7 @@ class Registration
     /**
      * @var string
      *
-     * @ORM\Column(type="string")
+     * @ORM\Column(type="string", nullable=false)
      * @JMS\Type("string")
      * @Assert\NotBlank
      * @Assert\Email(
@@ -68,23 +68,25 @@ class Registration
     /**
      * @var string
      *
-     * @ORM\Column(type="string")
+     * @ORM\Column(type="string", nullable=false)
      * @JMS\Type("string")
+     * @Assert\NotBlank
      */
     private $streetName;
 
     /**
-     * @var integer
+     * @var int
      *
-     * @ORM\Column(type="integer")
+     * @ORM\Column(type="integer", nullable=false)
      * @JMS\Type("integer")
+     * @Assert\NotBlank
      */
     private $addressNumber;
 
     /**
      * @var string|null
      *
-     * @ORM\Column(type="string")
+     * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")
      */
     private $addressNumberSuffix;
@@ -92,23 +94,25 @@ class Registration
     /**
      * @var string
      *
-     * @ORM\Column(type="string")
+     * @ORM\Column(type="string", nullable=false)
      * @JMS\Type("string")
+     * @Assert\NotBlank
      */
     private $postalCode;
 
     /**
      * @var string
      *
-     * @ORM\Column(type="string")
+     * @ORM\Column(type="string", nullable=false)
      * @JMS\Type("string")
+     * @Assert\NotBlank
      */
     private $city;
 
     /**
      * @var string
      *
-     * @ORM\Column(type="string")
+     * @ORM\Column(type="string", nullable=false)
      * @JMS\Type("string")
      * @Assert\NotBlank
      */
@@ -117,21 +121,23 @@ class Registration
     /**
      * @var string
      *
-     * @ORM\Column(type="string")
+     * @ORM\Column(type="string", nullable=false)
      * @JMS\Type("string")
+     * @Assert\NotBlank
      */
     private $brs;
 
     /**
      * @var string
      *
-     * @ORM\Column(type="string")
+     * @ORM\Column(type="string", nullable=false)
      * @JMS\Type("string")
+     * @Assert\NotBlank
      */
     private $phoneNumber;
 
     /**
-     * @return mixed
+     * @return int
      */
     public function getId()
     {
@@ -148,42 +154,48 @@ class Registration
 
     /**
      * @param string $status
+     * @return Registration
      */
-    public function setStatus(string $status): void
+    public function setStatus(string $status): Registration
     {
         $this->status = $status;
+        return $this;
     }
 
     /**
-     * @return mixed
+     * @return string
      */
-    public function getFirstName()
+    public function getFirstName(): string
     {
         return $this->firstName;
     }
 
     /**
-     * @param mixed $firstName
+     * @param  string  $firstName
+     * @return Registration
      */
-    public function setFirstName($firstName): void
+    public function setFirstName(string $firstName): Registration
     {
         $this->firstName = $firstName;
+        return $this;
     }
 
     /**
-     * @return mixed
+     * @return string
      */
-    public function getLastName()
+    public function getLastName(): string
     {
         return $this->lastName;
     }
 
     /**
-     * @param mixed $lastName
+     * @param  string  $lastName
+     * @return Registration
      */
-    public function setLastName($lastName): void
+    public function setLastName(string $lastName): Registration
     {
         $this->lastName = $lastName;
+        return $this;
     }
 
     /**
@@ -195,43 +207,49 @@ class Registration
     }
 
     /**
-     * @param string $emailAddress
+     * @param  string  $emailAddress
+     * @return Registration
      */
-    public function setEmailAddress(string $emailAddress): void
+    public function setEmailAddress(string $emailAddress): Registration
     {
         $this->emailAddress = $emailAddress;
+        return $this;
     }
 
     /**
-     * @return mixed
+     * @return string
      */
-    public function getStreetName()
+    public function getStreetName(): string
     {
         return $this->streetName;
     }
 
     /**
-     * @param mixed $streetName
+     * @param  string  $streetName
+     * @return Registration
      */
-    public function setStreetName($streetName): void
+    public function setStreetName(string $streetName): Registration
     {
         $this->streetName = $streetName;
+        return $this;
     }
 
     /**
-     * @return mixed
+     * @return int
      */
-    public function getAddressNumber()
+    public function getAddressNumber(): int
     {
         return $this->addressNumber;
     }
 
     /**
-     * @param mixed $addressNumber
+     * @param  int  $addressNumber
+     * @return Registration
      */
-    public function setAddressNumber($addressNumber): void
+    public function setAddressNumber(int $addressNumber): Registration
     {
         $this->addressNumber = $addressNumber;
+        return $this;
     }
 
     /**
@@ -254,91 +272,101 @@ class Registration
     }
 
     /**
-     * @return mixed
+     * @return string
      */
-    public function getPostalCode()
+    public function getPostalCode(): string
     {
         return $this->postalCode;
     }
 
     /**
-     * @param mixed $postalCode
+     * @param  string  $postalCode
+     * @return Registration
      */
-    public function setPostalCode($postalCode): void
+    public function setPostalCode(string $postalCode): Registration
     {
         $this->postalCode = $postalCode;
+        return $this;
     }
 
     /**
-     * @return mixed
+     * @return string
      */
-    public function getCity()
+    public function getCity(): string
     {
         return $this->city;
     }
 
     /**
-     * @param mixed $city
+     * @param  string  $city
+     * @return Registration
      */
-    public function setCity($city): void
+    public function setCity(string $city): Registration
     {
         $this->city = $city;
+        return $this;
     }
 
     /**
-     * @return mixed
+     * @return string
      */
-    public function getUbn()
+    public function getUbn(): string
     {
         return $this->ubn;
     }
 
     /**
-     * @param mixed $ubn
+     * @param  string  $ubn
+     * @return Registration
      */
-    public function setUbn($ubn): void
+    public function setUbn(string $ubn): Registration
     {
         $this->ubn = $ubn;
+        return $this;
     }
 
     /**
-     * @return mixed
+     * @return string
      */
-    public function getBrs()
+    public function getBrs(): string
     {
         return $this->brs;
     }
 
     /**
-     * @param mixed $brs
+     * @param  string  $brs
+     * @return Registration
      */
-    public function setBrs($brs): void
+    public function setBrs(string $brs): Registration
     {
         $this->brs = $brs;
+        return $this;
     }
 
     /**
-     * @return mixed
+     * @return string
      */
-    public function getPhoneNumber()
+    public function getPhoneNumber(): string
     {
         return $this->phoneNumber;
     }
 
     /**
-     * @param mixed $phoneNumber
+     * @param  string  $phoneNumber
+     * @return Registration
      */
-    public function setPhoneNumber($phoneNumber): void
+    public function setPhoneNumber(string $phoneNumber): Registration
     {
         $this->phoneNumber = $phoneNumber;
+        return $this;
     }
 
-    public function getFullAddress()
+    public function getFullAddress(): string
     {
         return $this->streetName .' '. $this->addressNumber.$this->addressNumberSuffix;
     }
 
-    public function getFullName()
+    public function getFullName(): string
     {
         return $this->firstName .' '. $this->lastName;
     }
