@@ -8,6 +8,7 @@ use AppBundle\Traits\EntityClassInfo;
 use AppBundle\Util\Translation;
 use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as JMS;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -243,6 +244,16 @@ class Treatment implements TreatmentInterface
     private $medicationSelections;
 
     /**
+     * @var ArrayCollection|DeclareAnimalFlag[]
+     * @ORM\OneToMany(targetEntity="DeclareAnimalFlag", mappedBy="treatment", cascade={"persist"})
+     * @JMS\Type("ArrayCollection<AppBundle\Entity\DeclareAnimalFlag>")
+     * @JMS\Groups({
+     *     "TREATMENT"
+     * })
+     */
+    private $declareAnimalFlags;
+
+    /**
      * @JMS\VirtualProperty
      * @JMS\SerializedName("dutchType")
      * @JMS\Groups({
@@ -263,6 +274,7 @@ class Treatment implements TreatmentInterface
         $this->isActive = true;
         $this->animals = new ArrayCollection();
         $this->medicationSelections = new ArrayCollection();
+        $this->declareAnimalFlags = new ArrayCollection();
     }
 
     /**
@@ -638,5 +650,40 @@ class Treatment implements TreatmentInterface
     {
         $this->treatmentTemplate = $treatmentTemplate;
         return $this;
+    }
+
+    /**
+     * Add DeclareAnimalFlag
+     *
+     * @param DeclareAnimalFlag $flag
+     *
+     * @return Treatment
+     */
+    public function addDeclareAnimalFlag(DeclareAnimalFlag $flag): Treatment
+    {
+        $this->declareAnimalFlags->add($flag);
+        return $this;
+    }
+
+    /**
+     * Remove DeclareAnimalFlag
+     *
+     * @param DeclareAnimalFlag $flag
+     * @return Treatment
+     */
+    public function removeDeclareAnimalFlag(DeclareAnimalFlag $flag): Treatment
+    {
+        $this->declareAnimalFlags->removeElement($flag);
+        return $this;
+    }
+
+    /**
+     * Get DeclareAnimalFlags
+     *
+     * @return Collection|ArrayCollection|DeclareAnimalFlag[]
+     */
+    public function getDeclareAnimalFlags()
+    {
+        return $this->declareAnimalFlags;
     }
 }

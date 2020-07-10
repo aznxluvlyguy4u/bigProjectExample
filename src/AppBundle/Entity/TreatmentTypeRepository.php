@@ -3,11 +3,40 @@
 namespace AppBundle\Entity;
 
 use AppBundle\Component\HttpFoundation\JsonResponse;
+use AppBundle\Enumerator\QFeverDescription;
 use AppBundle\Enumerator\TreatmentTypeOption;
 use AppBundle\Service\TreatmentTypeService;
+use Psr\Log\LoggerInterface;
 
 class TreatmentTypeRepository extends BaseRepository
 {
+
+    public function initializeRecords(LoggerInterface $logger)
+    {
+        $descriptions = [
+            QFeverDescription::BASIC_VACCINATION_FIRST,
+            QFeverDescription::BASIC_VACCINATION_SECOND,
+            QFeverDescription::REPEATED_VACCINATION,
+        ];
+        $typeOption = TreatmentTypeOption::INDIVIDUAL;
+
+        foreach ($descriptions as $description) {
+            $treatmentType = $this->findOneBy(['description' => $description]);
+            if (!$treatmentType) {
+                $treatmentType = (new TreatmentType())
+                    ->setDescription($description)
+                    ->setType($typeOption)
+                    ->setIsEditable(false)
+                ;
+                $this->persist($treatmentType);
+                $this->flush();
+                if ($logger) {
+                    $logger->notice('Created TreatmentType: '.$description.' of type '.$typeOption);
+                }
+            }
+        }
+    }
+
     /**
      * @param bool $activeOnly
      * @param string $type

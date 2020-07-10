@@ -49,6 +49,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  *     "MIXBLUP",
  *     "PARENT_DATA",
  *     "RESPONSE_PERSISTENCE",
+ *     "RVO",
  *     "USER_MEASUREMENT"
  * })
  *
@@ -79,6 +80,7 @@ abstract class Animal
      *     "MIXBLUP",
      *     "PARENT_DATA",
      *     "RESPONSE_PERSISTENCE",
+     *     "RVO",
      *     "TREATMENT_TEMPLATE",
      *     "TREATMENT",
      *     "USER_MEASUREMENT"
@@ -468,6 +470,7 @@ abstract class Animal
      *     "MIXBLUP",
      *     "PARENT_DATA",
      *     "RESPONSE_PERSISTENCE",
+     *     "RVO",
      *     "TREATMENT_TEMPLATE",
      *     "TREATMENT_TEMPLATE_MIN",
      *     "TREATMENT",
@@ -497,6 +500,7 @@ abstract class Animal
      *     "MIXBLUP",
      *     "PARENT_DATA",
      *     "RESPONSE_PERSISTENCE",
+     *     "RVO",
      *     "TREATMENT_TEMPLATE",
      *     "TREATMENT_TEMPLATE_MIN",
      *     "TREATMENT",
@@ -514,7 +518,8 @@ abstract class Animal
      *     "ANIMAL_DETAILS",
      *     "BASIC",
      *     "DECLARE",
-     *     "LIVESTOCK"
+     *     "LIVESTOCK",
+     *     "RVO"
      * })
      */
     protected $animalOrderNumber;

@@ -69,6 +69,16 @@ class TreatmentType
     private $isActive;
 
     /**
+     * @var boolean
+     * @ORM\Column(type="boolean", nullable=false, options={"default":true})
+     * @JMS\Type("boolean")
+     * @JMS\Groups({
+     *     "TREATMENT_TEMPLATE"
+     * })
+     */
+    private $isEditable;
+
+    /**
      * @var DateTime
      * @ORM\Column(type="datetime", options={"default":"CURRENT_TIMESTAMP"}, nullable=true)
      * @Assert\Date
@@ -134,6 +144,7 @@ class TreatmentType
     {
         $this->logDate = new \DateTime();
         $this->isActive = true;
+        $this->isEditable = true;
     }
 
     /**
@@ -280,7 +291,22 @@ class TreatmentType
         return $this;
     }
 
+    /**
+     * @return bool
+     */
+    public function isEditable(): bool
+    {
+        return $this->isEditable;
+    }
 
-
+    /**
+     * @param  bool  $isEditable
+     * @return TreatmentType
+     */
+    public function setIsEditable(bool $isEditable): TreatmentType
+    {
+        $this->isEditable = $isEditable;
+        return $this;
+    }
 
 }

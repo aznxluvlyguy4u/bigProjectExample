@@ -15,9 +15,9 @@ use AppBundle\Component\MixBlup\MixBlupInputFileValidator;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
 use AppBundle\Entity\EditType;
-use AppBundle\Entity\InbreedingCoefficientProcess;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\ProcessLog;
+use AppBundle\Entity\QFever;
 use AppBundle\Entity\ScrapieGenotypeSource;
 use AppBundle\Entity\TagSyncErrorLog;
 use AppBundle\Enumerator\CommandTitle;
@@ -713,6 +713,7 @@ class NsfoMainCommand extends ContainerAwareCommand
                 '6: PedigreeCodes & PedigreeRegister-PedigreeCode relationships', "\n",
                 '7: Initialize batch invoice invoice rules', "\n",
                 '8: EditType', "\n",
+                '9: Q-Fever treatmentTypes and treatmentTemplates', "\n",
                 self::LINE_THICK, "\n",
                 '10: StoredProcedures: initialize if not exist', "\n",
                 '11: StoredProcedures: overwrite all', "\n",
@@ -741,6 +742,7 @@ class NsfoMainCommand extends ContainerAwareCommand
             case 6: $this->getContainer()->get('AppBundle\Service\Migration\PedigreeCodeInitializer')->run($this->cmdUtil); break;
             case 7: $this->getContainer()->get('AppBundle\Service\Invoice\BatchInvoiceRuleInitializer')->load(); break;
             case 8: $this->em->getRepository(EditType::class)->initializeRecords(); break;
+            case 9: $this->em->getRepository(QFever::class)->initializeRecords($this->getLogger()); break;
 
             case 10: $this->getContainer()->get('AppBundle\Service\Migration\StoredProcedureInitializer')->initialize(); break;
             case 11: $this->getContainer()->get('AppBundle\Service\Migration\StoredProcedureInitializer')->update(); break;

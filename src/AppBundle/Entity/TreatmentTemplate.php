@@ -3,6 +3,7 @@
 namespace AppBundle\Entity;
 
 
+use AppBundle\Enumerator\AnimalType;
 use AppBundle\Traits\EntityClassInfo;
 use AppBundle\Util\Translation;
 use DateTime;
@@ -11,14 +12,25 @@ use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as JMS;
 use Symfony\Component\Validator\Constraints as Assert;
 
-
 /**
  * Class TreatmentTemplate
  *
  * @ORM\Entity(repositoryClass="AppBundle\Entity\TreatmentTemplateRepository")
  * @package AppBundle\Entity
+ * @ORM\InheritanceType("JOINED")
+ * @ORM\DiscriminatorColumn(name="templatetype", type="string")
+ * @ORM\DiscriminatorMap({"QFever"="QFever", "Default"="DefaultTreatmentTemplate"})
+ * @JMS\Discriminator(field="templatetype", disabled=false, map={
+ *                        "QFever" : "AppBundle\Entity\QFever",
+ *                        "Default" : "AppBundle\Entity\DefaultTreatmentTemplate"
+ *                      },
+ *                      groups = {
+ *                          "TREATMENT_TEMPLATE",
+ *                          "TREATMENT"
+ *                      }
+ *                  )
  */
-class TreatmentTemplate
+abstract class TreatmentTemplate
 {
     use EntityClassInfo;
 
@@ -104,6 +116,17 @@ class TreatmentTemplate
     private $isActive;
 
     /**
+     * @var boolean
+     * @ORM\Column(type="boolean", nullable=false, options={"default":true})
+     * @JMS\Type("boolean")
+     * @JMS\Groups({
+     *     "TREATMENT_TEMPLATE",
+     *     "TREATMENT"
+     * })
+     */
+    private $isEditable;
+
+    /**
      * @var \DateTime
      * @ORM\Column(type="datetime", options={"default":"CURRENT_TIMESTAMP"}, nullable=true)
      * @Assert\Date
@@ -151,6 +174,15 @@ class TreatmentTemplate
     private $type;
 
     /**
+     * @var int
+     *
+     * @ORM\Column(type="integer", nullable=false, options={"default":AppBundle\Enumerator\AnimalType::sheep})
+     * @JMS\Type("integer")
+     * @Assert\NotNull
+     */
+    private $animalType;
+
+    /**
      * @JMS\VirtualProperty
      * @JMS\SerializedName("dutchType")
      * @JMS\Groups({
@@ -168,6 +200,8 @@ class TreatmentTemplate
     {
         $this->logDate = new \DateTime();
         $this->isActive = true;
+        $this->isEditable = true;
+        $this->setAnimalType(AnimalType::sheep);
     }
 
     /**
@@ -455,4 +489,42 @@ class TreatmentTemplate
         }
         return $nullReplacement;
     }
+
+    /**
+     * @return int
+     */
+    public function getAnimalType(): int
+    {
+        return $this->animalType;
+    }
+
+    /**
+     * @param  int  $animalType
+     * @return TreatmentTemplate
+     */
+    public function setAnimalType(int $animalType): TreatmentTemplate
+    {
+        $this->animalType = $animalType;
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isEditable(): bool
+    {
+        return $this->isEditable;
+    }
+
+    /**
+     * @param  bool  $isEditable
+     * @return TreatmentTemplate
+     */
+    public function setIsEditable(bool $isEditable): TreatmentTemplate
+    {
+        $this->isEditable = $isEditable;
+        return $this;
+    }
+
+
 }

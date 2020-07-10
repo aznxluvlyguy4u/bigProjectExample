@@ -57,6 +57,10 @@ abstract class DeclareBaseResponse
      * @ORM\Column(type="integer")
      * @ORM\Id
      * @ORM\GeneratedValue(strategy="IDENTITY")
+     * @JMS\Type("integer")
+     * @JMS\Groups({
+     *     "ERROR_DETAILS"
+     * })
      */
     protected $id;
 
@@ -66,6 +70,7 @@ abstract class DeclareBaseResponse
      * @Assert\NotBlank
      * @JMS\Type("string")
      * @JMS\Groups({
+     *     "ERROR_DETAILS",
      *     "RESPONSE_PERSISTENCE"
      * })
      */
