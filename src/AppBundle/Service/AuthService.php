@@ -83,6 +83,10 @@ class AuthService extends AuthServiceBase
 
        if (!$this->emailService->sendNewRegistrationEmails($registration)) {
 
+           $registration->setStatus(RegistrationStatus::FAILED_SENDING_EMAILS);
+           $this->getManager()->persist($registration);
+           $this->getManager()->flush();
+
            throw new PreconditionFailedHttpException($this->translateUcFirstLower('THE REGISTRATIONS EMAILS HAVE NOT BEEN SENT'));
        }
 
