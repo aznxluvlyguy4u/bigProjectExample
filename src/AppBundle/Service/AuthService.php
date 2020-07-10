@@ -55,6 +55,11 @@ class AuthService extends AuthServiceBase
         /** @var Registration $registration */
         $registration = $this->getBaseSerializer()->deserializeToObject($request->getContent(), Registration::class);
 
+        $errors = $this->validator->validate($registration);
+        Validator::throwExceptionWithFormattedErrorMessageIfHasErrors($errors);
+
+        $registration->setStatus(RegistrationStatus::NEW);
+        
         $ubn = $registration->getUbn();
 
         if (!Validator::hasValidUbnFormat($ubn)) {
@@ -72,11 +77,6 @@ class AuthService extends AuthServiceBase
         if ($existingNewRegistration) {
             throw new PreconditionFailedHttpException($this->translateUcFirstLower('A NEW USER ALREADY EXISTS WITH THIS UBN').': '.$ubn);
         }
-
-        $errors = $this->validator->validate($registration);
-        Validator::throwExceptionWithFormattedErrorMessageIfHasErrors($errors);
-
-        $registration->setStatus(RegistrationStatus::NEW);
 
         $this->getManager()->persist($registration);
         $this->getManager()->flush();
