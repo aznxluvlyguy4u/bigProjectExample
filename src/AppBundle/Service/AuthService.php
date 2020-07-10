@@ -4,7 +4,10 @@
 namespace AppBundle\Service;
 
 
+use AppBundle\Entity\Location;
 use AppBundle\Entity\Registration;
+use AppBundle\Enumerator\JmsGroup;
+use AppBundle\Util\Validator;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\Constant;
@@ -22,10 +25,24 @@ use AppBundle\Validation\PasswordValidator;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
 use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class AuthService extends AuthServiceBase
 {
+
+    /** @var ValidatorInterface $validator */
+    private $validator;
+
+    /**
+     * @param ValidatorInterface $validator
+     */
+    public function setValidator(ValidatorInterface $validator)
+    {
+        $this->validator = $validator;
+    }
 
     /**
      * @param Request $request
@@ -37,13 +54,35 @@ class AuthService extends AuthServiceBase
         /** @var Registration $registration */
         $registration = $this->getBaseSerializer()->deserializeToObject($request->getContent(), Registration::class);
 
+        $ubn = $registration->getUbn();
+
+        if (!Validator::hasValidUbnFormat($ubn)) {
+            throw new PreconditionFailedHttpException($this->translateUcFirstLower('UBN IS NOT A VALID NUMBER').': '.$ubn);
+        }
+
+        $existingLocation = $this->getManager()->getRepository(Location::class)->findOneBy(['ubn' => $ubn]);
+
+        if ($existingLocation) {
+            throw new PreconditionFailedHttpException($this->translateUcFirstLower('A LOCATION WITH THIS UBN ALREADY EXISTS').': '.$ubn);
+        }
+
+        $existingNewRegistration = $this->getManager()->getRepository(Registration::class)->findOneBy(['status' => 'NEW', 'ubn' => $ubn]);
+
+        if ($existingNewRegistration) {
+            throw new PreconditionFailedHttpException($this->translateUcFirstLower('A NEW USER ALREADY EXISTS WITH THIS UBN').': '.$ubn);
+        }
+
+        $errors = $this->validator->validate($registration);
+        Validator::throwExceptionWithFormattedErrorMessageIfHasErrors($errors);
+
         $registration->setStatus('NEW');
 
         $this->getManager()->persist($registration);
         $this->getManager()->flush();
 
-        $this->emailService->sendNewRegistrationEmail($registration, 'beheerder');
-        $this->emailService->sendNewRegistrationEmail($registration, $registration->getFullName());
+       if (!$this->emailService->sendNewRegistrationEmails($registration)) {
+           throw new PreconditionFailedHttpException($this->translateUcFirstLower('THE REGISTRATIONS EMAILS HAVE NOT BEEN SENT'));
+       }
 
         return new JsonResponse(
             $this->getBaseSerializer()->getDecodedJson($registration),
@@ -52,14 +91,18 @@ class AuthService extends AuthServiceBase
     }
 
     public function acceptPerson(Person $person) {
-        $person->setIsActive(true);
+        if (!$person->getIsActive()) {
+            $person->setIsActive(true);
 
-        $this->getManager()->persist($person);
-        $this->getManager()->flush();
+            $this->getManager()->persist($person);
+            $this->getManager()->flush();
+        } else {
+            throw new PreconditionFailedHttpException($this->translateUcFirstLower('THE USER IS ALREADY ACTIVATED'));
+        }
 
         return new JsonResponse(
-            $this->getBaseSerializer()->getDecodedJson($person, ['REGISTRATION']),
-            200
+            $this->getBaseSerializer()->getDecodedJson($person, [JmsGroup::REGISTRATION]),
+            Response::HTTP_OK
         );
     }
 

@@ -14,6 +14,7 @@ use AppBundle\Entity\Person;
 use AppBundle\Entity\Registration;
 use AppBundle\Entity\VwaEmployee;
 use AppBundle\Enumerator\RequestType;
+use Swift_Message;
 use Symfony\Bridge\Monolog\Logger;
 use Symfony\Bridge\Twig\TwigEngine;
 use Symfony\Component\Translation\TranslatorInterface;
@@ -73,7 +74,7 @@ class EmailService
     public function sendNewPasswordEmail($emailAddress)
     {
         //Confirmation message back to the sender
-        $message = \Swift_Message::newInstance()
+        $message = Swift_Message::newInstance()
             ->setSubject(Constant::NEW_PASSWORD_MAIL_SUBJECT_HEADER)
             ->setFrom($this->mailerSourceAddress)
             ->setTo($emailAddress)
@@ -91,39 +92,49 @@ class EmailService
 
     /**
      * @param Registration $registration
-     * @param string $receiver
      * @return bool
      * @throws Error
      */
-    public function sendNewRegistrationEmail(Registration $registration, $receiver) {
-        if ($receiver === 'beheerder') {
-            $receiverEmailAddresses = $this->notificationEmailAddresses;
-            $subject = Constant::NEW_USER_MAIL_SUBJECT_HEADER_ADMIN;
-        } else {
-            $receiverEmailAddresses = [$registration->getEmailAddress()];
-            $subject = Constant::NEW_USER_MAIL_SUBJECT_HEADER_USER;
-        }
+    public function sendNewRegistrationEmails(Registration $registration) {
 
-        //Confirmation message back to the sender
-        $message = \Swift_Message::newInstance()
-            ->setSubject($subject)
+        $adminMessage = Swift_Message::newInstance()
+            ->setSubject(Constant::NEW_USER_MAIL_SUBJECT_HEADER_ADMIN)
             ->setFrom($this->mailerSourceAddress)
-            ->setTo($receiverEmailAddresses)
+            ->setTo( $this->notificationEmailAddresses)
             ->setBody(
                 $this->templating->render(
                 // app/Resources/views/...
                     'Auth/new_user_email.html.twig',
                     [
                         'registration' => $registration,
-                        'subject' => $subject,
-                        'receiver' => $receiver
+                        'subject'      => Constant::NEW_USER_MAIL_SUBJECT_HEADER_ADMIN,
+                        'receiver'     => 'beheerder'
                     ]
                 ),
                 'text/html'
             )
             ->setSender($this->mailerSourceAddress);
 
-        return $this->swiftMailer->send($message) > 0;
+        $userMessage = Swift_Message::newInstance()
+            ->setSubject(Constant::NEW_USER_MAIL_SUBJECT_HEADER_USER)
+            ->setFrom($this->mailerSourceAddress)
+            ->setTo([$registration->getEmailAddress()])
+            ->setBody(
+                $this->templating->render(
+                // app/Resources/views/...
+                    'Auth/new_user_email.html.twig',
+                    [
+                        'registration' => $registration,
+                        'subject'      => Constant::NEW_USER_MAIL_SUBJECT_HEADER_USER,
+                        'receiver'     => $registration->getFullName()
+                    ]
+                ),
+                'text/html'
+            )
+            ->setSender($this->mailerSourceAddress);
+
+        return $this->swiftMailer->send($adminMessage) > 0 && $this->swiftMailer->send($userMessage) > 0;
+
     }
 
     /**
@@ -161,7 +172,7 @@ class EmailService
         }
 
         //Confirmation message back to the sender
-        $message = \Swift_Message::newInstance()
+        $message = Swift_Message::newInstance()
             ->setSubject($this->getSubjectHeader($person))
             ->setFrom($this->mailerSourceAddress)
             ->setTo($person->getEmailAddress())
@@ -199,7 +210,7 @@ class EmailService
      */
     public function sendContactEmail($contactMailSubjectHeader, $emailData)
     {
-        $message = \Swift_Message::newInstance()
+        $message = Swift_Message::newInstance()
             ->setSubject($contactMailSubjectHeader)
             ->setFrom($this->mailerSourceAddress) // EMAIL IS ONLY SENT IF THIS IS THE EMAIL ADDRESS!
             ->setTo($this->mailerSourceAddress) //Send the original to kantoor@nsfo.nl
@@ -226,7 +237,7 @@ class EmailService
     {
         $emailAddressUser = $emailData['emailAddressUser'];
 
-        $messageConfirmation = \Swift_Message::newInstance()
+        $messageConfirmation = Swift_Message::newInstance()
             ->setSubject(Constant::CONTACT_CONFIRMATION_MAIL_SUBJECT_HEADER)
             ->setFrom($this->mailerSourceAddress) // EMAIL IS ONLY SENT IF THIS IS THE EMAIL ADDRESS!
             ->setTo($emailAddressUser) //Send the confirmation back to the original sender
@@ -254,7 +265,7 @@ class EmailService
         $emailData[JsonInputConstant::NSFO_DERDEN_LOGIN_URL] = $this->nsfoDerdenLoginUrl;
 
         //Confirmation message back to the sender
-        $message = \Swift_Message::newInstance()
+        $message = Swift_Message::newInstance()
             ->setSubject(Constant::NEW_THIRD_PARTY_PASSWORD_MAIL_SUBJECT_HEADER)
             ->setFrom($this->mailerSourceAddress)
             ->setTo($emailData[JsonInputConstant::EMAIL_ADDRESS])
@@ -288,7 +299,7 @@ class EmailService
         $subjectHeader = $type . ': wachtwoord reset aanvraag';
 
         //Confirmation message back to the sender
-        $message = \Swift_Message::newInstance()
+        $message = Swift_Message::newInstance()
             ->setSubject($subjectHeader)
             ->setFrom($this->mailerSourceAddress)
             ->setTo($person->getEmailAddress())
@@ -327,7 +338,7 @@ class EmailService
         $subjectHeader = $type . ': bevestiging e-mail';
 
         //Confirmation message back to the sender
-        $message = \Swift_Message::newInstance()
+        $message = Swift_Message::newInstance()
             ->setSubject($subjectHeader)
             ->setFrom($this->mailerSourceAddress)
             ->setTo($person->getEmailChangeToken()->getEmailAddress())
@@ -412,7 +423,7 @@ class EmailService
         $subjectHeaderData = $subjectHeaderData .' => UBN '.$locationHealthMessage->getUbnNewOwner().']';
         $introMessage = 'Er is een dier '.$arrivalVerbType.' op ' . $locationHealthMessage->getUbnNewOwner() . $senderInfo . '.';
 
-        $message = \Swift_Message::newInstance()
+        $message = Swift_Message::newInstance()
             ->setSubject($this->getEnvironmentSubjectPrefix()
                 .Constant::POSSIBLE_SICK_ANIMAL_ARRIVAL_MAIL_SUBJECT_HEADER.$subjectHeaderData)
             ->setFrom($this->mailerSourceAddress)

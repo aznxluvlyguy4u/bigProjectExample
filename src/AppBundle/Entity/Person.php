@@ -382,6 +382,16 @@ abstract class Person implements UserInterface
         return StringUtil::getFullName($this->firstName, $this->lastName);
     }
 
+    /**
+     * Person constructor.
+     * @param null $firstName
+     * @param null $lastName
+     * @param null $emailAddress
+     * @param string $password
+     * @param null $username
+     * @param null $cellphoneNumber
+     * @throws Exception
+     */
   public function __construct($firstName = null, $lastName = null, $emailAddress = null,
                               $password = '', $username = null, $cellphoneNumber = null)
   {
@@ -627,7 +637,7 @@ abstract class Person implements UserInterface
      *
      * @param string $accessToken
      *
-     * @return void|Person
+     * @return Person
      * @throws Exception
      */
     public function setAccessToken($accessToken)
@@ -637,7 +647,7 @@ abstract class Person implements UserInterface
         if($token->getType() == TokenType::ACCESS) {
           $token->setCode($accessToken);
           $token->setCreationDateTime(new \DateTime());
-          return;
+          return $this;
         }
       }
       //if no AccessTokens were found
