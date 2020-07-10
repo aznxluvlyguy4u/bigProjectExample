@@ -7,6 +7,7 @@ namespace AppBundle\Service;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Registration;
 use AppBundle\Enumerator\JmsGroup;
+use AppBundle\Enumerator\RegistrationStatus;
 use AppBundle\Util\Validator;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use AppBundle\Component\Utils;
@@ -66,7 +67,7 @@ class AuthService extends AuthServiceBase
             throw new PreconditionFailedHttpException($this->translateUcFirstLower('A LOCATION WITH THIS UBN ALREADY EXISTS').': '.$ubn);
         }
 
-        $existingNewRegistration = $this->getManager()->getRepository(Registration::class)->findOneBy(['status' => 'NEW', 'ubn' => $ubn]);
+        $existingNewRegistration = $this->getManager()->getRepository(Registration::class)->findOneBy(['status' => RegistrationStatus::NEW, 'ubn' => $ubn]);
 
         if ($existingNewRegistration) {
             throw new PreconditionFailedHttpException($this->translateUcFirstLower('A NEW USER ALREADY EXISTS WITH THIS UBN').': '.$ubn);
@@ -75,12 +76,13 @@ class AuthService extends AuthServiceBase
         $errors = $this->validator->validate($registration);
         Validator::throwExceptionWithFormattedErrorMessageIfHasErrors($errors);
 
-        $registration->setStatus('NEW');
+        $registration->setStatus(RegistrationStatus::NEW);
 
         $this->getManager()->persist($registration);
         $this->getManager()->flush();
 
        if (!$this->emailService->sendNewRegistrationEmails($registration)) {
+
            throw new PreconditionFailedHttpException($this->translateUcFirstLower('THE REGISTRATIONS EMAILS HAVE NOT BEEN SENT'));
        }
 
