@@ -279,6 +279,10 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
         $templateInDatabase = $this->getTemplateByIdAndType($templateId, $type);
         if ($templateInDatabase instanceof JsonResponse) { return $templateInDatabase; }
 
+        if (!$templateInDatabase->isEditable()) {
+            throw new PreconditionFailedHttpException('This template is not editable');
+        }
+
         $oldTemplateMedications = $templateInDatabase->getMedications();
 
         //new template data
