@@ -906,4 +906,29 @@ class TreatmentTemplateAPIController extends APIController implements TreatmentT
     function reactivateLocationTemplate(Request $request, $templateId) {
         return $this->get('app.treatment.template')->reactivateLocationTemplate($request, $templateId);
     }
+
+    /**
+     * @ApiDoc(
+     *   section = "Treatment Template",
+     *   headers={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "required"=true,
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Get descriptions of templates with type QFever",
+     *   statusCodes={200="Returned when successful"},
+     *   output="json"
+     * )
+     *
+     * @Route("/template/q-fever/descriptions")
+     * @Method("GET")
+     */
+    function getQFeverDescriptions()
+    {
+        return $this->get('app.treatment.template')->getQFeverDescriptions();
+    }
 }
