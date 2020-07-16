@@ -111,7 +111,15 @@ class TreatmentRepository extends BaseRepository {
 
             $item['medications'] = $medicineStatement->fetchAll();
 
-            $item['animals'] = $animalStatement->fetchAll();
+            foreach ( $animalStatement->fetchAll() as $sqlAnimal) {
+                /** @var DeclareAnimalFlag $declareAnimalFlag */
+                $declareAnimalFlag = $this->getEntityManager()->getRepository(Animal::class)->getLatestFlag($sqlAnimal['id']);
+                $sqlAnimal['rvo_flag'] = $declareAnimalFlag->getFlagType();
+                $sqlAnimal['rvo_flag_status'] = $declareAnimalFlag->getRequestState();
+                $sqlAnimal['rvo_flag_start_date'] = $declareAnimalFlag->getFlagStartDate()->format('d-m-Y');
+                $sqlAnimal['rvo_flag_end_date'] = $declareAnimalFlag->getFlagEndDate()->format('d-m-Y');
+                $item['animals'][] = $sqlAnimal;
+            }
 
             $item['dutchType'] = Translation::getDutchTreatmentType($item['type']);
             $results[] = $item;
