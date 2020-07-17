@@ -6,6 +6,7 @@ use AppBundle\Component\Utils;
 use AppBundle\Traits\EntityClassInfo;
 use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as JMS;
 use JMS\Serializer\Annotation\ExclusionPolicy;
@@ -486,7 +487,7 @@ class Location
     /**
      * Get arrivals
      *
-     * @return \Doctrine\Common\Collections\Collection
+     * @return Collection
      */
     public function getArrivals()
     {
@@ -520,7 +521,7 @@ class Location
     /**
      * Get births
      *
-     * @return \Doctrine\Common\Collections\Collection
+     * @return Collection
      */
     public function getBirths()
     {
@@ -637,7 +638,7 @@ class Location
     /**
      * Get imports
      *
-     * @return \Doctrine\Common\Collections\Collection
+     * @return Collection
      */
     public function getImports()
     {
@@ -671,7 +672,7 @@ class Location
     /**
      * Get departures
      *
-     * @return \Doctrine\Common\Collections\Collection
+     * @return Collection
      */
     public function getDepartures()
     {
@@ -705,7 +706,7 @@ class Location
     /**
      * Get losses
      *
-     * @return \Doctrine\Common\Collections\Collection
+     * @return Collection
      */
     public function getLosses()
     {
@@ -739,7 +740,7 @@ class Location
 
     /**
      * Get animals
-     * @return \Doctrine\Common\Collections\Collection|Animal[]
+     * @return Collection|Animal[]
      */
     public function getAnimals()
     {
@@ -773,7 +774,7 @@ class Location
     /**
      * Get exports
      *
-     * @return \Doctrine\Common\Collections\Collection
+     * @return Collection
      */
     public function getExports()
     {
@@ -808,7 +809,7 @@ class Location
     /**
      * Get tagTransfers
      *
-     * @return \Doctrine\Common\Collections\Collection
+     * @return Collection
      */
     public function getTagTransfers()
     {
@@ -842,7 +843,7 @@ class Location
     /**
      * Get flags
      *
-     * @return \Doctrine\Common\Collections\Collection
+     * @return Collection
      */
     public function getFlags()
     {
@@ -876,7 +877,7 @@ class Location
     /**
      * Get revokes
      *
-     * @return \Doctrine\Common\Collections\Collection
+     * @return Collection
      */
     public function getRevokes()
     {
@@ -911,7 +912,7 @@ class Location
     /**
      * Get matings
      *
-     * @return \Doctrine\Common\Collections\Collection
+     * @return Collection
      */
     public function getMatings()
     {
@@ -1001,7 +1002,7 @@ class Location
     /**
      * Get healthMessages
      *
-     * @return \Doctrine\Common\Collections\Collection
+     * @return Collection
      */
     public function getHealthMessages()
     {
@@ -1034,11 +1035,11 @@ class Location
     /**
      * Add animalResidenceHistory
      *
-     * @param \AppBundle\Entity\AnimalResidence $animalResidenceHistory
+     * @param AnimalResidence $animalResidenceHistory
      *
      * @return Location
      */
-    public function addAnimalResidenceHistory(\AppBundle\Entity\AnimalResidence $animalResidenceHistory)
+    public function addAnimalResidenceHistory(AnimalResidence $animalResidenceHistory)
     {
         $this->animalResidenceHistory[] = $animalResidenceHistory;
 
@@ -1048,9 +1049,9 @@ class Location
     /**
      * Remove animalResidenceHistory
      *
-     * @param \AppBundle\Entity\AnimalResidence $animalResidenceHistory
+     * @param AnimalResidence $animalResidenceHistory
      */
-    public function removeAnimalResidenceHistory(\AppBundle\Entity\AnimalResidence $animalResidenceHistory)
+    public function removeAnimalResidenceHistory(AnimalResidence $animalResidenceHistory)
     {
         $this->animalResidenceHistory->removeElement($animalResidenceHistory);
     }
@@ -1058,7 +1059,7 @@ class Location
     /**
      * Get animalResidenceHistory
      *
-     * @return \Doctrine\Common\Collections\Collection
+     * @return Collection
      */
     public function getAnimalResidenceHistory()
     {
@@ -1101,11 +1102,11 @@ class Location
     /**
      * Add tag
      *
-     * @param \AppBundle\Entity\Tag $tag
+     * @param Tag $tag
      *
-     * @return Client
+     * @return Location
      */
-    public function addTag(\AppBundle\Entity\Tag $tag)
+    public function addTag(Tag $tag)
     {
         $this->tags[] = $tag;
 
@@ -1115,9 +1116,9 @@ class Location
     /**
      * Remove tag
      *
-     * @param \AppBundle\Entity\Tag $tag
+     * @param Tag $tag
      */
-    public function removeTag(\AppBundle\Entity\Tag $tag)
+    public function removeTag(Tag $tag)
     {
         $this->tags->removeElement($tag);
     }
@@ -1252,10 +1253,13 @@ class Location
 
     /**
      * @param mixed $isActive
+     * @return Location
      */
     public function setIsActive($isActive)
     {
         $this->isActive = $isActive;
+
+        return $this;
     }
 
 
