@@ -2358,22 +2358,4 @@ WHERE animal_id IN (
         return $this->getManager()->getConnection()->query($sql)->fetchAll();
     }
 
-    /**
-     * @param $animalId
-     * @return DeclareAnimalFlag|null
-     * @throws NonUniqueResultException
-     */
-    public function getLatestFlag($animalId): ?DeclareAnimalFlag
-    {
-        $result =  $this->createQueryBuilder('animal')
-            ->innerJoin('animal.flags', 'flags')
-            ->where('animal.id = :id')
-            ->setParameter('id', $animalId)
-            ->orderBy('flags.flagStartDate', 'desc')
-            ->setMaxResults(1)
-            ->getQuery()
-            ->getOneOrNullResult();
-
-        return $result != null ? $result->getFlags()->last() : null;
-    }
 }
