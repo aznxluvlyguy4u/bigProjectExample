@@ -305,20 +305,23 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
         $this->nullCheckClient($client);
         $this->nullCheckLocation($location);
 
-        $page = $request->query->getInt('page', 1);
-        $pageSize = 10;
+        $pageNumber = RequestUtil::getPageNumber($request);
+        $pageSize = RequestUtil::getPageSize($request);
         $searchQuery = $request->get('query', '');
 
         $count = $this->getManager()->getRepository(Treatment::class)
             ->getHistoricTreatmentsTotalCount($location->getUbn(), $searchQuery);
 
         $treatments = $this->getManager()->getRepository(Treatment::class)
-            ->getHistoricTreatments($location->getUbn(), $page, $pageSize, $searchQuery);
+            ->getHistoricTreatments($location->getUbn(), $pageNumber, $pageSize, $searchQuery);
 
         return ResultUtil::successResult(
                     [
                         'items'      => $treatments,
                         'totalItems' => $count,
+                        'itemsOnPage' => count($treatments),
+                        'pageNumber' => $pageNumber,
+                        'pageSize' => $pageSize,
                     ]
         );
     }
