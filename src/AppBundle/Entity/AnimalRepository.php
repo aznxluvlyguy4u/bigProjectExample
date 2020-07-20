@@ -2360,10 +2360,10 @@ WHERE animal_id IN (
 
     /**
      * @param $animalId
-     * @return DeclareAnimalFlag
+     * @return DeclareAnimalFlag|null
      * @throws NonUniqueResultException
      */
-    public function getLatestFlag($animalId)
+    public function getLatestFlag($animalId): ?DeclareAnimalFlag
     {
         $result =  $this->createQueryBuilder('animal')
             ->innerJoin('animal.flags', 'flags')
@@ -2374,6 +2374,6 @@ WHERE animal_id IN (
             ->getQuery()
             ->getOneOrNullResult();
 
-        return $result->getFlags()->last();
+        return $result != null ? $result->getFlags()->last() : null;
     }
 }
