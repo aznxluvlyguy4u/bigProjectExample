@@ -3,9 +3,8 @@
 namespace AppBundle\Entity;
 
 use AppBundle\Util\Translation;
+use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DBALException;
-use Doctrine\ORM\NonUniqueResultException;
-use Doctrine\ORM\Query;
 
 /**
  * Class TreatmentRepository
@@ -13,19 +12,7 @@ use Doctrine\ORM\Query;
  */
 class TreatmentRepository extends BaseRepository {
 
-    /**
-     * @param $ubn
-     * @param int $page
-     * @param int $perPage
-     * @param string $searchQuery
-     * @return array
-     * @throws DBALException
-     */
-    public function getHistoricTreatments($ubn, $page = 1, $perPage = 10, $searchQuery = '')
-    {
-        $searchQuery = "%".$searchQuery."%";
-
-        $filter = "
+    const TREATMENT_WHERE_CONDITIONS = "
             WHERE l.ubn = :ubn
             AND (
                 LOWER(t.description) LIKE LOWER(:query) OR 
@@ -38,7 +25,7 @@ class TreatmentRepository extends BaseRepository {
             )
         ";
 
-        $joins = "
+    const TREATMENT_JOINS = "
             INNER JOIN location l ON t.location_id = l.id
             INNER JOIN treatment_animal ta ON ta.treatment_id = t.id
             INNER JOIN animal a ON a.id = ta.animal_id
@@ -46,11 +33,38 @@ class TreatmentRepository extends BaseRepository {
             LEFT JOIN treatment_medication tm ON tm.id = ms.treatment_medication_id
         ";
 
+    public function getHistoricTreatmentsTotalCount($ubn, $searchQuery = '')
+    {
+        $searchQuery = "%$searchQuery%";
+
         $countSql = "
-            SELECT DISTINCT t.id FROM treatment t
-            ".$joins."
-            ".$filter."
+            SELECT DISTINCT 
+                t.id
+            FROM treatment t
+            ".self::TREATMENT_JOINS."
+            ".self::TREATMENT_WHERE_CONDITIONS."
         ";
+
+        $countStatement = $this->getManager()->getConnection()->prepare($countSql);
+        $countStatement->bindParam('ubn', $ubn);
+        $countStatement->bindParam('query', $searchQuery);
+        $countStatement->execute();
+
+        return $countStatement->rowCount();
+    }
+
+
+    /**
+     * @param $ubn
+     * @param int $page
+     * @param int $perPage
+     * @param string $searchQuery
+     * @return array
+     * @throws DBALException
+     */
+    public function getHistoricTreatments($ubn, $page = 1, $perPage = 10, $searchQuery = '')
+    {
+        $searchQuery = "%$searchQuery%";
 
         $sql = "
             SELECT DISTINCT 
@@ -63,28 +77,91 @@ class TreatmentRepository extends BaseRepository {
                 t.type,
                 t.status
             FROM treatment t
-            ".$joins."
-            ".$filter."
+            ".self::TREATMENT_JOINS."
+            ".self::TREATMENT_WHERE_CONDITIONS."
             ORDER BY t.create_date DESC
             OFFSET ".$perPage." * (".$page." - 1)
             FETCH NEXT ".$perPage." ROWS ONLY
         ";
-
-        $countStatement = $this->getManager()->getConnection()->prepare($countSql);
-        $countStatement->bindParam('ubn', $ubn);
-        $countStatement->bindParam('query', $searchQuery);
-        $countStatement->execute();
 
         $statement = $this->getManager()->getConnection()->prepare($sql);
         $statement->bindParam('ubn', $ubn);
         $statement->bindParam('query', $searchQuery);
         $statement->execute();
 
-        $results = [];
+        $treatmentDetails = $statement->fetchAll();
 
-        foreach ($statement->fetchAll() as $item) {
-            $medicationSql = '
-                SELECT
+        // First retrieve all the details, to minimize the database queries
+
+        $treatmentIds = array_map(function (array $item) {
+            return $item['treatment_id'];
+        }, $treatmentDetails);
+
+        $medicationDetails = $this->getMedicationDetails($treatmentIds);
+        $treatmentAnimalDetailsSet = $this->getTreatmentAnimalDetails($treatmentIds);
+
+        $animalIds = array_map(function (array $item) {
+            return $item['animal_id'];
+        }, $treatmentAnimalDetailsSet);
+
+        $flagDetails = $this->getEntityManager()->getRepository(DeclareAnimalFlag::class)->getLatestFlagDetails($animalIds);
+
+        // Then group and map the data in the correct output format
+
+        foreach ($treatmentDetails as $treatmentKey => $item) {
+            $treatmentId = $item['treatment_id'];
+
+            $treatmentDetails[$treatmentKey]['dutchType'] = Translation::getDutchTreatmentType($item['type']);
+
+            $treatmentDetails[$treatmentKey]['medications'] = array_values(array_filter(
+                $medicationDetails,
+                function (array $medication) use ($treatmentId) {
+                    return $medication['treatment_id'] === $treatmentId;
+                }));
+
+            $animalDetailsOfTreatment = array_values(array_filter(
+                $treatmentAnimalDetailsSet,
+                function (array $treatmentAnimalDetailsItem) use ($treatmentId) {
+                    return $treatmentAnimalDetailsItem['treatment_id'] === $treatmentId;
+                }));
+
+            foreach ( $animalDetailsOfTreatment as $animalKey => $animalDetailOfTreatment) {
+                $animalIdOfTreatment = $animalDetailOfTreatment['animal_id'];
+                $flagDetailsOfAnimalWrappedInArray = array_map(
+                    function (array $filteredAnimalDetails) {
+                        return [
+                            'rvo_flag' => $filteredAnimalDetails['flag_type'],
+                            'rvo_flag_status' => $filteredAnimalDetails['request_state'],
+                            'rvo_flag_start_date' => $filteredAnimalDetails['start_date_in_default_format'],
+                            'rvo_flag_end_date' => $filteredAnimalDetails['end_date_in_default_format'],
+                        ];
+                    },
+                    array_filter($flagDetails,
+                    function (array $flag) use ($animalIdOfTreatment) {
+                        return $flag['animal_id'] === $animalIdOfTreatment;
+                    }
+                ));
+
+                $flagDetailsOfAnimal = array_shift($flagDetailsOfAnimalWrappedInArray);
+
+                if (is_array($flagDetailsOfAnimal) && !empty($flagDetailsOfAnimal)) {
+                    $mergedAnimalDetails = array_merge($animalDetailOfTreatment, $flagDetailsOfAnimal);
+                } else {
+                    $mergedAnimalDetails = $animalDetailOfTreatment;
+                }
+
+                $treatmentDetails[$treatmentKey]['animals'][] = $mergedAnimalDetails;
+            }
+        }
+
+        return $treatmentDetails;
+    }
+
+
+    private function getMedicationDetails(array $treatmentIds): array
+    {
+        $sql = 'SELECT
+                    ms.treatment_id,
                     tm.name,
                     ms.waiting_time_end,
                     tm.dosage,
@@ -92,36 +169,41 @@ class TreatmentRepository extends BaseRepository {
                     tm.reg_nl,
                     tm.treatment_duration
                FROM medication_selection ms 
-               LEFT JOIN treatment_medication tm ON ms.treatment_medication_id = tm.id
-               WHERE ms.treatment_id = :id
-            ';
-            $medicineStatement = $this->getManager()->getConnection()->prepare($medicationSql);
-            $medicineStatement->bindParam('id', $item['treatment_id']);
-            $medicineStatement->execute();
+               INNER JOIN treatment_medication tm ON ms.treatment_medication_id = tm.id
+               WHERE ms.treatment_id IN (?)';
 
-            $animalSql = '
-                SELECT a.* FROM treatment_animal ta
-                LEFT JOIN animal a ON ta.animal_id = a.id
-                WHERE ta.treatment_id = :treatment_id
-            ';
+        $values = [$treatmentIds];
+        $types = [Connection::PARAM_INT_ARRAY];
 
-            $animalStatement = $this->getManager()->getConnection()->prepare($animalSql);
-            $animalStatement->bindParam('treatment_id', $item['treatment_id']);
-            $animalStatement->execute();
-
-            $item['medications'] = $medicineStatement->fetchAll();
-
-            $item['animals'] = $animalStatement->fetchAll();
-
-            $item['dutchType'] = Translation::getDutchTreatmentType($item['type']);
-            $results[] = $item;
-        }
-
-        return [
-            'items'      => $results,
-            'totalItems' => count($countStatement->fetchAll())
-        ];
+        $statement = $this->getManager()->getConnection()
+            ->executeQuery($sql, $values, $types);
+        return $statement->fetchAll();
     }
+
+
+    private function getTreatmentAnimalDetails(array $treatmentIds): array
+    {
+        $sql = 'SELECT 
+                    t.treatment_id,
+                    t.animal_id,
+                    a.uln_country_code,
+                    a.uln_number,
+                    a.collar_color,
+                    a.collar_number,
+                    a.gender,
+                    a.date_of_birth
+                FROM treatment_animal t
+                    INNER JOIN animal a ON a.id = t.animal_id
+                WHERE t.treatment_id IN (?)';
+
+        $values = [$treatmentIds];
+        $types = [Connection::PARAM_INT_ARRAY];
+
+        $statement = $this->getManager()->getConnection()
+            ->executeQuery($sql, $values, $types);
+        return $statement->fetchAll();
+    }
+
 
     /**
      * @param Location $location

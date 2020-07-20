@@ -13,6 +13,9 @@ use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
 
 class RequestUtil
 {
+    const PAGE_SIZE_DEFAULT = 10;
+    const PAGE_SIZE_MAX = 25;
+
     /**
      * @param Request $request
      * @param bool $allowEmptyContent
@@ -126,6 +129,35 @@ class RequestUtil
         }
 
         return new \DateTime($queryValue);
+    }
+
+
+    /**
+     * @param Request $request
+     * @return int|null
+     */
+    public static function getPageNumber(Request $request): ?int
+    {
+        $pageNumber = self::getIntegerQuery($request, 'page', 1);
+        return $pageNumber < 1 ? 1: $pageNumber;
+    }
+
+
+    /**
+     * @param Request $request
+     * @param int|null $pageSize
+     * @return int|null
+     */
+    public static function getPageSize(Request $request, ?int $pageSize = self::PAGE_SIZE_DEFAULT): ?int
+    {
+        $pageSize = self::getIntegerQuery($request, 'pageSize', $pageSize);
+        if (intval($pageSize) && (
+                self::PAGE_SIZE_MAX < $pageSize ||
+                $pageSize < 1
+            )) {
+            throw new BadRequestHttpException('The pageSize must be at least 1 and at most '.self::PAGE_SIZE_MAX);
+        }
+        return $pageSize;
     }
 
 

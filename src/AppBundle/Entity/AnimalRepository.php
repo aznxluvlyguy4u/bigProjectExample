@@ -2357,4 +2357,5 @@ WHERE animal_id IN (
 
         return $this->getManager()->getConnection()->query($sql)->fetchAll();
     }
+
 }
