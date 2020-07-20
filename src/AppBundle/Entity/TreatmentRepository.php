@@ -12,19 +12,7 @@ use Doctrine\DBAL\DBALException;
  */
 class TreatmentRepository extends BaseRepository {
 
-    /**
-     * @param $ubn
-     * @param int $page
-     * @param int $perPage
-     * @param string $searchQuery
-     * @return array
-     * @throws DBALException
-     */
-    public function getHistoricTreatments($ubn, $page = 1, $perPage = 10, $searchQuery = '')
-    {
-        $searchQuery = "%".$searchQuery."%";
-
-        $filter = "
+    const TREATMENT_WHERE_CONDITIONS = "
             WHERE l.ubn = :ubn
             AND (
                 LOWER(t.description) LIKE LOWER(:query) OR 
@@ -37,7 +25,7 @@ class TreatmentRepository extends BaseRepository {
             )
         ";
 
-        $joins = "
+    const TREATMENT_JOINS = "
             INNER JOIN location l ON t.location_id = l.id
             INNER JOIN treatment_animal ta ON ta.treatment_id = t.id
             INNER JOIN animal a ON a.id = ta.animal_id
@@ -45,11 +33,38 @@ class TreatmentRepository extends BaseRepository {
             LEFT JOIN treatment_medication tm ON tm.id = ms.treatment_medication_id
         ";
 
+    public function getHistoricTreatmentsTotalCount($ubn, $searchQuery = '')
+    {
+        $searchQuery = "%$searchQuery%";
+
         $countSql = "
-            SELECT DISTINCT t.id FROM treatment t
-            ".$joins."
-            ".$filter."
+            SELECT DISTINCT 
+                t.id
+            FROM treatment t
+            ".self::TREATMENT_JOINS."
+            ".self::TREATMENT_WHERE_CONDITIONS."
         ";
+
+        $countStatement = $this->getManager()->getConnection()->prepare($countSql);
+        $countStatement->bindParam('ubn', $ubn);
+        $countStatement->bindParam('query', $searchQuery);
+        $countStatement->execute();
+
+        return $countStatement->rowCount();
+    }
+
+
+    /**
+     * @param $ubn
+     * @param int $page
+     * @param int $perPage
+     * @param string $searchQuery
+     * @return array
+     * @throws DBALException
+     */
+    public function getHistoricTreatments($ubn, $page = 1, $perPage = 10, $searchQuery = '')
+    {
+        $searchQuery = "%$searchQuery%";
 
         $sql = "
             SELECT DISTINCT 
@@ -62,17 +77,12 @@ class TreatmentRepository extends BaseRepository {
                 t.type,
                 t.status
             FROM treatment t
-            ".$joins."
-            ".$filter."
+            ".self::TREATMENT_JOINS."
+            ".self::TREATMENT_WHERE_CONDITIONS."
             ORDER BY t.create_date DESC
             OFFSET ".$perPage." * (".$page." - 1)
             FETCH NEXT ".$perPage." ROWS ONLY
         ";
-
-        $countStatement = $this->getManager()->getConnection()->prepare($countSql);
-        $countStatement->bindParam('ubn', $ubn);
-        $countStatement->bindParam('query', $searchQuery);
-        $countStatement->execute();
 
         $statement = $this->getManager()->getConnection()->prepare($sql);
         $statement->bindParam('ubn', $ubn);
@@ -144,10 +154,7 @@ class TreatmentRepository extends BaseRepository {
             }
         }
 
-        return [
-            'items'      => $treatmentDetails,
-            'totalItems' => count($countStatement->fetchAll())
-        ];
+        return $treatmentDetails;
     }
 
 
