@@ -29,6 +29,7 @@ class TreatmentRepository extends BaseRepository {
             INNER JOIN location l ON t.location_id = l.id
             INNER JOIN treatment_animal ta ON ta.treatment_id = t.id
             INNER JOIN animal a ON a.id = ta.animal_id
+            INNER JOIN treatment_template tt ON t.treatment_template_id = tt.id
             LEFT JOIN medication_selection ms ON ms.treatment_id = t.id
             LEFT JOIN treatment_medication tm ON tm.id = ms.treatment_medication_id
         ";
@@ -75,6 +76,7 @@ class TreatmentRepository extends BaseRepository {
                 t.end_date,
                 t.revoke_date,
                 t.type,
+                tt.is_editable,
                 t.status
             FROM treatment t
             ".self::TREATMENT_JOINS."
