@@ -13,7 +13,9 @@ use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
 use AppBundle\Util\Validator;
 use AppBundle\Validation\AdminValidator;
+use Exception;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
 
 /**
  * Class TreatmentTemplateService
@@ -107,6 +109,7 @@ class TreatmentTypeService extends TreatmentServiceBase implements TreatmentType
      * @param Request $request
      * @param int $treatmentTypeId
      * @return JsonResponse
+     * @throws Exception
      */
     function edit(Request $request, $treatmentTypeId)
     {
@@ -117,6 +120,11 @@ class TreatmentTypeService extends TreatmentServiceBase implements TreatmentType
         $treatmentTypeInDb = $this->treatmentTypeRepository->find($treatmentTypeId);
         if ($treatmentTypeInDb === null) { return Validator::createJsonResponse('TreatmentType not found for given id', 428); }
         if ($treatmentTypeInDb->isActive() === false) { return Validator::createJsonResponse('Template has been deactivated', 428); }
+
+        if (!$treatmentTypeInDb->isEditable()) {
+            throw new PreconditionFailedHttpException('This treatment type is not editable');
+        }
+
         $type = $treatmentTypeInDb->getType();
 
         //Deserialization and Validation
@@ -193,6 +201,7 @@ class TreatmentTypeService extends TreatmentServiceBase implements TreatmentType
      * @param Request $request
      * @param int $treatmentTypeId
      * @return JsonResponse
+     * @throws Exception
      */
     function delete(Request $request, $treatmentTypeId)
     {
@@ -203,6 +212,10 @@ class TreatmentTypeService extends TreatmentServiceBase implements TreatmentType
         $treatmentType = $this->treatmentTypeRepository->find($treatmentTypeId);
         if ($treatmentType === null) { return Validator::createJsonResponse('TreatmentType not found for given id', 428); }
         if ($treatmentType->isActive() === false) { return Validator::createJsonResponse('Template has already been deactivated', 428); }
+
+        if (!$treatmentType->isEditable()) {
+            throw new PreconditionFailedHttpException('This treatment type is not editable');
+        }
 
         $treatmentType->setIsActive(false);
         $treatmentType->setLogDate(new \DateTime());
