@@ -47,10 +47,10 @@ class AuthAPIController extends APIController {
      *   section = "Auth",
      *   requirements={
      *     {
-     *       "name"="Authorization header",
+     *       "name"="AccessToken",
      *       "dataType"="string",
-     *       "requirement"="Base64 encoded",
-     *       "description"="Basic Authentication header with a Base64 encoded secret, semicolon separated value, with delimiter"
+     *       "requirement"="",
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
      *     }
      *   },
      *   resource = false,
