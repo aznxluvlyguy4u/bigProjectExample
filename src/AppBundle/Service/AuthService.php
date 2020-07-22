@@ -136,6 +136,7 @@ class AuthService extends AuthServiceBase
             ->setLastName($registration->getLastName())
             ->setEmailAddress($registration->getEmailAddress())
             ->setCellphoneNumber($registration->getPhoneNumber())
+            ->setRelationNumberKeeper($registration->getBrs())
             ->setIsActive(true);
 
         $companyAddress
