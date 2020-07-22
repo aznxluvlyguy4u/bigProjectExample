@@ -104,7 +104,7 @@ class AuthService extends AuthServiceBase
 
         return new JsonResponse(
             $this->getBaseSerializer()->getDecodedJson($registration, [JmsGroup::REGISTRATION]),
-            200
+            Response::HTTP_OK
         );
     }
 
