@@ -664,12 +664,15 @@ abstract class Person implements UserInterface
     return $this->cellphoneNumber;
   }
 
-  /**
-   * @param string $cellphoneNumber
-   */
+    /**
+     * @param string $cellphoneNumber
+     * @return Person
+     */
   public function setCellphoneNumber($cellphoneNumber)
   {
     $this->cellphoneNumber = StringUtil::trimIfNotNull($cellphoneNumber);
+
+    return $this;
   }
 
   /**
