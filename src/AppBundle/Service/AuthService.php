@@ -161,6 +161,7 @@ class AuthService extends AuthServiceBase
             ->addLocation($location)
             ->setAnimalHealthSubscription(false)
             ->setIsRevealHistoricAnimals(true)
+            ->setTelephoneNumber($registration->setPhoneNumber())
             ->setOwner($client);
 
         $location
