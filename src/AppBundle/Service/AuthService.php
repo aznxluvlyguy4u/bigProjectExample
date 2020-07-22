@@ -4,7 +4,12 @@
 namespace AppBundle\Service;
 
 
+use AppBundle\Entity\Address;
+use AppBundle\Entity\Company;
+use AppBundle\Entity\CompanyAddress;
+use AppBundle\Entity\Country;
 use AppBundle\Entity\Location;
+use AppBundle\Entity\LocationAddress;
 use AppBundle\Entity\Registration;
 use AppBundle\Enumerator\JmsGroup;
 use AppBundle\Enumerator\RegistrationStatus;
@@ -78,6 +83,13 @@ class AuthService extends AuthServiceBase
             throw new PreconditionFailedHttpException($this->translateUcFirstLower('A NEW REGISTRATION ALREADY EXISTS FOR THIS UBN').': '.$ubn);
         }
 
+        $errors = $this->validator->validate($registration);
+        Validator::throwExceptionWithFormattedErrorMessageIfHasErrors($errors);
+
+        $registration->__construct();
+
+        $registration->setStatus(RegistrationStatus::NEW);
+
         $this->getManager()->persist($registration);
         $this->getManager()->flush();
 
@@ -91,23 +103,83 @@ class AuthService extends AuthServiceBase
        }
 
         return new JsonResponse(
-            $this->getBaseSerializer()->getDecodedJson($registration),
+            $this->getBaseSerializer()->getDecodedJson($registration, [JmsGroup::REGISTRATION]),
             200
         );
     }
 
-    public function acceptPerson(Person $person) {
-        if (!$person->getIsActive()) {
-            $person->setIsActive(true);
+    /**
+     * @param $registrationId
+     * @return JsonResponse
+     */
+    public function processRegistration($registrationId) {
+        /** @var Registration $registration */
+        $registration = $this->getManager()->getRepository(Registration::class)->findOneBy(['status' => 'NEW', 'registrationId' => $registrationId]);
 
-            $this->getManager()->persist($person);
-            $this->getManager()->flush();
-        } else {
-            throw new PreconditionFailedHttpException($this->translateUcFirstLower('THE USER IS ALREADY ACTIVATED'));
+        if (!$registration) {
+            throw new PreconditionFailedHttpException('This registration is already processed or could not be found');
         }
 
+        $client = new Client();
+        $location = new Location();
+        $company = new Company();
+        $companyAddress = new CompanyAddress();
+        $locationAddress = new LocationAddress();
+
+        $country = $this->getManager()
+            ->getRepository(Country::class)
+            ->findByCode('NL')[0];
+
+        $client
+            ->setFirstName($registration->getFirstName())
+            ->setLastName($registration->getLastName())
+            ->setEmailAddress($registration->getEmailAddress())
+            ->setCellphoneNumber($registration->getPhoneNumber())
+            ->setIsActive(true);
+
+        $companyAddress
+            ->setStreetName($registration->getStreetName())
+            ->setAddressNumber($registration->getAddressNumber())
+            ->setAddressNumberSuffix($registration->getAddressNumberSuffix())
+            ->setPostalCode($registration->getPostalCode())
+            ->setCity($registration->getCity())
+            ->setCountryDetails($country);
+
+        $locationAddress
+            ->setStreetName($registration->getStreetName())
+            ->setAddressNumber($registration->getAddressNumber())
+            ->setAddressNumberSuffix($registration->getAddressNumberSuffix())
+            ->setPostalCode($registration->getPostalCode())
+            ->setCity($registration->getCity())
+            ->setCountryDetails($country);
+
+        $company
+            ->setIsActive(true)
+            ->setAddress($companyAddress)
+            ->addLocation($location)
+            ->setAnimalHealthSubscription(false)
+            ->setIsRevealHistoricAnimals(true)
+            ->setOwner($client);
+
+        $location
+            ->setIsActive(true)
+            ->setUbn($registration->getUbn())
+            ->setCompany($company)
+            ->setAddress($locationAddress);
+
+        $registration->setStatus(RegistrationStatus::COMPLETED);
+
+        $this->getManager()->persist($client);
+        $this->getManager()->persist($location);
+        $this->getManager()->persist($company);
+        $this->getManager()->persist($locationAddress);
+        $this->getManager()->persist($companyAddress);
+        $this->getManager()->persist($registration);
+
+        $this->getManager()->flush();
+
         return new JsonResponse(
-            $this->getBaseSerializer()->getDecodedJson($person, [JmsGroup::REGISTRATION]),
+            $this->getBaseSerializer()->getDecodedJson($client, [JmsGroup::REGISTRATION]),
             Response::HTTP_OK
         );
     }

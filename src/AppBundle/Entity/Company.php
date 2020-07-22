@@ -732,10 +732,13 @@ class Company
 
     /**
      * @param mixed $animalHealthSubscription
+     * @return Company
      */
     public function setAnimalHealthSubscription($animalHealthSubscription)
     {
         $this->animalHealthSubscription = $animalHealthSubscription;
+
+        return $this;
     }
 
     /**
@@ -748,10 +751,13 @@ class Company
 
     /**
      * @param boolean $isActive
+     * @return Company
      */
     public function setIsActive($isActive)
     {
         $this->isActive = $isActive;
+
+        return $this;
     }
 
     /**
@@ -861,11 +867,14 @@ class Company
 
     /**
      * @param boolean $isRevealHistoricAnimals
+     * @return Company
      */
     public function setIsRevealHistoricAnimals($isRevealHistoricAnimals)
     {
         $this->isRevealHistoricAnimals = $isRevealHistoricAnimals;
         $this->resetLastMakeLivestockPublicDate();
+
+        return $this;
     }
 
     public function addInvoice(Invoice $invoice){

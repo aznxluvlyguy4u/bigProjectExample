@@ -40,6 +40,32 @@ class AuthAPIController extends APIController {
       return $this->get('app.security.auth')->signUpUser($request);
   }
 
+    /**
+     * Accept a new user
+     *
+     * @ApiDoc(
+     *   section = "Auth",
+     *   requirements={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "requirement"="",
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   resource = false,
+     *   description = "Process the registration and set all the values for the new user"
+     * )
+     * @param $registrationId
+     * @return JsonResponse
+     * @Route("/registration/{registrationId}/process")
+     * @Method("GET")
+     */
+  public function processRegistration($registrationId)
+  {
+      return $this->get('app.security.auth')->processRegistration($registrationId);
+  }
+
   /**
    * Validate whether an accesstoken is valid or not.
    *
