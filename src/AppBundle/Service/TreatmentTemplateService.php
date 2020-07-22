@@ -160,7 +160,7 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
 
         if ($template instanceof QFever) {
             $template
-                ->setQFeverType(QFeverService::getFlagType($template->getTreatmentType()->getDescription()))
+                ->setQFeverType(QFeverService::qFeverTypeLetter($template->getTreatmentType()->getDescription()))
                 ->setIsEditable(false);
         }
 
