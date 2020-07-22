@@ -58,4 +58,20 @@ class QFeverRepository  extends BaseRepository
             }
         }
     }
+
+    public function findQFeverDescriptions()
+    {
+        $treatmentTemplates = $this->findAll();
+
+        $output = [];
+
+        /** @var TreatmentTemplate $treatmentTemplate */
+        foreach ($treatmentTemplates as $treatmentTemplate) {
+            if($treatmentTemplate instanceof QFever) {
+                $output[] = $treatmentTemplate->getDescription();
+            }
+        }
+
+        return $output;
+    }
 }

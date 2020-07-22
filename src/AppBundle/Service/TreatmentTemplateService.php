@@ -4,7 +4,7 @@ namespace AppBundle\Service;
 
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Controller\TreatmentTemplateAPIControllerInterface;
-use AppBundle\Entity\MedicationOption;
+use AppBundle\Entity\QFever;
 use AppBundle\Entity\TreatmentMedication;
 use AppBundle\Entity\TreatmentTemplate;
 use AppBundle\Entity\TreatmentType;
@@ -21,6 +21,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\DBAL\DBALException;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Exception;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
@@ -157,6 +158,12 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
         $template = $this->baseValidateDeserializedTreatmentTemplate($template);
         if ($template instanceof JsonResponse) { return $template; }
 
+        if ($template instanceof QFever) {
+            $template
+                ->setQFeverType(QFeverService::qFeverTypeLetter($template->getTreatmentType()->getDescription()))
+                ->setIsEditable(false);
+        }
+
         //TODO check for duplicates
 
         /** @var TreatmentMedication $medication */
@@ -278,6 +285,10 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
         /** @var TreatmentTemplate $templateInDatabase */
         $templateInDatabase = $this->getTemplateByIdAndType($templateId, $type);
         if ($templateInDatabase instanceof JsonResponse) { return $templateInDatabase; }
+
+        if (!$templateInDatabase->isEditable()) {
+            throw new PreconditionFailedHttpException('This template is not editable');
+        }
 
         $oldTemplateMedications = $templateInDatabase->getMedications();
 
@@ -423,6 +434,10 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
         $template = $this->getTemplateByIdAndType($templateId, $type);
         if ($template instanceof JsonResponse) { return $template; }
 
+        if (!$template->isEditable()) {
+            throw new PreconditionFailedHttpException('This template is not editable');
+        }
+
         $template->setIsActive(false);
         $this->getManager()->persist($template);
         $this->getManager()->flush();
@@ -477,5 +492,16 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
 
         $output = $this->getBaseSerializer()->getDecodedJson($template, $this->getJmsGroupByQuery($request));
         return ResultUtil::successResult($output);
+    }
+
+    /**
+     * @return JsonResponse
+     */
+    public function getQFeverDescriptions()
+    {
+        $descriptions = $this->getManager()->getRepository(QFever::class)
+            ->findQFeverDescriptions();
+
+        return ResultUtil::successResult($descriptions);
     }
 }
