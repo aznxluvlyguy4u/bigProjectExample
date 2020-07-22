@@ -22,6 +22,7 @@ use AppBundle\Entity\Client;
 use AppBundle\Entity\MobileDevice;
 use AppBundle\Entity\Person;
 use AppBundle\Output\MenuBarOutput;
+use AppBundle\Enumerator\Country as CountryCodeEnum;
 use AppBundle\Util\ActionLogWriter;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\RequestUtil;
@@ -128,7 +129,7 @@ class AuthService extends AuthServiceBase
 
         $country = $this->getManager()
             ->getRepository(Country::class)
-            ->findByCode('NL')[0];
+            ->findOneByCode(CountryCodeEnum::NL);
 
         $client
             ->setFirstName($registration->getFirstName())
