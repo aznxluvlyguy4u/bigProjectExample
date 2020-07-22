@@ -139,6 +139,9 @@ class AuthService extends AuthServiceBase
             ->setRelationNumberKeeper($registration->getBrs())
             ->setIsActive(true);
 
+        // TODO generate a default password and email it to the new user
+        // If the emailaddress ends with @nsfo.nl it is a dummy email address
+        
         $companyAddress
             ->setStreetName($registration->getStreetName())
             ->setAddressNumber($registration->getAddressNumber())
