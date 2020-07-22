@@ -117,6 +117,11 @@ class AuthService extends AuthServiceBase
         /** @var Registration $registration */
         $registration = $this->getManager()->getRepository(Registration::class)->findOneBy(['status' => 'NEW', 'registrationId' => $registrationId]);
 
+        /**
+         * TODO currently "registration" is whitelisted in the security.yml firewall. Remove this whitelisting if the feature requires authentication!
+         * Currently this endpoint is acccessed through a link in an email. Therefore the authentication has to be deactivated
+         */
+
         if (!$registration) {
             throw new PreconditionFailedHttpException('This registration is already processed or could not be found');
         }
