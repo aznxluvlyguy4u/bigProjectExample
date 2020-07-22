@@ -158,6 +158,7 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
         $template = $this->baseValidateDeserializedTreatmentTemplate($template);
         if ($template instanceof JsonResponse) { return $template; }
 
+        $template->__construct();
         if ($template instanceof QFever) {
             $template
                 ->setQFeverType(QFeverService::qFeverTypeLetter($template->getTreatmentType()->getDescription()))
@@ -177,7 +178,6 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
             $template->addMedication($treatmentMedication);
         }
 
-        $template->__construct();
         $template->setCreationBy($this->getUser());
 
         $this->getManager()->persist($template);
