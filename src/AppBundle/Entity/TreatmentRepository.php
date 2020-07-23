@@ -200,13 +200,14 @@ class TreatmentRepository extends BaseRepository {
                     s.uln_number,
                     pedigree_country_code, 
                     pedigree_number, 
-                    s.date_of_death,
-                    is_export_animal, 
                     request_state, 
                     hide_failed_message as is_removed_by_user,
                     r.error_code, 
                     r.error_message, 
-                    r.message_number
+                    r.message_number,
+                    daf.flag_type,
+                    daf.flag_start_date,
+                    daf.flag_end_date
                 FROM declare_base b
                   INNER JOIN declare_animal_flag daf ON b.id = daf.id  
                   INNER JOIN treatment a ON a.id = daf.treatment_id
