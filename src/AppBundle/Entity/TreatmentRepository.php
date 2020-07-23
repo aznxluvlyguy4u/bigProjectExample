@@ -2,6 +2,7 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Util\Translation;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DBALException;
@@ -180,6 +181,49 @@ class TreatmentRepository extends BaseRepository {
         $statement = $this->getManager()->getConnection()
             ->executeQuery($sql, $values, $types);
         return $statement->fetchAll();
+    }
+
+    /**
+     * @param Location $location
+     * @return array
+     * @throws DBALException
+     */
+    public function getTreatmentsWithLastErrorResponses(Location $location)
+    {
+        $locationId = $location->getId();
+        if(!is_int($locationId)) { return []; }
+
+        $sql = "SELECT 
+                    b.request_id, 
+                    log_date, 
+                    s.uln_country_code,
+                    s.uln_number,
+                    pedigree_country_code, 
+                    pedigree_number, 
+                    s.date_of_death,
+                    is_export_animal, 
+                    request_state, 
+                    hide_failed_message as is_removed_by_user,
+                    r.error_code, 
+                    r.error_message, 
+                    r.message_number
+                FROM declare_base b
+                  INNER JOIN declare_animal_flag daf ON b.id = daf.id  
+                  INNER JOIN treatment a ON a.id = daf.treatment_id
+                  LEFT JOIN animal s ON s.id = daf.animal_id
+                  LEFT JOIN (
+                    SELECT y.request_id, y.error_code, y.error_message, y.message_number
+                    FROM declare_base_response y
+                      INNER JOIN (
+                                   SELECT request_id, MAX(log_date) as log_date
+                                   FROM declare_base_response
+                                   GROUP BY request_id
+                                 ) z ON z.log_date = y.log_date AND z.request_id = y.request_id
+                    )r ON r.request_id = b.request_id
+                WHERE request_state = '".RequestStateType::FAILED."' 
+                AND daf.location_id = ".$locationId." ORDER BY b.log_date DESC";
+
+        return $this->getManager()->getConnection()->query($sql)->fetchAll();
     }
 
 
