@@ -618,10 +618,10 @@ THIS TEMPLATE IS NOT EDITABLE: This template is not editable
 JSON BODY MUST HAVE THE TREATMENT STRUCTURE: Json body must have the treatment structure
 animal_not_found: "Animal with {animal_id} is not found"
 medication_not_found: "Medication with {medication_id} has not been found"
-NO TREATMENT TEMPLATE FOUND WITH ID: Geen behandeling gevonden met id
-DESCRIPTION IS MISSING: De beschrijving mist
-THIS TREATMENT DOES NOT BELONG TO THE LOCATION WITH UBN: Deze behandeling hoort niet bij de locatie met ubn
-JSON BODY MUST HAVE TREATMENT TEMPLATE STRUCTURE: Json body moet de behandelingtemplate structuur hebben
-A Q-FEVER TEMPLATE CAN NOT BE CREATED FOR A LOCATION: Een q-koorts template kan niet aangemaakt worden voor een locatie
-TREATMENT DESCRIPTION DOES NOT EXIST IN DATABASE FOR ACTIVE TREATMENT TYPE WITH TYPE LOCATION: De beschrijving van de behandeling bestaat niet in de database voor een actief behandelingstype met het type locatie
-NO WAITING DAYS HAVE BEEN FILLED IN: "Er zijn geen wacht dagen ingevuld"
+NO TREATMENT TEMPLATE FOUND WITH ID: No treatmens found with id
+DESCRIPTION IS MISSING: The description is missing
+THIS TREATMENT DOES NOT BELONG TO THE LOCATION WITH UBN: This treatment does not belong to the location with ubn
+JSON BODY MUST HAVE TREATMENT TEMPLATE STRUCTURE: Json body must have the treatment template structure
+A Q-FEVER TEMPLATE CAN NOT BE CREATED FOR A LOCATION: A q-fever template can not be created for a location
+TREATMENT DESCRIPTION DOES NOT EXIST IN DATABASE FOR ACTIVE TREATMENT TYPE WITH TYPE LOCATION: Treatment description does not exist in database for active treatment type with type location
+NO WAITING DAYS HAVE BEEN FILLED IN: No waiting days have been filled in
