@@ -200,18 +200,7 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
                 // The treatment has to be persisted first before being able to persist DeclareAnimalFlag
                 $this->createAndSendQFeverRvoMessages($treatment, $treatmentTemplate, $existingAnimals, $client, $loggedInUser);
             } else {
-                $treatment->setStatus(RequestStateType::FINISHED);
-                $declareAnimalFlagResponse = new DeclareAnimalFlagResponse();
-
-                $declareAnimalFlagResponse
-                    ->setRequestId(MessageBuilderBase::getNewRequestId())
-                    ->setLogDate(new DateTime())
-                    ->setActionBy(($loggedInUser instanceof Person) ? $loggedInUser : null)
-                    ->setIsRemovedByUser(false)
-                    ->setSuccessValues();
-
-                $this->getManager()->persist($declareAnimalFlagResponse);
-                $this->getManager()->flush();
+                $this->createCompletedQFeverMessage($treatment, $loggedInUser, $existingAnimals);
             }
         }
 
@@ -222,6 +211,40 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
         return ResultUtil::successResult($output);
     }
 
+    private function createCompletedQFeverMessage(Treatment $treatment, $loggedInUser, ArrayCollection $existingAnimals)
+    {
+        $template = $treatment->getTreatmentTemplate();
+        $em = $this->getManager();
+        $flagType = QFeverService::getFlagType($template->getDescription(), $template->getAnimalType());
+
+        /** @var Animal $animal */
+        foreach ($existingAnimals as $animal) {
+            $treatment->setStatus(RequestStateType::FINISHED);
+
+            $declareAnimalFlag = (new DeclareAnimalFlag())
+                ->setAnimal($animal)
+                ->setLocation($treatment->getLocation())
+                ->setFlagType($flagType)
+                ->setFlagStartDate($treatment->getStartDate())
+                ->setFlagEndDate($treatment->getEndDate())
+                ->setTreatment($treatment);
+
+            $declareAnimalFlagResponse = new DeclareAnimalFlagResponse();
+
+            $declareAnimalFlagResponse
+                ->setRequestId(MessageBuilderBase::getNewRequestId())
+                ->setLogDate(new DateTime())
+                ->setActionBy(($loggedInUser instanceof Person) ? $loggedInUser : null)
+                ->setIsRemovedByUser(false)
+                ->setSuccessValues()
+                ->setDeclareAnimalFlagRequestMessage($declareAnimalFlag);
+
+            $em->persist($declareAnimalFlag);
+            $em->persist($declareAnimalFlagResponse);
+        }
+
+        $em->flush();
+    }
 
     private function validateQFeverFlagsForAllAnimals(
         TreatmentTemplate $template,
