@@ -193,10 +193,7 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
             }
         }
 
-        if ($treatmentTemplate instanceof QFever) {
-            if (!$location->isDutchLocation()) {
-                throw new PreconditionFailedHttpException('RVO declare q-fever treatment cannot be executed for non-NL UBN');
-            }
+        if ($treatmentTemplate instanceof QFever && $location->isDutchLocation()) {
             // The treatment has to be persisted first before being able to persist DeclareAnimalFlag
             $this->createAndSendQFeverRvoMessages($treatment, $treatmentTemplate, $existingAnimals, $client, $loggedInUser);
         }
