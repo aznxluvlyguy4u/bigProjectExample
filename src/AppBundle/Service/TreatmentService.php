@@ -123,7 +123,9 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
             }
         }
 
-        $this->validateQFeverFlagsForAllAnimals($treatmentTemplate, $existingAnimals); //TODO
+        if ($treatmentTemplate instanceof QFever) {
+            $this->validateQFeverFlagsForAllAnimals($treatmentTemplate, $existingAnimals); //TODO
+        }
 
         // No duplicates are being created, so what is being meant with "duplicates"?
         //TODO check for duplicates
