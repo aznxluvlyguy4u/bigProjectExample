@@ -611,3 +611,17 @@ scanWeight: scan weight
 # Process
 process:
   duplicate: A similar process is already running
+
+# Treatments
+THIS TREATMENT TYPE IS NOT EDITABLE: This treatment type is not editable
+THIS TEMPLATE IS NOT EDITABLE: This template is not editable
+JSON BODY MUST HAVE THE TREATMENT STRUCTURE: Json body must have the treatment structure
+animal_not_found: "Animal with {animal_id} is not found"
+medication_not_found: "Medication with {medication_id} has not been found"
+NO TREATMENT TEMPLATE FOUND WITH ID: Geen behandeling gevonden met id
+DESCRIPTION IS MISSING: De beschrijving mist
+THIS TREATMENT DOES NOT BELONG TO THE LOCATION WITH UBN: Deze behandeling hoort niet bij de locatie met ubn
+JSON BODY MUST HAVE TREATMENT TEMPLATE STRUCTURE: Json body moet de behandelingtemplate structuur hebben
+A Q-FEVER TEMPLATE CAN NOT BE CREATED FOR A LOCATION: Een q-koorts template kan niet aangemaakt worden voor een locatie
+TREATMENT DESCRIPTION DOES NOT EXIST IN DATABASE FOR ACTIVE TREATMENT TYPE WITH TYPE LOCATION: De beschrijving van de behandeling bestaat niet in de database voor een actief behandelingstype met het type locatie
+NO WAITING DAYS HAVE BEEN FILLED IN: "Er zijn geen wacht dagen ingevuld"

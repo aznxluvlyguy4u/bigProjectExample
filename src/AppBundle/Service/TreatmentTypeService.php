@@ -44,6 +44,7 @@ class TreatmentTypeService extends TreatmentServiceBase implements TreatmentType
     /**
      * @param Request $request
      * @return JsonResponse
+     * @throws Exception
      */
     function create(Request $request)
     {
@@ -122,7 +123,7 @@ class TreatmentTypeService extends TreatmentServiceBase implements TreatmentType
         if ($treatmentTypeInDb->isActive() === false) { return Validator::createJsonResponse('Template has been deactivated', 428); }
 
         if (!$treatmentTypeInDb->isEditable()) {
-            throw new PreconditionFailedHttpException('This treatment type is not editable');
+            throw new PreconditionFailedHttpException($this->translateUcFirstLower('THIS TREATMENT TYPE IS NOT EDITABLE'));
         }
 
         $type = $treatmentTypeInDb->getType();
@@ -214,7 +215,7 @@ class TreatmentTypeService extends TreatmentServiceBase implements TreatmentType
         if ($treatmentType->isActive() === false) { return Validator::createJsonResponse('Template has already been deactivated', 428); }
 
         if (!$treatmentType->isEditable()) {
-            throw new PreconditionFailedHttpException('This treatment type is not editable');
+            throw new PreconditionFailedHttpException($this->translateUcFirstLower('THIS TREATMENT TYPE IS NOT EDITABLE'));
         }
 
         $treatmentType->setIsActive(false);

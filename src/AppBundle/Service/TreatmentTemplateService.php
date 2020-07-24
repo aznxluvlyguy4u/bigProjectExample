@@ -149,7 +149,7 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
         $template = $this->getBaseSerializer()->deserializeToObject($request->getContent(), TreatmentTemplate::class);
 
         if (!($template instanceof TreatmentTemplate)) {
-            return Validator::createJsonResponse('Json body must have the TreatmentTemplate structure', 428);
+            return Validator::createJsonResponse($this->translateUcFirstLower("JSON BODY MUST HAVE TREATMENT TEMPLATE STRUCTURE"), 428);
         }
 
         $template->setType($type);
@@ -160,7 +160,7 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
 
         if ($template instanceof QFever) {
             if ($template->getLocation() !== null) {
-                throw new PreconditionFailedHttpException('A q-fever template can not be created for a location!');
+                throw new PreconditionFailedHttpException($this->translateUcFirstLower("A Q-FEVER TEMPLATE CAN NOT BE CREATED FOR A LOCATION")."!");
             }
             $template
                 ->setQFeverType(QFeverService::qFeverTypeLetter($template->getTreatmentType()->getDescription()))
@@ -216,7 +216,7 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
 
         $description = $template->getDescription();
         if ($description === null) {
-            return Validator::createJsonResponse('Description is missing', 428);
+            return Validator::createJsonResponse($this->translateUcFirstLower('DESCRIPTION IS MISSING'), 428);
         }
 
         $type = TreatmentTypeService::getValidateType($template->getType());
@@ -237,7 +237,7 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
                 } else {
                     //TreatmentTypeOption::LOCATION
                     return Validator::createJsonResponse(
-                        'Treatment description does not exist in database for active TreatmentType with type = LOCATION',
+                        $this->translateUcFirstLower("TREATMENT DESCRIPTION DOES NOT EXIST IN DATABASE FOR ACTIVE TREATMENT TYPE WITH TYPE LOCATION"),
                         428);
                 }
             }
@@ -290,7 +290,7 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
         if ($templateInDatabase instanceof JsonResponse) { return $templateInDatabase; }
 
         if (!$templateInDatabase->isEditable()) {
-            throw new PreconditionFailedHttpException('This template is not editable');
+            throw new PreconditionFailedHttpException($this->translateUcFirstLower("THIS TEMPLATE IS NOT EDITABLE"));
         }
 
         $oldTemplateMedications = $templateInDatabase->getMedications();
@@ -299,7 +299,7 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
         /** @var TreatmentTemplate $template */
         $template = $this->getBaseSerializer()->deserializeToObject($request->getContent(), TreatmentTemplate::class);
         if (!($template instanceof TreatmentTemplate)) {
-            return Validator::createJsonResponse('Json body must have the TreatmentTemplate structure', 428);
+            return Validator::createJsonResponse($this->translateUcFirstLower("JSON BODY MUST HAVE TREATMENT TEMPLATE STRUCTURE"), 428);
         }
 
         /* Validation */
@@ -322,7 +322,7 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
             $treatmentMedication = $this->treatmentMedicationRepository->findOneBy(['name' => $medication->getName()]);
 
             if ($treatmentMedication->getWaitingDays() === null) {
-                throw new PreconditionFailedHttpException("'No waiting days have been filled in.'");
+                throw new PreconditionFailedHttpException($this->translateUcFirstLower("NO WAITING DAYS HAVE BEEN FILLED IN"));
             }
 
 //            $templateInDatabase->removeMedication($medication);
@@ -438,7 +438,7 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
         if ($template instanceof JsonResponse) { return $template; }
 
         if (!$template->isEditable()) {
-            throw new PreconditionFailedHttpException('This template is not editable');
+            throw new PreconditionFailedHttpException($this->translateUcFirstLower("THIS TEMPLATE IS NOT EDITABLE"));
         }
 
         $template->setIsActive(false);
