@@ -4,12 +4,14 @@ namespace AppBundle\Service;
 
 use AppBundle\Component\AnimalFlagMessageBuilder;
 use AppBundle\Component\HttpFoundation\JsonResponse;
+use AppBundle\Component\MessageBuilderBase;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Controller\TreatmentAPIControllerInterface;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\DeclareAnimalFlag;
+use AppBundle\Entity\DeclareAnimalFlagResponse;
 use AppBundle\Entity\MedicationSelection;
 use AppBundle\Entity\Person;
 use AppBundle\Entity\QFever;
@@ -193,9 +195,24 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
             }
         }
 
-        if ($treatmentTemplate instanceof QFever && $location->isDutchLocation()) {
-            // The treatment has to be persisted first before being able to persist DeclareAnimalFlag
-            $this->createAndSendQFeverRvoMessages($treatment, $treatmentTemplate, $existingAnimals, $client, $loggedInUser);
+        if ($treatmentTemplate instanceof QFever) {
+            if ($location->isDutchLocation()) {
+                // The treatment has to be persisted first before being able to persist DeclareAnimalFlag
+                $this->createAndSendQFeverRvoMessages($treatment, $treatmentTemplate, $existingAnimals, $client, $loggedInUser);
+            } else {
+                $treatment->setStatus(RequestStateType::FINISHED);
+                $declareAnimalFlagResponse = new DeclareAnimalFlagResponse();
+
+                $declareAnimalFlagResponse
+                    ->setRequestId(MessageBuilderBase::getNewRequestId())
+                    ->setLogDate(new DateTime())
+                    ->setActionBy(($loggedInUser instanceof Person) ? $loggedInUser : null)
+                    ->setIsRemovedByUser(false)
+                    ->setSuccessValues();
+
+                $this->getManager()->persist($declareAnimalFlagResponse);
+                $this->getManager()->flush();
+            }
         }
 
         ActionLogWriter::createTreatment($em, $request, $loggedInUser, $treatment);
