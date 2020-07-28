@@ -79,9 +79,8 @@ class DeclareAnimalFlag extends DeclareBase
     /**
      * 2016-04-01T22:00:48.131Z
      *
-     * @ORM\Column(type="datetime")
+     * @ORM\Column(type="datetime", nullable=true)
      * @Assert\Date
-     * @Assert\NotBlank
      * @JMS\Type("DateTime")
      * @JMS\Groups({
      *     "ERROR_DETAILS",
@@ -201,7 +200,7 @@ class DeclareAnimalFlag extends DeclareBase
     /**
      * Set flagEndDate
      *
-     * @param \DateTime $flagEndDate
+     * @param \DateTime|null $flagEndDate
      *
      * @return DeclareAnimalFlag
      */
@@ -215,7 +214,7 @@ class DeclareAnimalFlag extends DeclareBase
     /**
      * Get flagEndDate
      *
-     * @return \DateTime
+     * @return \DateTime|null
      */
     public function getFlagEndDate()
     {

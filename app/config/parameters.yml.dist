@@ -68,6 +68,10 @@ parameters:
 
     sentry_dns: ~
 
+    rvo_ir_base_url: ~
+    rvo_ir_username: ~
+    rvo_ir_password: ~
+
     # These parameters are only set to true during development and should be false in production!
     output_reports_to_cache_folder_for_local_testing: false
     display_report_pdf_output_as_html: false

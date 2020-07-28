@@ -1374,6 +1374,35 @@ services:
     AppBundle\Component\AnimalFlagMessageBuilder:
         parent: app.component.message.builder.base
 
+
+    # RVO
+
+    app.rvo.base:
+        abstract: true
+        calls:
+          - method: init
+          - method: setRvoIrBaseUrl
+            arguments:
+              - '%rvo_ir_base_url%'
+          - method: setRvoIrUserName
+            arguments:
+              - '%rvo_ir_username%'
+          - method: setRvoIrPassword
+            arguments:
+              - '%rvo_ir_password%'
+          - method: setLogger
+            arguments:
+              - '@logger'
+          - method: setEntityManager
+            arguments:
+              - '@doctrine.orm.entity_manager'
+          - method: setSerializer
+            arguments:
+              - '@app.serializer.base'
+
+    AppBundle\Service\Rvo\RvoDeclareAnimalFlagService:
+        parent: app.rvo.base
+
     # Listeners
     AppBundle\EventListener\ViewListener:
         tags:
