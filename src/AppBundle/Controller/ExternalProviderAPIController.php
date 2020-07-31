@@ -7,6 +7,7 @@ namespace AppBundle\Controller;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Service\ExternalProvider\ExternalProviderArticleService;
 use AppBundle\Service\ExternalProvider\ExternalProviderCustomerService;
+use AppBundle\Service\ExternalProvider\ExternalProviderInvoiceService;
 use AppBundle\Service\ExternalProvider\ExternalProviderOfficeService;
 use Exception;
 use Nelmio\ApiDocBundle\Annotation\ApiDoc;
@@ -93,5 +94,30 @@ class ExternalProviderAPIController extends APIController implements ExternalPro
      */
     public function getArticles() {
         return $this->get(ExternalProviderArticleService::class)->getAllArticles();
+    }
+
+    /**
+     *
+     * @ApiDoc(
+     *   section = "ExternalProvider",
+     *   requirements={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "requirement"="",
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Retrieve all twinfield invoices of a specific customer"
+     * )
+     * @Method("GET")
+     * @Route("/offices/{office}/customers/{customer}/invoices")
+     * @return JsonResponse
+     * @throws \Exception
+     */
+    public function getInvoicesOfCustomer($office, $customer)
+    {
+        return $this->get(ExternalProviderInvoiceService::class)->getAllInvoicesForCustomer($office, $customer);
     }
 }
