@@ -17,6 +17,14 @@ class ExternalProviderArticleService extends ExternalProviderBase implements Ext
     /** @var ArticleApiConnector $officeConnection */
     private $articleConnection;
 
+    /** @var string */
+    private $office_code;
+
+    public function setOfficeCode($office_code)
+    {
+        $this->office_code = $office_code;
+    }
+
     /**
      * @required
      */
@@ -24,7 +32,6 @@ class ExternalProviderArticleService extends ExternalProviderBase implements Ext
         $this->getAuthenticator()->refreshConnection();
         $this->articleConnection = new ArticleApiConnector ($this->getAuthenticator()->getConnection());
     }
-
 
     /**
      * @throws SoapFault
@@ -47,7 +54,7 @@ class ExternalProviderArticleService extends ExternalProviderBase implements Ext
 
         $finderClient = new SoapClient('https://accounting2.twinfield.com/webservices/finder.asmx?wsdl', ["trace" => 1]);
 
-        $headerData = ["SessionID" => $sessionID];
+        $headerData = ["SessionID" => $sessionID, "CompanyCode" => $this->office_code];
 
         $header = new SoapHeader('http://www.twinfield.com/','Header',
             $headerData);
@@ -57,9 +64,9 @@ class ExternalProviderArticleService extends ExternalProviderBase implements Ext
         $finderParams = [
             "type" => "ART",
             "pattern" => '*',
-            "field" => 0,
+            "field" => 1,
             "firstRow" => 1,
-            "maxRows" => 9001
+            "maxRows" => 10000000
         ];
 
         $res = $finderClient->Search($finderParams);
@@ -68,12 +75,6 @@ class ExternalProviderArticleService extends ExternalProviderBase implements Ext
 
         $result = [];
 
-        $office = new Office();
-
-        $office ->setCode('TESTNSFO');
-        $office->setName("NSFO testadm.");
-        $office->setCountryCode("NL");
-
         $processXMLClient = new SoapClient("https://accounting2.twinfield.com/webservices/processxml.asmx?wsdl", ["trace" => 1]);
 
         $processXMLClient->__setSoapHeaders($header);
@@ -81,7 +82,7 @@ class ExternalProviderArticleService extends ExternalProviderBase implements Ext
         foreach ($array["data"]["Items"]["ArrayOfString"] as $item) {
             $request_article = new Article();
             $request_article
-                ->setOffice($office->getCode())
+                ->setOffice($this->office_code)
                 ->setCode($item["string"][0]);
 
             $processXMLParams = [
@@ -90,13 +91,7 @@ class ExternalProviderArticleService extends ExternalProviderBase implements Ext
 
             $array = json_decode(json_encode($processXMLClient->ProcessXmlString($processXMLParams)), true);
 
-            $res = $this->xmlToArray($array["ProcessXmlStringResult"]);
-            if (key_exists("header", $res)) {
-                $result[] = $res["header"];
-            }
-//            else {
-//                dump($res);
-//            }
+            $result[] = $this->xmlToArray($array["ProcessXmlStringResult"]);
         }
 
         return $result;

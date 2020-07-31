@@ -1192,6 +1192,10 @@ services:
 
     AppBundle\Service\ExternalProvider\ExternalProviderArticleService:
       parent: app.abstract_base.external_provider
+      calls:
+        - method: setOfficeCode
+          arguments:
+            - '%twinfield_office_code%'
 
     AppBundle\Service\FeedbackQueueInvoiceMessageService:
         calls:
