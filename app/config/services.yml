@@ -1377,19 +1377,35 @@ services:
 
     # RVO
 
-    app.rvo.base:
+    app.rvo.external.base:
         abstract: true
         calls:
-          - method: init
-          - method: setRvoIrBaseUrl
+          - method: setLogger
             arguments:
-              - '%rvo_ir_base_url%'
-          - method: setRvoIrUserName
+              - '@logger'
+
+    AppBundle\Service\Rvo\SoapMessageBuilder\RvoDeclareAnimalFlagSoapMessageBuilder:
+        parent: app.rvo.external.base
+
+    AppBundle\Service\Rvo\ExternalWorker\ExternalWorker:
+        arguments:
+          - '@logger'
+          - '%rvo_ir_base_url%'
+          - '%rvo_ir_username%'
+          - '%rvo_ir_password%'
+
+    AppBundle\Service\Rvo\InternalWorker\InternalWorker:
+        calls:
+          - method: setLogger
             arguments:
-              - '%rvo_ir_username%'
-          - method: setRvoIrPassword
+              - '@logger'
+          - method: setDeclareAnimalFlagAction
             arguments:
-              - '%rvo_ir_password%'
+              - '@AppBundle\Worker\Logic\DeclareAnimalFlagAction'
+
+    app.rvo.logic:
+        abstract: true
+        calls:
           - method: setLogger
             arguments:
               - '@logger'
@@ -1400,10 +1416,10 @@ services:
             arguments:
               - '@app.serializer.base'
 
-    AppBundle\Service\Rvo\RvoDeclareAnimalFlagService:
-        parent: app.rvo.base
+    AppBundle\Worker\Logic\DeclareAnimalFlagAction:
+        parent: app.rvo.logic
 
-    # Listeners
+  # Listeners
     AppBundle\EventListener\ViewListener:
         tags:
             - { name: kernel.event_listener, event: kernel.view }
