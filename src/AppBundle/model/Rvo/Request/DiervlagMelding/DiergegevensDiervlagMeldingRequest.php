@@ -4,8 +4,8 @@
 namespace AppBundle\model\Rvo\Request\DiervlagMelding;
 
 
+use AppBundle\Constant\RvoSetting;
 use AppBundle\Entity\DeclareAnimalFlag;
-use AppBundle\model\Rvo\Request\RvoMeldingRequestBase;
 
 class DiergegevensDiervlagMeldingRequest
 {
@@ -32,7 +32,7 @@ class DiergegevensDiervlagMeldingRequest
         $this->selDierWerknummer = $flag->getAnimal()->getAnimalOrderNumber();
         $this->dierSoort = $flag->getAnimal()->getAnimalType();
         $this->vlagsoortCodeReden = $flag->getFlagType();
-        $this->datumIngang = $flag->getFlagStartDate()->format(RvoMeldingRequestBase::RVO_DATE_FORMAT);
-        $this->datumEinde = $flag->getFlagEndDate() ? $flag->getFlagEndDate()->format(RvoMeldingRequestBase::RVO_DATE_FORMAT) : null;
+        $this->datumIngang = $flag->getFlagStartDate()->format(RvoSetting::RVO_DATE_FORMAT);
+        $this->datumEinde = $flag->getFlagEndDate() ? $flag->getFlagEndDate()->format(RvoSetting::RVO_DATE_FORMAT) : null;
     }
 }
