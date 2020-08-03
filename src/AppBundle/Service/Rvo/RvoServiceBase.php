@@ -4,10 +4,14 @@
 namespace AppBundle\Service\Rvo;
 
 
-use AppBundle\Enumerator\RvoPathEnum;
+use AppBundle\Constant\RvoSetting;
 use AppBundle\Service\BaseSerializer;
+use AppBundle\Util\StringUtil;
+use AppBundle\Util\XmlUtil;
+use Curl\Curl;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\Serializer\Encoder\XmlEncoder;
 
 abstract class RvoServiceBase
 {
@@ -17,16 +21,15 @@ abstract class RvoServiceBase
     /** @var string */
     protected $rvoIrBaseUrl;
     /** @var string */
-    protected $rvoIrUserName;
+    private $rvoIrUserName;
     /** @var string */
-    protected $rvoIrPassword;
+    private $rvoIrPassword;
     /** @var LoggerInterface */
     protected $logger;
     /** @var EntityManagerInterface */
     protected $em;
     /** @var BaseSerializer */
     protected $serializer;
-
 
     /**
      * @required
@@ -88,13 +91,49 @@ abstract class RvoServiceBase
         $this->serializer = $serializer;
     }
 
-
-
     /**
      * @return string
      */
-    protected function getUrl(): string
+    private function getUrl(): string
     {
         return $this->rvoIrBaseUrl . $this->path;
+    }
+
+
+    private function createCurl(): Curl
+    {
+        $curl = new Curl();
+        $curl->setBasicAuthentication($this->rvoIrUserName, $this->rvoIrPassword);
+        $curl->setHeader('SOAPAction', 'true');
+        return $curl;
+    }
+
+
+    protected function post(string $xmlBody): Curl
+    {
+        $curl = $this->createCurl();
+        $curl->post($this->getUrl(), $xmlBody,false);
+        return $curl;
+    }
+
+
+    protected function parseRvoResponseObject(string $rvoXmlResponseContent, string $className)
+    {
+        $encoder = new XmlEncoder();
+        $arrayOuter = $encoder->decode($rvoXmlResponseContent, 'xml', XmlUtil::rvoXmlOptions());
+
+        $rvoClassKey = lcfirst(StringUtil::getEntityName($className));
+
+        $arrayInner = $arrayOuter[RvoSetting::XML_SOAP_ENV_BODY][$rvoClassKey];
+        XmlUtil::cleanXmlFormatting($arrayInner);
+        $arrayInnerCleaned = $arrayInner[$rvoClassKey];
+
+        $jsonInnerCleaned = json_encode($arrayInnerCleaned);
+
+        return $this->serializer->deserializeToObject(
+            $jsonInnerCleaned,
+            $className,
+            null
+        );
     }
 }

@@ -4,58 +4,78 @@
 namespace AppBundle\Service\Rvo;
 
 use AppBundle\Entity\DeclareAnimalFlag;
+use AppBundle\Entity\DeclareAnimalFlagResponse;
+use AppBundle\Exception\Rvo\RvoExternalWorkerException;
 use AppBundle\model\Rvo\Request\DiervlagMelding\VastleggenDiervlagMelding;
-use Symfony\Component\Serializer\Encoder\XmlEncoder;
+use AppBundle\model\Rvo\Response\DiervlagMelding\VastleggenDiervlagMeldingResponse;
+use AppBundle\Util\CurlUtil;
+use AppBundle\Util\StringUtil;
+use AppBundle\Util\XmlUtil;
+use \DateTime as DateTime;
 
 
 class RvoDeclareAnimalFlagService extends RvoMeldingenServiceBase implements RvoServiceInterface
 {
-    public function testRequest()
-    {
-        $flagOpen = $this->em->getRepository(DeclareAnimalFlag::class)
-            ->find(240494);
 
-        $this->sendRequest($flagOpen);
-    }
-
-    public function sendRequest(DeclareAnimalFlag $flag)
+    public function sendRequestToExternalQueue(DeclareAnimalFlag $flag)
     {
         $flagJson = json_encode(new VastleggenDiervlagMelding($flag));
         $flagAsAssociativeArray = json_decode($flagJson, true);
 
+        $bodyKey = lcfirst(StringUtil::getEntityName(VastleggenDiervlagMelding::class));
+
         $body = [
-            'vastleggenDiervlagMelding' => $flagAsAssociativeArray
+            $bodyKey => $flagAsAssociativeArray
         ];
 
+        $xmlRequestBody = XmlUtil::parseRvoXmlRequestBody($body, self::SOAP_ENVELOPE_DETAILS);
+        // TODO send $xmlRequestBody to EXTERNAL QUEUE
+    }
 
-        // Move encoding to base class
-        $encoder = new XmlEncoder();
 
-        $soapEnvelope = 'soapenv:Envelope';
-        $formatOutput = true;
-        $xmlOptions = [
-            'xml_version' => '1.0',
-            'xml_encoding' => 'utf-8',
-            'xml_format_output' => $formatOutput,
-            'xml_root_node_name' => $soapEnvelope,
-            'remove_empty_tags' => true
-        ];
+    public function sendRequestToRvo()
+    {
+        $xmlRequestBody = 'read it from the external queue';
+        $curl = $this->post($xmlRequestBody);
 
-        $xml = $encoder->encode([
-            'soapenv:Header' => [],
-            'soapenv:Body' => $body,
-        ], 'xml', $xmlOptions);
+        if (!CurlUtil::is200Response($curl)) {
+            throw new RvoExternalWorkerException($curl->response, $curl->getHttpStatus());
+        }
 
-        $headerNewLine = $formatOutput ? "\n  " : ' ';
-        $xml = str_replace(
-            "<$soapEnvelope",
-             "<$soapEnvelope".' xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"'.$headerNewLine
-             .'xmlns:mel="http://www.ienr.org/schemas/services/meldingenWS_v2_0"'.$headerNewLine
-             .'xmlns:mel1="http://www.ienr.org/schemas/types/meldingen_v2_0"',$xml);
+        $rvoXmlResponseContent = $curl->getResponse();
+        // TODO send it to the INTERNAL QUEUE
+    }
 
-        echo $xml;
-        die;
 
-        dump($xml);die;
+    public function processResponse()
+    {
+        $rvoXmlResponseContent = 'read it from the internal queue';
+        $rvoResponse = $this->parseRvoResponseObject($rvoXmlResponseContent, VastleggenDiervlagMeldingResponse::class);
+        $response = $this->parseNsfoResponse($rvoResponse);
+    }
+
+
+    public function parseNsfoResponse(VastleggenDiervlagMeldingResponse $rvoResponse): DeclareAnimalFlagResponse
+    {
+        $request = $this->em->getRepository(DeclareAnimalFlag::class)
+            ->findOneByRequestId($rvoResponse->requestID);
+
+        $diergegevensDiervlagMeldingResponse = $rvoResponse->diergegevensDiervlagMeldingResponse;
+        $verwerkingsResultaat = $diergegevensDiervlagMeldingResponse->verwerkingsresultaat;
+
+        $response = new DeclareAnimalFlagResponse();
+        $response->setDeclareAnimalFlagRequestMessage($request);
+        $response->setRequestId($rvoResponse->requestID);
+        $response->setMessageId($request->getMessageId());
+        $response->setMessageNumber($diergegevensDiervlagMeldingResponse->meldingnummer);
+        $response->setLogDate(new DateTime());
+        $response->setErrorCode($verwerkingsResultaat->foutcode);
+        $response->setErrorMessage($verwerkingsResultaat->foutmelding);
+        $response->setErrorKindIndicator($verwerkingsResultaat->soortFoutIndicator);
+        $response->setSuccessIndicator($verwerkingsResultaat->succesIndicator);
+        $response->setIsRemovedByUser(false);
+        $response->setActionBy($request->getActionBy());
+
+        return $response;
     }
 }
