@@ -73,7 +73,8 @@ class ExternalProviderArticleService extends ExternalProviderBase implements Ext
 
         $array = json_decode(json_encode($res), true);
 
-        $result = [];
+        $processedResults = [];
+        $results = [];
 
         $processXMLClient = new SoapClient("https://accounting2.twinfield.com/webservices/processxml.asmx?wsdl", ["trace" => 1]);
 
@@ -91,10 +92,44 @@ class ExternalProviderArticleService extends ExternalProviderBase implements Ext
 
             $array = json_decode(json_encode($processXMLClient->ProcessXmlString($processXMLParams)), true);
 
-            $result[] = $this->xmlToArray($array["ProcessXmlStringResult"]);
+            $processedResults[] = $this->xmlToArray($array["ProcessXmlStringResult"]);
         }
 
-        return $result;
+        foreach ($processedResults as $processedResult) {
+            foreach ($processedResult['lines'] as $line) {
+                if (key_exists('unitspriceexcl', $line)) {
+                    $sub_code = '';
+                    if (key_exists('subcode', $line) && !is_array($line['subcode'])) {
+                        $sub_code = $line['subcode'];
+                    }
+                    $results[] = [
+                        "description" => $processedResult['header']['name'],
+                        "article_code" => $processedResult['header']['code'],
+                        'sub_article_code' => $sub_code,
+                        "price_excl_vat" => (float) $line['unitspriceexcl'],
+                        "type" => $processedResult['header']['type']
+                    ];
+                }
+
+                foreach ($line as $subLine) {
+                    if(is_array($subLine) && key_exists('unitspriceexcl', $subLine)) {
+                        $sub_code = '';
+                        if (key_exists('subcode', $subLine) && !is_array($subLine['subcode'])) {
+                            $sub_code = $subLine['subcode'];
+                        }
+                        $results[] = [
+                            "description" => $subLine['name'],
+                            "article_code" => $processedResult['header']['code'],
+                            'sub_article_code' => $sub_code,
+                            "price_excl_vat" => (float) $subLine['unitspriceexcl'],
+                            "type" => $processedResult['header']['type']
+                        ];
+                    }
+                }
+            }
+        }
+
+        return $results;
     }
 
     private function xmlToArray($xml)
