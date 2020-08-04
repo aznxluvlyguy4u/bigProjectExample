@@ -8,6 +8,7 @@ use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Entity\Invoice;
 use AppBundle\Entity\InvoiceRuleSelection;
 use AppBundle\Enumerator\TwinfieldEnums;
+use AppBundle\Util\NullChecker;
 use PhpTwinfield\ApiConnectors\BrowseDataApiConnector;
 use PhpTwinfield\ApiConnectors\InvoiceApiConnector;
 use PhpTwinfield\BrowseColumn;
@@ -18,6 +19,7 @@ use PhpTwinfield\Exception;
 use PhpTwinfield\InvoiceLine;
 use PhpTwinfield\Office;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 class ExternalProviderInvoiceService extends ExternalProviderBase implements ExternalProviderInterface
 {
@@ -133,11 +135,24 @@ class ExternalProviderInvoiceService extends ExternalProviderBase implements Ext
     }
 
     /**
-     * @param $officeCode
+     * @param $request
      * @return \Exception|\PhpTwinfield\BrowseData
      * @throws \Exception
      */
-    public function getAllInvoicesForCustomer($officeCode, $customerId) {
+    public function getAllInvoicesForCustomer($request) {
+        $location = $this->userService->getSelectedLocation($request);
+        NullChecker::checkLocation($location);
+
+        $officeCode = $location->getCompany()->getTwinfieldOfficeCode();
+        if ($officeCode == null) {
+            throw new BadRequestHttpException("Dit UBN heeft geen geregistreerde Twinfield administratie code, neem contact op met NSFO");
+        }
+
+        $debtorNumber = $location->getCompany()->getDebtorNumber();
+        if ($debtorNumber == null) {
+            throw new BadRequestHttpException("Dit UBN heeft geen debiteurnummer, neem contact op met NSFO");
+        }
+
         try {
             // First, create the columns that you want to retrieve (see the browse definition for which columns are available)
             $columns[] = (new BrowseColumn())
@@ -154,7 +169,7 @@ class ExternalProviderInvoiceService extends ExternalProviderBase implements Ext
                 ->setVisible(true)
                 ->setAsk(true)
                 ->setOperator(BrowseColumnOperator::BETWEEN())
-                ->setFrom($customerId);
+                ->setFrom($debtorNumber);
 
             $columns[] = (new BrowseColumn())
                 ->setField('fin.trs.line.openvaluesigned')
@@ -169,12 +184,25 @@ class ExternalProviderInvoiceService extends ExternalProviderBase implements Ext
                 ->setOperator(BrowseColumnOperator::NONE());
 
             $columns[] = (new BrowseColumn())
+                ->setField('fin.trs.head.date')
+                ->setLabel('Invoice Date')
+                ->setVisible(true)
+                ->setAsk(false)
+                ->setOperator(BrowseColumnOperator::NONE());
+
+            $columns[] = (new BrowseColumn())
+                ->setField('fin.trs.head.status')
+                ->setLabel('Status')
+                ->setVisible(true)
+                ->setAsk(true)
+                ->setOperator(BrowseColumnOperator::NONE());
+
+            $columns[] = (new BrowseColumn())
                 ->setField('fin.trs.line.matchstatus')
                 ->setLabel('Available')
                 ->setVisible(true)
                 ->setAsk(true)
-                ->setOperator(BrowseColumnOperator::EQUAL())
-                ->setFrom('available');
+                ->setOperator(BrowseColumnOperator::NONE());
 
             $columns[] = (new BrowseColumn())
                 ->setField('fin.trs.head.code')
@@ -203,7 +231,7 @@ class ExternalProviderInvoiceService extends ExternalProviderBase implements Ext
 
             $this->incrementRetryCount();
             $this->reAuthenticate();
-            return $this->getAllInvoicesForCustomer($officeCode, $customerId);
+            return $this->getAllInvoicesForCustomer($request);
         }
     }
 

@@ -6,6 +6,7 @@ namespace AppBundle\Service\ExternalProvider;
 
 use AppBundle\Constant\ExternalProviderSetting;
 use AppBundle\Service\CacheService;
+use AppBundle\Service\UserService;
 
 class ExternalProviderBase
 {
@@ -18,15 +19,19 @@ class ExternalProviderBase
     /** @var CacheService */
     private $cacheService;
 
+    /** @var UserService */
+    protected $userService;
+
     private $customerListCacheId;
 
     private $officeListCacheId;
 
-    public function __construct(ExternalProviderAuthenticator $authenticator, CacheService $cacheService)
+    public function __construct(ExternalProviderAuthenticator $authenticator, CacheService $cacheService, UserService $userService)
     {
         $this->authenticator = $authenticator;
         $this->resetRetryCount();
         $this->cacheService = $cacheService;
+        $this->userService = $userService;
     }
 
     /**

@@ -13,6 +13,7 @@ use Exception;
 use Nelmio\ApiDocBundle\Annotation\ApiDoc;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
+use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Class ExternalProviderAPIController
@@ -112,12 +113,12 @@ class ExternalProviderAPIController extends APIController implements ExternalPro
      *   description = "Retrieve all twinfield invoices of a specific customer"
      * )
      * @Method("GET")
-     * @Route("/offices/{office}/customers/{customer}/invoices")
+     * @Route("/customer-invoices")
+     * @param Request $request
      * @return JsonResponse
-     * @throws \Exception
      */
-    public function getInvoicesOfCustomer($office, $customer)
+    public function getInvoicesOfCustomer(Request $request)
     {
-        return $this->get(ExternalProviderInvoiceService::class)->getAllInvoicesForCustomer($office, $customer);
+        return $this->get(ExternalProviderInvoiceService::class)->getAllInvoicesForCustomer($request);
     }
 }

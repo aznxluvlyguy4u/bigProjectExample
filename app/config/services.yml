@@ -1164,6 +1164,7 @@ services:
         arguments:
             - '@AppBundle\Service\ExternalProvider\ExternalProviderAuthenticator'
             - '@app.cache'
+            - '@app.user'
         calls:
             - method: reAuthenticate
 
