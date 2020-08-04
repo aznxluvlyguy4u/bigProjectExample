@@ -103,11 +103,7 @@ class TreatmentRepository extends BaseRepository {
         $medicationDetails = $this->getMedicationDetails($treatmentIds);
         $treatmentAnimalDetailsSet = $this->getTreatmentAnimalDetails($treatmentIds);
 
-        $animalIds = array_map(function (array $item) {
-            return $item['animal_id'];
-        }, $treatmentAnimalDetailsSet);
-
-        $flagDetails = $this->getEntityManager()->getRepository(DeclareAnimalFlag::class)->getLatestFlagDetails($animalIds);
+        $flagDetails = $this->getEntityManager()->getRepository(DeclareAnimalFlag::class)->getFlagDetailsByTreatmentIds($treatmentIds);
 
         // Then group and map the data in the correct output format
 

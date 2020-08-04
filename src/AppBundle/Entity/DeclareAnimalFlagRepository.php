@@ -11,6 +11,40 @@ use Doctrine\DBAL\Connection;
  */
 class DeclareAnimalFlagRepository extends BaseRepository
 {
+
+    /**
+     * @param array $treatmentIds
+     * @return array
+     */
+
+    public function getFlagDetailsByTreatmentIds(array $treatmentIds): array
+    {
+        if (empty($treatmentIds)) {
+            return [];
+        }
+
+        $dateFormat = SqlUtil::TO_CHAR_DATE_FORMAT;
+        $sql = "SELECT
+                    flag.animal_id,
+                    flag.location_id,
+                    flag.id as flag_id,
+                    flag.flag_type,
+                    flag.flag_start_date,
+                    flag.flag_end_date,
+                    to_char(flag_start_date, '$dateFormat') as start_date_in_default_format,
+                    to_char(flag_end_date, '$dateFormat') as end_date_in_default_format,
+                    db.request_state
+                FROM declare_animal_flag flag
+                    INNER JOIN declare_base db on flag.id = db.id
+                WHERE treatment_id IN (?)";
+        $values = [$treatmentIds];
+        $types = [Connection::PARAM_INT_ARRAY];
+
+        $statement = $this->getManager()->getConnection()->executeQuery($sql, $values, $types);
+        return $statement->fetchAll();
+    }
+
+
     /**
      * @param array $animalIds
      * @return array

@@ -10,6 +10,9 @@ use AppBundle\Controller\TreatmentAPIControllerInterface;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\DeclareAnimalFlag;
+use AppBundle\Entity\DeclareAnimalFlagResponse;
+use AppBundle\Entity\DeclareBase;
+use AppBundle\Entity\DeclareBaseResponse;
 use AppBundle\Entity\MedicationSelection;
 use AppBundle\Entity\Person;
 use AppBundle\Entity\QFever;
@@ -21,6 +24,7 @@ use AppBundle\Enumerator\TreatmentTypeOption;
 use AppBundle\Util\ActionLogWriter;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
+use AppBundle\Util\SqlUtil;
 use DateInterval;
 use DateTime;
 use AppBundle\Util\TimeUtil;
@@ -76,6 +80,8 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
         $location = $this->getSelectedLocation($request);
 
         $em = $this->getManager();
+
+        SqlUtil::bumpPrimaryKeySeqIfTooLow($this->getConnection(), DeclareBaseResponse::getTableName());
 
         $this->nullCheckClient($client);
         $this->nullCheckLocation($location);
@@ -185,16 +191,31 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
             ->setTreatmentTemplate($treatmentTemplate);
 
         $em->persist($treatment);
+
         try {
-            $em->flush();
-        } catch (Exception $e) {
-            if ($e instanceof UniqueConstraintViolationException) {
-               return ResultUtil::errorResult('A treatment already exists!', 500);
+
+            if ($treatmentTemplate instanceof QFever) {
+                if ($location->isDutchLocation()) {
+                    // The treatment has to be persisted first before being able to persist DeclareAnimalFlag
+                    $this->createAndSendQFeverRvoMessages($treatment, $treatmentTemplate, $existingAnimals, $client, $loggedInUser);
+                } else {
+                    $this->createCompletedQFeverMessage($treatment, $loggedInUser, $existingAnimals);
+                }
             }
+
+            $em->flush();
+
+        } catch (\Exception $exception) {
+            if ($exception instanceof UniqueConstraintViolationException) {
+
+                $this->resetManager();
+
+                SqlUtil::bumpPrimaryKeySeq($this->getConnection(), DeclareBase::getTableName());
+                SqlUtil::bumpPrimaryKeySeq($this->getConnection(), DeclareBaseResponse::getTableName());
+            }
+            throw $exception;
         }
 
-        // The treatment has to be persisted first before being able to persist DeclareAnimalFlag
-        $this->createAndSendQFeverRvoMessages($treatment, $treatmentTemplate, $existingAnimals, $client, $loggedInUser);
 
         ActionLogWriter::createTreatment($em, $request, $loggedInUser, $treatment);
 
@@ -203,6 +224,51 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
         return ResultUtil::successResult($output);
     }
 
+    private function createCompletedQFeverMessage(Treatment $treatment, $loggedInUser, ArrayCollection $existingAnimals)
+    {
+        $template = $treatment->getTreatmentTemplate();
+        $em = $this->getManager();
+        $flagType = QFeverService::getFlagType($template->getDescription(), $template->getAnimalType());
+
+        /** @var Animal $animal */
+        foreach ($existingAnimals as $animal) {
+            $treatment->setStatus(RequestStateType::FINISHED);
+
+            $declareAnimalFlag = (new DeclareAnimalFlag())
+                ->setAnimal($animal)
+                ->setLocation($treatment->getLocation())
+                ->setFlagType($flagType)
+                ->setFlagStartDate($treatment->getStartDate())
+                ->setFlagEndDate($treatment->getEndDate())
+                ->setTreatment($treatment);
+
+            $declareAnimalFlag = $this->animalFlagMessageBuilder->buildMessage(
+                $declareAnimalFlag,
+                $treatment->getLocation()->getOwner(),
+                $loggedInUser,
+                $treatment->getLocation()
+            );
+
+            // The request state should be set after the animalFlagMessageBuilder where it is set to OPEN.
+            $declareAnimalFlag->setRequestState(RequestStateType::FINISHED);
+
+            $declareAnimalFlagResponse = new DeclareAnimalFlagResponse();
+
+            $declareAnimalFlagResponse
+                ->setRequestId($declareAnimalFlag->getRequestId())
+                ->setMessageId($declareAnimalFlag->getMessageId())
+                ->setLogDate(new DateTime())
+                ->setActionBy(($loggedInUser instanceof Person) ? $loggedInUser : null)
+                ->setIsRemovedByUser(false)
+                ->setSuccessValues()
+                ->setDeclareAnimalFlagRequestMessage($declareAnimalFlag);
+
+            $em->persist($declareAnimalFlag);
+            $em->persist($declareAnimalFlagResponse);
+        }
+
+        $em->flush();
+    }
 
     private function validateQFeverFlagsForAllAnimals(
         TreatmentTemplate $template,
