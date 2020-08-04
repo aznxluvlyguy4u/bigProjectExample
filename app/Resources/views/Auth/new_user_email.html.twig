@@ -321,6 +321,16 @@
                                                         </tr>
                                                     </table>
                                                     <br>
+                                                    {% if receiver == 'beheerder' %}
+                                                    <p>
+                                                        Klik
+                                                        <a href="http://127.0.0.1:8081/user/accept/{{ registration.registrationId }}">
+                                                            hier
+                                                        </a>
+                                                        om de gebruiker te accepteren.
+                                                    </p>
+                                                    {% endif %}
+                                                    <br>
                                                     <p style="Margin:0;Margin-bottom:10px;color:#0a0a0a;font-family:Lato,sans-serif;font-size:.8em;font-weight:300;line-height:19px;margin:0;margin-bottom:10px;padding:0;text-align:left">
                                                         Met vriendelijke groeten,</p>
                                                     <p style="Margin:0;Margin-bottom:10px;color:#0a0a0a;font-family:Lato,sans-serif;font-size:.8em;font-weight:300;line-height:19px;margin:0;margin-bottom:10px;padding:0;text-align:left">

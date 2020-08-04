@@ -442,6 +442,20 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
 
     /**
      * @param Request $request
+     * @return JsonResponse
+     */
+    public function getTreatmentErrors(Request $request)
+    {
+        $location = $this->getSelectedLocation($request);
+        $this->nullCheckLocation($location);
+
+        $declareTreatments = $this->getManager()->getRepository(Treatment::class)->getTreatmentsWithLastErrorResponses($location);
+
+        return ResultUtil::successResult($declareTreatments);
+    }
+
+    /**
+     * @param Request $request
      * @param $treatmentId
      * @return JsonResponse
      */

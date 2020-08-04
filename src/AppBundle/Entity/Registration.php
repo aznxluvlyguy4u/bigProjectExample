@@ -2,6 +2,7 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Component\Utils;
 use AppBundle\Traits\EntityClassInfo;
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as JMS;
@@ -28,6 +29,13 @@ class Registration
 
     /**
      * @var string
+     * @ORM\Column(type="string")
+     * @JMS\Type("string")
+     */
+    private $registrationId;
+
+    /**
+     * @var string
      *
      * @ORM\Column(type="string", nullable=false)
      * @JMS\Type("string")
@@ -40,6 +48,9 @@ class Registration
      * @ORM\Column(type="string", nullable=false)
      * @JMS\Type("string")
      * @Assert\NotBlank(message="name.first.not_blank")
+     * @JMS\Groups({
+     *     "REGISTRATION"
+     * })
      */
     private $firstName;
 
@@ -49,6 +60,9 @@ class Registration
      * @ORM\Column(type="string", nullable=false)
      * @JMS\Type("string")
      * @Assert\NotBlank(message="name.last.not_blank")
+     * @JMS\Groups({
+     *     "REGISTRATION"
+     * })
      */
     private $lastName;
 
@@ -62,6 +76,9 @@ class Registration
      *     message = "email.address.invalid.format",
      *     checkMX = true
      * )
+     * @JMS\Groups({
+     *     "REGISTRATION"
+     * })
      */
     private $emailAddress;
 
@@ -71,6 +88,9 @@ class Registration
      * @ORM\Column(type="string", nullable=false)
      * @JMS\Type("string")
      * @Assert\NotBlank(message="address.street.name.not_blank")
+     * @JMS\Groups({
+     *     "REGISTRATION"
+     * })
      */
     private $streetName;
 
@@ -80,6 +100,9 @@ class Registration
      * @ORM\Column(type="integer", nullable=false)
      * @JMS\Type("integer")
      * @Assert\NotBlank(message="address.number.not_blank")
+     * @JMS\Groups({
+     *     "REGISTRATION"
+     * })
      */
     private $addressNumber;
 
@@ -88,6 +111,9 @@ class Registration
      *
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Type("string")
+     * @JMS\Groups({
+     *     "REGISTRATION"
+     * })
      */
     private $addressNumberSuffix;
 
@@ -97,6 +123,9 @@ class Registration
      * @ORM\Column(type="string", nullable=false)
      * @JMS\Type("string")
      * @Assert\NotBlank(message="address.postalcode.not_blank")
+     * @JMS\Groups({
+     *     "REGISTRATION"
+     * })
      */
     private $postalCode;
 
@@ -106,6 +135,9 @@ class Registration
      * @ORM\Column(type="string", nullable=false)
      * @JMS\Type("string")
      * @Assert\NotBlank(message="address.city.not_blank")
+     * @JMS\Groups({
+     *     "REGISTRATION"
+     * })
      */
     private $city;
 
@@ -115,6 +147,9 @@ class Registration
      * @ORM\Column(type="string", nullable=false)
      * @JMS\Type("string")
      * @Assert\NotBlank(message="ubn.not_blank")
+     * @JMS\Groups({
+     *     "REGISTRATION"
+     * })
      */
     private $ubn;
 
@@ -124,6 +159,9 @@ class Registration
      * @ORM\Column(type="string", nullable=false)
      * @JMS\Type("string")
      * @Assert\NotBlank(message="brs.not_blank")
+     * @JMS\Groups({
+     *     "REGISTRATION"
+     * })
      */
     private $brs;
 
@@ -133,8 +171,16 @@ class Registration
      * @ORM\Column(type="string", nullable=false)
      * @JMS\Type("string")
      * @Assert\NotBlank(message="phone.number.not_blank")
+     * @JMS\Groups({
+     *     "REGISTRATION"
+     * })
      */
     private $phoneNumber;
+
+    public function __construct()
+    {
+        $this->registrationId = Utils::generateTokenCode();
+    }
 
     /**
      * @return int
@@ -142,6 +188,25 @@ class Registration
     public function getId()
     {
         return $this->id;
+    }
+
+    /**
+     * @return string
+     */
+    public function getRegistrationId(): string
+    {
+        return $this->registrationId;
+    }
+
+    /**
+     * @param string $registrationId
+     * @return Registration
+     */
+    public function setRegistrationId(string $registrationId): self
+    {
+        $this->registrationId = $registrationId;
+
+        return $this;
     }
 
     /**

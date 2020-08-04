@@ -159,6 +159,9 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
         if ($template instanceof JsonResponse) { return $template; }
 
         if ($template instanceof QFever) {
+            if ($template->getLocation() !== null) {
+                throw new PreconditionFailedHttpException('A q-fever template can not be created for a location!');
+            }
             $template
                 ->setQFeverType(QFeverService::qFeverTypeLetter($template->getTreatmentType()->getDescription()))
                 ->setIsEditable(false);

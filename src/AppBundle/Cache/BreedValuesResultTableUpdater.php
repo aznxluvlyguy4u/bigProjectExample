@@ -432,34 +432,44 @@ class BreedValuesResultTableUpdater
                 return $generationDate;
             }
         }
+        return $this->maxGenerationDateByQuery($breedTypeValueVar);
+    }
 
+
+    private function maxGenerationDateByQuery(string $breedTypeValueVar, ?int $typeId = null): ?string {
+        $typeId = empty($typeId) ? $this->typeIdByQuery($breedTypeValueVar) : $typeId;
         $sql = "SELECT
                     MAX(generation_date)
-                FROM breed_value WHERE type_id = (
-                    SELECT id FROM breed_value_type WHERE result_table_value_variable = '$breedTypeValueVar'
-                    )";
-        return $this->conn->query($sql)->fetch()['max'];
+                FROM breed_value WHERE type_id = $typeId";
+        return empty($typeId) ? null : $this->conn->query($sql)->fetchColumn();
+    }
+
+
+    private function typeIdByQuery(string $breedTypeValueVar): ?int
+    {
+        $sqlTypeId = "SELECT id FROM breed_value_type WHERE result_table_value_variable = '$breedTypeValueVar'";
+        return $this->conn->query($sqlTypeId)->fetchColumn();
     }
 
 
     /**
      * @param string $breedTypeValueVar
-     * @return string|null
+     * @return int
      * @throws \Doctrine\DBAL\DBALException
      */
-    private function minBreedValueId($breedTypeValueVar): ?string {
-        $sql = "SELECT
-                id as min_id
-            FROM breed_value
-            WHERE type_id = (
-                    SELECT id FROM breed_value_type WHERE result_table_value_variable = '$breedTypeValueVar'
-                    ) AND 
-                                   generation_date = (
-                SELECT
-                    generation_date
-                FROM breed_value ORDER BY id DESC LIMIT 1
-                ) ORDER BY id ASC LIMIT 1;";
-        $minId = $this->conn->query($sql)->fetch()['min_id'];
+    private function minBreedValueId($breedTypeValueVar): int {
+        $typeId = $this->typeIdByQuery($breedTypeValueVar);
+        $maxGenerationDateString = $this->maxGenerationDateByQuery($breedTypeValueVar, $typeId);
+
+        if (empty($typeId) || empty($maxGenerationDateString)) {
+            return 0;
+        }
+
+        $sqlMinId = "SELECT
+                        id as min_id
+                    FROM breed_value
+                    WHERE type_id = $typeId AND generation_date = '$maxGenerationDateString' ORDER BY id LIMIT 1";
+        $minId = $this->conn->query($sqlMinId)->fetchColumn();
         return empty($minId) ? 0 : $minId;
     }
 

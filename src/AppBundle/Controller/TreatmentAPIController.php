@@ -252,5 +252,29 @@ class TreatmentAPIController extends APIController implements TreatmentAPIContro
         return $this->get('app.treatment')->deleteLocationTreatment($request, $treatmentId);
     }
 
-
+    /**
+     * Retrieves the error responses of treatments
+     *
+     * @ApiDoc(
+     *   section = "Treatment",
+     *   requirements={
+     *     {
+     *       "name"="AccessToken",
+     *       "dataType"="string",
+     *       "requirement"="",
+     *       "description"="A valid accesstoken belonging to the user that is registered with the API"
+     *     }
+     *   },
+     *   resource = true,
+     *   description = "Retrieves the error responses of treatments"
+     * )
+     * @param Request $request the request object
+     * @return JsonResponse
+     * @Route("-errors")
+     * @Method("GET")
+     */
+    function getTreatmentErrors(Request $request)
+    {
+        return $this->get('app.treatment')->getTreatmentErrors($request);
+    }
 }
