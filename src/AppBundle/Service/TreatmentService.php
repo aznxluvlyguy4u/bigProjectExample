@@ -249,6 +249,9 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
                 $treatment->getLocation()
             );
 
+            // The request state should be set after the animalFlagMessageBuilder where it is set to OPEN.
+            $declareAnimalFlag->setRequestState(RequestStateType::FINISHED);
+
             $declareAnimalFlagResponse = new DeclareAnimalFlagResponse();
 
             $declareAnimalFlagResponse
