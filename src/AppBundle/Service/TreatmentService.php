@@ -232,7 +232,8 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
             $declareAnimalFlagResponse = new DeclareAnimalFlagResponse();
 
             $declareAnimalFlagResponse
-                ->setRequestId(MessageBuilderBase::getNewRequestId())
+                ->setRequestId($declareAnimalFlag->getRequestId())
+                ->setMessageId($declareAnimalFlag->getMessageId())
                 ->setLogDate(new DateTime())
                 ->setActionBy(($loggedInUser instanceof Person) ? $loggedInUser : null)
                 ->setIsRemovedByUser(false)
