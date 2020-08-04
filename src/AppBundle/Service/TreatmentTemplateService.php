@@ -158,6 +158,7 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
         $template = $this->baseValidateDeserializedTreatmentTemplate($template);
         if ($template instanceof JsonResponse) { return $template; }
 
+        $template->__construct();
         if ($template instanceof QFever) {
             if ($template->getLocation() !== null) {
                 throw new PreconditionFailedHttpException($this->translateUcFirstLower("A Q-FEVER TEMPLATE CAN NOT BE CREATED FOR A LOCATION")."!");
@@ -180,7 +181,6 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
             $template->addMedication($treatmentMedication);
         }
 
-        $template->__construct();
         $template->setCreationBy($this->getUser());
 
         $this->getManager()->persist($template);
