@@ -394,13 +394,14 @@ abstract class DeclareBaseResponse
 
     /**
      * @param boolean $isRemovedByUser
+     * @return DeclareBaseResponse
      */
     public function setIsRemovedByUser($isRemovedByUser)
     {
         $this->isRemovedByUser = $isRemovedByUser;
+
+        return $this;
     }
-
-
 
     /**
      * Get isRemovedByUser
@@ -423,10 +424,13 @@ abstract class DeclareBaseResponse
 
     /**
      * @param Person $actionBy
+     * @return DeclareBaseResponse
      */
     public function setActionBy($actionBy)
     {
         $this->actionBy = $actionBy;
+
+        return $this;
     }
 
 

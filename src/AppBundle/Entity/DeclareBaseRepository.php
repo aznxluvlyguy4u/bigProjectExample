@@ -4,6 +4,7 @@ namespace AppBundle\Entity;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Enumerator\RequestStateType;
+use AppBundle\Traits\EntityClassInfo;
 use AppBundle\Util\ResultUtil;
 use AppBundle\Util\StoredProcedure;
 use AppBundle\Util\TimeUtil;
@@ -14,6 +15,8 @@ use AppBundle\Util\TimeUtil;
  */
 class DeclareBaseRepository extends BaseRepository implements DeclareBaseRepositoryInterface
 {
+    use EntityClassInfo;
+
     /**
      * @param Animal $animal
      * @param string $replacementString
