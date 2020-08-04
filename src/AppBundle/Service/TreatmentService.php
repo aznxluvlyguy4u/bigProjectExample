@@ -4,7 +4,6 @@ namespace AppBundle\Service;
 
 use AppBundle\Component\AnimalFlagMessageBuilder;
 use AppBundle\Component\HttpFoundation\JsonResponse;
-use AppBundle\Component\MessageBuilderBase;
 use AppBundle\Component\Utils;
 use AppBundle\Constant\JsonInputConstant;
 use AppBundle\Controller\TreatmentAPIControllerInterface;
@@ -12,6 +11,8 @@ use AppBundle\Entity\Animal;
 use AppBundle\Entity\Client;
 use AppBundle\Entity\DeclareAnimalFlag;
 use AppBundle\Entity\DeclareAnimalFlagResponse;
+use AppBundle\Entity\DeclareBase;
+use AppBundle\Entity\DeclareBaseResponse;
 use AppBundle\Entity\MedicationSelection;
 use AppBundle\Entity\Person;
 use AppBundle\Entity\QFever;
@@ -23,6 +24,7 @@ use AppBundle\Enumerator\TreatmentTypeOption;
 use AppBundle\Util\ActionLogWriter;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
+use AppBundle\Util\SqlUtil;
 use DateInterval;
 use DateTime;
 use AppBundle\Util\TimeUtil;
@@ -78,6 +80,8 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
         $location = $this->getSelectedLocation($request);
 
         $em = $this->getManager();
+
+        SqlUtil::bumpPrimaryKeySeqIfTooLow($this->getConnection(), DeclareBaseResponse::getTableName());
 
         $this->nullCheckClient($client);
         $this->nullCheckLocation($location);
@@ -187,22 +191,31 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
             ->setTreatmentTemplate($treatmentTemplate);
 
         $em->persist($treatment);
+
         try {
-            $em->flush();
-        } catch (Exception $e) {
-            if ($e instanceof UniqueConstraintViolationException) {
-               return ResultUtil::errorResult('A treatment already exists!', 500);
+
+            if ($treatmentTemplate instanceof QFever) {
+                if ($location->isDutchLocation()) {
+                    // The treatment has to be persisted first before being able to persist DeclareAnimalFlag
+                    $this->createAndSendQFeverRvoMessages($treatment, $treatmentTemplate, $existingAnimals, $client, $loggedInUser);
+                } else {
+                    $this->createCompletedQFeverMessage($treatment, $loggedInUser, $existingAnimals);
+                }
             }
+
+            $em->flush();
+
+        } catch (\Exception $exception) {
+            if ($exception instanceof UniqueConstraintViolationException) {
+
+                $this->resetManager();
+
+                SqlUtil::bumpPrimaryKeySeq($this->getConnection(), DeclareBase::getTableName());
+                SqlUtil::bumpPrimaryKeySeq($this->getConnection(), DeclareBaseResponse::getTableName());
+            }
+            throw $exception;
         }
 
-        if ($treatmentTemplate instanceof QFever) {
-            if ($location->isDutchLocation()) {
-                // The treatment has to be persisted first before being able to persist DeclareAnimalFlag
-                $this->createAndSendQFeverRvoMessages($treatment, $treatmentTemplate, $existingAnimals, $client, $loggedInUser);
-            } else {
-                $this->createCompletedQFeverMessage($treatment, $loggedInUser, $existingAnimals);
-            }
-        }
 
         ActionLogWriter::createTreatment($em, $request, $loggedInUser, $treatment);
 
