@@ -6,15 +6,13 @@ namespace AppBundle\Service\ExternalProvider;
 
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Constant\ExternalProviderSetting;
-use AppBundle\Util\ResultUtil;
+use Doctrine\Common\Collections\ArrayCollection;
 use PhpTwinfield\ApiConnectors\CustomerApiConnector;
 use PhpTwinfield\Request\Read\Customer;
 use PhpTwinfield\Office;
-use PhpTwinfield\Request\Read\Article;
 use SoapClient;
 use SoapFault;
 use SoapHeader;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 class ExternalProviderCustomerService extends ExternalProviderBase implements ExternalProviderInterface
@@ -161,15 +159,16 @@ class ExternalProviderCustomerService extends ExternalProviderBase implements Ex
     }
 
     /**
-     * @param Request $request
-     * @return JsonResponse
-     * @throws SoapFault
-     *
-     * If you need to edit send a existing code in the request
+     * @param ArrayCollection $content
+     * @param $countryCode
+     * @return array
+     * @throws SoapFault If you need to edit send a existing code in the request
      */
-    public function createOrEditCustomer(Request $request)
+    public function createOrEditCustomer(ArrayCollection $content, $countryCode)
     {
-        $data = json_decode($request->getContent(), true);
+        $code = rand(1111111, 9999999);
+        $contentBillingAddress = $content->get('billing_address');
+        $contentOwner = $content->get('owner');
 
         $soapClient = new SoapClient("https://login.twinfield.com/webservices/session.asmx?wsdl", ["trace" => 1]);
 
@@ -194,12 +193,34 @@ class ExternalProviderCustomerService extends ExternalProviderBase implements Ex
 
         $processXMLClient->__setSoapHeaders($header);
 
+        $addressXml = '
+           <addresses>
+        <address default="true" type="invoice">
+            <name>'.$content->get('company_name').'</name>
+            <country>'.$countryCode.'</country>
+            <city>'.$contentBillingAddress['city'].'</city>
+            <postcode>'.$contentBillingAddress['postal_code'].'</postcode>
+            <telephone>'.$content->get('telephone_number').'</telephone>
+            <telefax />
+            <email>'.$contentOwner['email_address'].'</email>
+            <contact />
+            <field1 />
+            <field2>'.$contentBillingAddress['street_name'].' '.$contentBillingAddress['address_number'].'</field2>
+            <field3 />
+            <field4></field4>
+            <field5 />
+            <field6 />
+        </address>
+    </addresses>
+        ';
+
         $xml = '
         <dimension status="active" result="1">
             <office>'.$this->office_code.'</office>
             <type name="Debiteuren" shortname="Debiteuren">DEB</type>
-            <code>'.$data['code'].'</code>
-            <name>'.$data['name'].'</name>
+            <code>'.$code.'</code>
+            <name>'.$content->get('company_name').'</name>
+            '.$addressXml.'
         </dimension>
         ';
 
@@ -211,12 +232,10 @@ class ExternalProviderCustomerService extends ExternalProviderBase implements Ex
 
         $processedResult = $this->xmlToArray($array["ProcessXmlStringResult"]);
 
-        return ResultUtil::successResult(
-            [
+        return [
                 "name" => $processedResult['name'],
                 "code" => $processedResult['code']
-            ]
-        );
+            ];
     }
 
     /**

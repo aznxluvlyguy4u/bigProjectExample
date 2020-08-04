@@ -930,6 +930,10 @@ services:
     app.company:
         parent: app.abstract_base.auth
         class: AppBundle\Service\CompanyService
+        calls:
+          - method: setExternalCustomerProviderService
+            arguments:
+              - '@AppBundle\Service\ExternalProvider\ExternalProviderCustomerService'
 
     app.component:
         parent: app.abstract_base.controller
