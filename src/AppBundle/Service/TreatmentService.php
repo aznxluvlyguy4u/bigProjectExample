@@ -125,7 +125,7 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
             if ($existingAnimal !== null || in_array($animalId, $historicAnimalsIds)) {
                 $existingAnimals->add($existingAnimal);
             } else {
-                throw new PreconditionFailedHttpException($this->translator->trans("animal_not_found", ['animal_id' => $animalId]));
+                throw new PreconditionFailedHttpException($this->translator->trans("ANIMAL_NOT_FOUND", ['animal_id' => $animalId]));
             }
         }
 
@@ -145,7 +145,7 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
                 ->getRepository(TreatmentMedication::class)->find($treatmentMedication->getId());
 
             if (!$treatmentMedicationInDB) {
-                throw new PreconditionFailedHttpException($this->translator->trans('medication_not_found', ['medication_id' => $treatmentMedication->getId()]));
+                throw new PreconditionFailedHttpException($this->translator->trans('MEDICATION_NOT_FOUND', ['medication_id' => $treatmentMedication->getId()]));
             }
 
             $treatmentDuration = $treatmentMedicationInDB->getTreatmentDuration();

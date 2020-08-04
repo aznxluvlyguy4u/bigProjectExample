@@ -616,8 +616,8 @@ process:
 THIS TREATMENT TYPE IS NOT EDITABLE: This treatment type is not editable
 THIS TEMPLATE IS NOT EDITABLE: This template is not editable
 JSON BODY MUST HAVE THE TREATMENT STRUCTURE: Json body must have the treatment structure
-animal_not_found: "Animal with {animal_id} is not found"
-medication_not_found: "Medication with {medication_id} has not been found"
+ANIMAL_NOT_FOUND: "Animal with {animal_id} is not found"
+MEDICATION_NOT_FOUND: "Medication with {medication_id} has not been found"
 NO TREATMENT TEMPLATE FOUND WITH ID: No treatmens found with id
 DESCRIPTION IS MISSING: The description is missing
 THIS TREATMENT DOES NOT BELONG TO THE LOCATION WITH UBN: This treatment does not belong to the location with ubn
