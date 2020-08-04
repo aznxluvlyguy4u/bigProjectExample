@@ -229,6 +229,13 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
                 ->setFlagEndDate($treatment->getEndDate())
                 ->setTreatment($treatment);
 
+            $declareAnimalFlag = $this->animalFlagMessageBuilder->buildMessage(
+                $declareAnimalFlag,
+                $treatment->getLocation()->getOwner(),
+                $loggedInUser,
+                $treatment->getLocation()
+            );
+
             $declareAnimalFlagResponse = new DeclareAnimalFlagResponse();
 
             $declareAnimalFlagResponse
