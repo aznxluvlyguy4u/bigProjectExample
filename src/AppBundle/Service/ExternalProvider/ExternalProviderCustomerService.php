@@ -4,10 +4,17 @@
 namespace AppBundle\Service\ExternalProvider;
 
 
+use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Constant\ExternalProviderSetting;
+use AppBundle\Util\ResultUtil;
 use PhpTwinfield\ApiConnectors\CustomerApiConnector;
-use PhpTwinfield\Customer;
+use PhpTwinfield\Request\Read\Customer;
 use PhpTwinfield\Office;
+use PhpTwinfield\Request\Read\Article;
+use SoapClient;
+use SoapFault;
+use SoapHeader;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 class ExternalProviderCustomerService extends ExternalProviderBase implements ExternalProviderInterface
@@ -17,15 +24,39 @@ class ExternalProviderCustomerService extends ExternalProviderBase implements Ex
     /** @var ExternalProviderOfficeService */
     private $twinfieldOfficeService;
 
+    /** @var string $external_provider_user */
+    private $external_provider_user;
 
+    /** @var string $external_provider_password */
+    private $external_provider_password;
+
+    /** @var string $external_provider_organisation */
+    private $external_provider_organisation;
+
+    /** @var string $office_code */
+    private $office_code;
 
     /**
      * @required
      *
      * @param ExternalProviderOfficeService $officeService
+     * @param $external_provider_user
+     * @param $external_provider_password
+     * @param $external_provider_organisation
+     * @param $office_code
      */
-    public function setExternalProviderOfficeService(ExternalProviderOfficeService $officeService) {
+    public function setProperties(
+        ExternalProviderOfficeService $officeService,
+        $external_provider_user,
+        $external_provider_password,
+        $external_provider_organisation,
+        $office_code
+    ) {
         $this->twinfieldOfficeService = $officeService;
+        $this->external_provider_user = $external_provider_user;
+        $this->external_provider_password = $external_provider_password;
+        $this->external_provider_organisation = $external_provider_organisation;
+        $this->office_code = $office_code;
     }
 
     /**
@@ -80,7 +111,7 @@ class ExternalProviderCustomerService extends ExternalProviderBase implements Ex
     /**
      * @param $debtorNumber
      * @param $administrationCode
-     * @return \AppBundle\Component\HttpFoundation\JsonResponse|Customer
+     * @return JsonResponse|Customer
      * @throws \Exception
      */
     public function getSingleCustomer($debtorNumber, $administrationCode) {
@@ -129,6 +160,64 @@ class ExternalProviderCustomerService extends ExternalProviderBase implements Ex
         return null;
     }
 
+    /**
+     * @param Request $request
+     * @return JsonResponse
+     * @throws SoapFault
+     *
+     * If you need to edit send a existing code in the request
+     */
+    public function createOrEditCustomer(Request $request)
+    {
+        $data = json_decode($request->getContent(), true);
+
+        $soapClient = new SoapClient("https://login.twinfield.com/webservices/session.asmx?wsdl", ["trace" => 1]);
+
+        $params = [
+            'user' => $this->external_provider_user,
+            'password' => $this->external_provider_password,
+            'organisation' => $this->external_provider_organisation
+        ];
+
+        $soapClient->Logon($params);
+        $p = xml_parser_create();
+        xml_parse_into_struct($p, $soapClient->__getLastResponse(), $vals, $index);
+
+        $sessionID = $vals[3]['value'];
+
+        $processXMLClient = new SoapClient("https://accounting2.twinfield.com/webservices/processxml.asmx?wsdl", ["trace" => 1]);
+
+        $headerData = ["SessionID" => $sessionID, "CompanyCode" => $this->office_code];
+
+        $header = new SoapHeader('http://www.twinfield.com/','Header',
+            $headerData);
+
+        $processXMLClient->__setSoapHeaders($header);
+
+        $xml = '
+        <dimension status="active" result="1">
+            <office>'.$this->office_code.'</office>
+            <type name="Debiteuren" shortname="Debiteuren">DEB</type>
+            <code>'.$data['code'].'</code>
+            <name>'.$data['name'].'</name>
+        </dimension>
+        ';
+
+        $processXMLParams = [
+            "xmlRequest" => $xml
+        ];
+
+        $array = json_decode(json_encode($processXMLClient->ProcessXmlString($processXMLParams)), true);
+
+        $processedResult = $this->xmlToArray($array["ProcessXmlStringResult"]);
+
+        return ResultUtil::successResult(
+            [
+                "name" => $processedResult['name'],
+                "code" => $processedResult['code']
+            ]
+        );
+    }
 
     /**
      * @param string $debtorNumber
@@ -150,6 +239,11 @@ class ExternalProviderCustomerService extends ExternalProviderBase implements Ex
             $this->reAuthenticate();
             return $this->getCustomer($debtorNumber, $customerOffice);
         }
+    }
+
+    private function xmlToArray($xml)
+    {
+        return json_decode(json_encode(simplexml_load_string($xml)), true);
     }
 
 }
