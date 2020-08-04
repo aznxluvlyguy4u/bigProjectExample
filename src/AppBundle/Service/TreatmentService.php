@@ -90,7 +90,7 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
         $treatment = $this->getBaseSerializer()->deserializeToObject($request->getContent(), Treatment::class);
 
         if (!($treatment instanceof Treatment)) {
-            throw new PreconditionFailedHttpException("Json body must have the Treatment structure");
+            throw new PreconditionFailedHttpException($this->translateUcFirstLower("JSON BODY MUST HAVE THE TREATMENT STRUCTURE"));
         }
 
         $treatment
@@ -125,7 +125,7 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
             if ($existingAnimal !== null || in_array($animalId, $historicAnimalsIds)) {
                 $existingAnimals->add($existingAnimal);
             } else {
-                throw new PreconditionFailedHttpException("Animal with id ".$animalId." not found");
+                throw new PreconditionFailedHttpException($this->translator->trans("ANIMAL_NOT_FOUND", ['animal_id' => $animalId]));
             }
         }
 
@@ -145,7 +145,7 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
                 ->getRepository(TreatmentMedication::class)->find($treatmentMedication->getId());
 
             if (!$treatmentMedicationInDB) {
-                throw new PreconditionFailedHttpException('Medication with '. $treatmentMedication->getId(). 'does not exist.');
+                throw new PreconditionFailedHttpException($this->translator->trans('MEDICATION_NOT_FOUND', ['medication_id' => $treatmentMedication->getId()]));
             }
 
             $treatmentDuration = $treatmentMedicationInDB->getTreatmentDuration();
@@ -337,12 +337,12 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
         $treatmentTemplate = $this->treatmentTemplateRepository->find($treatmentTemplateId);
 
         if ($treatmentTemplate === null) {
-            throw new PreconditionFailedHttpException("No treatment template found with id: ". $treatmentTemplateId);
+            throw new PreconditionFailedHttpException($this->translateUcFirstLower("NO TREATMENT TEMPLATE FOUND WITH ID").": ". $treatmentTemplateId);
         }
 
         $description = $treatment->getDescription();
         if ($description === null) {
-            throw new PreconditionFailedHttpException("Description is missing");
+            throw new PreconditionFailedHttpException($this->translateUcFirstLower("DESCRIPTION IS MISSING"));
         }
 
         if (TimeUtil::isDate1BeforeDate2($treatment->getEndDate(), $treatment->getStartDate())) {
@@ -438,7 +438,7 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
         $this->nullCheckLocation($location);
 
         if ($treatment->getLocation()->getId() !== $location->getId()) {
-            throw new PreconditionFailedHttpException('This treatment does not belong to the location with ubn: '.$location->getUbn());
+            throw new PreconditionFailedHttpException($this->translateUcFirstLower("THIS TREATMENT DOES NOT BELONG TO THE LOCATION WITH UBN").": ". $location->getUbn());
         }
 
         $content = RequestUtil::getContentAsArrayCollection($request);
