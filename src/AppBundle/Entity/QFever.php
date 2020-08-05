@@ -13,7 +13,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  *
  * @ORM\Entity(repositoryClass="AppBundle\Entity\QFeverRepository")
  */
-class QFever extends TreatmentTemplate
+class QFever extends TreatmentTemplate implements TreatmentTemplateInterface
 {
     use EntityClassInfo;
 
@@ -22,8 +22,22 @@ class QFever extends TreatmentTemplate
      *
      * @ORM\Column(type="string", nullable=false)
      * @JMS\Type("string")
+     * @JMS\Groups({
+     *     "TREATMENT_TEMPLATE"
+     * })
      */
     private $qFeverType;
+
+    /**
+     * @JMS\VirtualProperty
+     * @JMS\SerializedName("allow_end_date")
+     * @JMS\Groups({
+     *     "TREATMENT_TEMPLATE"
+     * })
+     */
+    public function allowEndDate(): bool {
+        return false;
+    }
 
     /**
      * @return string
