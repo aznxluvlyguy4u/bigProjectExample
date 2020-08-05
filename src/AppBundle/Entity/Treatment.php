@@ -5,6 +5,7 @@ namespace AppBundle\Entity;
 
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Traits\EntityClassInfo;
+use AppBundle\Util\TimeUtil;
 use AppBundle\Util\Translation;
 use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -409,6 +410,20 @@ class Treatment implements TreatmentInterface
     public function setEndDate($endDate)
     {
         $this->endDate = $endDate;
+        return $this;
+    }
+
+    /**
+     * @return $this
+     */
+    public function removeEndDateIfEqualToStartDate()
+    {
+        if (
+            $this->endDate != null &&
+            TimeUtil::isDateTimesOnTheSameDay($this->startDate, $this->endDate))
+        {
+            $this->endDate = null;
+        }
         return $this;
     }
 
