@@ -113,7 +113,7 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
             return $animal->getId();
         }, $historicAnimals);
 
-        /** @var ArrayCollection<Animal> $existingAnimals */
+        /** @var ArrayCollection|Animal[] $existingAnimals */
         $existingAnimals = new ArrayCollection();
 
         /** @var Animal $animal */
