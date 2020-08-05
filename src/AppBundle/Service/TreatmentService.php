@@ -140,23 +140,33 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
 
         $medicationSelections = new ArrayCollection();
 
-        /** @var TreatmentMedication $treatmentMedication */
-        foreach ($treatment->getTreatmentTemplate()->getMedications() as $treatmentMedication) {
-            /** @var TreatmentMedication $treatmentMedicationInDB */
-            $treatmentMedicationInDB = $this->getManager()
-                ->getRepository(TreatmentMedication::class)->find($treatmentMedication->getId());
+        $medications = $treatment->getTreatmentTemplate()->getMedications();
 
-            if (!$treatmentMedicationInDB) {
-                throw new PreconditionFailedHttpException($this->translator->trans('MEDICATION_NOT_FOUND', ['medication_id' => $treatmentMedication->getId()]));
+        if (!$treatmentTemplate->isEditable()) {
+            $medications = $treatmentTemplate->getMedications();
+        }
+
+        /** @var TreatmentMedication $treatmentMedication */
+        foreach ($medications as $treatmentMedication) {
+            $treatmentMedicationInDB = $treatmentMedication;
+
+            if ($treatmentTemplate->isEditable()) {
+                /** @var TreatmentMedication $treatmentMedicationInDB */
+                $treatmentMedicationInDB = $this->getManager()
+                    ->getRepository(TreatmentMedication::class)->find($treatmentMedication->getId());
+
+                if (!$treatmentMedicationInDB) {
+                    throw new PreconditionFailedHttpException($this->translator->trans('MEDICATION_NOT_FOUND', ['medication_id' => $treatmentMedication->getId()]));
+                }
             }
 
-            $treatmentDuration = $treatmentMedicationInDB->getTreatmentDuration();
             $medicationSelection = new MedicationSelection();
 
             $medicationSelection
                 ->setTreatment($treatment)
-                ->setTreatmentMedication($treatmentMedicationInDB)
-            ;
+                ->setTreatmentMedication($treatmentMedicationInDB);
+
+            $treatmentDuration = $treatmentMedicationInDB->getTreatmentDuration();
 
             if ($treatmentDuration !== 'eenmalig') {
                 $roundedTreatmentDuration = round($treatmentDuration, 0, PHP_ROUND_HALF_UP);
@@ -278,11 +288,11 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
     )
     {
         $flagType = QFeverService::getFlagType($template->getDescription(), $template->getAnimalType());
+
+        /** @var Animal $existingAnimal */
         foreach ($existingAnimals as $existingAnimal) {
-            // TODO check if existing animal already has the $flagType. Throw exception in that case.
         }
     }
-
 
     private function createAndSendQFeverRvoMessages(
         Treatment $treatment, TreatmentTemplate $template, ArrayCollection $existingAnimals,
