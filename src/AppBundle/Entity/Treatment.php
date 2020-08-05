@@ -74,8 +74,9 @@ class Treatment implements TreatmentInterface
 
     /**
      * @var DateTime
-     * @ORM\Column(type="datetime", nullable=true)
+     * @ORM\Column(type="datetime", nullable=false)
      * @Assert\Date
+     * @Assert\NotBlank
      * @JMS\Type("DateTime")
      *
      * @JMS\Groups({
