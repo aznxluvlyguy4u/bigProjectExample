@@ -267,6 +267,18 @@ class Treatment implements TreatmentInterface
     }
 
     /**
+     * @JMS\VirtualProperty
+     * @JMS\SerializedName("has_rvo_details")
+     * @JMS\Groups({
+     *     "TREATMENT",
+     *     "TREATMENT_MIN"
+     * })
+     */
+    public function hasRvoDetails() {
+        return $this->treatmentTemplate instanceof QFever;
+    }
+
+    /**
      * Treatment constructor.
      */
     public function __construct()
