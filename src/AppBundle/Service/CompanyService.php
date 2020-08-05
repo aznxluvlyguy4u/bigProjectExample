@@ -446,10 +446,19 @@ class CompanyService extends AuthServiceBase
             $billingAddress->setAddressNumberSuffix('');
         }
 
+        /** @var Country $billingAddressCountryDB */
+        $billingAddressCountryDB = $this->getCountryByName($billingAddressCountry);
+
+        if (!$content->containsKey('twinfield_code')) {
+            throw new PreconditionFailedHttpException('The twinfield code can not be empty');
+        }
+
+        $this->externalProviderCustomerService->createOrEditCustomer($content, $billingAddressCountryDB->getCode());
+
         $billingAddress->setPostalCode($contentBillingAddress['postal_code']);
         $billingAddress->setCity($contentBillingAddress['city']);
         $billingAddress->setState(ArrayUtil::get('state', $contentBillingAddress));
-        $billingAddress->setCountryDetails($this->getCountryByName($billingAddressCountry));
+        $billingAddress->setCountryDetails($billingAddressCountryDB);
 
         // Update Company
         $company->setCompanyName($content->get('company_name'));

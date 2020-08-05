@@ -167,6 +167,11 @@ class ExternalProviderCustomerService extends ExternalProviderBase implements Ex
     public function createOrEditCustomer(ArrayCollection $content, $countryCode)
     {
         $code = rand(1111111, 9999999);
+
+        if ($content->containsKey('twinfield_code')) {
+            $code = $content->get('twinfield_code');
+        }
+
         $contentBillingAddress = $content->get('billing_address');
         $contentOwner = $content->get('owner');
 
@@ -195,23 +200,23 @@ class ExternalProviderCustomerService extends ExternalProviderBase implements Ex
 
         $addressXml = '
            <addresses>
-        <address default="true" type="invoice">
-            <name>'.$content->get('company_name').'</name>
-            <country>'.$countryCode.'</country>
-            <city>'.$contentBillingAddress['city'].'</city>
-            <postcode>'.$contentBillingAddress['postal_code'].'</postcode>
-            <telephone>'.$content->get('telephone_number').'</telephone>
-            <telefax />
-            <email>'.$contentOwner['email_address'].'</email>
-            <contact />
-            <field1 />
-            <field2>'.$contentBillingAddress['street_name'].' '.$contentBillingAddress['address_number'].'</field2>
-            <field3 />
-            <field4></field4>
-            <field5 />
-            <field6 />
-        </address>
-    </addresses>
+                <address default="true" type="invoice">
+                    <name>'.$content->get('company_name').'</name>
+                    <country>'.$countryCode.'</country>
+                    <city>'.$contentBillingAddress['city'].'</city>
+                    <postcode>'.$contentBillingAddress['postal_code'].'</postcode>
+                    <telephone>'.$content->get('telephone_number').'</telephone>
+                    <telefax />
+                    <email>'.$contentOwner['email_address'].'</email>
+                    <contact />
+                    <field1 />
+                    <field2>'.$contentBillingAddress['street_name'].' '.$contentBillingAddress['address_number'].'</field2>
+                    <field3 />
+                    <field4></field4>
+                    <field5 />
+                    <field6 />
+                </address>
+           </addresses>
         ';
 
         $xml = '
