@@ -87,7 +87,7 @@ class Treatment implements TreatmentInterface
     private $startDate;
 
     /**
-     * @var DateTime
+     * @var DateTime|null
      * @ORM\Column(type="datetime", nullable=true)
      * @Assert\Date
      * @JMS\Type("DateTime")
@@ -370,8 +370,20 @@ class Treatment implements TreatmentInterface
         return $this;
     }
 
+
     /**
+     * Use this value in calculations where the startDate should be used if the endDate is not explicitly available.
+     *
      * @return DateTime
+     */
+    public function getLastDate()
+    {
+        return $this->endDate ?? $this->startDate;
+    }
+
+
+    /**
+     * @return DateTime|null
      */
     public function getEndDate()
     {
@@ -379,7 +391,7 @@ class Treatment implements TreatmentInterface
     }
 
     /**
-     * @param DateTime $endDate
+     * @param DateTime|null $endDate
      * @return Treatment
      */
     public function setEndDate($endDate)
