@@ -125,9 +125,9 @@ class Client extends Person implements PersonImplementationInterface
     */
     public function setRelationNumberKeeper($relationNumberKeeper)
     {
-    $this->relationNumberKeeper = StringUtil::trimIfNotNull($relationNumberKeeper);
+        $this->relationNumberKeeper = StringUtil::trimIfNotNull($relationNumberKeeper);
 
-    return $this;
+        return $this;
     }
 
     /**
