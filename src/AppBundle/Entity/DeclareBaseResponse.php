@@ -25,7 +25,6 @@ use Symfony\Component\Validator\Constraints as Assert;
  *      "DeclareLossResponse" = "DeclareLossResponse",
  *      "DeclareImportResponse" = "DeclareImportResponse",
  *      "DeclareExportResponse" = "DeclareExportResponse",
- *      "DeclareAnimalFlagResponse" = "DeclareAnimalFlagResponse",
  *      "DeclareTagsTransferResponse" = "DeclareTagsTransferResponse",
  *      "DeclareTagReplaceResponse" = "DeclareTagReplaceResponse",
  *      "RevokeDeclarationResponse" = "RevokeDeclarationResponse"
@@ -38,7 +37,6 @@ use Symfony\Component\Validator\Constraints as Assert;
  *      "DeclareLossResponse" : "AppBundle\Entity\DeclareLossResponse",
  *      "DeclareImportResponse" : "AppBundle\Entity\DeclareImportResponse",
  *      "DeclareExportResponse" : "AppBundle\Entity\DeclareExportResponse",
- *      "DeclareAnimalFlagResponse" : "AppBundle\Entity\DeclareAnimalFlagResponse",
  *      "DeclareTagsTransferResponse" : "AppBundle\Entity\DeclareTagsTransferResponse",
  *      "DeclareTagReplaceResponse" : "AppBundle\Entity\DeclareTagReplaceResponse",
  *      "RevokeDeclarationResponse" : "AppBundle\Entity\RevokeDeclarationResponse"},

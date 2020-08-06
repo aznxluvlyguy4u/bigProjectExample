@@ -2,20 +2,20 @@
 
 namespace AppBundle\Entity;
 
-use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Traits\EntityClassInfo;
-use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as JMS;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
+ * RVO name: "Vastleggen Diervlagmelding".
+ * What it is: Register the flagging of an animal.
+ *
  * Class DeclareAnimalFlag
  * @ORM\Entity(repositoryClass="AppBundle\Entity\DeclareAnimalFlagRepository")
  * @package AppBundle\Entity
  */
-class DeclareAnimalFlag extends DeclareBase
+class DeclareAnimalFlag extends DeclareBaseWithResponse
 {
     use EntityClassInfo;
 
@@ -91,14 +91,6 @@ class DeclareAnimalFlag extends DeclareBase
     private $flagEndDate;
 
     /**
-     * @ORM\OneToMany(targetEntity="DeclareAnimalFlagResponse", mappedBy="declareAnimalFlagRequestMessage", cascade={"persist"})
-     * @ORM\JoinColumn(name="declare_animal_flag_request_message_id", referencedColumnName="id")
-     * @ORM\OrderBy({"logDate" = "ASC"})
-     * @JMS\Type("ArrayCollection<AppBundle\Entity\DeclareAnimalFlagResponse>")
-     */
-    private $responses;
-
-    /**
      * @JMS\VirtualProperty
      * @JMS\SerializedName("uln")
      * @JMS\Groups({
@@ -122,30 +114,6 @@ class DeclareAnimalFlag extends DeclareBase
      */
     public function getAnimalId(): ?int {
         return $this->animal ? $this->animal->getId(): null;
-    }
-
-    /**
-     * @JMS\VirtualProperty
-     * @JMS\SerializedName("last_response")
-     * @JMS\Groups({
-     *     "ERROR_DETAILS"
-     * })
-     * @return DeclareAnimalFlagResponse
-     */
-    public function lastResponse(): ?DeclareAnimalFlagResponse
-    {
-        $criteria = Criteria::create()
-            ->orderBy(['id', Criteria::DESC])
-            ->getFirstResult();
-        return $this->responses->matching($criteria)->first();
-    }
-
-
-    public function __construct() {
-      parent::__construct();
-
-      $this->setRequestState(RequestStateType::OPEN);
-      $this->responses = new ArrayCollection();
     }
 
 
@@ -239,7 +207,7 @@ class DeclareAnimalFlag extends DeclareBase
     /**
      * Get location
      *
-     * @return \AppBundle\Entity\Location
+     * @return Location
      */
     public function getLocation()
     {
@@ -249,11 +217,11 @@ class DeclareAnimalFlag extends DeclareBase
     /**
      * Set animal
      *
-     * @param \AppBundle\Entity\Animal $animal
+     * @param Animal $animal
      *
      * @return DeclareAnimalFlag
      */
-    public function setAnimal(\AppBundle\Entity\Animal $animal = null)
+    public function setAnimal(Animal $animal = null)
     {
         $this->animal = $animal;
 
@@ -263,46 +231,13 @@ class DeclareAnimalFlag extends DeclareBase
     /**
      * Get animal
      *
-     * @return \AppBundle\Entity\Animal
+     * @return Animal
      */
     public function getAnimal()
     {
         return $this->animal;
     }
 
-    /**
-     * Add response
-     *
-     * @param \AppBundle\Entity\DeclareAnimalFlagResponse $response
-     *
-     * @return DeclareAnimalFlag
-     */
-    public function addResponse(\AppBundle\Entity\DeclareAnimalFlagResponse $response)
-    {
-        $this->responses[] = $response;
-
-        return $this;
-    }
-
-    /**
-     * Remove response
-     *
-     * @param \AppBundle\Entity\DeclareAnimalFlagResponse $response
-     */
-    public function removeResponse(\AppBundle\Entity\DeclareAnimalFlagResponse $response)
-    {
-        $this->responses->removeElement($response);
-    }
-
-    /**
-     * Get responses
-     *
-     * @return \Doctrine\Common\Collections\Collection
-     */
-    public function getResponses()
-    {
-        return $this->responses;
-    }
 
     /**
      * @return Treatment
