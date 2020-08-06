@@ -68,9 +68,9 @@ class AuthService extends AuthServiceBase
 
         $ubn = $registration->getUbn();
 
-        if (!Validator::hasValidUbnFormat($ubn)) {
-            throw new PreconditionFailedHttpException($this->translateUcFirstLower('UBN IS NOT A VALID NUMBER').': '.$ubn);
-        }
+//        if (!Validator::hasValidUbnFormat($ubn)) {
+//            throw new PreconditionFailedHttpException($this->translateUcFirstLower('UBN IS NOT A VALID NUMBER').': '.$ubn);
+//        }
 
         $existingLocation = $this->getManager()->getRepository(Location::class)->findOneByActiveUbn($ubn);
 
@@ -164,6 +164,7 @@ class AuthService extends AuthServiceBase
             ->setCountryDetails($country);
 
         $company
+            ->setCompanyName($registration->getCompanyName())
             ->setIsActive(true)
             ->setAddress($companyAddress)
             ->addLocation($location)
