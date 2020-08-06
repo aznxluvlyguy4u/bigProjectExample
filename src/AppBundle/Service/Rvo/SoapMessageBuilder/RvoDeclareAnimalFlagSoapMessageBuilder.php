@@ -11,8 +11,7 @@ use AppBundle\Util\XmlUtil;
 
 class RvoDeclareAnimalFlagSoapMessageBuilder extends RvoMeldingenSoapMessageBuilderBase
 {
-
-    public function sendRequestToExternalQueue(DeclareAnimalFlag $flag)
+    public function parseSoapXmlRequestBody(DeclareAnimalFlag $flag): string
     {
         $flagJson = json_encode(new VastleggenDiervlagMelding($flag));
         $flagAsAssociativeArray = json_decode($flagJson, true);
@@ -23,8 +22,7 @@ class RvoDeclareAnimalFlagSoapMessageBuilder extends RvoMeldingenSoapMessageBuil
             $bodyKey => $flagAsAssociativeArray
         ];
 
-        $xmlRequestBody = XmlUtil::parseRvoXmlRequestBody($body, self::SOAP_ENVELOPE_DETAILS);
-        // TODO send $xmlRequestBody to EXTERNAL QUEUE / Must include request type
+        return XmlUtil::parseRvoXmlRequestBody($body, self::SOAP_ENVELOPE_DETAILS);
     }
 
 }
