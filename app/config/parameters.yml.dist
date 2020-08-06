@@ -9,6 +9,8 @@ parameters:
     database_password: ~
 
     environment: ~
+    environment_slot: 1
+
     redis_host:        redis://localhost
 
     mailer_transport:  smtp
@@ -77,3 +79,4 @@ parameters:
     display_report_pdf_output_as_html: false
     use_test_data: false
     log_extra_details_for_development: false
+    animal_type_env: sheep / goat
