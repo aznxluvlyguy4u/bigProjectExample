@@ -41,6 +41,7 @@ use AppBundle\Exception\EventDateBeforeDateOfBirthHttpException;
 use AppBundle\Exception\InvalidStnHttpException;
 use AppBundle\Exception\InvalidUlnHttpException;
 use AppBundle\Exception\MissingRelationNumberKeeperOfLocationHttpException;
+use AppBundle\Exception\Sqs\SqsMessageSendFailedException;
 use AppBundle\Output\RequestMessageOutputBuilder;
 use AppBundle\Util\AnimalArrayReader;
 use AppBundle\Util\ArrayUtil;
@@ -59,10 +60,22 @@ abstract class DeclareControllerServiceBase extends ControllerServiceBase
 {
     /** @var AwsExternalQueueService */
     protected $externalQueueService;
+    /** @var AwsRawExternalQueueService */
+    protected $rawExternalQueueService;
     /** @var IRSerializer */
     protected $irSerializer;
     /** @var RequestMessageBuilder */
     protected $requestMessageBuilder;
+
+    /**
+     * @required
+     *
+     * @param AwsRawExternalQueueService $rawExternalQueueService
+     */
+    public function setRawExternalQueueService(AwsRawExternalQueueService $rawExternalQueueService)
+    {
+        $this->rawExternalQueueService = $rawExternalQueueService;
+    }
 
     /**
      * @required
@@ -95,6 +108,18 @@ abstract class DeclareControllerServiceBase extends ControllerServiceBase
     }
 
 
+    protected function sendRawMessageToQueue(string $xmlMessageBody, string $requestType, string $requestId) {
+        $sendToQueueResult = $this->rawExternalQueueService->send($xmlMessageBody, $requestType, $requestId);
+        if ($sendToQueueResult['statusCode'] != '200') {
+            throw new SqsMessageSendFailedException(
+                $this->rawExternalQueueService->getQueueId(),
+                $requestType,
+                $requestId
+            );
+        }
+    }
+
+
     /**
      * @param DeclareBase|BasicRvoDeclareInterface|BasicRetrieveRvoDeclareInterface $messageObject
      * @param bool $isUpdate
@@ -120,10 +145,10 @@ abstract class DeclareControllerServiceBase extends ControllerServiceBase
         //Send serialized message to Queue
         $requestTypeNameSpace = RequestType::getRequestTypeFromObject($messageObject);
 
-        $sendToQresult = $this->externalQueueService->send($jsonMessage, $requestTypeNameSpace, $requestId);
+        $sendToQueueResult = $this->externalQueueService->send($jsonMessage, $requestTypeNameSpace, $requestId);
 
         //If send to Queue, failed, it needs to be resend, set state to failed
-        if ($sendToQresult['statusCode'] != '200') {
+        if ($sendToQueueResult['statusCode'] != '200') {
             $messageObject->setRequestState(RequestStateType::FAILED);
             $messageObject = MessageModifier::modifyBeforePersistingRequestStateByQueueStatus($messageObject, $this->getManager());
             $this->persist($messageObject);

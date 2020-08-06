@@ -58,47 +58,67 @@ services:
           - '@app.serializer.ir'
           - '%kernel.environment%'
 
+    AppBundle\Service\Aws\AwsSqsService:
+      arguments:
+        - '%aws_access_key_id%'
+        - '%aws_secret_key%'
+        - '%aws_sqs_region%' #region
+        - '%aws_sqs_version%' #version
+        - '%aws_sqs_deactivate_ssl%'
+
+
+    app.aws.queueservice.workers_base.old:
+      abstract: true
+      arguments:
+        #NOTE! Don't use named keys here! That will prevent the child services from properly overriding the arguments.
+        - placeholder_to_override #queueIdPrefix
+        - '%aws_access_key_id%'
+        - '%aws_secret_key%'
+        - '%aws_sqs_region%' #region
+        - '%aws_sqs_version%' #version
+        - '%environment%' #selected environment
+        - '%kernel.environment%'
+        - true
+        - '%aws_sqs_deactivate_ssl%'
 
     app.aws.queueservice.workers_base:
         abstract: true
         arguments:
-        #NOTE! Don't use named keys here! That will prevent the child services from properly overriding the arguments.
-          - placeholder_to_override #queueIdPrefix
-          - '%aws_access_key_id%'
-          - '%aws_secret_key%'
-          - '%aws_sqs_region%' #region
-          - '%aws_sqs_version%' #version
-          - '%environment%' #currentEnv
+          - '@AppBundle\Service\Aws\AwsSqsService'
+          - '%environment%' #selected environment for test queues use !php/const:AppBundle\Constant\Environment::TEST
           - '%kernel.environment%'
-          - true
-          - '%aws_sqs_deactivate_ssl%'
+          - '%animal_type_env%'
+          - '%environment_slot%'
+
+    AppBundle\Service\AwsRawExternalQueueService:
+      parent: app.aws.queueservice.workers_base
 
     AppBundle\Service\AwsFeedbackQueueService:
-        parent: app.aws.queueservice.workers_base
+        parent: app.aws.queueservice.workers_base.old
         arguments: { index_0: '%aws_sqs_queue_feedback_prefix%' }
 
     AppBundle\Service\AwsExternalQueueService:
-        parent: app.aws.queueservice.workers_base
+        parent: app.aws.queueservice.workers_base.old
         arguments: { index_0: '%aws_sqs_queue_exteral_prefix%' }
 
     AppBundle\Service\AwsExternalTestQueueService:
-        parent: app.aws.queueservice.workers_base
+        parent: app.aws.queueservice.workers_base.old
         arguments: { index_0: '%aws_sqs_queue_exteral_prefix%', index_5: !php/const:AppBundle\Constant\Environment::TEST, index_7: false }
 
     AppBundle\Service\AwsInternalQueueService:
-        parent: app.aws.queueservice.workers_base
+        parent: app.aws.queueservice.workers_base.old
         arguments: { index_0: '%aws_sqs_queue_interal_prefix%' }
 
     AppBundle\Service\AwsInternalTestQueueService:
-        parent: app.aws.queueservice.workers_base
+        parent: app.aws.queueservice.workers_base.old
         arguments: { index_0: '%aws_sqs_queue_interal_prefix%', index_5: !php/const:AppBundle\Constant\Environment::TEST, index_7: false }
 
     AppBundle\Service\MixBlupInputQueueService:
-        parent: app.aws.queueservice.workers_base
+        parent: app.aws.queueservice.workers_base.old
         arguments: { index_0: '%aws_sqs_queue_mixblup_input_prefix%', index_7: false }
 
     AppBundle\Service\MixBlupOutputQueueService:
-        parent: app.aws.queueservice.workers_base
+        parent: app.aws.queueservice.workers_base.old
         arguments: { index_0: '%aws_sqs_queue_mixblup_output_prefix%', index_7: false }
 
     app.aws.storageservice:
@@ -856,6 +876,9 @@ services:
           - method: setExternalQueueService
             arguments:
               - '@AppBundle\Service\AwsExternalQueueService'
+          - method: setRawExternalQueueService
+            arguments:
+              - '@AppBundle\Service\AwsRawExternalQueueService'
 
     app.animal:
         parent: app.abstract_base.declare
