@@ -15,7 +15,6 @@ class RequestType
     use EnumInfo;
 
     //RequestType
-    const DECLARATION_DETAIL = 'DECLARATION_DETAIL';
     const DECLARE_ARRIVAL = 'DECLARE_ARRIVAL';
     const DECLARE_BIRTH = 'DECLARE_BIRTH';
     const DECLARE_ANIMAL_FLAG = 'DECLARE_ANIMAL_FLAG';
@@ -33,7 +32,6 @@ class RequestType
     const RETRIEVE_UBN_DETAILS = "RETRIEVE_UBN_DETAILS";
 
     //Request entity namespaces
-    const DECLARATION_DETAIL_ENTITY = 'DeclarationDetail';
     const DECLARE_ANIMAL_FLAG_ENTITY = 'DeclareAnimalFlag';
     const DECLARE_ARRIVAL_ENTITY = 'DeclareArrival';
     const DECLARE_BIRTH_ENTITY = 'DeclareBirth';
@@ -57,8 +55,6 @@ class RequestType
     public static function getRequestTypeFromEntityNameSpace($entityNameSpace)
     {
         switch($entityNameSpace) {
-            case RequestType::DECLARATION_DETAIL_ENTITY:
-                return RequestType::DECLARATION_DETAIL;
 
             case RequestType::DECLARE_ANIMAL_FLAG_ENTITY:
                 return RequestType::DECLARE_ANIMAL_FLAG;

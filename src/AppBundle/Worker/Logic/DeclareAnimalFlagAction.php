@@ -5,8 +5,8 @@ namespace AppBundle\Worker\Logic;
 
 
 use AppBundle\Entity\DeclareAnimalFlag;
-use AppBundle\Entity\DeclareAnimalFlagResponse;
 use AppBundle\model\Rvo\Response\DiervlagMelding\VastleggenDiervlagMeldingResponse;
+use DateTime;
 
 class DeclareAnimalFlagAction extends InternalWorkerActionBase implements InternalWorkerLogicInterface
 {
@@ -15,35 +15,31 @@ class DeclareAnimalFlagAction extends InternalWorkerActionBase implements Intern
      */
     public function process(string $rvoXmlResponseContent)
     {
+        /** @var VastleggenDiervlagMeldingResponse $rvoResponse */
         $rvoResponse = $this->parseRvoResponseObject($rvoXmlResponseContent, VastleggenDiervlagMeldingResponse::class);
-        $response = $this->parseNsfoResponse($rvoResponse);
+
+        $declareAnimalFlag = $this->em->getRepository(DeclareAnimalFlag::class)
+            ->findOneByRequestId($rvoResponse->requestID);
+
+        $response = $this->addResponseDetailsToDeclare($rvoResponse);
+
         // TODO add business logic here and persist request and response
 
         // TODO delete message from queue
     }
 
-    private function parseNsfoResponse(VastleggenDiervlagMeldingResponse $rvoResponse): DeclareAnimalFlagResponse
+    private function addResponseDetailsToDeclare(VastleggenDiervlagMeldingResponse $rvoResponse,
+                                                 DeclareAnimalFlag &$declareAnimalFlag)
     {
-        $request = $this->em->getRepository(DeclareAnimalFlag::class)
-            ->findOneByRequestId($rvoResponse->requestID);
-
         $diergegevensDiervlagMeldingResponse = $rvoResponse->diergegevensDiervlagMeldingResponse;
         $verwerkingsResultaat = $diergegevensDiervlagMeldingResponse->verwerkingsresultaat;
 
-        $response = new DeclareAnimalFlagResponse();
-        $response->setDeclareAnimalFlagRequestMessage($request);
-        $response->setRequestId($rvoResponse->requestID);
-        $response->setMessageId($request->getMessageId());
-        $response->setMessageNumber($diergegevensDiervlagMeldingResponse->meldingnummer);
-        $response->setLogDate(new DateTime());
-        $response->setErrorCode($verwerkingsResultaat->foutcode);
-        $response->setErrorMessage($verwerkingsResultaat->foutmelding);
-        $response->setErrorKindIndicator($verwerkingsResultaat->soortFoutIndicator);
-        $response->setSuccessIndicator($verwerkingsResultaat->succesIndicator);
-        $response->setIsRemovedByUser(false);
-        $response->setActionBy($request->getActionBy());
-
-        return $response;
+        $declareAnimalFlag->setMessageNumber($diergegevensDiervlagMeldingResponse->meldingnummer);
+        $declareAnimalFlag->setResponseLogDate(new DateTime());
+        $declareAnimalFlag->setErrorCode($verwerkingsResultaat->foutcode);
+        $declareAnimalFlag->setErrorMessage($verwerkingsResultaat->foutmelding);
+        $declareAnimalFlag->setErrorKindIndicator($verwerkingsResultaat->soortFoutIndicator);
+        $declareAnimalFlag->setSuccessIndicator($verwerkingsResultaat->succesIndicator);
     }
 
 

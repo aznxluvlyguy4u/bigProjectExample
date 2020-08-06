@@ -5,7 +5,6 @@ namespace AppBundle\Component;
 use AppBundle\Component\HttpFoundation\JsonResponse;
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\Client;
-use AppBundle\Entity\DeclarationDetail;
 use AppBundle\Entity\DeclareAnimalFlag;
 use AppBundle\Entity\DeclareArrival;
 use AppBundle\Entity\DeclareBirth;
@@ -106,20 +105,12 @@ class RequestMessageBuilder
      * @param Person|Client $loggedInUser
      * @param Location $location
      * @param boolean $isEditMessage
-     * @return null|DeclareArrival|DeclareImport|DeclareExport|DeclareDepart|DeclareBirth|DeclareLoss|DeclareAnimalFlag|DeclarationDetail|DeclareTagsTransfer|RetrieveTags|RevokeDeclaration|RetrieveAnimals|RetrieveAnimals|RetrieveCountries|RetrieveUBNDetails|DeclareTagReplace|JsonResponse|array
+     * @return null|DeclareArrival|DeclareImport|DeclareExport|DeclareDepart|DeclareBirth|DeclareLoss|DeclareAnimalFlag|DeclareTagsTransfer|RetrieveTags|RevokeDeclaration|RetrieveAnimals|RetrieveAnimals|RetrieveCountries|RetrieveUBNDetails|DeclareTagReplace|JsonResponse|array
      * @throws \Exception
      */
     public function build($messageClassNameSpace, ArrayCollection $contentArray, $person, $loggedInUser, $location, $isEditMessage)
     {
         switch($messageClassNameSpace) {
-            case RequestType::DECLARATION_DETAIL_ENTITY:
-                $declarationDetail = $this->irSerializer->parseDeclarationDetail($contentArray, $person, $isEditMessage);
-                //TODO: only add the mininum required fields for this Message Type
-                return $declarationDetail;
-            case RequestType::DECLARE_ANIMAL_FLAG_ENTITY:
-                $declareAnimalFlag = $this->irSerializer->parseDeclareAnimalFlag($contentArray, $person, $isEditMessage);
-                //TODO: only add the mininum required fields for this Message Type
-                return $declareAnimalFlag;
             case RequestType::DECLARE_ARRIVAL_ENTITY:
                 $declareArrivalRequest = $this->irSerializer->parseDeclareArrival($contentArray, $person, $location, $isEditMessage);
                 if($isEditMessage) { return $declareArrivalRequest; }

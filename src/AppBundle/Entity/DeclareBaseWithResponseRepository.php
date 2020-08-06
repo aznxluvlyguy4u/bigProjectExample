@@ -15,7 +15,7 @@ class DeclareBaseWithResponseRepository extends BaseRepository implements Declar
 
     /**
      * @param $messageId
-     * @return DeclareBaseWithResponse|DeclareAnimalFlag|DeclarationDetail
+     * @return DeclareBaseWithResponse|DeclareAnimalFlag
      */
     public function getErrorDetails($messageId)
     {

@@ -199,28 +199,16 @@ class TreatmentRepository extends BaseRepository {
                     pedigree_number, 
                     request_state, 
                     hide_failed_message as is_removed_by_user,
-                    r.error_code, 
-                    r.error_message, 
-                    r.message_number,
+                    b.error_code, 
+                    b.error_message, 
+                    b.message_number,
                     daf.flag_type,
                     daf.flag_start_date,
                     daf.flag_end_date
-                FROM declare_base b
+                FROM declare_base_with_response b
                   INNER JOIN declare_animal_flag daf ON b.id = daf.id  
                   INNER JOIN treatment a ON a.id = daf.treatment_id
                   INNER JOIN animal s ON s.id = daf.animal_id
-                  INNER JOIN (
-                    SELECT y.request_id, y.error_code, y.error_message, y.message_number,
-                           yf.declare_animal_flag_request_message_id as declare_id
-                    FROM declare_base_response y
-                      INNER JOIN declare_animal_flag_response yf ON yf.id = y.id
-                      INNER JOIN (
-                                   SELECT request_id, MAX(id) as id
-                                    -- lastest response always has the highest id
-                                   FROM declare_base_response
-                                   GROUP BY request_id
-                                 ) z ON z.id = y.id AND z.request_id = y.request_id
-                    )r ON r.declare_id = b.id
                 WHERE request_state = '".RequestStateType::FAILED."' 
                 AND daf.location_id = ".$locationId." ORDER BY b.log_date DESC";
 

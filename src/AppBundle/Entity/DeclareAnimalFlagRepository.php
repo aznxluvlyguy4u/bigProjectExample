@@ -35,7 +35,7 @@ class DeclareAnimalFlagRepository extends BaseRepository
                     to_char(flag_end_date, '$dateFormat') as end_date_in_default_format,
                     db.request_state
                 FROM declare_animal_flag flag
-                    INNER JOIN declare_base db on flag.id = db.id
+                    INNER JOIN declare_base_with_response db on flag.id = db.id
                 WHERE treatment_id IN (?)";
         $values = [$treatmentIds];
         $types = [Connection::PARAM_INT_ARRAY];
@@ -68,7 +68,7 @@ class DeclareAnimalFlagRepository extends BaseRepository
                     to_char(flag_end_date, '$dateFormat') as end_date_in_default_format,
                     db.request_state
                 FROM declare_animal_flag flag
-                    INNER JOIN declare_base db on flag.id = db.id
+                    INNER JOIN declare_base_with_response db on flag.id = db.id
                     INNER JOIN (
                         SELECT
                             animal_id,
@@ -89,7 +89,7 @@ class DeclareAnimalFlagRepository extends BaseRepository
                             SELECT flag.animal_id, flag.id as flag_id,
                                 DENSE_RANK() OVER (PARTITION BY flag.animal_id ORDER BY flag.flag_start_date) AS flag_ordinal
                               FROM declare_animal_flag flag
-                                INNER JOIN declare_base db ON db.id = flag.id
+                                INNER JOIN declare_base_with_response db ON db.id = flag.id
                             WHERE --db.request_state IN ('FINISHED','FINISHED_WITH_WARNING') AND
                                   flag.animal_id IN (?)
                         ORDER BY animal_id, flag.id
