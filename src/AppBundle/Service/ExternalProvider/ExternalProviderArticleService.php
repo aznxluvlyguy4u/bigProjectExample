@@ -20,9 +20,21 @@ class ExternalProviderArticleService extends ExternalProviderBase implements Ext
     /** @var string */
     private $office_code;
 
-    public function setOfficeCode($office_code)
+    /** @var string */
+    private $user;
+
+    /** @var string */
+    private $password;
+
+    /** @var string */
+    private $organisation;
+
+    public function setTwinfieldParameters($office_code, $user, $password, $organisation)
     {
         $this->office_code = $office_code;
+        $this->user = $user;
+        $this->password = $password;
+        $this->organisation = $organisation;
     }
 
     /**
@@ -41,9 +53,9 @@ class ExternalProviderArticleService extends ExternalProviderBase implements Ext
         $soapClient = new SoapClient("https://login.twinfield.com/webservices/session.asmx?wsdl", ["trace" => 1]);
 
         $params = [
-            'user' => 'Test_NSFO',
-            'password' => 'NSFO2020',
-            'organisation' => 'weariv'
+            'user' => $this->user,
+            'password' => $this->password,
+            'organisation' => $this->organisation
         ];
 
         $soapClient->Logon($params);
