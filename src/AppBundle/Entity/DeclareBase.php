@@ -19,7 +19,6 @@ use Symfony\Component\Validator\Constraints as Assert;
  * //TODO add new child classes to the DiscriminatorMap
  * @ORM\DiscriminatorMap(
  *   {
- *      "DeclarationDetail" = "DeclarationDetail",
  *      "DeclareAnimalFlag" = "DeclareAnimalFlag",
  *      "DeclareArrival" = "DeclareArrival",
  *      "DeclareBirth" = "DeclareBirth",
@@ -33,7 +32,6 @@ use Symfony\Component\Validator\Constraints as Assert;
  *   }
  * )
  * @JMS\Discriminator(field = "type", disabled=false, map = {
- *                      "DeclarationDetail" : "AppBundle\Entity\DeclarationDetail",
  *                      "DeclareAnimalFlag" : "AppBundle\Entity\DeclareAnimalFlag",
  *                         "DeclareArrival" : "AppBundle\Entity\DeclareArrival",
  *                           "DeclareBirth" : "AppBundle\Entity\DeclareBirth",
