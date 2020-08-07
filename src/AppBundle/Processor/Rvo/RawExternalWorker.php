@@ -5,24 +5,38 @@ namespace AppBundle\Processor\Rvo;
 
 
 use AppBundle\Enumerator\HttpMethod;
+use AppBundle\Enumerator\ProcessType;
+use AppBundle\Exception\FeatureNotAvailableHttpException;
 use AppBundle\Exception\Rvo\RvoExternalWorkerException;
-use AppBundle\Processor\SqsProcessorInterface;
+use AppBundle\Service\AwsQueueServiceBase;
 use AppBundle\Service\AwsRawExternalSqsService;
 use AppBundle\Service\AwsRawInternalSqsService;
 use AppBundle\Util\CurlUtil;
 use AppBundle\Util\RvoUtil;
+use Aws\Result;
 use Curl\Curl;
 use Psr\Log\LoggerInterface;
+use Throwable;
 
-class RawExternalWorker implements SqsProcessorInterface
+/**
+ * The Raw External Worker only deals with the raw xml request body and response body.
+ * Therefore it can be kept very simple.
+ *
+ * Class RawExternalWorker
+ * @package AppBundle\Processor\Rvo
+ */
+class RawExternalWorker extends SqsRvoProcessorBase
 {
+    const PROCESS_TYPE = ProcessType::SQS_RAW_EXTERNAL_WORKER;
+    const LOOP_DELAY_SECONDS = 1;
+
+    // This number should not be too big, too prevent too severe memory leaks
+    const MAX_MESSAGES_PER_PROCESS_LIMIT = 50;
+
     /** @var AwsRawExternalSqsService */
     private $rawExternalQueueService;
     /** @var AwsRawInternalSqsService */
     private $rawInternalQueueService;
-
-    /** @var LoggerInterface */
-    private $logger;
 
     /** @var string */
     protected $rvoIrBaseUrl;
@@ -40,10 +54,10 @@ class RawExternalWorker implements SqsProcessorInterface
         string $rvoIrPassword
     )
     {
+        $this->queueLogger = $logger;
+
         $this->rawExternalQueueService = $rawExternalQueueService;
         $this->rawInternalQueueService = $rawInternalQueueService;
-
-        $this->logger = $logger;
 
         $this->rvoIrBaseUrl = $rvoIrBaseUrl;
         $this->rvoIrUserName = $rvoIrUserName;
@@ -53,25 +67,68 @@ class RawExternalWorker implements SqsProcessorInterface
 
     public function run()
     {
-        try {
-            // TODO Don't loop to prevent memory leaks
-        } catch (\Exception $exception) {
-            $this->logger->error($exception->getMessage());
-            $this->logger->error($exception->getTraceAsString());
+        if (!$this->initializeProcessLocker()) {
+            return;
+        }
 
-            // Move message to error queue
+        if ($this->rawInternalQueueService->isQueueEmpty()) {
+
+            /*
+             * WARNING!
+             * Removing this sleep while calling this function in a loop
+             * will cause a huge amount of calls to the queue and a huge AWS bill!
+             */
+            sleep(self::LOOP_DELAY_SECONDS);
+
+        } else {
+
+            $this->process();
+
+        }
+
+        $this->unlockProcess();
+    }
+
+
+    private function process()
+    {
+        $this->messageCount = 0;
+
+        try {
+
+            do {
+
+                $response = $this->rawExternalQueueService->getNextMessage();
+                $xmlRequestBody = AwsQueueServiceBase::getMessageBodyFromResponse($response, false);
+                if ($xmlRequestBody) {
+                    $this->processNextMessage($response);
+                } else {
+                    $this->processEmptyMessage($this->rawExternalQueueService, $response);
+                }
+
+            } while (
+                $xmlRequestBody &&
+                $this->messageCount <= self::MAX_MESSAGES_PER_PROCESS_LIMIT &&
+                !$this->rawExternalQueueService->isQueueEmpty()
+            );
+
+        } catch (Throwable $e) {
+            $this->logException($e);
+            $this->unlockProcess();
         }
     }
 
 
-    private function sendRequestToRvo()
+    private function processNextMessage(Result $queueMessage)
     {
-        $xmlRequestBody = 'read it from the external queue';
-        $requestType = 'get from TaskType key in message';
+        $this->queueLogger->debug('New '.self::PROCESS_TYPE.' message found!');
 
-        $httpMethod = RvoUtil::REQUEST_TYPES[RvoUtil::HTTP_METHOD];
-        $rvoPath = RvoUtil::REQUEST_TYPES[RvoUtil::RVO_PATH];
-        $url = $this->rvoIrBaseUrl . $rvoPath;
+        $requestType = $this->getRequestType($queueMessage);
+        $xmlRequestBody = AwsQueueServiceBase::getMessageBodyFromResponse($queueMessage, false);
+        $requestId = AwsQueueServiceBase::getMessageId($queueMessage);
+
+        $httpMethod = RvoUtil::getHttpMethod($requestType);
+        $url = RvoUtil::getRvoUrl($requestType, $this->rvoIrBaseUrl);
 
         switch ($httpMethod) {
             case HttpMethod::GET:
@@ -81,17 +138,24 @@ class RawExternalWorker implements SqsProcessorInterface
                 $curl = $this->post($url, $xmlRequestBody);
                 break;
             default:
-                throw new \Exception(
-                    'Http Method not implemented yet '.$httpMethod. ' for requestType '. $requestType
-                );
+                $errorMessage = 'Unsupported RVO HTTP Method for raw external worker '.$httpMethod;
+                $this->queueLogger->emergency($errorMessage);
+                throw new FeatureNotAvailableHttpException($this->translator, 'Given HttpMethod: '.$httpMethod);
         }
 
-        if (!CurlUtil::is200Response($curl)) {
-            throw new RvoExternalWorkerException($curl->response, $curl->getHttpStatus());
+        if (CurlUtil::is200Response($curl)) {
+            // Success response
+            $this->rawInternalQueueService->send($curl->getResponse(), $requestType, $requestId);
+
+        } else {
+            // Failed response
+            $this->logException(new RvoExternalWorkerException($curl->response, $curl->getHttpStatus()));
+            $this->rawExternalQueueService->sendToErrorQueue($xmlRequestBody, $requestType, $requestId);
         }
 
-        $rvoXmlResponseContent = $curl->getResponse();
-        // TODO send it to the INTERNAL QUEUE
+        $this->rawExternalQueueService->deleteMessage($queueMessage);
+
+        $this->messageCount++;
     }
 
 

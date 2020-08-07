@@ -20,4 +20,15 @@ class RvoUtil
             ]
     ];
 
+    public static function getRvoUrl(string $requestType, string $rvoIrBaseUrl): string
+    {
+        $rvoPath = RvoUtil::REQUEST_TYPES[$requestType][RvoUtil::RVO_PATH];
+        return $rvoIrBaseUrl . $rvoPath;
+    }
+
+    public static function getHttpMethod(string $requestType): string
+    {
+        return RvoUtil::REQUEST_TYPES[$requestType][RvoUtil::HTTP_METHOD];
+    }
+
 }

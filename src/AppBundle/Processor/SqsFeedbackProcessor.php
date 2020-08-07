@@ -16,7 +16,7 @@ use AppBundle\Service\Worker\SyncHealthCheckProcessor;
 use AppBundle\Util\ArrayUtil;
 use Aws\Result;
 use Monolog\Logger;
-use Symfony\Component\Translation\TranslatorInterface;
+use Throwable;
 
 class SqsFeedbackProcessor extends SqsProcessorBase
 {
@@ -25,8 +25,6 @@ class SqsFeedbackProcessor extends SqsProcessorBase
 
     /** @var AwsFeedbackQueueService */
     private $feedbackQueueService;
-    /** @var TranslatorInterface */
-    private $translator;
 
     /** @var SyncAnimalRelocationProcessor */
     private $syncAnimalRelocationProcessor;
@@ -38,7 +36,6 @@ class SqsFeedbackProcessor extends SqsProcessorBase
 
     public function __construct(AwsFeedbackQueueService $feedbackQueueService,
                                 Logger $queueLogger,
-                                TranslatorInterface $translator,
                                 SyncAnimalRelocationProcessor $syncAnimalRelocationProcessor,
                                 SyncHealthCheckProcessor $syncHealthCheckProcessor,
                                 BatchInvoiceService $batchInvoiceService
@@ -47,7 +44,6 @@ class SqsFeedbackProcessor extends SqsProcessorBase
         $this->queueLogger = $queueLogger;
 
         $this->feedbackQueueService = $feedbackQueueService;
-        $this->translator = $translator;
 
         $this->syncAnimalRelocationProcessor = $syncAnimalRelocationProcessor;
         $this->syncHealthCheckProcessor = $syncHealthCheckProcessor;
@@ -89,7 +85,7 @@ class SqsFeedbackProcessor extends SqsProcessorBase
                 }
             }
 
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->logException($e);
             $this->unlockProcess();
         }
@@ -111,11 +107,6 @@ class SqsFeedbackProcessor extends SqsProcessorBase
     {
         $this->queueLogger->debug('New '.self::PROCESS_TYPE.' message found!');
         $taskTypeName = !empty($queueMessage) ? AwsQueueServiceBase::getTaskType($queueMessage) : null;
-
-        if (!$taskTypeName) {
-            throw new SqsMessageMissingTaskTypeException();
-        }
-
         $taskType = ArrayUtil::get($taskTypeName, SqsCommandType::getConstants(), null);
 
         switch ($taskType) {

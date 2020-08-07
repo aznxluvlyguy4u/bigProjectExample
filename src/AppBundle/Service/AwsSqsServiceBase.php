@@ -26,7 +26,7 @@ abstract class AwsSqsServiceBase implements QueueServiceInterface
     const MESSAGE_ID = 'MessageId';
 
     /** @var SqsClient */
-    protected $queueService;
+    protected $sqlClient;
 
     /** @var string */
     protected $queueUrl;
@@ -54,7 +54,7 @@ abstract class AwsSqsServiceBase implements QueueServiceInterface
                                 $animalEnvType, $slot
     )
     {
-        $this->queueService = $sqsService;
+        $this->sqlClient = $sqsService->getSqlClient();
 
         if ($currentEnvironment === Environment::TEST) { $selectedEnvironment = $currentEnvironment; }
         $this->selectedEnvironment = $selectedEnvironment;
@@ -73,7 +73,7 @@ abstract class AwsSqsServiceBase implements QueueServiceInterface
      */
     public function createQueueUrl($queueId)
     {
-        $result = $this->queueService->createQueue(array('QueueName' => $queueId));
+        $result = $this->sqlClient->createQueue(array('QueueName' => $queueId));
         return $result->get('QueueUrl');
     }
 
@@ -95,7 +95,7 @@ abstract class AwsSqsServiceBase implements QueueServiceInterface
     {
         EnvUtil::validateAnimalTypeEnv($animalEnvType);
         EnvUtil::validateEnvironment($environment);
-        return sprintf('nsfo_%s_%s_%s_%s', $environment, $slot, $animalEnvType, self::QUEUE_TYPE);
+        return sprintf('nsfo-%s-%s-%s-%s', $environment, $slot, $animalEnvType, static::QUEUE_TYPE);
     }
 
 
@@ -105,7 +105,7 @@ abstract class AwsSqsServiceBase implements QueueServiceInterface
      */
     protected function parseErrorQueueId($queueId): string
     {
-        return $queueId.'_error';
+        return $queueId.'-error';
     }
 
 
@@ -154,7 +154,7 @@ abstract class AwsSqsServiceBase implements QueueServiceInterface
         }
 
         $message = $this->createMessage($queueUrl, $messageBody, $requestType);
-        $response = $this->queueService->sendMessage($message);
+        $response = $this->sqlClient->sendMessage($message);
 
         return $this->responseHandler($response);
     }
@@ -175,7 +175,7 @@ abstract class AwsSqsServiceBase implements QueueServiceInterface
         }
 
         $message = $this->createMessage($this->queueUrl, $messageBody, $requestType, $requestId);
-        $response = $this->queueService->sendMessage($message);
+        $response = $this->sqlClient->sendMessage($message);
 
         return $this->responseHandler($response);
     }
@@ -243,7 +243,7 @@ abstract class AwsSqsServiceBase implements QueueServiceInterface
      */
     private function getNextMessageBase($queueUrl, $messageAttributeNames)
     {
-        return $this->queueService->receiveMessage([
+        return $this->sqlClient->receiveMessage([
             'QueueUrl' => $queueUrl,
             'MessageAttributeNames' => $messageAttributeNames,
         ]);
@@ -253,9 +253,9 @@ abstract class AwsSqsServiceBase implements QueueServiceInterface
     /**
      * @return string
      */
-    public function getQueueService()
+    public function getSqlClient()
     {
-        return $this->queueService;
+        return $this->sqlClient;
     }
 
 
@@ -301,10 +301,16 @@ abstract class AwsSqsServiceBase implements QueueServiceInterface
             $receiptHandleOrAwsResult = $receiptHandleOrAwsResult['Messages'][0]['ReceiptHandle'];
         }
 
-        return $this->queueService->deleteMessage([
+        return $this->sqlClient->deleteMessage([
             'QueueUrl' => $queueUrl, // REQUIRED
             'ReceiptHandle' => $receiptHandleOrAwsResult, // REQUIRED
         ]);
+    }
+
+
+    public function isQueueEmpty(): bool
+    {
+        return $this->getSizeOfQueue() == 0;
     }
 
 
@@ -349,7 +355,7 @@ abstract class AwsSqsServiceBase implements QueueServiceInterface
     private function getSizeOfQueueBase($queueUrl)
     {
         /** @var AbstractModel $result */
-        $result = $this->queueService->getQueueAttributes([
+        $result = $this->sqlClient->getQueueAttributes([
             'QueueUrl' => $queueUrl,
             'AttributeNames' => [
                 AwsSqs::APPROXIMATE_MESSAGE_NAMESPACE

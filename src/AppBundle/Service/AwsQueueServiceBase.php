@@ -5,9 +5,13 @@ namespace AppBundle\Service;
 use AppBundle\Constant\AwsSqs;
 use AppBundle\Constant\Environment;
 use AppBundle\Enumerator\QueueSuffix;
+use AppBundle\Exception\Sqs\SqsMessageInvalidTaskTypeException;
+use AppBundle\Exception\Sqs\SqsMessageMissingMessageIdException;
+use AppBundle\Exception\Sqs\SqsMessageMissingTaskTypeException;
 use AppBundle\Util\ArrayUtil;
 use Aws\Api\AbstractModel;
 use Aws\Credentials\Credentials;
+use Aws\Result as AwsResult;
 use Aws\Sqs\SqsClient;
 
 /**
@@ -278,7 +282,7 @@ abstract class AwsQueueServiceBase implements QueueServiceInterface
     /**
      * @return string
      */
-    public function getQueueService()
+    public function getSqlClient()
     {
         return $this->queueService;
     }
@@ -437,15 +441,41 @@ abstract class AwsQueueServiceBase implements QueueServiceInterface
 
 
     /**
-     * @param \Aws\Result $messageResponse
-     * @return null|string
+     * @param AwsResult $messageResponse
+     * @param array $supportedRequestTypes is empty this validation is skipped
+     * @return string
      */
-    public static function getTaskType($messageResponse): ?string
+    public static function getTaskType(AwsResult $messageResponse, array $supportedRequestTypes = []): string
     {
         $messageAttributes = AwsQueueServiceBase::getMessageAttributes($messageResponse);
-        return is_array($messageAttributes) ?
+        $taskType = is_array($messageAttributes) ?
             ArrayUtil::get(self::TASK_TYPE, $messageAttributes,null) :
             null;
+
+        if (!$taskType) {
+            throw new SqsMessageMissingTaskTypeException();
+        }
+
+        if (!empty($supportedRequestTypes) && in_array($taskType, $supportedRequestTypes)) {
+            throw new SqsMessageInvalidTaskTypeException($taskType);
+        }
+
+        return $taskType;
+    }
+
+
+    public static function getMessageId(AwsResult $messageResponse): string
+    {
+        $messageAttributes = AwsQueueServiceBase::getMessageAttributes($messageResponse);
+        $messageId = is_array($messageAttributes) ?
+            ArrayUtil::get(self::MESSAGE_ID, $messageAttributes,null) :
+            null;
+
+        if (!$messageId) {
+            throw new SqsMessageMissingMessageIdException();
+        }
+
+        return $messageId;
     }
 
 

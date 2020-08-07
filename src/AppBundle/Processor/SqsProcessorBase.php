@@ -7,6 +7,7 @@ namespace AppBundle\Processor;
 use AppBundle\Service\ProcessLockerInterface;
 use Monolog\Logger;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\Translation\TranslatorInterface;
 
 abstract class SqsProcessorBase implements SqsProcessorInterface
 {
@@ -27,6 +28,8 @@ abstract class SqsProcessorBase implements SqsProcessorInterface
     protected $exceptionLogger;
     /** protected ProcessLockerInterface */
     protected $processLocker;
+    /** @var TranslatorInterface */
+    protected $translator;
 
     /** @var int */
     private $processId;
@@ -38,15 +41,18 @@ abstract class SqsProcessorBase implements SqsProcessorInterface
      *
      * @param Logger $exceptionLogger
      * @param ProcessLockerInterface $processLocker
+     * @param TranslatorInterface $translator
      */
     public function setBaseServices(
 
         Logger $exceptionLogger,
-        ProcessLockerInterface $processLocker
+        ProcessLockerInterface $processLocker,
+        TranslatorInterface $translator
     )
     {
         $this->exceptionLogger = $exceptionLogger;
         $this->processLocker = $processLocker;
+        $this->translator = $translator;
     }
 
     /**
@@ -55,7 +61,7 @@ abstract class SqsProcessorBase implements SqsProcessorInterface
     protected function initializeProcessLocker(): bool
     {
         $isLockedResult = $this->processLocker->isProcessLimitNotReachedCheckForQueueService(
-            self::PROCESS_TYPE,
+            static::PROCESS_TYPE,
             $this->queueLogger
         );
 
@@ -67,7 +73,7 @@ abstract class SqsProcessorBase implements SqsProcessorInterface
     protected function unlockProcess()
     {
         $this->processLocker->unlockProcessForQueueService(
-            self::PROCESS_TYPE,
+            static::PROCESS_TYPE,
             $this->processId,
             $this->queueLogger
         );
@@ -75,11 +81,11 @@ abstract class SqsProcessorBase implements SqsProcessorInterface
 
     protected function logException(\Throwable $exception)
     {
-        $this->queueLogger->error(self::ERROR_LOG_HEADER);
+        $this->queueLogger->error(static::ERROR_LOG_HEADER);
         $this->queueLogger->error($exception->getMessage());
         $this->queueLogger->error($exception->getTraceAsString());
 
-        $this->exceptionLogger->error(self::ERROR_LOG_HEADER);
+        $this->exceptionLogger->error(static::ERROR_LOG_HEADER);
         $this->exceptionLogger->error($exception->getMessage());
         $this->exceptionLogger->error($exception->getTraceAsString());
     }

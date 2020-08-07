@@ -62,7 +62,7 @@ interface QueueServiceInterface
     /**
      * @return string
      */
-    public function getQueueService();
+    public function getSqlClient();
 
 
     /**
