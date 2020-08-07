@@ -20,6 +20,7 @@ services:
         class: AppBundle\Service\DataFix\GenderChangeCommandService
         arguments:
           - '@doctrine.orm.entity_manager'
+          - '@logger'
 
     app.cli.internal_worker.depart:
         class: AppBundle\Service\Worker\DepartInternalWorkerCliOptions
