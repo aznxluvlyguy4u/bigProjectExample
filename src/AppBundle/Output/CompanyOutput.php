@@ -79,6 +79,7 @@ class CompanyOutput
                 'twinfield_office_code' => Utils::fillNull($company['twinfieldOfficeCode']),
                 'twinfield_administration_code' => Utils::fillNull($company['twinfieldOfficeCode']),
                 'company_name' => Utils::fillNull($company['companyName']),
+                'created_at' => Utils::fillNull($company['createdAt']),
                 'subscription_date' => Utils::fillNull($company['subscriptionDate']),
                 'animal_health_subscription' => Utils::fillNull($company['animalHealthSubscription']),
                 'vat_number' => Utils::fillNull($company['vatNumber']),

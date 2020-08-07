@@ -349,6 +349,9 @@ class Company
      * @var DateTime
      *
      * @ORM\Column(type="datetime", nullable=true)
+     * @JMS\Groups({
+     *     "DOSSIER"
+     * })
      */
     private $createdAt;
 
