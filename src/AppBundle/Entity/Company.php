@@ -330,6 +330,26 @@ class Company
      */
     private $twinfieldOfficeCode;
 
+    /**
+     * @var string
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Type("string")
+     */
+    private $debtorNumberYear;
+
+    /**
+     * @var string
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Type("string")
+     */
+    private $debtorNumberCompanyType;
+
+    /**
+     * @var string
+     * @ORM\Column(type="string", nullable=true)
+     * @JMS\Type("string")
+     */
+    private $debtorNumberOrdinal;
 
     /**
      * @var ResultTableAnimalCounts|null
@@ -700,10 +720,13 @@ class Company
 
     /**
      * @param string $debtorNumber
+     * @return Company
      */
     public function setDebtorNumber($debtorNumber)
     {
         $this->debtorNumber = StringUtil::trimIfNotNull($debtorNumber);
+
+        return $this;
     }
 
     /**
@@ -928,6 +951,70 @@ class Company
         $this->twinfieldOfficeCode = $twinfieldOfficeCode;
     }
 
+    /**
+     * @return string
+     */
+    public function getDebtorNumberYear(): string
+    {
+        return $this->debtorNumberYear;
+    }
+
+    /**
+     * @param string $debtorNumberYear
+     * @return Company
+     */
+    public function setDebtorNumberYear(string $debtorNumberYear): self
+    {
+        $this->debtorNumberYear = $debtorNumberYear;
+
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getDebtorNumberCompanyType(): string
+    {
+        return $this->debtorNumberCompanyType;
+    }
+
+    /**
+     * @param string $debtorNumberCompanyType
+     * @return Company
+     */
+    public function setDebtorNumberCompanyType(string $debtorNumberCompanyType): self
+    {
+        $this->debtorNumberCompanyType = $debtorNumberCompanyType;
+
+        return $this;
+    }
+
+    /**
+     * @return integer
+     */
+    public function getDebtorNumberOrdinal()
+    {
+        return $this->debtorNumberOrdinal;
+    }
+
+    /**
+     * @param integer $debtorNumberOrdinal
+     * @return Company
+     */
+    public function setDebtorNumberOrdinal($debtorNumberOrdinal): self
+    {
+        $this->debtorNumberOrdinal = $debtorNumberOrdinal;
+
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getDebtorCode(): string
+    {
+        return $this->debtorNumberYear."-".$this->debtorNumberCompanyType."-".$this->debtorNumberOrdinal;
+    }
 
     /**
      * @param bool $onlyReturnActiveUbns
