@@ -12,7 +12,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Serializer\Encoder\XmlEncoder;
 
-class InternalWorkerActionBase
+abstract class RawInternalWorkerActionBase
 {
     /** @var EntityManagerInterface */
     protected $em;
@@ -21,36 +21,14 @@ class InternalWorkerActionBase
     /** @var BaseSerializer */
     protected $serializer;
 
-
-    /**
-     * @required
-     *
-     * @param EntityManagerInterface $em
-     */
-    public function setEntityManager(EntityManagerInterface $em)
-    {
-        $this->em = $em;
-    }
-
-
-    /**
-     * @required
-     *
-     * @param BaseSerializer $serializer
-     */
-    public function setSerializer(BaseSerializer $serializer): void
+    public function __construct(
+        BaseSerializer $serializer,
+        EntityManagerInterface $em,
+        LoggerInterface $logger
+    )
     {
         $this->serializer = $serializer;
-    }
-
-
-    /**
-     * @required
-     *
-     * @param LoggerInterface $logger
-     */
-    public function setLogger(LoggerInterface $logger): void
-    {
+        $this->em = $em;
         $this->logger = $logger;
     }
 

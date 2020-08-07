@@ -59,7 +59,7 @@ abstract class DeclareControllerServiceBase extends ControllerServiceBase
 {
     /** @var AwsExternalQueueService */
     protected $externalQueueService;
-    /** @var AwsRawExternalQueueService */
+    /** @var AwsRawExternalSqsService */
     protected $rawExternalQueueService;
     /** @var IRSerializer */
     protected $irSerializer;
@@ -69,9 +69,9 @@ abstract class DeclareControllerServiceBase extends ControllerServiceBase
     /**
      * @required
      *
-     * @param AwsRawExternalQueueService $rawExternalQueueService
+     * @param AwsRawExternalSqsService $rawExternalQueueService
      */
-    public function setRawExternalQueueService(AwsRawExternalQueueService $rawExternalQueueService)
+    public function setRawExternalQueueService(AwsRawExternalSqsService $rawExternalQueueService)
     {
         $this->rawExternalQueueService = $rawExternalQueueService;
     }

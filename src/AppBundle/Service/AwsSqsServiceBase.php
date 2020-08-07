@@ -17,7 +17,7 @@ use Aws\Sqs\SqsClient;
  * Class AWSQueueServiceBase
  * @package AppBundle\Service
  */
-abstract class AwsQueueServiceBaseV2 implements QueueServiceInterface
+abstract class AwsSqsServiceBase implements QueueServiceInterface
 {
     // Set the queue type in the implemented service
     const QUEUE_TYPE = null;

@@ -1,20 +1,33 @@
 <?php
 
 
-namespace AppBundle\Service\Rvo\InternalWorker;
+namespace AppBundle\Processor\Rvo;
 
 
 use AppBundle\Enumerator\RequestType;
+use AppBundle\Service\AwsRawInternalSqsService;
 use AppBundle\Worker\Logic\DeclareAnimalFlagAction;
 use Psr\Log\LoggerInterface;
 
-class InternalWorker
+class RawInternalWorker
 {
+    /** @var AwsRawInternalSqsService */
+    private $rawInternalQueueService;
+
     /** @var LoggerInterface */
     private $logger;
 
     /** @var DeclareAnimalFlagAction  */
     private $declareAnimalFlagAction;
+
+    public function __construct(
+        AwsRawInternalSqsService $rawInternalQueueService,
+        LoggerInterface $logger
+    )
+    {
+        $this->rawInternalQueueService = $rawInternalQueueService;
+        $this->logger = $logger;
+    }
 
     /**
      * @required
@@ -24,16 +37,6 @@ class InternalWorker
     public function setDeclareAnimalFlagAction(DeclareAnimalFlagAction $service)
     {
         $this->declareAnimalFlagAction = $service;
-    }
-
-    /**
-     * @required
-     *
-     * @param LoggerInterface $logger
-     */
-    public function setLogger(LoggerInterface $logger): void
-    {
-        $this->logger = $logger;
     }
 
     public function run()

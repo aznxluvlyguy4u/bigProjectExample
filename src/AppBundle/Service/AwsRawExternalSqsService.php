@@ -9,7 +9,7 @@ use AppBundle\Enumerator\AwsQueueType;
  * Class AwsRawExternalQueueService
  * @package AppBundle\Service
  */
-class AwsRawExternalQueueService extends AwsQueueServiceBaseV2
+class AwsRawExternalSqsService extends AwsSqsServiceBase
 {
     const QUEUE_TYPE = AwsQueueType::EXTERNAL_RAW;
 }

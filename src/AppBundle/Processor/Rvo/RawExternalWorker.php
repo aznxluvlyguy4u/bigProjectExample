@@ -1,18 +1,27 @@
 <?php
 
 
-namespace AppBundle\Service\Rvo\ExternalWorker;
+namespace AppBundle\Processor\Rvo;
 
 
 use AppBundle\Enumerator\HttpMethod;
 use AppBundle\Exception\Rvo\RvoExternalWorkerException;
+use AppBundle\Service\AwsRawExternalSqsService;
+use AppBundle\Service\AwsRawInternalSqsService;
 use AppBundle\Util\CurlUtil;
 use AppBundle\Util\RvoUtil;
 use Curl\Curl;
 use Psr\Log\LoggerInterface;
 
-class ExternalWorker
+class RawExternalWorker
 {
+    /** @var AwsRawExternalSqsService */
+    private $rawExternalQueueService;
+    /** @var AwsRawInternalSqsService */
+    private $rawInternalQueueService;
+
+    /** @var LoggerInterface */
+    private $logger;
 
     /** @var string */
     protected $rvoIrBaseUrl;
@@ -20,17 +29,21 @@ class ExternalWorker
     private $rvoIrUserName;
     /** @var string */
     private $rvoIrPassword;
-    /** @var LoggerInterface */
-    private $logger;
 
     public function __construct(
+        AwsRawExternalSqsService $rawExternalQueueService,
+        AwsRawInternalSqsService $rawInternalQueueService,
         LoggerInterface $logger,
         string $rvoIrBaseUrl,
         string $rvoIrUserName,
         string $rvoIrPassword
     )
     {
+        $this->rawExternalQueueService = $rawExternalQueueService;
+        $this->rawInternalQueueService = $rawInternalQueueService;
+
         $this->logger = $logger;
+
         $this->rvoIrBaseUrl = $rvoIrBaseUrl;
         $this->rvoIrUserName = $rvoIrUserName;
         $this->rvoIrPassword = $rvoIrPassword;

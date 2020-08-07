@@ -4,7 +4,7 @@
 namespace AppBundle\Worker\Logic;
 
 
-interface InternalWorkerLogicInterface
+interface RawInternalWorkerLogicInterface
 {
     function process(string $rvoXmlResponseContent);
 }

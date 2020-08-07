@@ -91,7 +91,10 @@ services:
           - '%animal_type_env%'
           - '%environment_slot%'
 
-    AppBundle\Service\AwsRawExternalQueueService:
+    AppBundle\Service\AwsRawExternalSqsService:
+      parent: app.aws.queueservice.workers_base
+
+    AppBundle\Service\AwsRawInternalSqsService:
       parent: app.aws.queueservice.workers_base
 
     AppBundle\Service\AwsFeedbackQueueService:
@@ -879,7 +882,7 @@ services:
               - '@AppBundle\Service\AwsExternalQueueService'
           - method: setRawExternalQueueService
             arguments:
-              - '@AppBundle\Service\AwsRawExternalQueueService'
+              - '@AppBundle\Service\AwsRawExternalSqsService'
 
     app.animal:
         parent: app.abstract_base.declare
@@ -1411,34 +1414,31 @@ services:
     AppBundle\Service\Rvo\SoapMessageBuilder\RvoDeclareAnimalFlagSoapMessageBuilder:
         parent: app.rvo.external.base
 
-    AppBundle\Service\Rvo\ExternalWorker\ExternalWorker:
+    AppBundle\Processor\Rvo\RawExternalWorker:
         arguments:
+          - '@AppBundle\Service\AwsRawExternalSqsService'
+          - '@AppBundle\Service\AwsRawInternalSqsService'
           - '@logger'
           - '%rvo_ir_base_url%'
           - '%rvo_ir_username%'
           - '%rvo_ir_password%'
 
-    AppBundle\Service\Rvo\InternalWorker\InternalWorker:
+    AppBundle\Processor\Rvo\RawInternalWorker:
+        arguments:
+          - '@AppBundle\Service\AwsRawInternalSqsService'
+          - '@logger'
         calls:
-          - method: setLogger
-            arguments:
-              - '@logger'
           - method: setDeclareAnimalFlagAction
             arguments:
               - '@AppBundle\Worker\Logic\DeclareAnimalFlagAction'
 
     app.rvo.logic:
         abstract: true
-        calls:
-          - method: setLogger
-            arguments:
-              - '@logger'
-          - method: setEntityManager
-            arguments:
-              - '@doctrine.orm.entity_manager'
-          - method: setSerializer
-            arguments:
-              - '@app.serializer.base'
+        lazy: true
+        arguments:
+          - '@app.serializer.base'
+          - '@doctrine.orm.entity_manager'
+          - '@logger'
 
     AppBundle\Worker\Logic\DeclareAnimalFlagAction:
         parent: app.rvo.logic

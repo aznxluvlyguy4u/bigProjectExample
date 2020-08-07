@@ -8,7 +8,7 @@ use AppBundle\Entity\DeclareAnimalFlag;
 use AppBundle\model\Rvo\Response\DiervlagMelding\VastleggenDiervlagMeldingResponse;
 use DateTime;
 
-class DeclareAnimalFlagAction extends InternalWorkerActionBase implements InternalWorkerLogicInterface
+class DeclareAnimalFlagAction extends RawInternalWorkerActionBase implements RawInternalWorkerLogicInterface
 {
     /**
      * @param string $rvoXmlResponseContent TODO read it from the internal queue
