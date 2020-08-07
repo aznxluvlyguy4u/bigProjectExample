@@ -6,6 +6,7 @@ namespace AppBundle\Processor\Rvo;
 
 use AppBundle\Enumerator\HttpMethod;
 use AppBundle\Exception\Rvo\RvoExternalWorkerException;
+use AppBundle\Processor\SqsProcessorInterface;
 use AppBundle\Service\AwsRawExternalSqsService;
 use AppBundle\Service\AwsRawInternalSqsService;
 use AppBundle\Util\CurlUtil;
@@ -13,7 +14,7 @@ use AppBundle\Util\RvoUtil;
 use Curl\Curl;
 use Psr\Log\LoggerInterface;
 
-class RawExternalWorker
+class RawExternalWorker implements SqsProcessorInterface
 {
     /** @var AwsRawExternalSqsService */
     private $rawExternalQueueService;

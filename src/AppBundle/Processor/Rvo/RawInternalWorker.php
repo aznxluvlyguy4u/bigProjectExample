@@ -5,11 +5,12 @@ namespace AppBundle\Processor\Rvo;
 
 
 use AppBundle\Enumerator\RequestType;
+use AppBundle\Processor\SqsProcessorInterface;
 use AppBundle\Service\AwsRawInternalSqsService;
 use AppBundle\Worker\Logic\DeclareAnimalFlagAction;
 use Psr\Log\LoggerInterface;
 
-class RawInternalWorker
+class RawInternalWorker implements SqsProcessorInterface
 {
     /** @var AwsRawInternalSqsService */
     private $rawInternalQueueService;

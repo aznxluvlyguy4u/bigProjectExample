@@ -804,17 +804,42 @@ services:
         tags:
           - {name: 'enqueue.client.processor'}
 
+    app.sqs.processor.base:
+        calls:
+          - method: setBaseServices
+            arguments:
+              - '@logger'
+              - '@AppBundle\Service\ProcessLocker'
+
     AppBundle\Processor\SqsFeedbackProcessor:
+        parent: 'app.sqs.processor.base'
         arguments:
           - '@AppBundle\Service\AwsFeedbackQueueService'
           - '@monolog.logger.feedback_worker'
-          - '@logger'
-          - '@AppBundle\Service\ProcessLocker'
-          - '@AppBundle\Service\SettingsContainer'
           - '@translator'
           - '@AppBundle\Service\Worker\SyncAnimalRelocationProcessor'
           - '@AppBundle\Service\Worker\SyncHealthCheckProcessor'
           - '@AppBundle\Service\Invoice\BatchInvoiceService'
+
+    AppBundle\Processor\Rvo\RawExternalWorker:
+      arguments:
+        - '@AppBundle\Service\AwsRawExternalSqsService'
+        - '@AppBundle\Service\AwsRawInternalSqsService'
+        - '@AppBundle\Service\ProcessLocker'
+        - '@logger'
+        - '%rvo_ir_base_url%'
+        - '%rvo_ir_username%'
+        - '%rvo_ir_password%'
+
+    AppBundle\Processor\Rvo\RawInternalWorker:
+      arguments:
+        - '@AppBundle\Service\AwsRawInternalSqsService'
+        - '@AppBundle\Service\ProcessLocker'
+        - '@logger'
+      calls:
+        - method: setDeclareAnimalFlagAction
+          arguments:
+            - '@AppBundle\Worker\Logic\DeclareAnimalFlagAction'
 
     app.abstract_base.worker_task_processor:
         abstract: true
@@ -1390,6 +1415,8 @@ services:
     AppBundle\Service\SettingsContainer:
         arguments:
           - '%max_feedback_workers%'
+          - '%max_raw_external_workers%'
+          - '%max_raw_internal_workers%'
 
 
     app.component.message.builder.base:
@@ -1413,24 +1440,6 @@ services:
 
     AppBundle\Service\Rvo\SoapMessageBuilder\RvoDeclareAnimalFlagSoapMessageBuilder:
         parent: app.rvo.external.base
-
-    AppBundle\Processor\Rvo\RawExternalWorker:
-        arguments:
-          - '@AppBundle\Service\AwsRawExternalSqsService'
-          - '@AppBundle\Service\AwsRawInternalSqsService'
-          - '@logger'
-          - '%rvo_ir_base_url%'
-          - '%rvo_ir_username%'
-          - '%rvo_ir_password%'
-
-    AppBundle\Processor\Rvo\RawInternalWorker:
-        arguments:
-          - '@AppBundle\Service\AwsRawInternalSqsService'
-          - '@logger'
-        calls:
-          - method: setDeclareAnimalFlagAction
-            arguments:
-              - '@AppBundle\Worker\Logic\DeclareAnimalFlagAction'
 
     app.rvo.logic:
         abstract: true
