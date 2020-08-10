@@ -662,6 +662,9 @@ services:
         parent: app.treatment.base
         class: AppBundle\Service\TreatmentService
         calls:
+          - method: setRvoDeclareAnimalFlagSoapMessageBuilder
+            arguments:
+              - '@AppBundle\Service\Rvo\SoapMessageBuilder\RvoDeclareAnimalFlagSoapMessageBuilder'
           - method: setAnimalFlagMessageBuilder
             arguments:
               - '@AppBundle\Component\AnimalFlagMessageBuilder'

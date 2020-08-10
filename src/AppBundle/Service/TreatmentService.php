@@ -45,6 +45,12 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
     /** @var RvoDeclareAnimalFlagSoapMessageBuilder */
     private $animalFlagSoapMessageBuilder;
 
+    /** @var AnimalFlagMessageBuilder */
+    private $animalFlagMessageBuilder;
+
+    /** @var QFeverService */
+    private $qFeverService;
+
     /**
      * @required
      *
@@ -55,11 +61,25 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
         $this->animalFlagSoapMessageBuilder = $animalFlagSoapMessageBuilder;
     }
 
-    /** @var AnimalFlagMessageBuilder */
-    private $animalFlagMessageBuilder;
+    /**
+     * @required Set at initialization
+     *
+     * @param $animalFlagMessageBuilder
+     */
+    public function setAnimalFlagMessageBuilder(AnimalFlagMessageBuilder $animalFlagMessageBuilder)
+    {
+        $this->animalFlagMessageBuilder = $animalFlagMessageBuilder;
+    }
 
-    /** @var QFeverService */
-    private $qFeverService;
+    /**
+     * @required Set at initialization
+     *
+     * @param  QFeverService  $qFeverService
+     */
+    public function setQFeverService(QFeverService $qFeverService)
+    {
+        $this->qFeverService = $qFeverService;
+    }
 
     /**
      * @param Request $request
@@ -221,7 +241,7 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
 
         if ($treatmentTemplate instanceof QFever) {
             if ($location->isDutchLocation()) {
-                $this->createQFeverByRvoPostRequest();
+                $this->createQFeverByRvoPostRequest($treatment, $treatmentTemplate, $existingAnimals, $client, $loggedInUser);
             } else {
                 $this->createCompletedQFeverMessage($treatment, $existingAnimals, $loggedInUser);
             }
@@ -266,10 +286,10 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
                     ->setTreatment($treatment)
                 ;
 
-                $messageObject = $this->animalFlagMessageBuilder->buildMessage($declareAnimalFlag, $client,
+                $declareAnimalFlag = $this->animalFlagMessageBuilder->buildMessage($declareAnimalFlag, $client,
                     $loggedInUser, $treatment->getLocation());
 
-                $this->getManager()->persist($messageObject);
+                $this->getManager()->persist($declareAnimalFlag);
 
                 $declareAnimalFlags[$declareAnimalFlag->getRequestId()] = [
                     'xml' => $this->animalFlagSoapMessageBuilder->parseSoapXmlRequestBody($declareAnimalFlag),
@@ -569,25 +589,5 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
     function getLocationTreatments(Request $request)
     {
         // TODO: Implement getLocationTreatments() method.
-    }
-
-    /**
-     * @required Set at initialization
-     *
-     * @param $animalFlagMessageBuilder
-     */
-    public function setAnimalFlagMessageBuilder(AnimalFlagMessageBuilder $animalFlagMessageBuilder)
-    {
-        $this->animalFlagMessageBuilder = $animalFlagMessageBuilder;
-    }
-
-    /**
-     * @required Set at initialization
-     *
-     * @param  QFeverService  $qFeverService
-     */
-    public function setQFeverService(QFeverService $qFeverService)
-    {
-        $this->qFeverService = $qFeverService;
     }
 }
