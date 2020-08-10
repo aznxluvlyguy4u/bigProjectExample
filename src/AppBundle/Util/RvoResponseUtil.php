@@ -10,19 +10,19 @@ use AppBundle\Enumerator\SuccessIndicator;
 
 class RvoResponseUtil
 {
-    public static function hasSuccessResponse(DeclareBaseResponseInterface $response): bool
+    public static function hasSuccessRvoResponseDetails(DeclareBaseResponseInterface $response): bool
     {
         return $response->getSuccessIndicator() === SuccessIndicator::J;
     }
 
-    public static function hasSuccessWithWarningResponse(DeclareBaseResponseInterface $response): bool
+    public static function hasSuccessWithWarningRvoResponseDetails(DeclareBaseResponseInterface $response): bool
     {
         return $response->getSuccessIndicator() === SuccessIndicator::J
             && $response->getErrorKindIndicator() === ErrorKindIndicator::W
             ;
     }
 
-    public static function hasFailedResponse(DeclareBaseResponseInterface $response): bool
+    public static function hasFailedRvoResponseDetails(DeclareBaseResponseInterface $response): bool
     {
         return $response->getSuccessIndicator() === SuccessIndicator::N;
     }
