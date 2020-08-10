@@ -76,17 +76,24 @@ class RawInternalWorker extends SqsRvoProcessorBase
     public function process()
     {
         $this->messageCount = 0;
+        $response = null;
 
         try {
 
             do {
 
+                $xmlRequestBody = null;
                 $response = $this->rawInternalQueueService->getNextMessage();
-                $xmlRequestBody = AwsQueueServiceBase::getMessageBodyFromResponse($response, false);
-                if ($xmlRequestBody) {
-                    $this->processNextMessage($response);
-                } else {
-                    $this->processEmptyMessage($this->rawInternalQueueService, $response);
+
+                if ($response) {
+
+                    $xmlRequestBody = AwsQueueServiceBase::getMessageBodyFromResponse($response, false);
+                    if ($xmlRequestBody) {
+                        $this->processNextMessage($response);
+                    } else {
+                        $this->processEmptyMessage($this->rawInternalQueueService, $response);
+                    }
+
                 }
 
             } while (
@@ -96,6 +103,11 @@ class RawInternalWorker extends SqsRvoProcessorBase
             );
 
         } catch (Throwable $e) {
+
+            if ($response) {
+                $this->rawInternalQueueService->moveMessageToErrorQueue($response);
+            }
+
             $this->logException($e);
             $this->unlockProcess();
         }
@@ -104,8 +116,12 @@ class RawInternalWorker extends SqsRvoProcessorBase
 
     private function processNextMessage(Result $queueMessage)
     {
+        $this->queueLogger->debug($this->logPrefix().'New message found!');
+
         $requestType = $this->getRequestType($queueMessage);
         $rvoXmlResponseContent = AwsQueueServiceBase::getMessageBodyFromResponse($queueMessage, false);
+
+        $this->queueLogger->debug($this->logPrefix()."RVO ResponseBody: $rvoXmlResponseContent");
 
         switch ($requestType) {
             case RequestType::DECLARE_ANIMAL_FLAG:
@@ -116,6 +132,8 @@ class RawInternalWorker extends SqsRvoProcessorBase
                 $this->queueLogger->emergency($errorMessage);
                 throw new FeatureNotAvailableHttpException($this->translator, 'Given RequestType: '.$requestType);
         }
+
+        $this->rawInternalQueueService->deleteMessage($queueMessage);
 
         $this->messageCount++;
     }

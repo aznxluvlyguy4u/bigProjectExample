@@ -71,7 +71,7 @@ class RawExternalWorker extends SqsRvoProcessorBase
             return;
         }
 
-        if ($this->rawInternalQueueService->isQueueEmpty()) {
+        if ($this->rawExternalQueueService->isQueueEmpty()) {
 
             /*
              * WARNING!
@@ -93,17 +93,24 @@ class RawExternalWorker extends SqsRvoProcessorBase
     private function process()
     {
         $this->messageCount = 0;
+        $response = null;
 
         try {
 
             do {
 
+                $xmlRequestBody = null;
                 $response = $this->rawExternalQueueService->getNextMessage();
-                $xmlRequestBody = AwsQueueServiceBase::getMessageBodyFromResponse($response, false);
-                if ($xmlRequestBody) {
-                    $this->processNextMessage($response);
-                } else {
-                    $this->processEmptyMessage($this->rawExternalQueueService, $response);
+
+                if ($response) {
+
+                    $xmlRequestBody = AwsQueueServiceBase::getMessageBodyFromResponse($response, false);
+                    if ($xmlRequestBody) {
+                        $this->processNextMessage($response);
+                    } else {
+                        $this->processEmptyMessage($this->rawExternalQueueService, $response);
+                    }
+
                 }
 
             } while (
@@ -113,6 +120,11 @@ class RawExternalWorker extends SqsRvoProcessorBase
             );
 
         } catch (Throwable $e) {
+
+            if ($response) {
+                $this->rawExternalQueueService->moveMessageToErrorQueue($response);
+            }
+
             $this->logException($e);
             $this->unlockProcess();
         }
@@ -121,11 +133,14 @@ class RawExternalWorker extends SqsRvoProcessorBase
 
     private function processNextMessage(Result $queueMessage)
     {
-        $this->queueLogger->debug('New '.self::PROCESS_TYPE.' message found!');
+        $this->queueLogger->debug($this->logPrefix().'New message found!');
 
         $requestType = $this->getRequestType($queueMessage);
         $xmlRequestBody = AwsQueueServiceBase::getMessageBodyFromResponse($queueMessage, false);
         $requestId = AwsQueueServiceBase::getMessageId($queueMessage);
+
+        $this->queueLogger->debug($this->logPrefix()."RequestId $requestId");
+        $this->queueLogger->debug($this->logPrefix()."RequestBody: $xmlRequestBody");
 
         $httpMethod = RvoUtil::getHttpMethod($requestType);
         $url = RvoUtil::getRvoUrl($requestType, $this->rvoIrBaseUrl);
@@ -139,12 +154,14 @@ class RawExternalWorker extends SqsRvoProcessorBase
                 break;
             default:
                 $errorMessage = 'Unsupported RVO HTTP Method for raw external worker '.$httpMethod;
-                $this->queueLogger->emergency($errorMessage);
+                $this->queueLogger->emergency($this->logPrefix().$errorMessage);
                 throw new FeatureNotAvailableHttpException($this->translator, 'Given HttpMethod: '.$httpMethod);
         }
 
         if (CurlUtil::is200Response($curl)) {
             // Success response
+            $this->queueLogger->debug($this->logPrefix()."Sending success response to raw internal queue");
+            $this->queueLogger->debug($this->logPrefix()."ResponseBody: ".$curl->getResponse());
             $this->rawInternalQueueService->send($curl->getResponse(), $requestType, $requestId);
 
         } else {
