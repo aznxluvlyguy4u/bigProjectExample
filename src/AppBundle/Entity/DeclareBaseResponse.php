@@ -17,7 +17,6 @@ use Symfony\Component\Validator\Constraints as Assert;
  * @ORM\Entity(repositoryClass="AppBundle\Entity\DeclareBaseResponseRepository")
  * @ORM\InheritanceType("JOINED")
  * @ORM\DiscriminatorColumn(name="type", type="string")
- * //TODO add new child classes to the DiscriminatorMap
  * @ORM\DiscriminatorMap(
  *   {
  *      "DeclareArrivalResponse" = "DeclareArrivalResponse",
@@ -53,6 +52,7 @@ abstract class DeclareBaseResponse implements DeclareBaseResponseInterface
     use EntityClassInfo;
 
     /**
+     * @var int
      * @ORM\Column(type="integer")
      * @ORM\Id
      * @ORM\GeneratedValue(strategy="IDENTITY")
@@ -64,6 +64,7 @@ abstract class DeclareBaseResponse implements DeclareBaseResponseInterface
     protected $id;
 
     /**
+     * @var string|null
      * @ORM\Column(type="string")
      * @Assert\Length(max = 20)
      * @Assert\NotBlank
@@ -76,6 +77,7 @@ abstract class DeclareBaseResponse implements DeclareBaseResponseInterface
     protected $requestId;
 
     /**
+     * @var string|null
      * @ORM\Column(type="string")
      * @Assert\Length(max = 20)
      * @Assert\NotBlank
@@ -185,81 +187,44 @@ abstract class DeclareBaseResponse implements DeclareBaseResponseInterface
      */
     public function __construct()
     {
-        $this->logDate = new \DateTime();
+        $this->logDate = new DateTime();
         $this->isRemovedByUser = $this->isRemovedByUser ?? false;
     }
 
-
-    /**
-     * Get id
-     *
-     * @return integer
-     */
-    public function getId()
+    public function getId(): string
     {
         return $this->id;
     }
 
-    /**
-     * Set messageId
-     *
-     * @param string $messageId
-     *
-     * @return DeclareBaseResponse
-     */
-    public function setMessageId($messageId)
+    public function setMessageId($messageId): DeclareBaseResponse
     {
         $this->messageId = $messageId;
-
         return $this;
     }
 
-    /**
-     * Get messageId
-     *
-     * @return string
-     */
-    public function getMessageId()
+    public function getMessageId(): ?string
     {
         return $this->messageId;
     }
 
-    /**
-     * @return string|null
-     */
     public function getMessageNumber(): ?string
     {
         return $this->messageNumber;
     }
 
-    /**
-     * @param string|null $messageNumber
-     */
     public function setMessageNumber(?string $messageNumber): DeclareBaseResponseInterface
     {
         $this->messageNumber = $messageNumber;
-    }
-
-    /**
-     * Set logDate
-     *
-     * @param \DateTime $logDate
-     *
-     * @return DeclareBaseResponse
-     */
-    public function setLogDate($logDate)
-    {
-        $this->logDate = $logDate;
-
         return $this;
     }
 
-    /**
-     * Get logDate
-     *
-     * @return \DateTime
-     */
-    public function getLogDate()
+    public function setLogDate(DateTime $logDate): DeclareBaseResponse
+    {
+        $this->logDate = $logDate;
+        return $this;
+    }
+
+    public function getLogDate(): DateTime
     {
         return $this->logDate;
     }
@@ -267,7 +232,6 @@ abstract class DeclareBaseResponse implements DeclareBaseResponseInterface
     public function setErrorCode(?string $errorCode): DeclareBaseResponseInterface
     {
         $this->errorCode = $errorCode;
-
         return $this;
     }
 
@@ -279,7 +243,6 @@ abstract class DeclareBaseResponse implements DeclareBaseResponseInterface
     public function setErrorMessage(?string $errorMessage): DeclareBaseResponseInterface
     {
         $this->errorMessage = $errorMessage;
-
         return $this;
     }
 
@@ -291,7 +254,6 @@ abstract class DeclareBaseResponse implements DeclareBaseResponseInterface
     public function setErrorKindIndicator($errorKindIndicator): DeclareBaseResponseInterface
     {
         $this->errorKindIndicator = $errorKindIndicator;
-
         return $this;
     }
 
@@ -303,7 +265,6 @@ abstract class DeclareBaseResponse implements DeclareBaseResponseInterface
     public function setSuccessIndicator($successIndicator): DeclareBaseResponseInterface
     {
         $this->successIndicator = $successIndicator;
-
         return $this;
     }
 

@@ -327,12 +327,7 @@ abstract class DeclareBaseWithResponse implements DeclareLogInterface,DeclareBas
         $this->isRemovedByUser = $this->isRemovedByUser ?? false;
     }
 
-    /**
-     * Get id
-     *
-     * @return integer
-     */
-    public function getId()
+    public function getId(): int
     {
         return $this->id;
     }
@@ -351,12 +346,7 @@ abstract class DeclareBaseWithResponse implements DeclareLogInterface,DeclareBas
         return $this;
     }
 
-    /**
-     * Get logDate
-     *
-     * @return DateTime
-     */
-    public function getLogDate()
+    public function getLogDate(): DateTime
     {
         return $this->logDate;
     }
@@ -371,15 +361,9 @@ abstract class DeclareBaseWithResponse implements DeclareLogInterface,DeclareBas
     public function setRequestId($requestId): DeclareBaseWithResponse
     {
         $this->requestId = $requestId;
-
         return $this;
     }
 
-    /**
-     * Get requestId
-     *
-     * @return string
-     */
     public function getRequestId(): string
     {
         return $this->requestId;
@@ -395,16 +379,15 @@ abstract class DeclareBaseWithResponse implements DeclareLogInterface,DeclareBas
     public function setMessageId($messageId): DeclareBaseWithResponse
     {
         $this->setRequestId($messageId);
-
         return $this;
     }
 
     /**
      * Legacy function, should be removed when possible.
      *
-     * @return string|void
+     * @return string
      */
-    public function getMessageId()
+    public function getMessageId(): string
     {
         return $this->getRequestId();
     }
@@ -424,11 +407,6 @@ abstract class DeclareBaseWithResponse implements DeclareLogInterface,DeclareBas
         return $this;
     }
 
-    /**
-     * Get requestState
-     *
-     * @return string
-     */
     public function getRequestState(): string
     {
         return $this->requestState;
@@ -448,11 +426,6 @@ abstract class DeclareBaseWithResponse implements DeclareLogInterface,DeclareBas
         return $this;
     }
 
-    /**
-     * Get action
-     *
-     * @return string
-     */
     public function getAction(): string
     {
         return $this->action;
@@ -468,15 +441,9 @@ abstract class DeclareBaseWithResponse implements DeclareLogInterface,DeclareBas
     public function setRecoveryIndicator($recoveryIndicator): DeclareBaseWithResponse
     {
         $this->recoveryIndicator = $recoveryIndicator;
-
         return $this;
     }
 
-    /**
-     * Get recoveryIndicator
-     *
-     * @return string
-     */
     public function getRecoveryIndicator(): string
     {
         return $this->recoveryIndicator;
@@ -492,15 +459,9 @@ abstract class DeclareBaseWithResponse implements DeclareLogInterface,DeclareBas
     public function setRelationNumberKeeper($relationNumberKeeper): DeclareBaseWithResponse
     {
         $this->relationNumberKeeper = $relationNumberKeeper;
-
         return $this;
     }
 
-    /**
-     * Get relationNumberKeeper
-     *
-     * @return string
-     */
     public function getRelationNumberKeeper(): string
     {
         return $this->relationNumberKeeper;
@@ -516,23 +477,14 @@ abstract class DeclareBaseWithResponse implements DeclareLogInterface,DeclareBas
     public function setUbn($ubn): DeclareBaseWithResponse
     {
         $this->ubn = $ubn;
-
         return $this;
     }
 
-    /**
-     * Get ubn
-     *
-     * @return string
-     */
     public function getUbn(): string
     {
         return $this->ubn;
     }
 
-    /**
-     * @return string|null
-     */
     public function getMessageNumberToRecover(): ?string
     {
         return $this->messageNumberToRecover;
@@ -567,9 +519,6 @@ abstract class DeclareBaseWithResponse implements DeclareLogInterface,DeclareBas
         return $this;
     }
 
-    /**
-     * @return boolean
-     */
     public function isHideFailedMessage(): bool
     {
         return $this->hideFailedMessage;
@@ -585,9 +534,6 @@ abstract class DeclareBaseWithResponse implements DeclareLogInterface,DeclareBas
         return $this;
     }
 
-    /**
-     * @return bool
-     */
     public function isHideForAdmin(): bool
     {
         return $this->hideForAdmin;
@@ -603,9 +549,6 @@ abstract class DeclareBaseWithResponse implements DeclareLogInterface,DeclareBas
         return $this;
     }
 
-    /**
-     * @return DeclareBaseWithResponse|null
-     */
     public function getNewestVersion(): ?DeclareBaseWithResponse
     {
         return $this->newestVersion;
@@ -621,19 +564,11 @@ abstract class DeclareBaseWithResponse implements DeclareLogInterface,DeclareBas
         return $this;
     }
 
-
-    /**
-     * @return bool
-     */
     public function isRvoMessage(): bool
     {
         return $this->isRvoMessage;
     }
 
-    /**
-     * @param bool $isRvoMessage
-     * @return DeclareBaseWithResponse
-     */
     public function setIsRvoMessage(bool $isRvoMessage): DeclareBaseWithResponse
     {
         $this->isRvoMessage = $isRvoMessage;
@@ -658,9 +593,6 @@ abstract class DeclareBaseWithResponse implements DeclareLogInterface,DeclareBas
     }
 
 
-    /**
-     * @return string
-     */
     function getEventDate(): string
     {
         $eventDateString = '';
@@ -683,28 +615,24 @@ abstract class DeclareBaseWithResponse implements DeclareLogInterface,DeclareBas
     public function setFinishedRequestState(): DeclareBaseWithResponse
     {
         $this->setRequestState(RequestStateType::FINISHED);
-
         return $this;
     }
 
     public function setFinishedWithWarningRequestState(): DeclareBaseWithResponse
     {
         $this->setRequestState(RequestStateType::FINISHED_WITH_WARNING);
-
         return $this;
     }
 
     public function setFailedRequestState(): DeclareBaseWithResponse
     {
         $this->setRequestState(RequestStateType::FAILED);
-
         return $this;
     }
 
     public function setRevokedRequestState(): DeclareBaseWithResponse
     {
         $this->setRequestState(RequestStateType::REVOKED);
-
         return $this;
     }
 
@@ -740,6 +668,7 @@ abstract class DeclareBaseWithResponse implements DeclareLogInterface,DeclareBas
     public function setMessageNumber(?string $messageNumber): DeclareBaseResponseInterface
     {
         $this->messageNumber = $messageNumber;
+        return $this;
     }
 
     public function isIsRemovedByUser(): bool
@@ -750,7 +679,6 @@ abstract class DeclareBaseWithResponse implements DeclareLogInterface,DeclareBas
     public function setIsRemovedByUser($isRemovedByUser): DeclareBaseResponseInterface
     {
         $this->isRemovedByUser = $isRemovedByUser;
-
         return $this;
     }
 
@@ -762,7 +690,6 @@ abstract class DeclareBaseWithResponse implements DeclareLogInterface,DeclareBas
     public function setErrorCode(?string $errorCode): DeclareBaseResponseInterface
     {
         $this->errorCode = $errorCode;
-
         return $this;
     }
 
@@ -785,7 +712,6 @@ abstract class DeclareBaseWithResponse implements DeclareLogInterface,DeclareBas
     public function setErrorKindIndicator(?string $errorKindIndicator): DeclareBaseResponseInterface
     {
         $this->errorKindIndicator = $errorKindIndicator;
-
         return $this;
     }
 
@@ -797,7 +723,6 @@ abstract class DeclareBaseWithResponse implements DeclareLogInterface,DeclareBas
     public function setSuccessIndicator(?string $successIndicator): DeclareBaseResponseInterface
     {
         $this->successIndicator = $successIndicator;
-
         return $this;
     }
 
