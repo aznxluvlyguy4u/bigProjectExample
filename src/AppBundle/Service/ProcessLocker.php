@@ -301,7 +301,7 @@ class ProcessLocker implements ProcessLockerInterface
         }
 
         $processId = $this->addProcess($processGroupName);
-        $this->logger->debug('Initialized feedback processor lock with id: ' . $processId);
+        $this->logger->debug("Initialized $processGroupName process lock with id: $processId");
         return [
             $processId => true
         ];
@@ -311,6 +311,6 @@ class ProcessLocker implements ProcessLockerInterface
     public function unlockProcessForQueueService(string $processGroupName, int $processId, LoggerInterface $logger)
     {
         $this->removeProcess($processGroupName, $processId);
-        $logger->debug('Unlocked feedback processor lock with id: ' . $processId);
+        $logger->debug("Unlocked $processGroupName process lock with id: $processId");
     }
 }
