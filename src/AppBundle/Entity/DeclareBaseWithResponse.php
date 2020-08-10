@@ -74,7 +74,7 @@ abstract class DeclareBaseWithResponse implements DeclareLogInterface,DeclareBas
     protected $logDate;
 
     /**
-     * @var string
+     * @var string|null
      * @ORM\Column(type="string")
      * @Assert\Length(max = 20)
      * @Assert\NotBlank
@@ -248,9 +248,8 @@ abstract class DeclareBaseWithResponse implements DeclareLogInterface,DeclareBas
 
     /**
      * @var DateTime|null
-     * @ORM\Column(type="datetime")
+     * @ORM\Column(type="datetime", nullable=true)
      * @Assert\Date
-     * @Assert\NotBlank
      * @JMS\Type("DateTime")
      * @JMS\Groups({
      *     "ERROR_DETAILS",
@@ -365,7 +364,7 @@ abstract class DeclareBaseWithResponse implements DeclareLogInterface,DeclareBas
         return $this;
     }
 
-    public function getRequestId(): string
+    public function getRequestId(): ?string
     {
         return $this->requestId;
     }
@@ -386,9 +385,9 @@ abstract class DeclareBaseWithResponse implements DeclareLogInterface,DeclareBas
     /**
      * Legacy function, should be removed when possible.
      *
-     * @return string
+     * @return string|null
      */
-    public function getMessageId(): string
+    public function getMessageId(): ?string
     {
         return $this->getRequestId();
     }
@@ -427,7 +426,7 @@ abstract class DeclareBaseWithResponse implements DeclareLogInterface,DeclareBas
         return $this;
     }
 
-    public function getAction(): string
+    public function getAction(): ?string
     {
         return $this->action;
     }
@@ -445,7 +444,7 @@ abstract class DeclareBaseWithResponse implements DeclareLogInterface,DeclareBas
         return $this;
     }
 
-    public function getRecoveryIndicator(): string
+    public function getRecoveryIndicator(): ?string
     {
         return $this->recoveryIndicator;
     }
@@ -463,7 +462,7 @@ abstract class DeclareBaseWithResponse implements DeclareLogInterface,DeclareBas
         return $this;
     }
 
-    public function getRelationNumberKeeper(): string
+    public function getRelationNumberKeeper(): ?string
     {
         return $this->relationNumberKeeper;
     }
@@ -768,16 +767,16 @@ abstract class DeclareBaseWithResponse implements DeclareLogInterface,DeclareBas
 
     public function hasSuccessResponse(): bool
     {
-        return RvoResponseUtil::hasSuccessWithWarningResponse($this);
+        return RvoResponseUtil::hasSuccessRvoResponseDetails($this);
     }
 
     public function hasSuccessWithWarningResponse(): bool
     {
-        return RvoResponseUtil::hasSuccessWithWarningResponse($this);
+        return RvoResponseUtil::hasSuccessWithWarningRvoResponseDetails($this);
     }
 
     public function hasFailedResponse(): bool
     {
-        return RvoResponseUtil::hasFailedResponse($this);
+        return RvoResponseUtil::hasFailedRvoResponseDetails($this);
     }
 }

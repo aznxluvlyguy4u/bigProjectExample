@@ -353,17 +353,17 @@ abstract class DeclareBaseResponse implements DeclareBaseResponseInterface
 
     public function hasSuccessResponse(): bool
     {
-        return RvoResponseUtil::hasSuccessWithWarningResponse($this);
+        return RvoResponseUtil::hasSuccessRvoResponseDetails($this);
     }
 
     public function hasSuccessWithWarningResponse(): bool
     {
-        return RvoResponseUtil::hasSuccessWithWarningResponse($this);
+        return RvoResponseUtil::hasSuccessWithWarningRvoResponseDetails($this);
     }
 
     public function hasFailedResponse(): bool
     {
-        return RvoResponseUtil::hasFailedResponse($this);
+        return RvoResponseUtil::hasFailedRvoResponseDetails($this);
     }
 
 }
