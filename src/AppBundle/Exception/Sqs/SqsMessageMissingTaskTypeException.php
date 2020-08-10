@@ -28,6 +28,7 @@ class SqsMessageMissingTaskTypeException extends SqsMessageException
      */
     private function getAppendedMessage(?string $customMessage = ''): string
     {
-        return 'Sqs is missing TaskType.' . (!empty($customMessage) ? ' ' . $customMessage : '');
+        $customMessage = $customMessage ?? '';
+        return "Sqs is missing TaskType. $customMessage";
     }
 }
