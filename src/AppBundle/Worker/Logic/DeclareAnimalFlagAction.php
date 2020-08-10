@@ -4,15 +4,18 @@
 namespace AppBundle\Worker\Logic;
 
 
+use AppBundle\Constant\Constant;
 use AppBundle\Entity\DeclareAnimalFlag;
+use AppBundle\Entity\DeclareBaseResponseInterface;
+use AppBundle\Entity\Treatment;
+use AppBundle\Enumerator\RequestStateType;
+use AppBundle\Enumerator\RvoErrorCode;
+use AppBundle\Enumerator\SuccessIndicator;
 use AppBundle\model\Rvo\Response\DiervlagMelding\VastleggenDiervlagMeldingResponse;
 use DateTime;
 
 class DeclareAnimalFlagAction extends RawInternalWorkerActionBase implements RawInternalWorkerLogicInterface
 {
-    /**
-     * @param string $rvoXmlResponseContent TODO read it from the internal queue
-     */
     public function process(string $rvoXmlResponseContent)
     {
         /** @var VastleggenDiervlagMeldingResponse $rvoResponse */
@@ -21,11 +24,24 @@ class DeclareAnimalFlagAction extends RawInternalWorkerActionBase implements Raw
         $declareAnimalFlag = $this->em->getRepository(DeclareAnimalFlag::class)
             ->findOneByRequestId($rvoResponse->requestID);
 
-        $response = $this->addResponseDetailsToDeclare($rvoResponse);
+        // First make sure the treatmentId exists
+        $treatmentId = $declareAnimalFlag->getTreatment()->getId();
 
-        // TODO add business logic here and persist request and response
+        $this->addResponseDetailsToDeclare($rvoResponse, $declareAnimalFlag);
 
-        // TODO delete message from queue
+        if ($this->isRepeatedDeclare($declareAnimalFlag)) {
+            $declareAnimalFlag->setWarningValues(
+                $declareAnimalFlag->getErrorMessage(),
+                $declareAnimalFlag->getErrorCode()
+            );
+        }
+
+        // No further business logic is necessary
+        $this->em->persist($declareAnimalFlag);
+        $this->em->flush();
+
+        $this->updateTreatmentStatus($treatmentId);
+        $this->em->flush();
     }
 
     private function addResponseDetailsToDeclare(VastleggenDiervlagMeldingResponse $rvoResponse,
@@ -43,4 +59,48 @@ class DeclareAnimalFlagAction extends RawInternalWorkerActionBase implements Raw
     }
 
 
+    private function isRepeatedDeclare(DeclareBaseResponseInterface $response)
+    {
+        $repeatedDeclareErrorCodes = [
+            RvoErrorCode::REPEATED_ARRIVAL_00015
+        ];
+
+        return in_array($response->getErrorCode(), $repeatedDeclareErrorCodes);
+    }
+
+
+    private function updateTreatmentStatus(int $treatmentId)
+    {
+        $successIndicatorCounts = $this->em->getRepository(DeclareAnimalFlag::class)
+            ->getFlagSuccessIndicatorCountByTreatmentId($treatmentId);
+
+        if ($successIndicatorCounts[Constant::NULL] !== 0) {
+            // Not all declare animal flags have been process yet for the treatment
+            return;
+        }
+
+        $hasFailedFlags = $successIndicatorCounts[SuccessIndicator::N] > 0;
+        $hasSuccessFlags = $successIndicatorCounts[SuccessIndicator::N] > 0;
+
+        $hasOnlySuccessFlags = $hasSuccessFlags && !$hasFailedFlags;
+        $hasOnlyFailedFlags = $hasFailedFlags && !$hasSuccessFlags;
+
+        switch (true) {
+            case $hasOnlySuccessFlags:
+                $finalTreatmentStatus = RequestStateType::FINISHED;
+                break;
+            case $hasOnlyFailedFlags:
+                $finalTreatmentStatus = RequestStateType::FAILED;
+                break;
+            default:
+                $finalTreatmentStatus = RequestStateType::FINISHED_WITH_ERRORS;
+                break;
+        }
+
+        $treatment = $this->em->getRepository(Treatment::class)->find($treatmentId);
+        if ($treatment && $treatment->getStatus() !== $finalTreatmentStatus) {
+            $treatment->setStatus($finalTreatmentStatus);
+            $this->em->persist($treatment);
+        }
+    }
 }

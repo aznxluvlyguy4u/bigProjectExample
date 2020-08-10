@@ -2,8 +2,11 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Constant\Constant;
+use AppBundle\Enumerator\SuccessIndicator;
 use AppBundle\Util\SqlUtil;
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\ParameterType;
 
 /**
  * Class DeclareAnimalFlagRepository
@@ -102,5 +105,30 @@ class DeclareAnimalFlagRepository extends BaseRepository
 
         $statement = $this->getManager()->getConnection()->executeQuery($sql, $values, $types);
         return $statement->fetchAll();
+    }
+
+    public function getFlagSuccessIndicatorCountByTreatmentId(int $treatmentId): array
+    {
+        $sql = "SELECT
+                    success_indicator,
+                    COUNT(*) as count
+                FROM declare_animal_flag f
+                    INNER JOIN declare_base_with_response b ON b.id = f.id
+                WHERE treatment_id = ?
+                GROUP BY success_indicator";
+        $values = [$treatmentId];
+        $types = [ParameterType::INTEGER];
+        $statement = $this->getManager()->getConnection()->executeQuery($sql, $values, $types);
+        $output = [];
+        foreach ($statement->fetchAll() as $result) {
+            $successIndicator = $result['success_indicator'] ?? Constant::NULL;
+            $output[$successIndicator] = intval($result['count']);
+        }
+
+        $output[SuccessIndicator::J] = $output[SuccessIndicator::J] ?? 0;
+        $output[SuccessIndicator::N] = $output[SuccessIndicator::N] ?? 0;
+        $output[Constant::NULL] = $output[Constant::NULL] ?? 0;
+
+        return $output;
     }
 }
