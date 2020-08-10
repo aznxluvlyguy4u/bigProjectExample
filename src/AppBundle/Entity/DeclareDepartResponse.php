@@ -147,41 +147,6 @@ class DeclareDepartResponse extends DeclareBaseResponse
         return $this->declareDepartRequestMessage;
     }
 
-
-    /**
-     * Get id
-     *
-     * @return integer
-     */
-    public function getId()
-    {
-        return $this->id;
-    }
-
-    /**
-     * Set logDate
-     *
-     * @param \DateTime $logDate
-     *
-     * @return DeclareDepartResponse
-     */
-    public function setLogDate($logDate)
-    {
-        $this->logDate = $logDate;
-
-        return $this;
-    }
-
-    /**
-     * Get logDate
-     *
-     * @return \DateTime
-     */
-    public function getLogDate()
-    {
-        return $this->logDate;
-    }
-
     /**
      * @return string
      */

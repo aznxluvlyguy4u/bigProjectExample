@@ -192,7 +192,7 @@ abstract class DeclareBaseResponse implements DeclareBaseResponseInterface
         $this->isRemovedByUser = $this->isRemovedByUser ?? false;
     }
 
-    public function getId(): string
+    public function getId()
     {
         return $this->id;
     }
