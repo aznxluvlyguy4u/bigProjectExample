@@ -41,7 +41,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  *
  * @package AppBundle\Entity\DeclareBaseWithResponse
  */
-abstract class DeclareBaseWithResponse implements DeclareLogInterface, DeclareBaseInterface
+abstract class DeclareBaseWithResponse implements DeclareLogInterface,DeclareBaseInterface,DeclareBaseResponseInterface
 {
     use EntityClassInfo;
 
@@ -234,7 +234,7 @@ abstract class DeclareBaseWithResponse implements DeclareLogInterface, DeclareBa
     /**
      * Returned in RVO response
      *
-     * @var string
+     * @var string|null
      * @ORM\Column(type="string", nullable=true)
      * @Assert\Length(max = 15)
      * @JMS\Type("string")
@@ -246,7 +246,7 @@ abstract class DeclareBaseWithResponse implements DeclareLogInterface, DeclareBa
     protected $messageNumber;
 
     /**
-     * @var DateTime
+     * @var DateTime|null
      * @ORM\Column(type="datetime")
      * @Assert\Date
      * @Assert\NotBlank
@@ -259,7 +259,7 @@ abstract class DeclareBaseWithResponse implements DeclareLogInterface, DeclareBa
     protected $responseLogDate;
 
     /**
-     * @var string;
+     * @var string|null
      *
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Groups({
@@ -270,7 +270,7 @@ abstract class DeclareBaseWithResponse implements DeclareLogInterface, DeclareBa
     private $errorCode;
 
     /**
-     * @var string
+     * @var string|null
      *
      * @ORM\Column(type="string", nullable=true)
      * @JMS\Groups({
@@ -281,7 +281,7 @@ abstract class DeclareBaseWithResponse implements DeclareLogInterface, DeclareBa
     private $errorMessage;
 
     /**
-     * @var string
+     * @var string|null
      *
      * @ORM\Column(type="string", nullable=true)
      * @Assert\Length(max = 1)
@@ -293,7 +293,7 @@ abstract class DeclareBaseWithResponse implements DeclareLogInterface, DeclareBa
     private $errorKindIndicator;
 
     /**
-     * @var string
+     * @var string|null
      *
      * @ORM\Column(type="string", nullable=true)
      * @Assert\Length(max = 1)
@@ -307,7 +307,7 @@ abstract class DeclareBaseWithResponse implements DeclareLogInterface, DeclareBa
     /**
      * @var boolean
      *
-     * @ORM\Column(type="boolean", nullable=true)
+     * @ORM\Column(type="boolean", nullable=false, options={"default":false})
      * @JMS\Type("boolean")
      * @JMS\Groups({
      *     "RESPONSE_PERSISTENCE"
@@ -721,169 +721,92 @@ abstract class DeclareBaseWithResponse implements DeclareLogInterface, DeclareBa
      * RESPONSE GETTERS AND SETTERS
      */
 
-    /**
-     * @return DateTime
-     */
-    public function getResponseLogDate(): DateTime
+    public function getResponseLogDate(): ?DateTime
     {
         return $this->responseLogDate;
     }
 
-    /**
-     * @param DateTime $responseLogDate
-     * @return DeclareBaseWithResponse
-     */
-    public function setResponseLogDate(DateTime $responseLogDate): DeclareBaseWithResponse
+    public function setResponseLogDate(?DateTime $responseLogDate): DeclareBaseResponseInterface
     {
         $this->responseLogDate = $responseLogDate;
         return $this;
     }
 
-    /**
-     * @return string
-     */
-    public function getMessageNumber()
+    public function getMessageNumber(): ?string
     {
         return $this->messageNumber;
     }
 
-    /**
-     * @param string $messageNumber
-     */
-    public function setMessageNumber($messageNumber)
+    public function setMessageNumber(?string $messageNumber): DeclareBaseResponseInterface
     {
         $this->messageNumber = $messageNumber;
     }
 
-    /**
-     * @return boolean
-     */
-    public function isIsRemovedByUser()
+    public function isIsRemovedByUser(): bool
     {
         return $this->isRemovedByUser;
     }
 
-    /**
-     * @param boolean $isRemovedByUser
-     * @return DeclareBaseWithResponse
-     */
-    public function setIsRemovedByUser($isRemovedByUser)
+    public function setIsRemovedByUser($isRemovedByUser): DeclareBaseResponseInterface
     {
         $this->isRemovedByUser = $isRemovedByUser;
 
         return $this;
     }
 
-    /**
-     * Get isRemovedByUser
-     *
-     * @return boolean
-     */
-    public function getIsRemovedByUser()
+    public function getIsRemovedByUser(): bool
     {
-        return $this->isRemovedByUser;
+        return $this->isIsRemovedByUser();
     }
 
-    /**
-     * Set errorCode
-     *
-     * @param string $errorCode
-     *
-     * @return DeclareBaseWithResponse
-     */
-    public function setErrorCode($errorCode): DeclareBaseWithResponse
+    public function setErrorCode(?string $errorCode): DeclareBaseResponseInterface
     {
         $this->errorCode = $errorCode;
 
         return $this;
     }
 
-    /**
-     * Get errorCode
-     *
-     * @return string
-     */
-    public function getErrorCode()
+    public function getErrorCode(): ?string
     {
         return $this->errorCode;
     }
 
-    /**
-     * Set errorMessage
-     *
-     * @param string $errorMessage
-     *
-     * @return DeclareBaseWithResponse
-     */
-    public function setErrorMessage($errorMessage): DeclareBaseWithResponse
+    public function setErrorMessage(?string $errorMessage): DeclareBaseResponseInterface
     {
         $this->errorMessage = $errorMessage;
-
         return $this;
     }
 
-    /**
-     * Get errorMessage
-     *
-     * @return string
-     */
-    public function getErrorMessage()
+    public function getErrorMessage(): ?string
     {
         return $this->errorMessage;
     }
 
-    /**
-     * Set errorKindIndicator
-     *
-     * @param string $errorKindIndicator
-     *
-     * @return DeclareBaseWithResponse
-     */
-    public function setErrorKindIndicator($errorKindIndicator): DeclareBaseWithResponse
+    public function setErrorKindIndicator(?string $errorKindIndicator): DeclareBaseResponseInterface
     {
         $this->errorKindIndicator = $errorKindIndicator;
 
         return $this;
     }
 
-    /**
-     * Get errorKindIndicator
-     *
-     * @return string
-     */
-    public function getErrorKindIndicator()
+    public function getErrorKindIndicator(): ?string
     {
         return $this->errorKindIndicator;
     }
 
-    /**
-     * Set successIndicator
-     *
-     * @param string $successIndicator
-     *
-     * @return DeclareBaseWithResponse
-     */
-    public function setSuccessIndicator($successIndicator): DeclareBaseWithResponse
+    public function setSuccessIndicator(?string $successIndicator): DeclareBaseResponseInterface
     {
         $this->successIndicator = $successIndicator;
 
         return $this;
     }
 
-    /**
-     * Get successIndicator
-     *
-     * @return string
-     */
-    public function getSuccessIndicator()
+    public function getSuccessIndicator(): ?string
     {
         return $this->successIndicator;
     }
 
-    /**
-     * @return DeclareBaseWithResponse
-     */
-    public function setSuccessValues()
+    public function setSuccessValues(): DeclareBaseResponseInterface
     {
         $this->setRequestState(RequestStateType::FINISHED);
         $this->setSuccessIndicator(SuccessIndicator::J);
@@ -893,13 +816,7 @@ abstract class DeclareBaseWithResponse implements DeclareLogInterface, DeclareBa
         return $this;
     }
 
-
-    /**
-     * @param string $errorMessage
-     * @param string $errorCode
-     * @return DeclareBaseWithResponse
-     */
-    public function setFailedValues($errorMessage, $errorCode)
+    public function setFailedValues($errorMessage, $errorCode): DeclareBaseResponseInterface
     {
         $this->setRequestState(RequestStateType::FAILED);
         $this->setSuccessIndicator(SuccessIndicator::N);
@@ -909,13 +826,7 @@ abstract class DeclareBaseWithResponse implements DeclareLogInterface, DeclareBa
         return $this;
     }
 
-
-    /**
-     * @param string $errorMessage
-     * @param string $errorCode
-     * @return DeclareBaseWithResponse
-     */
-    public function setWarningValues($errorMessage, $errorCode)
+    public function setWarningValues($errorMessage, $errorCode): DeclareBaseResponseInterface
     {
         $this->setRequestState(RequestStateType::FINISHED_WITH_WARNING);
         $this->setSuccessIndicator(SuccessIndicator::J);
