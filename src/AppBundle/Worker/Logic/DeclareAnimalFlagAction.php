@@ -11,6 +11,8 @@ use AppBundle\Entity\Treatment;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\RvoErrorCode;
 use AppBundle\Enumerator\SuccessIndicator;
+use AppBundle\Exception\Rvo\RvoUnmappedResponseDetailsException;
+use AppBundle\Exception\Sqs\SqsMessageInvalidTaskTypeException;
 use AppBundle\model\Rvo\Response\DiervlagMelding\VastleggenDiervlagMeldingResponse;
 use DateTime;
 
@@ -27,14 +29,7 @@ class DeclareAnimalFlagAction extends RawInternalWorkerActionBase implements Raw
         // First make sure the treatmentId exists
         $treatmentId = $declareAnimalFlag->getTreatment()->getId();
 
-        $this->addResponseDetailsToDeclare($rvoResponse, $declareAnimalFlag);
-
-        if ($this->isRepeatedDeclare($declareAnimalFlag)) {
-            $declareAnimalFlag->setWarningValues(
-                $declareAnimalFlag->getErrorMessage(),
-                $declareAnimalFlag->getErrorCode()
-            );
-        }
+        $this->addResponseDetailsAndStatusToDeclare($rvoResponse, $declareAnimalFlag);
 
         // No further business logic is necessary
         $this->em->persist($declareAnimalFlag);
@@ -42,20 +37,47 @@ class DeclareAnimalFlagAction extends RawInternalWorkerActionBase implements Raw
 
         $this->updateTreatmentStatus($treatmentId);
         $this->em->flush();
+
+        $this->logger->debug('DeclareAnimalFlag processed!');
     }
 
-    private function addResponseDetailsToDeclare(VastleggenDiervlagMeldingResponse $rvoResponse,
-                                                 DeclareAnimalFlag &$declareAnimalFlag)
+    private function addResponseDetailsAndStatusToDeclare(VastleggenDiervlagMeldingResponse $rvoResponse,
+                                                          DeclareAnimalFlag &$declareAnimalFlag)
     {
         $diergegevensDiervlagMeldingResponse = $rvoResponse->diergegevensDiervlagMeldingResponse;
         $verwerkingsResultaat = $diergegevensDiervlagMeldingResponse->verwerkingsresultaat;
 
+        // 1. Copy response values
         $declareAnimalFlag->setMessageNumber($diergegevensDiervlagMeldingResponse->meldingnummer);
         $declareAnimalFlag->setResponseLogDate(new DateTime());
         $declareAnimalFlag->setErrorCode($verwerkingsResultaat->foutcode);
         $declareAnimalFlag->setErrorMessage($verwerkingsResultaat->foutmelding);
         $declareAnimalFlag->setErrorKindIndicator($verwerkingsResultaat->soortFoutIndicator);
         $declareAnimalFlag->setSuccessIndicator($verwerkingsResultaat->succesIndicator);
+
+        // 2. Check if possible error should be treated as a repeated declare
+        if ($this->isRepeatedDeclare($declareAnimalFlag)) {
+            $declareAnimalFlag->setWarningValues(
+                $declareAnimalFlag->getErrorMessage(),
+                $declareAnimalFlag->getErrorCode()
+            );
+        }
+
+        // 3. Set request status by response details
+        switch (true) {
+            // Always check the SuccessWithWarning details BEFORE the Success details
+            case $declareAnimalFlag->hasSuccessWithWarningResponse():
+                $declareAnimalFlag->setRequestState(RequestStateType::FINISHED_WITH_WARNING);
+                break;
+            case $declareAnimalFlag->hasSuccessResponse():
+                $declareAnimalFlag->setRequestState(RequestStateType::FINISHED);
+                break;
+            case $declareAnimalFlag->hasFailedResponse():
+                $declareAnimalFlag->setRequestState(RequestStateType::FAILED);
+                break;
+            default:
+                throw new RvoUnmappedResponseDetailsException($declareAnimalFlag);
+        }
     }
 
 
