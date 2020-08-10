@@ -4,7 +4,7 @@
 namespace AppBundle\model\Rvo\Request;
 
 
-use AppBundle\Entity\DeclareBase;
+use AppBundle\Entity\DeclareBaseInterface;
 
 class RvoMeldingRequestBase
 {
@@ -21,7 +21,7 @@ class RvoMeldingRequestBase
     /** @var string */
     public $herstelIndicator;
 
-    public function __construct(DeclareBase $declareBase)
+    public function __construct(DeclareBaseInterface $declareBase)
     {
         $this->requestID = $declareBase->getRequestId();
         $this->relatienummerHouder = $declareBase->getRelationNumberKeeper();
