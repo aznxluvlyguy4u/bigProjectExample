@@ -24,6 +24,9 @@ class Constant
     const MESSAGE_NUMBER_SNAKE_CASE_NAMESPACE = 'message_number';
     const MESSAGE_NUMBER_CAMEL_CASE_NAMESPACE = 'messageNumber';
 
+    //Global
+    const NULL = 'NULL';
+
     //Identity
     const NAME_NAMESPACE = 'name';
 
