@@ -8,6 +8,7 @@ use AppBundle\Enumerator\Language;
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\SuccessIndicator;
 use AppBundle\Traits\EntityClassInfo;
+use AppBundle\Util\RvoResponseUtil;
 use DateTime;
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as JMS;
@@ -763,5 +764,20 @@ abstract class DeclareBaseWithResponse implements DeclareLogInterface,DeclareBas
         $this->setErrorMessage($errorMessage);
         $this->setErrorCode($errorCode);
         return $this;
+    }
+
+    public function hasSuccessResponse(): bool
+    {
+        return RvoResponseUtil::hasSuccessWithWarningResponse($this);
+    }
+
+    public function hasSuccessWithWarningResponse(): bool
+    {
+        return RvoResponseUtil::hasSuccessWithWarningResponse($this);
+    }
+
+    public function hasFailedResponse(): bool
+    {
+        return RvoResponseUtil::hasFailedResponse($this);
     }
 }

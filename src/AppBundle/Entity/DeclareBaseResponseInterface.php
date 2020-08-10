@@ -32,4 +32,7 @@ interface DeclareBaseResponseInterface
     public function setFailedValues(string $errorMessage, string $errorCode): DeclareBaseResponseInterface;
     public function setWarningValues(string $errorMessage, string $errorCode): DeclareBaseResponseInterface;
 
+    public function  hasSuccessResponse(): bool;
+    public function  hasSuccessWithWarningResponse(): bool;
+    public function  hasFailedResponse(): bool;
 }

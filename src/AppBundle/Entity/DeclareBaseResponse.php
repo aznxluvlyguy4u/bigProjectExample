@@ -5,6 +5,7 @@ namespace AppBundle\Entity;
 use AppBundle\Enumerator\ErrorKindIndicator;
 use AppBundle\Enumerator\SuccessIndicator;
 use AppBundle\Traits\EntityClassInfo;
+use AppBundle\Util\RvoResponseUtil;
 use DateTime;
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as JMS;
@@ -349,4 +350,20 @@ abstract class DeclareBaseResponse implements DeclareBaseResponseInterface
         $this->setErrorCode($errorCode);
         return $this;
     }
+
+    public function hasSuccessResponse(): bool
+    {
+        return RvoResponseUtil::hasSuccessWithWarningResponse($this);
+    }
+
+    public function hasSuccessWithWarningResponse(): bool
+    {
+        return RvoResponseUtil::hasSuccessWithWarningResponse($this);
+    }
+
+    public function hasFailedResponse(): bool
+    {
+        return RvoResponseUtil::hasFailedResponse($this);
+    }
+
 }
