@@ -79,14 +79,14 @@ abstract class SqsProcessorBase implements SqsProcessorInterface
         );
     }
 
-    protected function logException(\Throwable $exception)
+    protected function logException(\Throwable $exception, string $prefix = '')
     {
-        $this->queueLogger->error(static::ERROR_LOG_HEADER);
-        $this->queueLogger->error($exception->getMessage());
-        $this->queueLogger->error($exception->getTraceAsString());
+        $this->queueLogger->error($prefix.static::ERROR_LOG_HEADER);
+        $this->queueLogger->error($prefix.$exception->getMessage());
+        $this->queueLogger->error($prefix.$exception->getTraceAsString());
 
-        $this->exceptionLogger->error(static::ERROR_LOG_HEADER);
-        $this->exceptionLogger->error($exception->getMessage());
-        $this->exceptionLogger->error($exception->getTraceAsString());
+        $this->exceptionLogger->error($prefix.static::ERROR_LOG_HEADER);
+        $this->exceptionLogger->error($prefix.$exception->getMessage());
+        $this->exceptionLogger->error($prefix.$exception->getTraceAsString());
     }
 }
