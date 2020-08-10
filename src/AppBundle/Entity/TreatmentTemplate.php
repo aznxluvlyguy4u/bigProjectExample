@@ -93,6 +93,7 @@ abstract class TreatmentTemplate
      *     "TREATMENT_TEMPLATE_MIN",
      *     "TREATMENT"
      * })
+     * @JMS\MaxDepth(depth=2)
      */
     private $treatmentMedications;
 

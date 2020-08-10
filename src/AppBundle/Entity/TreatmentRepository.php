@@ -78,6 +78,7 @@ class TreatmentRepository extends BaseRepository {
                 t.revoke_date,
                 t.type,
                 tt.is_editable,
+                tt.templatetype = 'QFever' as has_rvo_details,
                 t.status
             FROM treatment t
             ".self::TREATMENT_JOINS."

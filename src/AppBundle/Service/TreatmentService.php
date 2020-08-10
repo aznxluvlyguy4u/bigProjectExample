@@ -96,6 +96,7 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
         $treatment
             ->setType($type)
             ->setLocation($location)
+            ->removeEndDateIfEqualToStartDate()
             ->setCreateDate(new DateTime());
 
         //Validation
@@ -112,7 +113,7 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
             return $animal->getId();
         }, $historicAnimals);
 
-        /** @var ArrayCollection<Animal> $existingAnimals */
+        /** @var ArrayCollection|Animal[] $existingAnimals */
         $existingAnimals = new ArrayCollection();
 
         /** @var Animal $animal */
@@ -460,7 +461,9 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
 
         $treatment
             ->setStartDate($startDate)
-            ->setEndDate($endDate);
+            ->setEndDate($endDate)
+            ->removeEndDateIfEqualToStartDate()
+        ;
 
         //Validation
         $treatment = $this->baseValidateDeserializedTreatment($treatment);

@@ -5,6 +5,7 @@ namespace AppBundle\Entity;
 
 use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Traits\EntityClassInfo;
+use AppBundle\Util\TimeUtil;
 use AppBundle\Util\Translation;
 use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -74,8 +75,9 @@ class Treatment implements TreatmentInterface
 
     /**
      * @var DateTime
-     * @ORM\Column(type="datetime", nullable=true)
+     * @ORM\Column(type="datetime", nullable=false)
      * @Assert\Date
+     * @Assert\NotBlank
      * @JMS\Type("DateTime")
      *
      * @JMS\Groups({
@@ -86,7 +88,7 @@ class Treatment implements TreatmentInterface
     private $startDate;
 
     /**
-     * @var DateTime
+     * @var DateTime|null
      * @ORM\Column(type="datetime", nullable=true)
      * @Assert\Date
      * @JMS\Type("DateTime")
@@ -266,6 +268,18 @@ class Treatment implements TreatmentInterface
     }
 
     /**
+     * @JMS\VirtualProperty
+     * @JMS\SerializedName("has_rvo_details")
+     * @JMS\Groups({
+     *     "TREATMENT",
+     *     "TREATMENT_MIN"
+     * })
+     */
+    public function hasRvoDetails() {
+        return $this->treatmentTemplate instanceof QFever;
+    }
+
+    /**
      * Treatment constructor.
      */
     public function __construct()
@@ -369,8 +383,20 @@ class Treatment implements TreatmentInterface
         return $this;
     }
 
+
     /**
+     * Use this value in calculations where the startDate should be used if the endDate is not explicitly available.
+     *
      * @return DateTime
+     */
+    public function getLastDate()
+    {
+        return $this->endDate ?? $this->startDate;
+    }
+
+
+    /**
+     * @return DateTime|null
      */
     public function getEndDate()
     {
@@ -378,12 +404,26 @@ class Treatment implements TreatmentInterface
     }
 
     /**
-     * @param DateTime $endDate
+     * @param DateTime|null $endDate
      * @return Treatment
      */
     public function setEndDate($endDate)
     {
         $this->endDate = $endDate;
+        return $this;
+    }
+
+    /**
+     * @return $this
+     */
+    public function removeEndDateIfEqualToStartDate()
+    {
+        if (
+            $this->endDate != null &&
+            TimeUtil::isDateTimesOnTheSameDay($this->startDate, $this->endDate))
+        {
+            $this->endDate = null;
+        }
         return $this;
     }
 
