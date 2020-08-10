@@ -319,6 +319,16 @@ abstract class AwsQueueServiceBase implements QueueServiceInterface
         return $this->deleteMessageBase($receiptHandleOrAwsResult, $this->errorQueueUrl);
     }
 
+    public function moveMessageToErrorQueue(AwsResult $response)
+    {
+        $messageBody = self::getMessageBodyFromResponse($response, false);
+        $requestId = AwsQueueServiceBase::getMessageId($response);
+        $taskType = AwsQueueServiceBase::getTaskType($response);
+
+        $this->sendToErrorQueue($messageBody,$taskType,$requestId);
+        $this->deleteMessage($response);
+    }
+
 
     /**
      * @param $receiptHandleOrAwsResult
@@ -456,7 +466,7 @@ abstract class AwsQueueServiceBase implements QueueServiceInterface
             throw new SqsMessageMissingTaskTypeException();
         }
 
-        if (!empty($supportedRequestTypes) && in_array($taskType, $supportedRequestTypes)) {
+        if (!empty($supportedRequestTypes) && !in_array($taskType, $supportedRequestTypes)) {
             throw new SqsMessageInvalidTaskTypeException($taskType);
         }
 

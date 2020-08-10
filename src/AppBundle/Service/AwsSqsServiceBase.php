@@ -8,6 +8,7 @@ use AppBundle\Service\Aws\AwsSqsService;
 use AppBundle\Util\ArrayUtil;
 use AppBundle\Util\EnvUtil;
 use Aws\Api\AbstractModel;
+use Aws\Result as AwsResult;
 use Aws\Sqs\SqsClient;
 
 /**
@@ -137,6 +138,16 @@ abstract class AwsSqsServiceBase implements QueueServiceInterface
         return $this->sendBase($messageBody, $requestType, $requestId, $this->errorQueueUrl);
     }
 
+    public function moveMessageToErrorQueue(AwsResult $response)
+    {
+        $messageBody = self::getMessageBodyFromResponse($response, false);
+        $requestId = AwsQueueServiceBase::getMessageId($response);
+        $taskType = AwsQueueServiceBase::getTaskType($response);
+
+        $this->sendToErrorQueue($messageBody,$taskType,$requestId);
+        $this->deleteMessage($response);
+    }
+
 
     /**
      * Send a request message to given Queue.
@@ -153,7 +164,7 @@ abstract class AwsSqsServiceBase implements QueueServiceInterface
             return null;
         }
 
-        $message = $this->createMessage($queueUrl, $messageBody, $requestType);
+        $message = $this->createMessage($queueUrl, $messageBody, $requestType, $requestId);
         $response = $this->sqlClient->sendMessage($message);
 
         return $this->responseHandler($response);
@@ -217,7 +228,7 @@ abstract class AwsSqsServiceBase implements QueueServiceInterface
 
     /**
      * @param $messageAttributeNames
-     * @return \Aws\Result
+     * @return AwsResult
      */
     public function getNextMessage(array $messageAttributeNames = ['All'])
     {
@@ -227,7 +238,7 @@ abstract class AwsSqsServiceBase implements QueueServiceInterface
 
     /**
      * @param $messageAttributeNames
-     * @return \Aws\Result
+     * @return AwsResult
      */
     public function getNextErrorMessage(array $messageAttributeNames = ['All'])
     {
@@ -239,7 +250,7 @@ abstract class AwsSqsServiceBase implements QueueServiceInterface
     /**
      * @param string $queueUrl
      * @param $messageAttributeNames
-     * @return \Aws\Result
+     * @return AwsResult
      */
     private function getNextMessageBase($queueUrl, $messageAttributeNames)
     {
@@ -271,7 +282,7 @@ abstract class AwsSqsServiceBase implements QueueServiceInterface
 
     /**
      * @param string $receiptHandleOrAwsResult
-     * @return \Aws\Result
+     * @return AwsResult
      */
     public function deleteMessage($receiptHandleOrAwsResult)
     {
@@ -281,7 +292,7 @@ abstract class AwsSqsServiceBase implements QueueServiceInterface
 
     /**
      * @param string $receiptHandleOrAwsResult
-     * @return \Aws\Result
+     * @return AwsResult
      */
     public function deleteErrorMessage($receiptHandleOrAwsResult)
     {
@@ -293,11 +304,11 @@ abstract class AwsSqsServiceBase implements QueueServiceInterface
     /**
      * @param $receiptHandleOrAwsResult
      * @param string $queueUrl
-     * @return \Aws\Result
+     * @return AwsResult
      */
     private function deleteMessageBase($receiptHandleOrAwsResult, $queueUrl)
     {
-        if($receiptHandleOrAwsResult instanceof \Aws\Result) {
+        if($receiptHandleOrAwsResult instanceof AwsResult) {
             $receiptHandleOrAwsResult = $receiptHandleOrAwsResult['Messages'][0]['ReceiptHandle'];
         }
 
@@ -373,7 +384,7 @@ abstract class AwsSqsServiceBase implements QueueServiceInterface
 
 
     /**
-     * @param \Aws\Result $response
+     * @param AwsResult $response
      * @param bool $decodeJsonString
      * @return mixed
      */
@@ -417,7 +428,7 @@ abstract class AwsSqsServiceBase implements QueueServiceInterface
 
 
     /**
-     * @param \Aws\Result $messageResponse
+     * @param AwsResult $messageResponse
      * @return null|string
      */
     public static function getTaskType($messageResponse): ?string
@@ -430,7 +441,7 @@ abstract class AwsSqsServiceBase implements QueueServiceInterface
 
 
     /**
-     * @param \Aws\Result $response
+     * @param AwsResult $response
      * @return mixed
      */
     public static function getResponseValue($response, $key)
@@ -457,7 +468,7 @@ abstract class AwsSqsServiceBase implements QueueServiceInterface
 
 
     /**
-     * @param \Aws\Result $receiptHandleOrAwsResult
+     * @param AwsResult $receiptHandleOrAwsResult
      * @return bool
      */
     public static function hasMessage($receiptHandleOrAwsResult)
