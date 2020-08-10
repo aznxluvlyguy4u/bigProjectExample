@@ -585,11 +585,13 @@ abstract class DeclareBaseWithResponse implements DeclareLogInterface,DeclareBas
         switch ($this::getShortClassName()) {
             case DeclareAnimalFlag::getShortClassName():
                 /** @var DeclareAnimalFlag $this */
-                return Language::getValue($language, DeclareLogMessage::ANIMAL_FLAG_REPORTED)
+                $logMessage = Language::getValue($language, DeclareLogMessage::ANIMAL_FLAG_REPORTED)
                     .': '.$this->getFlagType();
                 break;
+            default:
+                $logMessage = DeclareLogInterface::DECLARE_LOG_MESSAGE_NULL_RESPONSE;
         }
-        return DeclareLogInterface::DECLARE_LOG_MESSAGE_NULL_RESPONSE;
+        return $logMessage;
     }
 
 
@@ -601,14 +603,16 @@ abstract class DeclareBaseWithResponse implements DeclareLogInterface,DeclareBas
         {
             case DeclareAnimalFlag::getShortClassName():
                 /** @var DeclareAnimalFlag $this */
-                $eventDateString = $this->getStartDate()->format(DeclareLogInterface::EVENT_DATE_FORMAT);
-                if ($this->getEndDate()) {
-                    $eventDateString .= ' - ' . $this->getEndDate()->format(DeclareLogInterface::EVENT_DATE_FORMAT);
+                $eventDateString = $this->getFlagStartDate()->format(DeclareLogInterface::EVENT_DATE_FORMAT);
+                if ($this->getFlagEndDate()) {
+                    $eventDateString .= ' - ' . $this->getFlagEndDate()->format(DeclareLogInterface::EVENT_DATE_FORMAT);
                 }
                 break;
+            default:
+                $eventDateString = $eventDateString !== '' ? $eventDateString : DeclareLogInterface::EVENT_DATE_NULL_RESPONSE;
         }
 
-        return $eventDateString !== '' ? $eventDateString : DeclareLogInterface::EVENT_DATE_NULL_RESPONSE;
+        return $eventDateString;
     }
 
 
