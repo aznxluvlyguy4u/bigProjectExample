@@ -7,6 +7,7 @@ use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\SuccessIndicator;
 use AppBundle\Util\SqlUtil;
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\DBALException;
 use Doctrine\DBAL\ParameterType;
 
 /**
@@ -154,5 +155,42 @@ class DeclareAnimalFlagRepository extends BaseRepository
         $output[Constant::NULL] = $output[Constant::NULL] ?? 0;
 
         return $output;
+    }
+
+
+    /**
+     * @param $flagType
+     * @param $animalIds
+     * @throws DBALException
+     */
+    public function getUlnsForExistingFlags($flagType, $animalIds)
+    {
+        $sql = 'SELECT 
+                    CONCAT(a.uln_country_code,a.uln_number) as uln
+                FROM declare_animal_flag flag
+                    INNER JOIN animal a ON a.id = flag.animal_id
+                    INNER JOIN declare_base_with_response db on flag.id = db.id
+                WHERE request_state IN (?)
+                    AND flag.flag_type = ?
+                    AND flag.animal_id IN (?)
+                GROUP BY CONCAT(a.uln_country_code,a.uln_number)
+                ORDER BY CONCAT(a.uln_country_code,a.uln_number)';
+
+        $values = [
+            SqlUtil::activeRequestStateTypes(),
+            $flagType,
+            $animalIds,
+        ];
+        $types = [
+            Connection::PARAM_STR_ARRAY,
+            ParameterType::STRING,
+            Connection::PARAM_INT_ARRAY,
+        ];
+
+        $statement = $this->getManager()->getConnection()
+            ->executeQuery($sql, $values, $types);
+        return array_map(function (array $result) {
+            return $result['uln'];
+        }, $statement->fetchAll());
     }
 }

@@ -625,3 +625,4 @@ JSON BODY MUST HAVE TREATMENT TEMPLATE STRUCTURE: Json body must have the treatm
 A Q-FEVER TEMPLATE CAN NOT BE CREATED FOR A LOCATION: A q-fever template can not be created for a location
 TREATMENT DESCRIPTION DOES NOT EXIST IN DATABASE FOR ACTIVE TREATMENT TYPE WITH TYPE LOCATION: Treatment description does not exist in database for active treatment type with type location
 NO WAITING DAYS HAVE BEEN FILLED IN: No waiting days have been filled in
+  THE Q-FEVER TREATMENT %description% (FLAG=%flag%) WAS ALREADY DECLARED FOR THE FOLLOWING ANIMALS: The Q-Fever treatment %description% (flag=%flag%) was already declared for the following animals

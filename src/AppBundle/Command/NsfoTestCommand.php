@@ -83,16 +83,6 @@ class NsfoTestCommand extends ContainerAwareCommand
         $output->writeln(CommandUtil::generateTitle(self::TITLE));
         $output->writeln([DoctrineUtil::getDatabaseHostAndNameString($em),'']);
 
-        $treatmentId = 29;
-
-        $successIndicatorCounts = $this->em->getRepository(DeclareAnimalFlag::class)
-            ->getFlagSuccessIndicatorCountByTreatmentId($treatmentId);
-
-        $hasFailedFlags = $successIndicatorCounts[SuccessIndicator::N] > 0;
-        $hasSuccessFlags = $successIndicatorCounts[SuccessIndicator::N] > 0;
-
-dump($successIndicatorCounts, $hasFailedFlags, $hasSuccessFlags);die;
-
         $option = $this->cmdUtil->generateMultiLineQuestion([
             'Choose option: ', "\n",
             '1: Find locations with highest animal count', "\n",

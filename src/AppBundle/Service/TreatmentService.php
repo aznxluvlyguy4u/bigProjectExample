@@ -34,6 +34,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Exception;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
 
 /**
@@ -165,7 +166,7 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
         }
 
         if ($treatmentTemplate instanceof QFever) {
-            $this->validateQFeverFlagsForAllAnimals($treatmentTemplate, $existingAnimals); //TODO
+            $this->validateQFeverFlagsForAllAnimals($treatmentTemplate, $existingAnimals);
         }
 
         // No duplicates are being created, so what is being meant with "duplicates"?
@@ -391,9 +392,19 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
     )
     {
         $flagType = QFeverService::getFlagType($template->getDescription(), $template->getAnimalType());
+        $animalIds = array_map(function (Animal $animal) {
+            return $animal->getId();
+        }, $existingAnimals->toArray());
 
-        /** @var Animal $existingAnimal */
-        foreach ($existingAnimals as $existingAnimal) {
+        $ulnForExistingFlags = $this->getManager()->getRepository(DeclareAnimalFlag::class)
+            ->getUlnsForExistingFlags($flagType, $animalIds);
+
+        if (!empty($ulnForExistingFlags)) {
+            $errorMessage = $this->translator->trans('THE Q-FEVER TREATMENT %description% WAS ALREADY DECLARED FOR THE FOLLOWING ANIMALS', [
+                '%description%' => $template->getDescription(),
+                '%flag%' => $flagType
+            ]).': '.implode(',',$ulnForExistingFlags);
+            throw new BadRequestHttpException($errorMessage);
         }
     }
 
