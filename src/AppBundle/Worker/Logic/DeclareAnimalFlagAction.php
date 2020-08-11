@@ -23,6 +23,7 @@ class DeclareAnimalFlagAction extends RawInternalWorkerActionBase implements Raw
         /** @var VastleggenDiervlagMeldingResponse $rvoResponse */
         $rvoResponse = $this->parseRvoResponseObject($rvoXmlResponseContent, VastleggenDiervlagMeldingResponse::class);
 
+        /** @var DeclareAnimalFlag $declareAnimalFlag */
         $declareAnimalFlag = $this->em->getRepository(DeclareAnimalFlag::class)
             ->findOneByRequestId($rvoResponse->requestID);
 
@@ -30,6 +31,24 @@ class DeclareAnimalFlagAction extends RawInternalWorkerActionBase implements Raw
         $treatmentId = $declareAnimalFlag->getTreatment()->getId();
 
         $this->addResponseDetailsAndStatusToDeclare($rvoResponse, $declareAnimalFlag);
+
+        // Change status depending on repeated declare logic
+        if ($this->isRepeatedDeclare($declareAnimalFlag)) {
+
+            $oldDeclareAnimalFlag = $this->em->getRepository(DeclareAnimalFlag::class)
+                ->findActiveForAnimalId($declareAnimalFlag->getAnimalId(), $declareAnimalFlag->getFlagType());
+
+            if (!$oldDeclareAnimalFlag) {
+                // The flag does not exist yet in the database.
+                // Create it as a new flag.
+                $declareAnimalFlag->setWarningValues(
+                    $declareAnimalFlag->getErrorMessage(),
+                    $declareAnimalFlag->getErrorCode()
+                );
+                $declareAnimalFlag->setRequestState(RequestStateType::FINISHED_WITH_WARNING);
+            }
+            // ELSE just keep it as an error.
+        }
 
         // No further business logic is necessary
         $this->em->persist($declareAnimalFlag);
@@ -55,15 +74,7 @@ class DeclareAnimalFlagAction extends RawInternalWorkerActionBase implements Raw
         $declareAnimalFlag->setErrorKindIndicator($verwerkingsResultaat->soortFoutIndicator);
         $declareAnimalFlag->setSuccessIndicator($verwerkingsResultaat->succesIndicator);
 
-        // 2. Check if possible error should be treated as a repeated declare
-        if ($this->isRepeatedDeclare($declareAnimalFlag)) {
-            $declareAnimalFlag->setWarningValues(
-                $declareAnimalFlag->getErrorMessage(),
-                $declareAnimalFlag->getErrorCode()
-            );
-        }
-
-        // 3. Set request status by response details
+        // 2. Set request status by response details
         switch (true) {
             // Always check the SuccessWithWarning details BEFORE the Success details
             case $declareAnimalFlag->hasSuccessWithWarningResponse():
@@ -84,7 +95,7 @@ class DeclareAnimalFlagAction extends RawInternalWorkerActionBase implements Raw
     private function isRepeatedDeclare(DeclareBaseResponseInterface $response)
     {
         $repeatedDeclareErrorCodes = [
-            RvoErrorCode::REPEATED_ARRIVAL_00015
+            RvoErrorCode::REPEATED_ANIMAL_FLAG_01521
         ];
 
         return in_array($response->getErrorCode(), $repeatedDeclareErrorCodes);

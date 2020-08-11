@@ -3,6 +3,7 @@
 namespace AppBundle\Entity;
 
 use AppBundle\Constant\Constant;
+use AppBundle\Enumerator\RequestStateType;
 use AppBundle\Enumerator\SuccessIndicator;
 use AppBundle\Util\SqlUtil;
 use Doctrine\DBAL\Connection;
@@ -14,6 +15,26 @@ use Doctrine\DBAL\ParameterType;
  */
 class DeclareAnimalFlagRepository extends BaseRepository
 {
+    public function findActiveForAnimalId(int $animalId, string $flagType): ?DeclareAnimalFlag
+    {
+        $qb = $this->getManager()->createQueryBuilder();
+        $qb
+            ->select('flag')
+            ->from(DeclareAnimalFlag::class, 'flag')
+            ->where(
+                $qb->expr()->orX(
+                    $qb->expr()->eq('flag.requestState', "'".RequestStateType::FINISHED."'"),
+                    $qb->expr()->eq('flag.requestState', "'".RequestStateType::FINISHED_WITH_WARNING."'")
+                )
+            )
+            ->andWhere($qb->expr()->eq('flag.animal', $animalId))
+            ->andWhere($qb->expr()->eq('flag.flagType', "'$flagType'"))
+        ;
+
+        $result = $qb->getQuery()->getResult();
+        return array_shift($result);
+    }
+
 
     /**
      * @param array $treatmentIds
