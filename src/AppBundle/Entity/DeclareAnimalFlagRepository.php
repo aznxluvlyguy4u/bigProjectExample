@@ -51,6 +51,7 @@ class DeclareAnimalFlagRepository extends BaseRepository
         $sql = "SELECT
                     flag.animal_id,
                     flag.location_id,
+                    flag.treatment_id,
                     flag.id as flag_id,
                     flag.flag_type,
                     flag.flag_start_date,

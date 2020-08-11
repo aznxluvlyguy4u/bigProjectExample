@@ -139,8 +139,8 @@ class TreatmentRepository extends BaseRepository {
                         ];
                     },
                     array_filter($flagDetails,
-                    function (array $flag) use ($animalIdOfTreatment) {
-                        return $flag['animal_id'] === $animalIdOfTreatment;
+                    function (array $flag) use ($animalIdOfTreatment, $treatmentId) {
+                        return $flag['animal_id'] === $animalIdOfTreatment && $flag['treatment_id'] === $treatmentId;
                     }
                 ));
 
