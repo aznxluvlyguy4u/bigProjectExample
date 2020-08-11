@@ -4,9 +4,11 @@ namespace AppBundle\Command;
 
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
+use AppBundle\Entity\DeclareAnimalFlag;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\LocationRepository;
 use AppBundle\Entity\ResultTableBreedGrades;
+use AppBundle\Enumerator\SuccessIndicator;
 use AppBundle\Service\AwsExternalTestQueueService;
 use AppBundle\Service\AwsInternalTestQueueService;
 use AppBundle\Util\CommandUtil;
@@ -80,6 +82,16 @@ class NsfoTestCommand extends ContainerAwareCommand
         //Print intro
         $output->writeln(CommandUtil::generateTitle(self::TITLE));
         $output->writeln([DoctrineUtil::getDatabaseHostAndNameString($em),'']);
+
+        $treatmentId = 29;
+
+        $successIndicatorCounts = $this->em->getRepository(DeclareAnimalFlag::class)
+            ->getFlagSuccessIndicatorCountByTreatmentId($treatmentId);
+
+        $hasFailedFlags = $successIndicatorCounts[SuccessIndicator::N] > 0;
+        $hasSuccessFlags = $successIndicatorCounts[SuccessIndicator::N] > 0;
+
+dump($successIndicatorCounts, $hasFailedFlags, $hasSuccessFlags);die;
 
         $option = $this->cmdUtil->generateMultiLineQuestion([
             'Choose option: ', "\n",

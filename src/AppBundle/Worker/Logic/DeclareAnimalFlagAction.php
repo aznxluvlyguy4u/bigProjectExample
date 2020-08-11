@@ -113,7 +113,7 @@ class DeclareAnimalFlagAction extends RawInternalWorkerActionBase implements Raw
         }
 
         $hasFailedFlags = $successIndicatorCounts[SuccessIndicator::N] > 0;
-        $hasSuccessFlags = $successIndicatorCounts[SuccessIndicator::N] > 0;
+        $hasSuccessFlags = $successIndicatorCounts[SuccessIndicator::J] > 0;
 
         $hasOnlySuccessFlags = $hasSuccessFlags && !$hasFailedFlags;
         $hasOnlyFailedFlags = $hasFailedFlags && !$hasSuccessFlags;
