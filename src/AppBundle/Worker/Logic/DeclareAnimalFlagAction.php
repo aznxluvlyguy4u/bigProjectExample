@@ -14,6 +14,7 @@ use AppBundle\Enumerator\SuccessIndicator;
 use AppBundle\Exception\Rvo\RvoUnmappedResponseDetailsException;
 use AppBundle\Exception\Sqs\SqsMessageInvalidTaskTypeException;
 use AppBundle\model\Rvo\Response\DiervlagMelding\VastleggenDiervlagMeldingResponse;
+use AppBundle\Util\RvoResponseUtil;
 use DateTime;
 
 class DeclareAnimalFlagAction extends RawInternalWorkerActionBase implements RawInternalWorkerLogicInterface
@@ -37,6 +38,11 @@ class DeclareAnimalFlagAction extends RawInternalWorkerActionBase implements Raw
 
             $oldDeclareAnimalFlag = $this->em->getRepository(DeclareAnimalFlag::class)
                 ->findActiveForAnimalId($declareAnimalFlag->getAnimalId(), $declareAnimalFlag->getFlagType());
+
+            $messageNumber = RvoResponseUtil::extractMessageNumberFromErrorMessage(
+                $declareAnimalFlag->getErrorCode(), $declareAnimalFlag->getErrorMessage()
+            );
+            $declareAnimalFlag->setMessageNumber($messageNumber);
 
             if (!$oldDeclareAnimalFlag) {
                 // The flag does not exist yet in the database.
@@ -95,7 +101,8 @@ class DeclareAnimalFlagAction extends RawInternalWorkerActionBase implements Raw
     private function isRepeatedDeclare(DeclareBaseResponseInterface $response)
     {
         $repeatedDeclareErrorCodes = [
-            RvoErrorCode::REPEATED_ANIMAL_FLAG_01521
+            RvoErrorCode::REPEATED_ANIMAL_FLAG_01521,
+            RvoErrorCode::REPEATED_DECLARE_00015
         ];
 
         return in_array($response->getErrorCode(), $repeatedDeclareErrorCodes);
