@@ -36,7 +36,9 @@ class DeclareAnimalFlagRepository extends BaseRepository
                     flag.flag_end_date,
                     to_char(flag_start_date, '$dateFormat') as start_date_in_default_format,
                     to_char(flag_end_date, '$dateFormat') as end_date_in_default_format,
-                    db.request_state
+                    db.request_state,
+                    db.error_code,
+                    db.error_message
                 FROM declare_animal_flag flag
                     INNER JOIN declare_base_with_response db on flag.id = db.id
                 WHERE treatment_id IN (?)";
