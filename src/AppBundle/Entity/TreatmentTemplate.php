@@ -5,6 +5,7 @@ namespace AppBundle\Entity;
 
 use AppBundle\Enumerator\AnimalType;
 use AppBundle\Traits\EntityClassInfo;
+use AppBundle\Util\TimeUtil;
 use AppBundle\Util\Translation;
 use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -33,6 +34,8 @@ use Symfony\Component\Validator\Constraints as Assert;
 abstract class TreatmentTemplate
 {
     use EntityClassInfo;
+
+    const IS_NEW_MAX_DAYS_LIMIT = 14;
 
     /**
      * @var integer
@@ -192,6 +195,17 @@ abstract class TreatmentTemplate
      */
     public function getDutchType() {
         return Translation::getDutchTreatmentType($this->type);
+    }
+
+    /**
+     * @JMS\VirtualProperty
+     * @JMS\SerializedName("is_new")
+     * @JMS\Groups({
+     *     "TREATMENT_TEMPLATE"
+     * })
+     */
+    public function isNew(): bool {
+        return TimeUtil::getAgeInDays($this->getLogDate(),new DateTime()) <= self::IS_NEW_MAX_DAYS_LIMIT;
     }
 
     /**
