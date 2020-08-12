@@ -400,7 +400,7 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
             ->getUlnsForExistingFlags($flagType, $animalIds);
 
         if (!empty($ulnForExistingFlags)) {
-            $errorMessage = $this->translator->trans('THE Q-FEVER TREATMENT %description% WAS ALREADY DECLARED FOR THE FOLLOWING ANIMALS', [
+            $errorMessage = $this->translator->trans('q-fever.duplicate.flag', [
                 '%description%' => $template->getDescription(),
                 '%flag%' => $flagType
             ]).': '.implode(',',$ulnForExistingFlags);
