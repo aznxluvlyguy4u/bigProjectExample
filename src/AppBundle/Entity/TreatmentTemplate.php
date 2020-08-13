@@ -16,6 +16,13 @@ use Symfony\Component\Validator\Constraints as Assert;
 /**
  * Class TreatmentTemplate
  *
+ * @ORM\Table(name="treatment_template", indexes={
+ *     @ORM\Index(
+ *      name="treatment_template_idx",
+ *      columns={"location_id", "treatment_type_id", "description"},
+ *      options={"where": "is_active"}
+ *     )
+ * })
  * @ORM\Entity(repositoryClass="AppBundle\Entity\TreatmentTemplateRepository")
  * @package AppBundle\Entity
  * @ORM\InheritanceType("JOINED")
