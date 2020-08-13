@@ -17,6 +17,13 @@ use Symfony\Component\Validator\Constraints as Assert;
 /**
  * Class Treatment
  *
+ * @ORM\Table(name="treatment", indexes={
+ *     @ORM\Index(
+ *      name="treatment_idx",
+ *      columns={"location_id", "treatment_template_id", "status"},
+ *      options={"where": "is_active"}
+ *     )
+ * })
  * @ORM\Entity(repositoryClass="AppBundle\Entity\TreatmentRepository")
  * @package AppBundle\Entity
  */
