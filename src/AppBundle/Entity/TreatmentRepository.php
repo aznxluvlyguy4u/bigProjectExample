@@ -146,10 +146,12 @@ class TreatmentRepository extends BaseRepository {
 
                 $flagDetailsOfAnimal = array_shift($flagDetailsOfAnimalWrappedInArray);
 
-                // The following details can be assumed to be identical for all animals within
-                $treatmentDetails[$treatmentKey]['rvo_flag'] = $flagDetailsOfAnimal['rvo_flag'] ?? null;
-                $treatmentDetails[$treatmentKey]['start_date'] = $flagDetailsOfAnimal['rvo_flag_start_date'] ?? null;
-                $treatmentDetails[$treatmentKey]['end_date'] = $flagDetailsOfAnimal['rvo_flag_end_date'] ?? null;
+                if ($flagDetailsOfAnimal) {
+                    // The following details can be assumed to be identical for all animals within
+                    $treatmentDetails[$treatmentKey]['rvo_flag'] = $flagDetailsOfAnimal['rvo_flag'] ?? null;
+                    $treatmentDetails[$treatmentKey]['rvo_flag_start_date'] = $flagDetailsOfAnimal['rvo_flag_start_date'] ?? null;
+                    $treatmentDetails[$treatmentKey]['rvo_flag_end_date'] = $flagDetailsOfAnimal['rvo_flag_end_date'] ?? null;
+                }
 
                 if (is_array($flagDetailsOfAnimal) && !empty($flagDetailsOfAnimal)) {
                     $mergedAnimalDetails = array_merge($animalDetailOfTreatment, $flagDetailsOfAnimal);

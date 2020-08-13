@@ -459,6 +459,11 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
 
     private function validateTreatmentDuration(Treatment $treatment)
     {
+        if ($treatment->getTreatmentTemplate() instanceof QFever) {
+            // For QFever no endDate can be used.
+            return;
+        }
+
         $durationInDays = $treatment->getEndDate() ? TimeUtil::getAgeInDays($treatment->getStartDate(), $treatment->getEndDate()) : 0;
 
         $minTreatmentDuration = 0;
