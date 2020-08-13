@@ -635,6 +635,10 @@ A Q-FEVER TEMPLATE CAN NOT BE CREATED FOR A LOCATION: Een q-koorts template kan 
 TREATMENT DESCRIPTION DOES NOT EXIST IN DATABASE FOR ACTIVE TREATMENT TYPE WITH TYPE LOCATION: De beschrijving van de behandeling bestaat niet in de database voor een actief behandelingstype met het type locatie
 NO WAITING DAYS HAVE BEEN FILLED IN: Er zijn geen wacht dagen ingevuld
 
+treatment:
+  duration:
+    too-short: De opgegeven behandelingsduur van %inputDurationDays% dagen is korter dan de minimale %treatmentDurationDays% dagen. Voor de opgegeven startdatum %inputStartDate% is een minimale einddatum nodig van %minEndDate%.
+
 q-fever:
   duplicate:
     flag: De Q-Koorts behandeling %description% (vlag=%flag%) was al gemeld voor de deze dieren

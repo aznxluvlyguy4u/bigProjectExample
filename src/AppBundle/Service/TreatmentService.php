@@ -24,6 +24,7 @@ use AppBundle\Enumerator\RequestType;
 use AppBundle\Enumerator\TreatmentTypeOption;
 use AppBundle\Service\Rvo\SoapMessageBuilder\RvoDeclareAnimalFlagSoapMessageBuilder;
 use AppBundle\Util\ActionLogWriter;
+use AppBundle\Util\DateUtil;
 use AppBundle\Util\RequestUtil;
 use AppBundle\Util\ResultUtil;
 use AppBundle\Util\SqlUtil;
@@ -226,8 +227,6 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
             }
 
             $medicationSelections->add($medicationSelection);
-
-            $em->persist($medicationSelection);
         }
 
         $treatment->__construct();
@@ -237,6 +236,13 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
             ->setCreationBy($this->getUser())
             ->setAnimals($existingAnimals)
             ->setTreatmentTemplate($treatmentTemplate);
+
+        $this->validateTreatmentDuration($treatment);
+
+
+        foreach ($medicationSelections as $medicationSelection) {
+            $em->persist($medicationSelection);
+        }
 
         $em->persist($treatment);
 
@@ -449,6 +455,30 @@ class TreatmentService extends TreatmentServiceBase implements TreatmentAPIContr
             ->setType($type);
 
         return $treatment;
+    }
+
+    private function validateTreatmentDuration(Treatment $treatment)
+    {
+        $durationInDays = $treatment->getEndDate() ? TimeUtil::getAgeInDays($treatment->getStartDate(), $treatment->getEndDate()) : 0;
+
+        $minTreatmentDuration = 0;
+
+        foreach ($treatment->getMedicationSelections() as $medicationSelection) {
+            $treatmentDuration = $medicationSelection->getTreatmentMedication()->getTreatmentDuration();
+            $minTreatmentDuration = $minTreatmentDuration < $treatmentDuration ? $treatmentDuration : $minTreatmentDuration;
+        }
+
+        if ($durationInDays < $minTreatmentDuration) {
+            $minEndTime = clone $treatment->getStartDate();
+            $minEndTime->add(new DateInterval('P'.ceil($minTreatmentDuration).'D'));
+
+            throw new BadRequestHttpException($this->translator->trans('treatment.duration.too-short', [
+                '%inputDurationDays%' => $durationInDays,
+                '%treatmentDurationDays%' => $minTreatmentDuration,
+                '%inputStartDate%' => $treatment->getStartDate()->format(DateUtil::DATE_USER_DISPLAY_FORMAT),
+                '%minEndDate%' => $minEndTime->format(DateUtil::DATE_USER_DISPLAY_FORMAT),
+            ]));
+        }
     }
 
     /**

@@ -626,7 +626,7 @@ class Treatment implements TreatmentInterface
     }
 
     /**
-     * @return ArrayCollection<MedicationSelection>
+     * @return ArrayCollection|MedicationSelection[]
      */
     public function getMedicationSelections()
     {
