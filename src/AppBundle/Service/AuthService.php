@@ -168,6 +168,7 @@ class AuthService extends AuthServiceBase
             ->setCountryDetails($country);
 
         $company
+            ->setCompanyName($registration->getCompanyName())
             ->setIsActive(true)
             ->setAddress($companyAddress)
             ->addLocation($location)

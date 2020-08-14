@@ -35,3 +35,7 @@ phone:
 
 ubn:
   not_blank: UBN cannot be empty
+
+company:
+  name:
+    not_blank: Company name can not be empty

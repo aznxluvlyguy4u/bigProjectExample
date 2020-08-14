@@ -147,6 +147,18 @@ class Registration
      *
      * @ORM\Column(type="string", nullable=false)
      * @JMS\Type("string")
+     * @Assert\NotBlank(message="company.name.not_blank")
+     * @JMS\Groups({
+     *     "REGISTRATION"
+     * })
+     */
+    private $companyName;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(type="string", nullable=false)
+     * @JMS\Type("string")
      * @Assert\NotBlank(message="ubn.not_blank")
      * @JMS\Groups({
      *     "REGISTRATION"
@@ -378,6 +390,25 @@ class Registration
     public function setCity(string $city): Registration
     {
         $this->city = $city;
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getCompanyName(): string
+    {
+        return $this->companyName;
+    }
+
+    /**
+     * @param string $companyName
+     * @return Registration
+     */
+    public function setCompanyName(string $companyName): self
+    {
+        $this->companyName = $companyName;
+
         return $this;
     }
 
