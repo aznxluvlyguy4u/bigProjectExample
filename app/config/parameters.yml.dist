@@ -74,6 +74,8 @@ parameters:
 
     sentry_dns: ~
 
+    twinfield_office_code: TESTNSFO
+
     rvo_ir_base_url: ~
     rvo_ir_username: ~
     rvo_ir_password: ~
