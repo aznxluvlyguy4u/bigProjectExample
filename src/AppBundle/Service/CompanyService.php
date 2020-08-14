@@ -11,6 +11,7 @@ use AppBundle\Entity\Client;
 use AppBundle\Entity\Company;
 use AppBundle\Entity\CompanyAddress;
 use AppBundle\Entity\CompanyNote;
+use AppBundle\Entity\Country;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\LocationAddress;
 use AppBundle\Entity\PedigreeRegisterRegistration;
@@ -23,6 +24,7 @@ use AppBundle\Filter\ActiveInvoiceFilter;
 use AppBundle\Filter\ActiveLocationFilter;
 use AppBundle\Output\CompanyNoteOutput;
 use AppBundle\Output\CompanyOutput;
+use AppBundle\Service\ExternalProvider\ExternalProviderCustomerService;
 use AppBundle\Setting\InvoiceSetting;
 use AppBundle\Util\ActionLogWriter;
 use AppBundle\Util\AdminActionLogWriter;
@@ -38,6 +40,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Query;
 use Doctrine\ORM\QueryBuilder;
 use Exception;
+use SoapFault;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
@@ -46,6 +49,14 @@ use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
 
 class CompanyService extends AuthServiceBase
 {
+
+    /** @var ExternalProviderCustomerService $externalProviderCustomerService */
+    private $externalProviderCustomerService;
+
+    public function setExternalCustomerProviderService(ExternalProviderCustomerService $externalProviderCustomerService)
+    {
+        $this->externalProviderCustomerService = $externalProviderCustomerService;
+    }
 
     /**
      * @param Request $request
@@ -99,6 +110,7 @@ class CompanyService extends AuthServiceBase
      * @param Request $request
      * @return JsonResponse
      * @throws Exception
+     * @throws SoapFault
      */
     public function createCompany(Request $request)
     {
@@ -152,10 +164,13 @@ class CompanyService extends AuthServiceBase
             $address->setAddressNumberSuffix($contentAddress['suffix']);
         }
 
+        /** @var Country $addressCountryDB */
+        $addressCountryDB = $this->getCountryByName($addressCountry);
+
         $address->setPostalCode($contentAddress['postal_code']);
         $address->setCity($contentAddress['city']);
         $address->setState(ArrayUtil::get('state', $contentAddress));
-        $address->setCountryDetails($this->getCountryByName($addressCountry));
+        $address->setCountryDetails($addressCountryDB);
 
         // Create Billing Address
         $contentBillingAddress = $content->get('billing_address');
@@ -270,6 +285,9 @@ class CompanyService extends AuthServiceBase
         // Save to Database
         $this->getManager()->persist($company);
         $this->getManager()->flush();
+
+        // Create TwinField entry
+        $this->externalProviderCustomerService->createOrEditCustomer($content, $addressCountryDB->getCode());
 
         $log = ActionLogWriter::createCompany($this->getManager(), $content, $company, $admin);
 
@@ -429,10 +447,19 @@ class CompanyService extends AuthServiceBase
             $billingAddress->setAddressNumberSuffix('');
         }
 
+        /** @var Country $billingAddressCountryDB */
+        $billingAddressCountryDB = $this->getCountryByName($billingAddressCountry);
+
+        if (!$content->containsKey('twinfield_code')) {
+            throw new PreconditionFailedHttpException('The twinfield code can not be empty');
+        }
+
+        $this->externalProviderCustomerService->createOrEditCustomer($content, $billingAddressCountryDB->getCode());
+
         $billingAddress->setPostalCode($contentBillingAddress['postal_code']);
         $billingAddress->setCity($contentBillingAddress['city']);
         $billingAddress->setState(ArrayUtil::get('state', $contentBillingAddress));
-        $billingAddress->setCountryDetails($this->getCountryByName($billingAddressCountry));
+        $billingAddress->setCountryDetails($billingAddressCountryDB);
 
         // Update Company
         $company->setCompanyName($content->get('company_name'));
