@@ -986,6 +986,10 @@ services:
     app.company:
         parent: app.abstract_base.auth
         class: AppBundle\Service\CompanyService
+        calls:
+          - method: setExternalCustomerProviderService
+            arguments:
+              - '@AppBundle\Service\ExternalProvider\ExternalProviderCustomerService'
 
     app.component:
         parent: app.abstract_base.controller
@@ -1239,9 +1243,13 @@ services:
     AppBundle\Service\ExternalProvider\ExternalProviderCustomerService:
         parent: app.abstract_base.external_provider
         calls:
-            - method: setExternalProviderOfficeService
+            - method: setProperties
               arguments:
                 - '@AppBundle\Service\ExternalProvider\ExternalProviderOfficeService'
+                - '%external_provider_user%'
+                - '%external_provider_password%'
+                - '%external_provider_organisation%'
+                - '%twinfield_office_code%'
 
     AppBundle\Service\ExternalProvider\ExternalProviderOfficeService:
         parent: app.abstract_base.external_provider
