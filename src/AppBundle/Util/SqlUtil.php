@@ -68,6 +68,23 @@ class SqlUtil
     }
 
 
+    public static function bumpPrimaryKeySeqIfTooLow(Connection $conn, $tableName, ?LoggerInterface $logger = null,
+                                                     string $logLevel = LogLevel::DEBUG)
+    {
+        $tableName = strtolower($tableName);
+        $sequenceName = $tableName.'_id_seq';
+        $sql = "SELECT
+                       (SELECT COALESCE(last_value,0) FROM $sequenceName) - COALESCE(MAX(id),0) < 0 
+                           as has_too_low_sequence
+                FROM $tableName";
+        $hasTooLowSequence = $conn->query($sql)->fetchColumn() ?? true;
+
+        if ($hasTooLowSequence) {
+            self::bumpPrimaryKeySeq($conn, $tableName, $logger, $logLevel);
+        }
+    }
+
+
     /**
      * @param mixed $value
      * @param boolean $includeQuotes
@@ -963,7 +980,7 @@ class SqlUtil
     }
 
 
-    private static function activeRequestStateTypes(): array
+    public static function activeRequestStateTypes(): array
     {
         return [
             RequestStateType::FINISHED,

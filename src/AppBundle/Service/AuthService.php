@@ -66,6 +66,8 @@ class AuthService extends AuthServiceBase
 
         $registration->setStatus(RegistrationStatus::NEW);
 
+        $registration->__construct();
+
         $ubn = $registration->getUbn();
 
         if (!Validator::hasValidUbnFormat($ubn)) {
@@ -86,10 +88,6 @@ class AuthService extends AuthServiceBase
 
         $errors = $this->validator->validate($registration);
         Validator::throwExceptionWithFormattedErrorMessageIfHasErrors($errors);
-
-        $registration->__construct();
-
-        $registration->setStatus(RegistrationStatus::NEW);
 
         $this->getManager()->persist($registration);
         $this->getManager()->flush();
@@ -171,6 +169,7 @@ class AuthService extends AuthServiceBase
             ->setIsRevealHistoricAnimals(true)
             ->setOwner($client)
             ->setTelephoneNumber($registration->getPhoneNumber())
+            ->setCreatedAt($registration->getCreatedAt())
         ;
 
         $location

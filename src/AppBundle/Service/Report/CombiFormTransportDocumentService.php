@@ -98,31 +98,31 @@ class CombiFormTransportDocumentService extends ReportServiceBase
             $iterator = $animal->getTreatments()->getIterator();
 
             $iterator->uasort(function($first, $second) {
-                return $first->getEndDate() > $second->getEndDate();
+                return $first->getLastDate() > $second->getLastDate();
             });
 
             $lastTreatmentEndDate = '';
 
             if (isset($iterator->getArrayCopy()[0])) {
-                $lastTreatmentEndDate = $iterator->getArrayCopy()[0]->getEndDate()->format('d-m-Y');
+                $lastTreatmentEndDate = $iterator->getArrayCopy()[0]->getLastDate()->format('d-m-Y');
             }
 
             /** @var Treatment $treatment */
             foreach ($animal->getTreatments() as $treatment) {
-                if ($treatment->getStartDate() >= $transportDateSickTime && $treatment->getEndDate() <= $transportDateSickTime) {
+                if ($treatment->getStartDate() >= $transportDateSickTime && $treatment->getLastDate() <= $transportDateSickTime) {
                     $this->result['sickTimeAnswer'] = 'Ja';
                 }
 
                 /** @var MedicationSelection $medicationSelection */
                 foreach ($treatment->getMedicationSelections() as $medicationSelection) {
-                    $endDate = clone $treatment->getEndDate();
+                    $lastDate = clone $treatment->getLastDate();
 
                     /** @var TreatmentMedication $treatmentMedication */
                     $treatmentMedication = $medicationSelection->getTreatmentMedication();
 
-                    $endDate->modify('+'.$treatmentMedication->getWaitingDays().' days');
+                    $lastDate->modify('+'.$treatmentMedication->getWaitingDays().' days');
 
-                    if ($endDate >= $transportDateWaitingTimeExpired && $treatment->getEndDate()->format('d-m-Y') == $lastTreatmentEndDate) {
+                    if ($lastDate >= $transportDateWaitingTimeExpired && $treatment->getLastDate()->format('d-m-Y') == $lastTreatmentEndDate) {
                         $this->result['waitingTimeExpiredAnswer'] = 'Ja';
                         $this->result['waiting_time_expired_animals'][] = [
                             'uln'                   => $animal->getUln(),

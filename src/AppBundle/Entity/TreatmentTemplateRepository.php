@@ -3,7 +3,6 @@
 namespace AppBundle\Entity;
 
 use AppBundle\Enumerator\TreatmentTypeOption;
-use AppBundle\Util\ArrayUtil;
 
 class TreatmentTemplateRepository extends BaseRepository
 {
@@ -36,11 +35,20 @@ class TreatmentTemplateRepository extends BaseRepository
             $qb->andWhere($qb->expr()->eq('template.isActive', 'true'));
         }
 
-        $qb->orderBy('template.id' ,'DESC');
+        $qb->addOrderBy('template.description' ,'ASC');
         $query = $qb->getQuery();
 
 
-        return $query->getResult();
+        $results = $query->getResult();
+
+        // Order QFever above others
+        usort($results, function (TreatmentTemplate $a, TreatmentTemplate $b) {
+            $aRank = $a instanceof QFever ? 1 : 0;
+            $bRank = $b instanceof QFever ? 1 : 0;
+            return $aRank < $bRank;
+        });
+
+        return $results;
     }
 
 

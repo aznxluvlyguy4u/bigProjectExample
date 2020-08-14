@@ -11,7 +11,6 @@ use AppBundle\Criteria\DeclareCriteria;
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\BasicRetrieveRvoDeclareInterface;
 use AppBundle\Entity\BasicRvoDeclareInterface;
-use AppBundle\Entity\DeclarationDetail;
 use AppBundle\Entity\DeclareAnimalFlag;
 use AppBundle\Entity\DeclareArrival;
 use AppBundle\Entity\DeclareBase;
@@ -41,6 +40,7 @@ use AppBundle\Exception\EventDateBeforeDateOfBirthHttpException;
 use AppBundle\Exception\InvalidStnHttpException;
 use AppBundle\Exception\InvalidUlnHttpException;
 use AppBundle\Exception\MissingRelationNumberKeeperOfLocationHttpException;
+use AppBundle\Exception\Sqs\SqsMessageSendFailedException;
 use AppBundle\Output\RequestMessageOutputBuilder;
 use AppBundle\Util\AnimalArrayReader;
 use AppBundle\Util\ArrayUtil;
@@ -59,10 +59,22 @@ abstract class DeclareControllerServiceBase extends ControllerServiceBase
 {
     /** @var AwsExternalQueueService */
     protected $externalQueueService;
+    /** @var AwsRawExternalSqsService */
+    protected $rawExternalQueueService;
     /** @var IRSerializer */
     protected $irSerializer;
     /** @var RequestMessageBuilder */
     protected $requestMessageBuilder;
+
+    /**
+     * @required
+     *
+     * @param AwsRawExternalSqsService $rawExternalQueueService
+     */
+    public function setRawExternalQueueService(AwsRawExternalSqsService $rawExternalQueueService)
+    {
+        $this->rawExternalQueueService = $rawExternalQueueService;
+    }
 
     /**
      * @required
@@ -95,6 +107,18 @@ abstract class DeclareControllerServiceBase extends ControllerServiceBase
     }
 
 
+    protected function sendRawMessageToQueue(string $xmlMessageBody, string $requestType, string $requestId) {
+        $sendToQueueResult = $this->rawExternalQueueService->send($xmlMessageBody, $requestType, $requestId);
+        if ($sendToQueueResult['statusCode'] != '200') {
+            throw new SqsMessageSendFailedException(
+                $this->rawExternalQueueService->getQueueId(),
+                $requestType,
+                $requestId
+            );
+        }
+    }
+
+
     /**
      * @param DeclareBase|BasicRvoDeclareInterface|BasicRetrieveRvoDeclareInterface $messageObject
      * @param bool $isUpdate
@@ -120,10 +144,10 @@ abstract class DeclareControllerServiceBase extends ControllerServiceBase
         //Send serialized message to Queue
         $requestTypeNameSpace = RequestType::getRequestTypeFromObject($messageObject);
 
-        $sendToQresult = $this->externalQueueService->send($jsonMessage, $requestTypeNameSpace, $requestId);
+        $sendToQueueResult = $this->externalQueueService->send($jsonMessage, $requestTypeNameSpace, $requestId);
 
         //If send to Queue, failed, it needs to be resend, set state to failed
-        if ($sendToQresult['statusCode'] != '200') {
+        if ($sendToQueueResult['statusCode'] != '200') {
             $messageObject->setRequestState(RequestStateType::FAILED);
             $messageObject = MessageModifier::modifyBeforePersistingRequestStateByQueueStatus($messageObject, $this->getManager());
             $this->persist($messageObject);
@@ -240,7 +264,7 @@ abstract class DeclareControllerServiceBase extends ControllerServiceBase
      * @param $user
      * @param Location $location
      * @param Person $loggedInUser
-     * @return null|DeclareArrival|DeclareImport|DeclareExport|DeclareDepart|DeclareBirth|DeclareLoss|DeclareAnimalFlag|DeclarationDetail|DeclareTagsTransfer|RetrieveTags|RevokeDeclaration|RetrieveAnimals|RetrieveCountries|RetrieveUbnDetails
+     * @return null|DeclareArrival|DeclareImport|DeclareExport|DeclareDepart|DeclareBirth|DeclareLoss|DeclareAnimalFlag|DeclareTagsTransfer|RetrieveTags|RevokeDeclaration|RetrieveAnimals|RetrieveCountries|RetrieveUbnDetails
      * @throws \Exception
      */
     protected function buildEditMessageObject($messageClassNameSpace, ArrayCollection $contentArray, $user, $loggedInUser, $location)
@@ -256,7 +280,7 @@ abstract class DeclareControllerServiceBase extends ControllerServiceBase
      * @param $user
      * @param Location $location
      * @param Person $loggedInUser
-     * @return null|DeclareArrival|DeclareImport|DeclareExport|DeclareDepart|DeclareBirth|DeclareLoss|DeclareAnimalFlag|DeclarationDetail|DeclareTagsTransfer|RetrieveTags|RevokeDeclaration|RetrieveAnimals|RetrieveAnimals|RetrieveCountries|RetrieveUBNDetails|DeclareTagReplace
+     * @return null|DeclareArrival|DeclareImport|DeclareExport|DeclareDepart|DeclareBirth|DeclareLoss|DeclareAnimalFlag|DeclareTagsTransfer|RetrieveTags|RevokeDeclaration|RetrieveAnimals|RetrieveAnimals|RetrieveCountries|RetrieveUBNDetails|DeclareTagReplace
      * @throws \Exception
      */
     protected function buildMessageObject($messageClassNameSpace, ArrayCollection $contentArray, $user, $loggedInUser, $location)

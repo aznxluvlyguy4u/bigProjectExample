@@ -25,8 +25,10 @@ class Language
 
     private static $values = [
         self::NL => [
+            DeclareLogMessage::ANIMAL_FLAG_REPORTED => 'Diervlag gemeld',
             DeclareLogMessage::ARRIVAL_REPORTED => 'Aanvoer gemeld',
             DeclareLogMessage::BIRTH_REPORTED => 'Geboorte gemeld',
+            DeclareLogMessage::DECLARATION_DETAIL_REPORTED => "Dierdetails gemeld",
             DeclareLogMessage::DEPART_REPORTED => "Afvoer gemeld",
             DeclareLogMessage::EXPORT_REPORTED => "Export gemeld",
             DeclareLogMessage::IMPORT_REPORTED => "Import gemeld",

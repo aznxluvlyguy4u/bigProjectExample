@@ -169,40 +169,6 @@ class DeclareBirthResponse extends DeclareBaseResponse
 
 
     /**
-     * Get id
-     *
-     * @return integer
-     */
-    public function getId()
-    {
-        return $this->id;
-    }
-
-    /**
-     * Set logDate
-     *
-     * @param \DateTime $logDate
-     *
-     * @return DeclareBirthResponse
-     */
-    public function setLogDate($logDate)
-    {
-        $this->logDate = $logDate;
-
-        return $this;
-    }
-
-    /**
-     * Get logDate
-     *
-     * @return \DateTime
-     */
-    public function getLogDate()
-    {
-        return $this->logDate;
-    }
-
-    /**
      * Set dateOfBirth
      *
      * @param \DateTime $dateOfBirth

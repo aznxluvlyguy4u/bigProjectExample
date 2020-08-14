@@ -4,7 +4,6 @@ namespace AppBundle\Component\Modifier;
 
 
 use AppBundle\Component\Utils;
-use AppBundle\Entity\DeclarationDetail;
 use AppBundle\Entity\DeclareAnimalFlag;
 use AppBundle\Entity\DeclareArrival;
 use AppBundle\Entity\DeclareBase;
@@ -37,16 +36,14 @@ class MessageModifier
 
     /**
      * @param EntityManagerInterface|ObjectManager $em
-     * @param null|DeclareBase|DeclareArrival|DeclareImport|DeclareExport|DeclareDepart|DeclareBirth|DeclareLoss|DeclareAnimalFlag|DeclarationDetail|DeclareTagsTransfer|RetrieveTags|RevokeDeclaration|RetrieveAnimals|RetrieveAnimals|RetrieveCountries|RetrieveUBNDetails $messageObject
-     * @return null|DeclareArrival|DeclareImport|DeclareExport|DeclareDepart|DeclareBirth|DeclareLoss|DeclareAnimalFlag|DeclarationDetail|DeclareTagsTransfer|RetrieveTags|RevokeDeclaration|RetrieveAnimals|RetrieveAnimals|RetrieveCountries|RetrieveUBNDetails
+     * @param null|DeclareBase|DeclareArrival|DeclareImport|DeclareExport|DeclareDepart|DeclareBirth|DeclareLoss|DeclareAnimalFlag|DeclareTagsTransfer|RetrieveTags|RevokeDeclaration|RetrieveAnimals|RetrieveAnimals|RetrieveCountries|RetrieveUBNDetails $messageObject
+     * @return null|DeclareArrival|DeclareImport|DeclareExport|DeclareDepart|DeclareBirth|DeclareLoss|DeclareAnimalFlag|DeclareTagsTransfer|RetrieveTags|RevokeDeclaration|RetrieveAnimals|RetrieveAnimals|RetrieveCountries|RetrieveUBNDetails
      */
     public static function modifyBeforePersistingRequestStateByQueueStatus($messageObject, $em)
     {
         $entityNameSpace = Utils::getClassName($messageObject);
         
         switch($entityNameSpace) {
-            case RequestType::DECLARATION_DETAIL_ENTITY:
-                return $messageObject;
 
             case RequestType::DECLARE_ANIMAL_FLAG_ENTITY:
                 return $messageObject;

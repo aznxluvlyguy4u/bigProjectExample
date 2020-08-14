@@ -4,7 +4,6 @@ namespace AppBundle\Service;
 
 use AppBundle\Constant\Constant;
 use AppBundle\Entity\AnimalRepository;
-use AppBundle\Entity\DeclarationDetail;
 use AppBundle\Entity\DeclareAnimalFlag;
 use AppBundle\Entity\DeclareArrival;
 use AppBundle\Entity\DeclareBase;
@@ -437,7 +436,7 @@ class EntityGetter
 
     /**
      * @param string $messageNumber
-     * @return DeclareBase|DeclareArrival|DeclareAnimalFlag|DeclareBirth|DeclareDepart|DeclareExport|DeclareImport|DeclareLoss|DeclareTagsTransfer|DeclarationDetail|RevokeDeclaration
+     * @return DeclareBase|DeclareArrival|DeclareAnimalFlag|DeclareBirth|DeclareDepart|DeclareExport|DeclareImport|DeclareLoss|DeclareTagsTransfer|RevokeDeclaration
      */
     public function getRequestMessageByMessageNumber($messageNumber)
     {
