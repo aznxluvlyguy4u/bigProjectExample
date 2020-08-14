@@ -980,7 +980,7 @@ class SqlUtil
     }
 
 
-    private static function activeRequestStateTypes(): array
+    public static function activeRequestStateTypes(): array
     {
         return [
             RequestStateType::FINISHED,

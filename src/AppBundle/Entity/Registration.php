@@ -4,6 +4,7 @@ namespace AppBundle\Entity;
 
 use AppBundle\Component\Utils;
 use AppBundle\Traits\EntityClassInfo;
+use DateTime;
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as JMS;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -189,9 +190,17 @@ class Registration
      */
     private $phoneNumber;
 
+    /**
+ * @var DateTime
+ *
+ * @ORM\Column(type="datetime", nullable=false)
+ */
+    private $createdAt;
+
     public function __construct()
     {
         $this->registrationId = Utils::generateTokenCode();
+        $this->createdAt = new DateTime();
     }
 
     /**
@@ -454,6 +463,25 @@ class Registration
     public function setPhoneNumber(string $phoneNumber): Registration
     {
         $this->phoneNumber = $phoneNumber;
+        return $this;
+    }
+
+    /**
+     * @return DateTime
+     */
+    public function getCreatedAt(): DateTime
+    {
+        return $this->createdAt;
+    }
+
+    /**
+     * @param DateTime $createdAt
+     * @return Registration
+     */
+    public function setCreatedAt(DateTime $createdAt): self
+    {
+        $this->createdAt = $createdAt;
+
         return $this;
     }
 

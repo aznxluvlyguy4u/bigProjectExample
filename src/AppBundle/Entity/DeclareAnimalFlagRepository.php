@@ -2,8 +2,13 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Constant\Constant;
+use AppBundle\Enumerator\RequestStateType;
+use AppBundle\Enumerator\SuccessIndicator;
 use AppBundle\Util\SqlUtil;
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\DBALException;
+use Doctrine\DBAL\ParameterType;
 
 /**
  * Class DeclareAnimalFlagRepository
@@ -11,6 +16,26 @@ use Doctrine\DBAL\Connection;
  */
 class DeclareAnimalFlagRepository extends BaseRepository
 {
+    public function findActiveForAnimalId(int $animalId, string $flagType): ?DeclareAnimalFlag
+    {
+        $qb = $this->getManager()->createQueryBuilder();
+        $qb
+            ->select('flag')
+            ->from(DeclareAnimalFlag::class, 'flag')
+            ->where(
+                $qb->expr()->orX(
+                    $qb->expr()->eq('flag.requestState', "'".RequestStateType::FINISHED."'"),
+                    $qb->expr()->eq('flag.requestState', "'".RequestStateType::FINISHED_WITH_WARNING."'")
+                )
+            )
+            ->andWhere($qb->expr()->eq('flag.animal', $animalId))
+            ->andWhere($qb->expr()->eq('flag.flagType', "'$flagType'"))
+        ;
+
+        $result = $qb->getQuery()->getResult();
+        return array_shift($result);
+    }
+
 
     /**
      * @param array $treatmentIds
@@ -27,15 +52,18 @@ class DeclareAnimalFlagRepository extends BaseRepository
         $sql = "SELECT
                     flag.animal_id,
                     flag.location_id,
+                    flag.treatment_id,
                     flag.id as flag_id,
                     flag.flag_type,
                     flag.flag_start_date,
                     flag.flag_end_date,
                     to_char(flag_start_date, '$dateFormat') as start_date_in_default_format,
                     to_char(flag_end_date, '$dateFormat') as end_date_in_default_format,
-                    db.request_state
+                    db.request_state,
+                    db.error_code,
+                    db.error_message
                 FROM declare_animal_flag flag
-                    INNER JOIN declare_base db on flag.id = db.id
+                    INNER JOIN declare_base_with_response db on flag.id = db.id
                 WHERE treatment_id IN (?)";
         $values = [$treatmentIds];
         $types = [Connection::PARAM_INT_ARRAY];
@@ -68,7 +96,7 @@ class DeclareAnimalFlagRepository extends BaseRepository
                     to_char(flag_end_date, '$dateFormat') as end_date_in_default_format,
                     db.request_state
                 FROM declare_animal_flag flag
-                    INNER JOIN declare_base db on flag.id = db.id
+                    INNER JOIN declare_base_with_response db on flag.id = db.id
                     INNER JOIN (
                         SELECT
                             animal_id,
@@ -89,7 +117,7 @@ class DeclareAnimalFlagRepository extends BaseRepository
                             SELECT flag.animal_id, flag.id as flag_id,
                                 DENSE_RANK() OVER (PARTITION BY flag.animal_id ORDER BY flag.flag_start_date) AS flag_ordinal
                               FROM declare_animal_flag flag
-                                INNER JOIN declare_base db ON db.id = flag.id
+                                INNER JOIN declare_base_with_response db ON db.id = flag.id
                             WHERE --db.request_state IN ('FINISHED','FINISHED_WITH_WARNING') AND
                                   flag.animal_id IN (?)
                         ORDER BY animal_id, flag.id
@@ -102,5 +130,67 @@ class DeclareAnimalFlagRepository extends BaseRepository
 
         $statement = $this->getManager()->getConnection()->executeQuery($sql, $values, $types);
         return $statement->fetchAll();
+    }
+
+    public function getFlagSuccessIndicatorCountByTreatmentId(int $treatmentId): array
+    {
+        $sql = "SELECT
+                    success_indicator,
+                    COUNT(*) as count
+                FROM declare_animal_flag f
+                    INNER JOIN declare_base_with_response b ON b.id = f.id
+                WHERE treatment_id = ?
+                GROUP BY success_indicator";
+        $values = [$treatmentId];
+        $types = [ParameterType::INTEGER];
+        $statement = $this->getManager()->getConnection()->executeQuery($sql, $values, $types);
+        $output = [];
+        foreach ($statement->fetchAll() as $result) {
+            $successIndicator = $result['success_indicator'] ?? Constant::NULL;
+            $output[$successIndicator] = intval($result['count']);
+        }
+
+        $output[SuccessIndicator::J] = $output[SuccessIndicator::J] ?? 0;
+        $output[SuccessIndicator::N] = $output[SuccessIndicator::N] ?? 0;
+        $output[Constant::NULL] = $output[Constant::NULL] ?? 0;
+
+        return $output;
+    }
+
+
+    /**
+     * @param $flagType
+     * @param $animalIds
+     * @throws DBALException
+     */
+    public function getUlnsForExistingFlags($flagType, $animalIds)
+    {
+        $sql = 'SELECT 
+                    CONCAT(a.uln_country_code,a.uln_number) as uln
+                FROM declare_animal_flag flag
+                    INNER JOIN animal a ON a.id = flag.animal_id
+                    INNER JOIN declare_base_with_response db on flag.id = db.id
+                WHERE request_state IN (?)
+                    AND flag.flag_type = ?
+                    AND flag.animal_id IN (?)
+                GROUP BY CONCAT(a.uln_country_code,a.uln_number)
+                ORDER BY CONCAT(a.uln_country_code,a.uln_number)';
+
+        $values = [
+            SqlUtil::activeRequestStateTypes(),
+            $flagType,
+            $animalIds,
+        ];
+        $types = [
+            Connection::PARAM_STR_ARRAY,
+            ParameterType::STRING,
+            Connection::PARAM_INT_ARRAY,
+        ];
+
+        $statement = $this->getManager()->getConnection()
+            ->executeQuery($sql, $values, $types);
+        return array_map(function (array $result) {
+            return $result['uln'];
+        }, $statement->fetchAll());
     }
 }

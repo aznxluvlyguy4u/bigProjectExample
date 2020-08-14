@@ -9,6 +9,8 @@ parameters:
     database_password: ~
 
     environment: ~
+    environment_slot: 1
+
     redis_host:        redis://localhost
 
     mailer_transport:  smtp
@@ -30,7 +32,11 @@ parameters:
     aws_sqs_queue_exteral_prefix: ~
     aws_sqs_queue_interal_prefix: ~
     aws_sqs_queue_feedback_prefix: ~
+
     max_feedback_workers: 1
+    max_raw_external_workers: 1
+    max_raw_internal_workers: 1
+
     aws_sqs_queue_mixblup_input_prefix: ~
     aws_sqs_queue_mixblup_output_prefix: ~
 
@@ -68,8 +74,15 @@ parameters:
 
     sentry_dns: ~
 
+    twinfield_office_code: TESTNSFO
+
+    rvo_ir_base_url: ~
+    rvo_ir_username: ~
+    rvo_ir_password: ~
+
     # These parameters are only set to true during development and should be false in production!
     output_reports_to_cache_folder_for_local_testing: false
     display_report_pdf_output_as_html: false
     use_test_data: false
     log_extra_details_for_development: false
+    animal_type_env: sheep / goat

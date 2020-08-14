@@ -3,6 +3,7 @@
 
 namespace AppBundle\Service;
 
+use Aws\Result;
 
 interface QueueServiceInterface
 {
@@ -47,14 +48,14 @@ interface QueueServiceInterface
 
     /**
      * @param $messageAttributeNames
-     * @return \Aws\Result
+     * @return Result
      */
     public function getNextMessage(array $messageAttributeNames = []);
 
 
     /**
      * @param $messageAttributeNames
-     * @return \Aws\Result
+     * @return Result
      */
     public function getNextErrorMessage(array $messageAttributeNames = []);
 
@@ -62,22 +63,25 @@ interface QueueServiceInterface
     /**
      * @return string
      */
-    public function getQueueService();
+    public function getSqlClient();
 
 
     /**
      * @param string $receiptHandleOrAwsResult
-     * @return \Aws\Result
+     * @return Result
      */
     public function deleteMessage($receiptHandleOrAwsResult);
 
 
     /**
      * @param string $receiptHandleOrAwsResult
-     * @return \Aws\Result
+     * @return Result
      */
     public function deleteErrorMessage($receiptHandleOrAwsResult);
 
+    
+    public function moveMessageToErrorQueue(Result $response);
+    
 
     /**
      * WARNING!
@@ -102,7 +106,7 @@ interface QueueServiceInterface
 
 
     /**
-     * @param \Aws\Result $response
+     * @param Result $response
      * @param bool $decodeJsonString
      * @return mixed
      */
@@ -117,7 +121,7 @@ interface QueueServiceInterface
 
 
     /**
-     * @param \Aws\Result $response
+     * @param Result $response
      * @param $key
      * @return mixed
      */
@@ -136,7 +140,7 @@ interface QueueServiceInterface
 
 
     /**
-     * @param \Aws\Result $receiptHandleOrAwsResult
+     * @param Result $receiptHandleOrAwsResult
      * @return bool
      */
     public static function hasMessage($receiptHandleOrAwsResult);

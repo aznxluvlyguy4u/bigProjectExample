@@ -81,13 +81,6 @@ class DeclareTagReplaceResponse extends DeclareBaseResponse
      */
     private $replaceDate;
 
-  /**
-   * DeclareTagReplaceResponse constructor.
-   */
-    public function __construct() {
-      $this->setLogDate(new \DateTime());
-    }
-
     /**
      * Set ulnCountryCodeToReplace
      *
