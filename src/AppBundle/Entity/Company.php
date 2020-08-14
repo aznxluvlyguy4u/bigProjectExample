@@ -366,6 +366,16 @@ class Company
      */
     private $animalAnnotations;
 
+    /**
+     * @var DateTime
+     *
+     * @ORM\Column(type="datetime", nullable=true)
+     * @JMS\Groups({
+     *     "DOSSIER"
+     * })
+     */
+    private $createdAt;
+
   /**
    * Company constructor.
    */
@@ -378,7 +388,8 @@ class Company
     $this->notes = new ArrayCollection();
     $this->invoices = new ArrayCollection();
     $this->animalAnnotations = new ArrayCollection();
-    $this->lastMakeLivestockPublicDate = new \DateTime();
+    $this->lastMakeLivestockPublicDate = new DateTime();
+    $this->createdAt = new DateTime();
   }
 
     /**
@@ -638,10 +649,13 @@ class Company
 
     /**
      * @param string $telephoneNumber
+     * @return Company
      */
     public function setTelephoneNumber($telephoneNumber)
     {
         $this->telephoneNumber = StringUtil::trimIfNotNull($telephoneNumber);
+
+        return $this;
     }
 
     /**
@@ -921,7 +935,7 @@ class Company
      */
     public function resetLastMakeLivestockPublicDate(): Company
     {
-        $this->lastMakeLivestockPublicDate = new \DateTime();
+        $this->lastMakeLivestockPublicDate = new DateTime();
         return $this;
     }
 
@@ -1122,5 +1136,24 @@ class Company
     public function removeAnimalAnnotation(AnimalAnnotation $annotation)
     {
         $this->animalAnnotations->removeElement($annotation);
+    }
+
+    /**
+     * @return DateTime
+     */
+    public function getCreatedAt(): DateTime
+    {
+        return $this->createdAt;
+    }
+
+    /**
+     * @param DateTime $createdAt
+     * @return Company
+     */
+    public function setCreatedAt(DateTime $createdAt): self
+    {
+        $this->createdAt = $createdAt;
+
+        return $this;
     }
 }

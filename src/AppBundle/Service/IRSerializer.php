@@ -162,26 +162,6 @@ class IRSerializer extends BaseSerializer implements IRSerializerInterface
     /**
      * @inheritdoc
      */
-    function parseDeclarationDetail(ArrayCollection $declarationDetailcontentArray, Client $client, $isEditMessage)
-    {
-        $declarationDetailcontentArray["type"] = RequestType::DECLARATION_DETAIL_ENTITY;
-        // TODO: Implement parseDeclarationDetail() method.
-        return $declarationDetailcontentArray;
-    }
-
-    /**
-     * @inheritdoc
-     */
-    function parseDeclareAnimalFlag(ArrayCollection $declareAnimalFlagContentArray, Client $client, $isEditMessage)
-    {
-        $declareAnimalFlagContentArray["type"] = RequestType::DECLARE_ANIMAL_FLAG_ENTITY;
-        // TODO: Implement parseDeclareAnimalFlag() method.
-        return $declareAnimalFlagContentArray;
-    }
-
-    /**
-     * @inheritdoc
-     */
     function parseDeclareArrival(ArrayCollection $declareArrivalContentArray, Client $client, Location $location, $isEditMessage)
     {
         $declareArrivalContentArray["type"] = RequestType::DECLARE_ARRIVAL_ENTITY;

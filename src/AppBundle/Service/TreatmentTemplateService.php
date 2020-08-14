@@ -289,10 +289,6 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
         $templateInDatabase = $this->getTemplateByIdAndType($templateId, $type);
         if ($templateInDatabase instanceof JsonResponse) { return $templateInDatabase; }
 
-        if (!$templateInDatabase->isEditable()) {
-            throw new PreconditionFailedHttpException($this->translateUcFirstLower("THIS TEMPLATE IS NOT EDITABLE"));
-        }
-
         $oldTemplateMedications = $templateInDatabase->getMedications();
 
         //new template data
@@ -306,6 +302,13 @@ class TreatmentTemplateService extends TreatmentServiceBase implements Treatment
         if ($template->getType() !== null && $template->getType() !== $type) {
             //Prevent unpredictable results by blocking the editing of the type.
             return Validator::createJsonResponse('Template type may not be edited!', 428);
+        }
+
+        if (
+            !$templateInDatabase->isEditable() &&
+            $templateInDatabase->getDescription() !== $template->getDescription()
+        ) {
+            throw new PreconditionFailedHttpException($this->translateUcFirstLower("THIS TEMPLATE IS NOT EDITABLE"));
         }
 
         $template->setType($type); //Necessary for baseValidation

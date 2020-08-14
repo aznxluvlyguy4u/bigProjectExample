@@ -4,6 +4,8 @@
 namespace AppBundle\Service;
 
 
+use Psr\Log\LoggerInterface;
+
 interface ProcessLockerInterface
 {
     function initializeProcessGroupValues(string $processGroupName, int $maxProcesses = 1): string;
@@ -14,4 +16,12 @@ interface ProcessLockerInterface
     function removeProcess(string $processGroupName, int $processId);
     function removeAllProcessesOfGroup(string $processGroupName);
     function removeAllProcesses();
+    function getMaxLimit(string $processGroupName): int;
+
+    /*
+     * functions used in queue services
+     */
+    function isProcessLimitNotReachedCheckForQueueService(string $processGroupName, LoggerInterface $logger): array;
+    function unlockProcessForQueueService(string $processGroupName, int $processId, LoggerInterface $logger);
+
 }

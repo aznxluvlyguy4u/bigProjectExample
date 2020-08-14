@@ -47,7 +47,11 @@
         "enqueue/fs": "^0.8.24",
         "sentry/sentry-symfony": "^2.0",
         "twbs/bootstrap": "4.1.3",
-      "ext-json": "*"
+        "ext-json": "*",
+        "ext-soap": "*",
+        "ext-simplexml": "*",
+        "ext-xml": "*"
+        "curl/curl": "^2.3"
     },
     "require-dev": {
         "sensio/generator-bundle": "^3.0",
@@ -78,7 +82,7 @@
     },
     "config": {
         "platform": {
-            "php": "7.1"
+            "php": "7.2"
         },
         "bin-dir": "bin"
     },

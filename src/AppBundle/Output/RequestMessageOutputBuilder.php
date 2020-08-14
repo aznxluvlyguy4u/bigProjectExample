@@ -14,8 +14,6 @@ class RequestMessageOutputBuilder
         $entityNameSpace = Utils::getClassName($messageObject);
 
         switch($entityNameSpace) {
-            case RequestType::DECLARATION_DETAIL_ENTITY:
-                return null;
 
             case RequestType::DECLARE_ANIMAL_FLAG_ENTITY:
                 return null;

@@ -21,7 +21,7 @@ class NsfoWorkerFeedbackCommand extends ContainerAwareCommand
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $sqsFeedbackProcessor = $this->getContainer()->get('AppBundle\Processor\SqsFeedbackProcessor');
-        $sqsFeedbackProcessor->process();
+        $sqsFeedbackProcessor->run();
     }
 
 }

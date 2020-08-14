@@ -7,11 +7,17 @@ namespace AppBundle\Enumerator;
 class RvoErrorCode
 {
     /*
-     * Arrival: repeated declare
+     * AnimalFlag: repeated declare
+     * Example: "Error message example: De vlag bestaat al bij het dier."
+     */
+    const REPEATED_ANIMAL_FLAG_01521 = 'IRD-01521';
+
+    /*
+     * Repeated declare for: Arrival, AnimalFlag
      * Example: "Error message example: Deze melding is al gedaan of er is niets gewijzigd.
      *           Aanvullende info: meldingnummer = 201346674, ander kanaal = N, andere melder = N."
      */
-    const REPEATED_ARRIVAL_00015 = 'IRD-00015';
+    const REPEATED_DECLARE_00015 = 'IRD-00015';
 
     /*
      * Arrival: repeated declare

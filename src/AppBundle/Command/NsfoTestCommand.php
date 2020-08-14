@@ -4,9 +4,11 @@ namespace AppBundle\Command;
 
 use AppBundle\Entity\Animal;
 use AppBundle\Entity\AnimalRepository;
+use AppBundle\Entity\DeclareAnimalFlag;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\LocationRepository;
 use AppBundle\Entity\ResultTableBreedGrades;
+use AppBundle\Enumerator\SuccessIndicator;
 use AppBundle\Service\AwsExternalTestQueueService;
 use AppBundle\Service\AwsInternalTestQueueService;
 use AppBundle\Util\CommandUtil;

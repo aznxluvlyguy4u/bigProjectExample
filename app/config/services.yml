@@ -20,6 +20,7 @@ services:
         class: AppBundle\Service\DataFix\GenderChangeCommandService
         arguments:
           - '@doctrine.orm.entity_manager'
+          - '@logger'
 
     app.cli.internal_worker.depart:
         class: AppBundle\Service\Worker\DepartInternalWorkerCliOptions
@@ -58,47 +59,70 @@ services:
           - '@app.serializer.ir'
           - '%kernel.environment%'
 
+    AppBundle\Service\Aws\AwsSqsService:
+      arguments:
+        - '%aws_access_key_id%'
+        - '%aws_secret_key%'
+        - '%aws_sqs_region%' #region
+        - '%aws_sqs_version%' #version
+        - '%aws_sqs_deactivate_ssl%'
+
+
+    app.aws.queueservice.workers_base.old:
+      abstract: true
+      arguments:
+        #NOTE! Don't use named keys here! That will prevent the child services from properly overriding the arguments.
+        - placeholder_to_override #queueIdPrefix
+        - '%aws_access_key_id%'
+        - '%aws_secret_key%'
+        - '%aws_sqs_region%' #region
+        - '%aws_sqs_version%' #version
+        - '%environment%' #selected environment
+        - '%kernel.environment%'
+        - true
+        - '%aws_sqs_deactivate_ssl%'
 
     app.aws.queueservice.workers_base:
         abstract: true
         arguments:
-        #NOTE! Don't use named keys here! That will prevent the child services from properly overriding the arguments.
-          - placeholder_to_override #queueIdPrefix
-          - '%aws_access_key_id%'
-          - '%aws_secret_key%'
-          - '%aws_sqs_region%' #region
-          - '%aws_sqs_version%' #version
-          - '%environment%' #currentEnv
+          - '@AppBundle\Service\Aws\AwsSqsService'
+          - '%environment%' #selected environment for test queues use !php/const:AppBundle\Constant\Environment::TEST
           - '%kernel.environment%'
-          - true
-          - '%aws_sqs_deactivate_ssl%'
+          - '%animal_type_env%'
+          - '%environment_slot%'
+
+    AppBundle\Service\AwsRawExternalSqsService:
+      parent: app.aws.queueservice.workers_base
+
+    AppBundle\Service\AwsRawInternalSqsService:
+      parent: app.aws.queueservice.workers_base
 
     AppBundle\Service\AwsFeedbackQueueService:
-        parent: app.aws.queueservice.workers_base
+        parent: app.aws.queueservice.workers_base.old
         arguments: { index_0: '%aws_sqs_queue_feedback_prefix%' }
 
     AppBundle\Service\AwsExternalQueueService:
-        parent: app.aws.queueservice.workers_base
+        parent: app.aws.queueservice.workers_base.old
         arguments: { index_0: '%aws_sqs_queue_exteral_prefix%' }
 
     AppBundle\Service\AwsExternalTestQueueService:
-        parent: app.aws.queueservice.workers_base
+        parent: app.aws.queueservice.workers_base.old
         arguments: { index_0: '%aws_sqs_queue_exteral_prefix%', index_5: !php/const:AppBundle\Constant\Environment::TEST, index_7: false }
 
     AppBundle\Service\AwsInternalQueueService:
-        parent: app.aws.queueservice.workers_base
+        parent: app.aws.queueservice.workers_base.old
         arguments: { index_0: '%aws_sqs_queue_interal_prefix%' }
 
     AppBundle\Service\AwsInternalTestQueueService:
-        parent: app.aws.queueservice.workers_base
+        parent: app.aws.queueservice.workers_base.old
         arguments: { index_0: '%aws_sqs_queue_interal_prefix%', index_5: !php/const:AppBundle\Constant\Environment::TEST, index_7: false }
 
     AppBundle\Service\MixBlupInputQueueService:
-        parent: app.aws.queueservice.workers_base
+        parent: app.aws.queueservice.workers_base.old
         arguments: { index_0: '%aws_sqs_queue_mixblup_input_prefix%', index_7: false }
 
     AppBundle\Service\MixBlupOutputQueueService:
-        parent: app.aws.queueservice.workers_base
+        parent: app.aws.queueservice.workers_base.old
         arguments: { index_0: '%aws_sqs_queue_mixblup_output_prefix%', index_7: false }
 
     app.aws.storageservice:
@@ -638,6 +662,9 @@ services:
         parent: app.treatment.base
         class: AppBundle\Service\TreatmentService
         calls:
+          - method: setRvoDeclareAnimalFlagSoapMessageBuilder
+            arguments:
+              - '@AppBundle\Service\Rvo\SoapMessageBuilder\RvoDeclareAnimalFlagSoapMessageBuilder'
           - method: setAnimalFlagMessageBuilder
             arguments:
               - '@AppBundle\Component\AnimalFlagMessageBuilder'
@@ -780,17 +807,43 @@ services:
         tags:
           - {name: 'enqueue.client.processor'}
 
+    app.sqs.processor.base:
+        abstract: true
+        calls:
+          - method: setBaseServices
+            arguments:
+              - '@logger'
+              - '@AppBundle\Service\ProcessLocker'
+              - '@translator'
+
     AppBundle\Processor\SqsFeedbackProcessor:
+        parent: 'app.sqs.processor.base'
         arguments:
           - '@AppBundle\Service\AwsFeedbackQueueService'
           - '@monolog.logger.feedback_worker'
-          - '@logger'
-          - '@AppBundle\Service\ProcessLocker'
-          - '@AppBundle\Service\SettingsContainer'
-          - '@translator'
           - '@AppBundle\Service\Worker\SyncAnimalRelocationProcessor'
           - '@AppBundle\Service\Worker\SyncHealthCheckProcessor'
           - '@AppBundle\Service\Invoice\BatchInvoiceService'
+
+    AppBundle\Processor\Rvo\RawExternalWorker:
+      parent: 'app.sqs.processor.base'
+      arguments:
+        - '@AppBundle\Service\AwsRawExternalSqsService'
+        - '@AppBundle\Service\AwsRawInternalSqsService'
+        - '@logger'
+        - '%rvo_ir_base_url%'
+        - '%rvo_ir_username%'
+        - '%rvo_ir_password%'
+
+    AppBundle\Processor\Rvo\RawInternalWorker:
+      parent: 'app.sqs.processor.base'
+      arguments:
+        - '@AppBundle\Service\AwsRawInternalSqsService'
+        - '@logger'
+      calls:
+        - method: setDeclareAnimalFlagAction
+          arguments:
+            - '@AppBundle\Worker\Logic\DeclareAnimalFlagAction'
 
     app.abstract_base.worker_task_processor:
         abstract: true
@@ -857,6 +910,9 @@ services:
           - method: setExternalQueueService
             arguments:
               - '@AppBundle\Service\AwsExternalQueueService'
+          - method: setRawExternalQueueService
+            arguments:
+              - '@AppBundle\Service\AwsRawExternalSqsService'
 
     app.animal:
         parent: app.abstract_base.declare
@@ -1191,6 +1247,16 @@ services:
     AppBundle\Service\ExternalProvider\ExternalProviderOfficeService:
         parent: app.abstract_base.external_provider
 
+    AppBundle\Service\ExternalProvider\ExternalProviderArticleService:
+      parent: app.abstract_base.external_provider
+      calls:
+        - method: setTwinfieldParameters
+          arguments:
+            - '%twinfield_office_code%'
+            - '%external_provider_user%'
+            - '%external_provider_password%'
+            - '%external_provider_organisation%'
+
     AppBundle\Service\FeedbackQueueInvoiceMessageService:
         calls:
           - method: instantiateServices
@@ -1364,6 +1430,8 @@ services:
     AppBundle\Service\SettingsContainer:
         arguments:
           - '%max_feedback_workers%'
+          - '%max_raw_external_workers%'
+          - '%max_raw_internal_workers%'
 
 
     app.component.message.builder.base:
@@ -1375,7 +1443,31 @@ services:
     AppBundle\Component\AnimalFlagMessageBuilder:
         parent: app.component.message.builder.base
 
-    # Listeners
+
+    # RVO
+
+    app.rvo.external.base:
+        abstract: true
+        calls:
+          - method: setLogger
+            arguments:
+              - '@logger'
+
+    AppBundle\Service\Rvo\SoapMessageBuilder\RvoDeclareAnimalFlagSoapMessageBuilder:
+        parent: app.rvo.external.base
+
+    app.rvo.logic:
+        abstract: true
+        lazy: true
+        arguments:
+          - '@app.serializer.base'
+          - '@doctrine.orm.entity_manager'
+          - '@logger'
+
+    AppBundle\Worker\Logic\DeclareAnimalFlagAction:
+        parent: app.rvo.logic
+
+  # Listeners
     AppBundle\EventListener\ViewListener:
         tags:
             - { name: kernel.event_listener, event: kernel.view }
