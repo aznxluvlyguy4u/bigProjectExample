@@ -191,6 +191,18 @@ class Registration
     private $phoneNumber;
 
     /**
+     * @var boolean
+     *
+     * @ORM\Column(type="boolean", options={"default":false}, nullable=false)
+     * @JMS\Type("boolean")
+     * @Assert\NotBlank(message="auto.debit.not_blank")
+     * @JMS\Groups({
+     *     "REGISTRATION"
+     * })
+     */
+    private $hasAutoDebit;
+
+    /**
  * @var DateTime
  *
  * @ORM\Column(type="datetime", nullable=false)
@@ -482,6 +494,25 @@ class Registration
     {
         $this->createdAt = $createdAt;
 
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isHasAutoDebit(): bool
+    {
+        return $this->hasAutoDebit;
+    }
+
+
+    /**
+     * @param bool $hasAutoDebit
+     * @return Registration
+     */
+    public function setHasAutoDebit(bool $hasAutoDebit): Registration
+    {
+        $this->hasAutoDebit = $hasAutoDebit;
         return $this;
     }
 

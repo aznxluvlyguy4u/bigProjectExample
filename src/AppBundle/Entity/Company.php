@@ -367,6 +367,20 @@ class Company
     private $animalAnnotations;
 
     /**
+     * @var boolean
+     *
+     * @ORM\Column(type="boolean", options={"default":false}, nullable=false)
+     * @JMS\Type("boolean")
+     * @Assert\NotBlank(message="auto.debit.not_blank")
+     * @JMS\Groups({
+     *     "INVOICE",
+     *     "INVOICE_NO_COMPANY",
+     *     "DOSSIER"
+     * })
+     */
+    private $hasAutoDebit;
+
+    /**
      * @var DateTime
      *
      * @ORM\Column(type="datetime", nullable=true)
@@ -389,6 +403,7 @@ class Company
     $this->invoices = new ArrayCollection();
     $this->animalAnnotations = new ArrayCollection();
     $this->lastMakeLivestockPublicDate = new DateTime();
+    $this->hasAutoDebit = false;
     $this->createdAt = new DateTime();
   }
 
@@ -1136,6 +1151,24 @@ class Company
     public function removeAnimalAnnotation(AnimalAnnotation $annotation)
     {
         $this->animalAnnotations->removeElement($annotation);
+    }
+
+    /**
+     * @return bool
+     */
+    public function isHasAutoDebit(): bool
+    {
+        return $this->hasAutoDebit;
+    }
+
+    /**
+     * @param bool $hasAutoDebit
+     * @return Company
+     */
+    public function setHasAutoDebit(bool $hasAutoDebit): Company
+    {
+        $this->hasAutoDebit = $hasAutoDebit;
+        return $this;
     }
 
     /**
