@@ -43,12 +43,17 @@ class AuthService extends AuthServiceBase
     /** @var ValidatorInterface $validator */
     private $validator;
 
+    /** @var CompanyService $companyService */
+    private $companyService;
+
     /**
      * @param ValidatorInterface $validator
+     * @param CompanyService $companyService
      */
-    public function setValidator(ValidatorInterface $validator)
+    public function setProperties(ValidatorInterface $validator, CompanyService $companyService)
     {
         $this->validator = $validator;
+        $this->companyService = $companyService;
     }
 
     /**
@@ -110,6 +115,7 @@ class AuthService extends AuthServiceBase
     /**
      * @param $registrationId
      * @return JsonResponse
+     * @throws Exception
      */
     public function processRegistration($registrationId) {
         /** @var Registration $registration */
@@ -126,7 +132,7 @@ class AuthService extends AuthServiceBase
 
         $client = new Client();
         $location = new Location();
-        $company = new Company();
+        $company = $this->companyService->generateAndSetDebtorCode(new Company());
         $companyAddress = new CompanyAddress();
         $locationAddress = new LocationAddress();
 

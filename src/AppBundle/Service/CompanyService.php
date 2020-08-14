@@ -17,6 +17,7 @@ use AppBundle\Entity\LocationAddress;
 use AppBundle\Entity\PedigreeRegisterRegistration;
 use AppBundle\Entity\Tag;
 use AppBundle\Enumerator\AccessLevelType;
+use AppBundle\Enumerator\DebtorNumberCompanyType;
 use AppBundle\Enumerator\JmsGroup;
 use AppBundle\Filter\ActiveCompanyFilter;
 use AppBundle\Filter\ActiveInvoiceFilter;
@@ -34,6 +35,7 @@ use AppBundle\Util\TimeUtil;
 use AppBundle\Util\Validator;
 use AppBundle\Validation\AdminValidator;
 use AppBundle\Validation\CompanyValidator;
+use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Query;
 use Doctrine\ORM\QueryBuilder;
@@ -91,7 +93,6 @@ class CompanyService extends AuthServiceBase
         return ResultUtil::successResult($result);
     }
 
-
     /**
      * company_relation_number
      * @param $companyRelationNumber
@@ -105,10 +106,10 @@ class CompanyService extends AuthServiceBase
         }
     }
 
-
     /**
      * @param Request $request
      * @return JsonResponse
+     * @throws Exception
      * @throws SoapFault
      */
     public function createCompany(Request $request)
@@ -192,7 +193,8 @@ class CompanyService extends AuthServiceBase
         $billingAddress->setCountryDetails($this->getCountryByName($billingAddressCountry));
 
         // Create Company
-        $company = new Company();
+        $company = $this->generateAndSetDebtorCode(new Company());
+
         $company->setCompanyName($content->get('company_name'));
         $company->setTelephoneNumber($content->get('telephone_number'));
         $company->setCompanyRelationNumber($companyRelationNumber);
@@ -209,6 +211,7 @@ class CompanyService extends AuthServiceBase
         if($content->get('subscription_date')) {
             $company->setSubscriptionDate(TimeUtil::getDayOfDateTime(new \DateTime($content->get('subscription_date'))));
         }
+
         $company->setIsActive(true);
         $company->setOwner($owner);
         $company->setAddress($address);
@@ -306,7 +309,6 @@ class CompanyService extends AuthServiceBase
         return ResultUtil::successResult(['company_id' => $company->getCompanyId()]);
     }
 
-
     /**
      * @param Request $request
      * @param $companyId
@@ -327,7 +329,6 @@ class CompanyService extends AuthServiceBase
 
         return ResultUtil::successResult($this->getBaseSerializer()->getDecodedJson($company, [JmsGroup::DOSSIER]));
     }
-
 
     /**
      * @param Request $request
@@ -658,7 +659,6 @@ class CompanyService extends AuthServiceBase
         return ResultUtil::successResult(['company_id' => $company->getCompanyId()]);
     }
 
-
     /**
      * @param $ubn
      */
@@ -669,7 +669,6 @@ class CompanyService extends AuthServiceBase
         }
     }
 
-
     /**
      * @param string $ubn
      * @return Location|null
@@ -679,7 +678,6 @@ class CompanyService extends AuthServiceBase
         return $this->getManager()->getRepository(Location::class)
             ->findOneBy(['ubn' => $ubn, 'isActive' => true]);
     }
-
 
     /**
      * @param string $locationId
@@ -697,7 +695,6 @@ class CompanyService extends AuthServiceBase
         }
         return $location;
     }
-
 
     /**
      * @param Request $request
@@ -769,7 +766,6 @@ class CompanyService extends AuthServiceBase
         return ResultUtil::successResult('ok');
     }
 
-
     /**
      * @param Request $request
      * @param $companyId
@@ -793,7 +789,6 @@ class CompanyService extends AuthServiceBase
 
         return ResultUtil::successResult($result);
     }
-
 
     /**
      * @param Request $request
@@ -820,11 +815,11 @@ class CompanyService extends AuthServiceBase
         return ResultUtil::successResult($result);
     }
 
-
     /**
      * @param Request $request
      * @param $companyId
      * @return JsonResponse
+     * @throws Exception
      */
     public function createCompanyNotes(Request $request, $companyId)
     {
@@ -856,7 +851,6 @@ class CompanyService extends AuthServiceBase
         return ResultUtil::successResult($result);
     }
 
-
     /**
      * @return JsonResponse
      */
@@ -870,7 +864,6 @@ class CompanyService extends AuthServiceBase
 
         return ResultUtil::successResult($this->getBaseSerializer()->getDecodedJson($companies, JmsGroup::INVOICE));
     }
-
 
     /**
      * @param Request $request
@@ -890,4 +883,28 @@ class CompanyService extends AuthServiceBase
         return ResultUtil::successResult($this->getBaseSerializer()->getDecodedJson($companies, JmsGroup::INVOICE));
     }
 
+    /**
+     * @param Company $company
+     * @return Company
+     * @throws Exception
+     */
+    public function generateAndSetDebtorCode(Company $company)
+    {
+       $latestDebtorNumberOrdinal = $this->getManager()->getRepository(Company::class)
+        ->getLatestDebtorNumberOrdinal();
+
+        $currentDate = new DateTime();
+        $newDebtorNumberOrdinal = "00001";
+
+       if ($latestDebtorNumberOrdinal !== null) {
+           $newDebtorNumberOrdinal = sprintf('%05d', (int) $latestDebtorNumberOrdinal+1);
+       }
+
+        $company
+            ->setDebtorNumberCompanyType(DebtorNumberCompanyType::HOLDER_PEDIGREE_BREEDING)
+            ->setDebtorNumberOrdinal($newDebtorNumberOrdinal)
+            ->setDebtorNumberYear($currentDate->format('Y'));
+
+       return $company;
+    }
 }
