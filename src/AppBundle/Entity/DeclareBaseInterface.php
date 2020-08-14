@@ -68,7 +68,7 @@ interface DeclareBaseInterface
     public function getUbn();
 
     /**
-     * @return string
+     * @return string|null
      */
     public function getMessageNumberToRecover();
 

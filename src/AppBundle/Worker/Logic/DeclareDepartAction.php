@@ -180,7 +180,7 @@ class DeclareDepartAction
         $ubnNewOwner = $departResponseArray[JsonInputConstant::UBN_NEW_OWNER];
         $reasonOfDeparture = $departResponseArray[JsonInputConstant::REASON_OF_DEPARTURE];
         $isExportAnimal = $departResponseArray[JsonInputConstant::IS_EXPORT_ANIMAL];
-        $isRemovedByUser = $departResponseArray[JsonInputConstant::IS_REMOVED_BY_USER];
+        $isRemovedByUser = $departResponseArray[JsonInputConstant::IS_REMOVED_BY_USER] ?? false;
 
         $departResponse->setRequestId($requestId);
         $departResponse->setMessageNumber($messageNumber);

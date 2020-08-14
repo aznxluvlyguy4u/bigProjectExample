@@ -21,6 +21,7 @@ class RequestStateType
     const INCOMPLETE = "INCOMPLETE";
     const FINISHED = "FINISHED";
     const FINISHED_WITH_WARNING = "FINISHED_WITH_WARNING";
+    const FINISHED_WITH_ERRORS = "FINISHED_WITH_ERRORS";
     const FAILED = "FAILED";
     const CANCELLED = "CANCELLED";
     const REJECTED = "REJECTED";

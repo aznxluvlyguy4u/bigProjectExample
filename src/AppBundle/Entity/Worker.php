@@ -9,6 +9,13 @@ use JMS\Serializer\Annotation as JMS;
 
 /**
  * Class Worker
+ *
+ * @ORM\Table(name="worker", indexes={
+ *     @ORM\Index(
+ *      name="worker_idx",
+ *      columns={"owner_id", "action_by_id", "started_at"}
+ *     )
+ * })
  * @ORM\Entity(repositoryClass="AppBundle\Entity\WorkerRepository")
  * @ORM\InheritanceType("JOINED")
  * @ORM\DiscriminatorColumn(name="type", type="string")

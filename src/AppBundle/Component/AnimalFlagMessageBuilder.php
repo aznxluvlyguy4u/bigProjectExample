@@ -6,7 +6,6 @@ use AppBundle\Entity\Client;
 use AppBundle\Entity\DeclareAnimalFlag;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\Person;
-use Doctrine\Common\Persistence\ObjectManager;
 
 class AnimalFlagMessageBuilder extends MessageBuilderBase
 {

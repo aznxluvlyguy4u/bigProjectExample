@@ -11,62 +11,39 @@ use AppBundle\Exception\Sqs\SqsMessageMissingTaskTypeException;
 use AppBundle\Service\AwsFeedbackQueueService;
 use AppBundle\Service\AwsQueueServiceBase;
 use AppBundle\Service\Invoice\BatchInvoiceService;
-use AppBundle\Service\ProcessLockerInterface;
-use AppBundle\Service\SettingsContainer;
 use AppBundle\Service\Worker\SyncAnimalRelocationProcessor;
 use AppBundle\Service\Worker\SyncHealthCheckProcessor;
 use AppBundle\Util\ArrayUtil;
 use Aws\Result;
 use Monolog\Logger;
-use Symfony\Component\Translation\TranslatorInterface;
+use Throwable;
 
-class SqsFeedbackProcessor
+class SqsFeedbackProcessor extends SqsProcessorBase
 {
-    const ERROR_LOG_HEADER = '===== SQS FEEDBACK WORKER =====';
+    const PROCESS_TYPE = ProcessType::SQS_FEEDBACK_WORKER;
     const LOOP_DELAY_SECONDS = 10;
 
-    /** @var Logger */
-    private $feedbackWorkerLogger;
-    /** @var Logger */
-    private $exceptionLogger;
     /** @var AwsFeedbackQueueService */
     private $feedbackQueueService;
-    /** @var ProcessLockerInterface */
-    private $processLocker;
-    /** @var SettingsContainer */
-    private $settingsContainer;
-    /** @var TranslatorInterface */
-    private $translator;
 
     /** @var SyncAnimalRelocationProcessor */
     private $syncAnimalRelocationProcessor;
     /** @var SyncHealthCheckProcessor */
     private $syncHealthCheckProcessor;
 
-    /** @var int */
-    private $processId;
-    /** @var int */
-    private $taskCount;
     /** @var BatchInvoiceService */
     private $batchInvoiceService;
 
     public function __construct(AwsFeedbackQueueService $feedbackQueueService,
-                                Logger $feedbackWorkerLogger,
-                                Logger $exceptionLogger,
-                                ProcessLockerInterface $processLocker,
-                                SettingsContainer $settingsContainer,
-                                TranslatorInterface $translator,
+                                Logger $queueLogger,
                                 SyncAnimalRelocationProcessor $syncAnimalRelocationProcessor,
                                 SyncHealthCheckProcessor $syncHealthCheckProcessor,
                                 BatchInvoiceService $batchInvoiceService
     )
     {
+        $this->queueLogger = $queueLogger;
+
         $this->feedbackQueueService = $feedbackQueueService;
-        $this->feedbackWorkerLogger = $feedbackWorkerLogger;
-        $this->exceptionLogger = $exceptionLogger;
-        $this->processLocker = $processLocker;
-        $this->settingsContainer = $settingsContainer;
-        $this->translator = $translator;
 
         $this->syncAnimalRelocationProcessor = $syncAnimalRelocationProcessor;
         $this->syncHealthCheckProcessor = $syncHealthCheckProcessor;
@@ -76,10 +53,8 @@ class SqsFeedbackProcessor
     /**
      * @inheritDoc
      */
-    public function process()
+    public function run()
     {
-        $delayInSeconds = self::LOOP_DELAY_SECONDS;
-
         if (!$this->initializeProcessLocker()) {
             return;
         }
@@ -91,7 +66,7 @@ class SqsFeedbackProcessor
          * Removing this sleep while calling this function in a loop
          * will cause a huge amount of calls to the queue and a huge AWS bill!
          */
-        sleep($delayInSeconds);
+        sleep(self::LOOP_DELAY_SECONDS);
 
         $this->unlockProcess();
     }
@@ -99,7 +74,7 @@ class SqsFeedbackProcessor
 
     private function processAllFoundMessages()
     {
-        $this->taskCount = 0;
+        $this->messageCount = 0;
 
         try {
             while ($this->feedbackQueueService->getSizeOfQueue() > 0) {
@@ -110,15 +85,15 @@ class SqsFeedbackProcessor
                 }
             }
 
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->logException($e);
             $this->unlockProcess();
         }
 
-        $taskCountMessage = (empty($this->taskCount) ? 'No' : $this->taskCount)
-            . ' ' . $this->getProcessType().' messages processed';
-        if (!empty($this->taskCount)) {
-            $this->feedbackWorkerLogger->debug($taskCountMessage);
+        $taskCountMessage = (empty($this->messageCount) ? 'No' : $this->messageCount)
+            . ' ' . self::PROCESS_TYPE.' messages processed';
+        if (!empty($this->messageCount)) {
+            $this->queueLogger->debug($taskCountMessage);
         }
     }
 
@@ -130,13 +105,8 @@ class SqsFeedbackProcessor
      */
     private function processNextMessage(Result $queueMessage)
     {
-        $this->feedbackWorkerLogger->debug('New '.$this->getProcessType().' message found!');
+        $this->queueLogger->debug('New '.self::PROCESS_TYPE.' message found!');
         $taskTypeName = !empty($queueMessage) ? AwsQueueServiceBase::getTaskType($queueMessage) : null;
-
-        if (!$taskTypeName) {
-            throw new SqsMessageMissingTaskTypeException();
-        }
-
         $taskType = ArrayUtil::get($taskTypeName, SqsCommandType::getConstants(), null);
 
         switch ($taskType) {
@@ -155,50 +125,6 @@ class SqsFeedbackProcessor
 
         $this->feedbackQueueService->deleteMessage($queueMessage);
 
-        $this->taskCount++;
-    }
-
-
-    private function logException(\Throwable $exception)
-    {
-        $this->feedbackWorkerLogger->error(self::ERROR_LOG_HEADER);
-        $this->feedbackWorkerLogger->error($exception->getMessage());
-        $this->feedbackWorkerLogger->error($exception->getTraceAsString());
-
-        $this->exceptionLogger->error(self::ERROR_LOG_HEADER);
-        $this->exceptionLogger->error($exception->getMessage());
-        $this->exceptionLogger->error($exception->getTraceAsString());
-    }
-
-
-    private function getProcessType(): string
-    {
-        return ProcessType::SQS_FEEDBACK_WORKER;
-    }
-
-    /**
-     * @return bool
-     */
-    private function initializeProcessLocker(): bool
-    {
-        $maxWorkerCount = $this->settingsContainer->getMaxFeedbackWorkers();
-        $this->processLocker->initializeProcessGroupValues($this->getProcessType());
-
-        if ($this->processLocker->isProcessLimitReached($this->getProcessType())) {
-            $this->feedbackWorkerLogger->notice('Max process limit of '.$maxWorkerCount.' reached. '
-                .'No new '.$this->getProcessType().' process started.');
-            return false;
-        }
-
-        $this->processId = $this->processLocker->addProcess($this->getProcessType());
-        $this->feedbackWorkerLogger->debug('Initialized feedback processor lock with id: ' . $this->processId);
-        return true;
-    }
-
-
-    private function unlockProcess()
-    {
-        $this->processLocker->removeProcess($this->getProcessType(), $this->processId);
-        $this->feedbackWorkerLogger->debug('Unlocked feedback processor lock with id: ' . $this->processId);
+        $this->messageCount++;
     }
 }

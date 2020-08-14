@@ -865,10 +865,13 @@ INNER JOIN (
 
         $primaryOutput = array_map(function (array $result) use ($medicationsLabel) {
             $startDate = (new \DateTime($result['start_date']))->format(DateUtil::DATE_USER_DISPLAY_FORMAT);
-            $endDate = (new \DateTime($result['end_date']))->format(DateUtil::DATE_USER_DISPLAY_FORMAT);
+            $endDate = !empty($result['end_date']) ?
+                (new \DateTime($result['end_date']))->format(DateUtil::DATE_USER_DISPLAY_FORMAT) :
+                null
+            ;
             $medicationsListAsString = $result[$medicationsLabel];
 
-            $displayDate = $startDate === $endDate ? $startDate : $startDate . ' - ' .$endDate;
+            $displayDate = $startDate === $endDate || empty($endDate) ? $startDate : $startDate . ' - ' .$endDate;
 
             $result[ReportLabel::DATE] = $displayDate;
             $result[$medicationsLabel] = [];
