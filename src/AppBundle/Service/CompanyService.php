@@ -11,17 +11,20 @@ use AppBundle\Entity\Client;
 use AppBundle\Entity\Company;
 use AppBundle\Entity\CompanyAddress;
 use AppBundle\Entity\CompanyNote;
+use AppBundle\Entity\Country;
 use AppBundle\Entity\Location;
 use AppBundle\Entity\LocationAddress;
 use AppBundle\Entity\PedigreeRegisterRegistration;
 use AppBundle\Entity\Tag;
 use AppBundle\Enumerator\AccessLevelType;
+use AppBundle\Enumerator\DebtorNumberCompanyType;
 use AppBundle\Enumerator\JmsGroup;
 use AppBundle\Filter\ActiveCompanyFilter;
 use AppBundle\Filter\ActiveInvoiceFilter;
 use AppBundle\Filter\ActiveLocationFilter;
 use AppBundle\Output\CompanyNoteOutput;
 use AppBundle\Output\CompanyOutput;
+use AppBundle\Service\ExternalProvider\ExternalProviderCustomerService;
 use AppBundle\Setting\InvoiceSetting;
 use AppBundle\Util\ActionLogWriter;
 use AppBundle\Util\AdminActionLogWriter;
@@ -32,10 +35,12 @@ use AppBundle\Util\TimeUtil;
 use AppBundle\Util\Validator;
 use AppBundle\Validation\AdminValidator;
 use AppBundle\Validation\CompanyValidator;
+use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Query;
 use Doctrine\ORM\QueryBuilder;
 use Exception;
+use SoapFault;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
@@ -44,6 +49,14 @@ use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
 
 class CompanyService extends AuthServiceBase
 {
+
+    /** @var ExternalProviderCustomerService $externalProviderCustomerService */
+    private $externalProviderCustomerService;
+
+    public function setExternalCustomerProviderService(ExternalProviderCustomerService $externalProviderCustomerService)
+    {
+        $this->externalProviderCustomerService = $externalProviderCustomerService;
+    }
 
     /**
      * @param Request $request
@@ -80,7 +93,6 @@ class CompanyService extends AuthServiceBase
         return ResultUtil::successResult($result);
     }
 
-
     /**
      * company_relation_number
      * @param $companyRelationNumber
@@ -94,10 +106,11 @@ class CompanyService extends AuthServiceBase
         }
     }
 
-
     /**
      * @param Request $request
      * @return JsonResponse
+     * @throws Exception
+     * @throws SoapFault
      */
     public function createCompany(Request $request)
     {
@@ -151,10 +164,13 @@ class CompanyService extends AuthServiceBase
             $address->setAddressNumberSuffix($contentAddress['suffix']);
         }
 
+        /** @var Country $addressCountryDB */
+        $addressCountryDB = $this->getCountryByName($addressCountry);
+
         $address->setPostalCode($contentAddress['postal_code']);
         $address->setCity($contentAddress['city']);
         $address->setState(ArrayUtil::get('state', $contentAddress));
-        $address->setCountryDetails($this->getCountryByName($addressCountry));
+        $address->setCountryDetails($addressCountryDB);
 
         // Create Billing Address
         $contentBillingAddress = $content->get('billing_address');
@@ -177,7 +193,8 @@ class CompanyService extends AuthServiceBase
         $billingAddress->setCountryDetails($this->getCountryByName($billingAddressCountry));
 
         // Create Company
-        $company = new Company();
+        $company = $this->generateAndSetDebtorCode(new Company());
+
         $company->setCompanyName($content->get('company_name'));
         $company->setTelephoneNumber($content->get('telephone_number'));
         $company->setCompanyRelationNumber($companyRelationNumber);
@@ -194,6 +211,7 @@ class CompanyService extends AuthServiceBase
         if($content->get('subscription_date')) {
             $company->setSubscriptionDate(TimeUtil::getDayOfDateTime(new \DateTime($content->get('subscription_date'))));
         }
+
         $company->setIsActive(true);
         $company->setOwner($owner);
         $company->setAddress($address);
@@ -268,6 +286,9 @@ class CompanyService extends AuthServiceBase
         $this->getManager()->persist($company);
         $this->getManager()->flush();
 
+        // Create TwinField entry
+        $this->externalProviderCustomerService->createOrEditCustomer($content, $addressCountryDB->getCode());
+
         $log = ActionLogWriter::createCompany($this->getManager(), $content, $company, $admin);
 
         // Send Email with passwords to Owner & Users
@@ -287,7 +308,6 @@ class CompanyService extends AuthServiceBase
 
         return ResultUtil::successResult(['company_id' => $company->getCompanyId()]);
     }
-
 
     /**
      * @param Request $request
@@ -309,7 +329,6 @@ class CompanyService extends AuthServiceBase
 
         return ResultUtil::successResult($this->getBaseSerializer()->getDecodedJson($company, [JmsGroup::DOSSIER]));
     }
-
 
     /**
      * @param Request $request
@@ -428,10 +447,19 @@ class CompanyService extends AuthServiceBase
             $billingAddress->setAddressNumberSuffix('');
         }
 
+        /** @var Country $billingAddressCountryDB */
+        $billingAddressCountryDB = $this->getCountryByName($billingAddressCountry);
+
+        if (!$content->containsKey('twinfield_code')) {
+            throw new PreconditionFailedHttpException('The twinfield code can not be empty');
+        }
+
+        $this->externalProviderCustomerService->createOrEditCustomer($content, $billingAddressCountryDB->getCode());
+
         $billingAddress->setPostalCode($contentBillingAddress['postal_code']);
         $billingAddress->setCity($contentBillingAddress['city']);
         $billingAddress->setState(ArrayUtil::get('state', $contentBillingAddress));
-        $billingAddress->setCountryDetails($this->getCountryByName($billingAddressCountry));
+        $billingAddress->setCountryDetails($billingAddressCountryDB);
 
         // Update Company
         $company->setCompanyName($content->get('company_name'));
@@ -631,7 +659,6 @@ class CompanyService extends AuthServiceBase
         return ResultUtil::successResult(['company_id' => $company->getCompanyId()]);
     }
 
-
     /**
      * @param $ubn
      */
@@ -642,7 +669,6 @@ class CompanyService extends AuthServiceBase
         }
     }
 
-
     /**
      * @param string $ubn
      * @return Location|null
@@ -652,7 +678,6 @@ class CompanyService extends AuthServiceBase
         return $this->getManager()->getRepository(Location::class)
             ->findOneBy(['ubn' => $ubn, 'isActive' => true]);
     }
-
 
     /**
      * @param string $locationId
@@ -670,7 +695,6 @@ class CompanyService extends AuthServiceBase
         }
         return $location;
     }
-
 
     /**
      * @param Request $request
@@ -742,7 +766,6 @@ class CompanyService extends AuthServiceBase
         return ResultUtil::successResult('ok');
     }
 
-
     /**
      * @param Request $request
      * @param $companyId
@@ -766,7 +789,6 @@ class CompanyService extends AuthServiceBase
 
         return ResultUtil::successResult($result);
     }
-
 
     /**
      * @param Request $request
@@ -793,11 +815,11 @@ class CompanyService extends AuthServiceBase
         return ResultUtil::successResult($result);
     }
 
-
     /**
      * @param Request $request
      * @param $companyId
      * @return JsonResponse
+     * @throws Exception
      */
     public function createCompanyNotes(Request $request, $companyId)
     {
@@ -829,7 +851,6 @@ class CompanyService extends AuthServiceBase
         return ResultUtil::successResult($result);
     }
 
-
     /**
      * @return JsonResponse
      */
@@ -843,7 +864,6 @@ class CompanyService extends AuthServiceBase
 
         return ResultUtil::successResult($this->getBaseSerializer()->getDecodedJson($companies, JmsGroup::INVOICE));
     }
-
 
     /**
      * @param Request $request
@@ -863,4 +883,28 @@ class CompanyService extends AuthServiceBase
         return ResultUtil::successResult($this->getBaseSerializer()->getDecodedJson($companies, JmsGroup::INVOICE));
     }
 
+    /**
+     * @param Company $company
+     * @return Company
+     * @throws Exception
+     */
+    public function generateAndSetDebtorCode(Company $company)
+    {
+       $latestDebtorNumberOrdinal = $this->getManager()->getRepository(Company::class)
+        ->getLatestDebtorNumberOrdinal();
+
+        $currentDate = new DateTime();
+        $newDebtorNumberOrdinal = "00001";
+
+       if ($latestDebtorNumberOrdinal !== null) {
+           $newDebtorNumberOrdinal = sprintf('%05d', (int) $latestDebtorNumberOrdinal+1);
+       }
+
+        $company
+            ->setDebtorNumberCompanyType(DebtorNumberCompanyType::HOLDER_PEDIGREE_BREEDING)
+            ->setDebtorNumberOrdinal($newDebtorNumberOrdinal)
+            ->setDebtorNumberYear($currentDate->format('Y'));
+
+       return $company;
+    }
 }

@@ -8,6 +8,7 @@ use AppBundle\Enumerator\ProcessType;
 use AppBundle\Exception\ProcessLockerException;
 use AppBundle\Util\ArrayUtil;
 use Monolog\Logger;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\Filesystem\Filesystem;
 
 class ProcessLocker implements ProcessLockerInterface
@@ -36,6 +37,25 @@ class ProcessLocker implements ProcessLockerInterface
         $this->maxProcessCounts = [];
     }
 
+    function getMaxLimit(string $processGroupName): int
+    {
+        switch ($processGroupName) {
+            case ProcessType::SQS_FEEDBACK_WORKER:
+                $maxProcesses = $this->settingsContainer->getMaxFeedbackWorkers();
+                break;
+            case ProcessType::SQS_RAW_EXTERNAL_WORKER:
+                $maxProcesses = $this->settingsContainer->getMaxRawExternalWorkers();
+                break;
+            case ProcessType::SQS_RAW_INTERNAL_WORKER:
+                $maxProcesses = $this->settingsContainer->getMaxRawInternalWorkers();
+                break;
+            default:
+                $maxProcesses = self::DEFAULT_MAX_PROCESSES;
+                break;
+        }
+        return $maxProcesses;
+    }
+
 
     /**
      * @param string $processGroupName
@@ -50,14 +70,7 @@ class ProcessLocker implements ProcessLockerInterface
         }
 
         if ($maxProcesses <= 0) {
-            switch ($processGroupName) {
-                case ProcessType::SQS_FEEDBACK_WORKER:
-                    $maxProcesses = $this->settingsContainer->getMaxFeedbackWorkers();
-                    break;
-                default:
-                    $maxProcesses = self::DEFAULT_MAX_PROCESSES;
-                    break;
-            }
+            $maxProcesses = $this->getMaxLimit($processGroupName);
         }
 
         $this->lockFilePaths[$processGroupName] = sys_get_temp_dir(). DIRECTORY_SEPARATOR . $processGroupName . '.lock';
@@ -273,5 +286,31 @@ class ProcessLocker implements ProcessLockerInterface
         $errorMessage = 'PROCESS LOCKER ['.$code.']: '.$message;
         $this->logger->error($errorMessage);
         throw new ProcessLockerException($errorMessage, $code);
+    }
+
+    public function isProcessLimitNotReachedCheckForQueueService(string $processGroupName, LoggerInterface $logger): array
+    {
+        $this->initializeProcessGroupValues($processGroupName);
+
+        if ($this->isProcessLimitReached($processGroupName)) {
+            $this->logger->debug('Max process limit of '. $this->getMaxLimit($processGroupName) .' reached. '
+                .'No new '.$processGroupName.' process started.');
+            return [
+                0 => false
+            ];
+        }
+
+        $processId = $this->addProcess($processGroupName);
+        $this->logger->debug("Initialized $processGroupName process lock with id: $processId");
+        return [
+            $processId => true
+        ];
+    }
+
+
+    public function unlockProcessForQueueService(string $processGroupName, int $processId, LoggerInterface $logger)
+    {
+        $this->removeProcess($processGroupName, $processId);
+        $logger->debug("Unlocked $processGroupName process lock with id: $processId");
     }
 }

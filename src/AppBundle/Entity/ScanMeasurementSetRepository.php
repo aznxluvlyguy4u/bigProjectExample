@@ -361,6 +361,9 @@ class ScanMeasurementSetRepository  extends MeasurementRepository{
         $set->nestedDeactivate($deletedBy, $deleteDate);
         $animal->setScanMeasurementSet(null);
 
+        $set->setAnimal(null);
+
+        $this->getManager()->persist($set);
         $this->getManager()->persist($animal); // has nested cascade persist
 
         $this->flush();

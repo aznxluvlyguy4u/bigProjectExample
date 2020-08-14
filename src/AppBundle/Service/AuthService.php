@@ -43,12 +43,17 @@ class AuthService extends AuthServiceBase
     /** @var ValidatorInterface $validator */
     private $validator;
 
+    /** @var CompanyService $companyService */
+    private $companyService;
+
     /**
      * @param ValidatorInterface $validator
+     * @param CompanyService $companyService
      */
-    public function setValidator(ValidatorInterface $validator)
+    public function setProperties(ValidatorInterface $validator, CompanyService $companyService)
     {
         $this->validator = $validator;
+        $this->companyService = $companyService;
     }
 
     /**
@@ -65,6 +70,8 @@ class AuthService extends AuthServiceBase
         Validator::throwExceptionWithFormattedErrorMessageIfHasErrors($errors);
 
         $registration->setStatus(RegistrationStatus::NEW);
+
+        $registration->__construct();
 
         $ubn = $registration->getUbn();
 
@@ -87,10 +94,6 @@ class AuthService extends AuthServiceBase
         $errors = $this->validator->validate($registration);
         Validator::throwExceptionWithFormattedErrorMessageIfHasErrors($errors);
 
-        $registration->__construct();
-
-        $registration->setStatus(RegistrationStatus::NEW);
-
         $this->getManager()->persist($registration);
         $this->getManager()->flush();
 
@@ -112,6 +115,7 @@ class AuthService extends AuthServiceBase
     /**
      * @param $registrationId
      * @return JsonResponse
+     * @throws Exception
      */
     public function processRegistration($registrationId) {
         /** @var Registration $registration */
@@ -128,7 +132,7 @@ class AuthService extends AuthServiceBase
 
         $client = new Client();
         $location = new Location();
-        $company = new Company();
+        $company = $this->companyService->generateAndSetDebtorCode(new Company());
         $companyAddress = new CompanyAddress();
         $locationAddress = new LocationAddress();
 
@@ -146,7 +150,7 @@ class AuthService extends AuthServiceBase
 
         // TODO generate a default password and email it to the new user
         // If the emailaddress ends with @nsfo.nl it is a dummy email address
-        
+
         $companyAddress
             ->setStreetName($registration->getStreetName())
             ->setAddressNumber($registration->getAddressNumber())
@@ -164,6 +168,7 @@ class AuthService extends AuthServiceBase
             ->setCountryDetails($country);
 
         $company
+            ->setCompanyName($registration->getCompanyName())
             ->setIsActive(true)
             ->setAddress($companyAddress)
             ->addLocation($location)
@@ -171,6 +176,8 @@ class AuthService extends AuthServiceBase
             ->setIsRevealHistoricAnimals(true)
             ->setOwner($client)
             ->setTelephoneNumber($registration->getPhoneNumber())
+            ->setHasAutoDebit($registration->isHasAutoDebit())
+            ->setCreatedAt($registration->getCreatedAt())
         ;
 
         $location

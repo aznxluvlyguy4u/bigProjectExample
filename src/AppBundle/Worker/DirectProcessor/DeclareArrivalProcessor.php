@@ -99,7 +99,7 @@ class DeclareArrivalProcessor extends DeclareProcessorBase implements DeclareArr
         if ($animalIsOnOriginLocation) {
             $this->response->setWarningValues(
                 RvoErrorMessage::REPEATED_ARRIVAL_00015_MAIN_PART,
-                RvoErrorCode::REPEATED_ARRIVAL_00015
+                RvoErrorCode::REPEATED_DECLARE_00015
             );
             return RequestStateType::FINISHED_WITH_WARNING;
         }

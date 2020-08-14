@@ -9,6 +9,10 @@ address:
     name:
       not_blank: Straatnaam mag niet leeg zijn.
 
+auto:
+  debit:
+    not_blank: Automatisch incasso keuze mag niet leeg zijn.
+
 brs:
   not_blank: BRS mag niet leeg zijn.
 
@@ -35,3 +39,7 @@ phone:
 
 ubn:
   not_blank: UBN mag niet leeg zijn.
+
+company:
+  name:
+    not_blank: Bedrijfsnaam mag niet leeg zijn

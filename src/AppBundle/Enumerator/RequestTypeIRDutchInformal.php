@@ -10,7 +10,6 @@ class RequestTypeIRDutchInformal
 {
     use EnumInfo;
 
-    const DeclarationDetail = 'Melding Detail';
     const DeclareAnimalFlag = 'Diervlag';
     const DeclareArrival = 'Aanvoer';
     const DeclareBirth = 'Geboorte';

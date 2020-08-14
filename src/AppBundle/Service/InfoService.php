@@ -5,7 +5,7 @@ namespace AppBundle\Service;
 
 
 use AppBundle\Command\NsfoMainCommand;
-use AppBundle\Enumerator\QueueType;
+use AppBundle\Enumerator\AwsQueueType;
 use AppBundle\Util\CommandUtil;
 use AppBundle\Util\DoctrineUtil;
 use Doctrine\ORM\EntityManagerInterface;
@@ -57,10 +57,10 @@ class InfoService
         $this->redisHost = $redisHost;
 
         $this->queues = [
-            QueueType::EXTERNAL => $externalQueue,
-            QueueType::INTERNAL => $internalQueue,
-            QueueType::MIXBLUP_INPUT => $mixBlupInputQueue,
-            QueueType::MIXBLUP_OUTPUT => $mixBlupOutputQueue,
+            AwsQueueType::EXTERNAL => $externalQueue,
+            AwsQueueType::INTERNAL => $internalQueue,
+            AwsQueueType::MIXBLUP_INPUT => $mixBlupInputQueue,
+            AwsQueueType::MIXBLUP_OUTPUT => $mixBlupOutputQueue,
         ];
 
     }

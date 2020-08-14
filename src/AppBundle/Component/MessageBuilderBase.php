@@ -4,10 +4,10 @@ namespace AppBundle\Component;
 
 use AppBundle\Constant\Environment;
 use AppBundle\Entity\Client as Client;
-use AppBundle\Entity\DeclarationDetail;
 use AppBundle\Entity\DeclareAnimalFlag;
 use AppBundle\Entity\DeclareArrival;
 use AppBundle\Entity\DeclareBase;
+use AppBundle\Entity\DeclareBaseInterface;
 use AppBundle\Entity\DeclareBirth;
 use AppBundle\Entity\DeclareDepart;
 use AppBundle\Entity\DeclareExport;
@@ -68,7 +68,7 @@ class MessageBuilderBase
      * @param Person $person
      * @param Person $loggedInUser
      * @param Location $location
-     * @return DeclareBase|DeclareArrival|DeclareAnimalFlag|DeclareBirth|DeclareDepart|DeclareExport|DeclareImport|DeclareLoss|DeclareTagsTransfer|Mate|DeclarationDetail|RevokeDeclaration|DeclareTagReplace the base message
+     * @return DeclareBase|DeclareArrival|DeclareAnimalFlag|DeclareBirth|DeclareDepart|DeclareExport|DeclareImport|DeclareLoss|DeclareTagsTransfer|Mate|RevokeDeclaration|DeclareTagReplace the base message
      */
     protected function buildBaseMessageObject($messageObject, Person $person, Person $loggedInUser,
                                               Location $location)
@@ -119,12 +119,12 @@ class MessageBuilderBase
 
 
     /**
-     * @param DeclareBase $declare
+     * @param DeclareBaseInterface $declare
      * @param Client $client
      * @param Person $loggedInUser
      * @param string $actionType
      * @param bool $isRvoMessage
-     * @return DeclareBase|DeclareArrival|DeclareAnimalFlag|DeclareBirth|DeclareDepart|DeclareExport|DeclareImport|DeclareLoss|DeclareTagsTransfer|Mate|DeclarationDetail|RevokeDeclaration|DeclareTagReplace the base message
+     * @return DeclareBase|DeclareBaseInterface|DeclareArrival|DeclareAnimalFlag|DeclareBirth|DeclareDepart|DeclareExport|DeclareImport|DeclareLoss|DeclareTagsTransfer|Mate|RevokeDeclaration|DeclareTagReplace the base message
      */
     public static function setStandardDeclareBaseValues($declare, $client, $loggedInUser, $actionType, $isRvoMessage)
     {
@@ -145,10 +145,10 @@ class MessageBuilderBase
 
 
     /**
-     * @param DeclareBase $declare
+     * @param DeclareBaseInterface $declare
      * @param Client $client
      * @param Person $loggedInUser
-     * @return DeclareBase
+     * @return DeclareBaseInterface
      */
     public static function setStandardBaseRetrieveValues($declare, $client, $loggedInUser)
     {
@@ -157,10 +157,10 @@ class MessageBuilderBase
 
 
     /**
-     * @param DeclareBase $declare
+     * @param DeclareBaseInterface $declare
      * @param Client $client
      * @param Person $loggedInUser
-     * @return DeclareBase
+     * @return DeclareBaseInterface
      */
     private static function setDeclareValuesBase($declare, $client, $loggedInUser)
     {
