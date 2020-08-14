@@ -9,6 +9,10 @@ address:
     name:
       not_blank: Streetname cannot be empty
 
+auto:
+  debit:
+    not_blank: Auto debit choice cannot be empty
+
 brs:
   not_blank: BRS cannot be empty
 

@@ -144,7 +144,7 @@ class AuthService extends AuthServiceBase
 
         // TODO generate a default password and email it to the new user
         // If the emailaddress ends with @nsfo.nl it is a dummy email address
-        
+
         $companyAddress
             ->setStreetName($registration->getStreetName())
             ->setAddressNumber($registration->getAddressNumber())
@@ -169,6 +169,7 @@ class AuthService extends AuthServiceBase
             ->setIsRevealHistoricAnimals(true)
             ->setOwner($client)
             ->setTelephoneNumber($registration->getPhoneNumber())
+            ->setHasAutoDebit($registration->isHasAutoDebit())
             ->setCreatedAt($registration->getCreatedAt())
         ;
 
